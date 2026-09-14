@@ -47,6 +47,16 @@ class DataLoaderMixin:
         if getattr(self, "use_pressure", False):
             self._load_pressure_obs(pressure_filename, path.parent)
 
+        n_curve = self.y_obs_matrix.shape[1]
+        msg = (
+            f"Loaded data: {n_curve} curve points (thin={self.thin}), "
+            f"realized noise sigma={self.sigma_noise_realized:.6e} "
+            f"(target={self.sigma_noise_target:.6e})"
+        )
+        if getattr(self, "use_pressure", False):
+            msg += f", {self.pressure_obs.size} pressure points"
+        print(msg)
+
     def _load_pressure_obs(self, filename, folder):
 
         if filename is None:

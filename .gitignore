@@ -3,8 +3,11 @@ extras/
 __pycache__/
 packages/__pycache__/
 .ipynb_checkpoints/
+
 *.pyc
 *.pyo
 *.pyd
+
 *.pdf
+*.vtk
 *.simulation.out

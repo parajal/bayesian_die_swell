@@ -317,9 +317,9 @@ class PlottingMixin:
         plt.show()
 
     def plot_trace_all(self, burn_in_ratio: float = 0.6) -> None:
-        if getattr(self, "chain_log", None) is None:
+        if getattr(self, "chain", None) is None:
             raise RuntimeError("Call run_mcmc() first.")
-        chain = self._to_physical_chain(np.asarray(self.chain_log, dtype=float))
+        chain = self._to_physical_chain(np.asarray(self.chain, dtype=float))
         burn = int(burn_in_ratio * chain.shape[0])
         labels = self._labels()[:chain.shape[2]]
         fig, axes = plt.subplots(
