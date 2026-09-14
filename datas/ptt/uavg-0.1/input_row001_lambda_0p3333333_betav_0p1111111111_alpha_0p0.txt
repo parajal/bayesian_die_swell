@@ -1,0 +1,15 @@
+&comppar
+  model        = 3
+  lambda       = 0.3333333
+  mobility     = 0.0  ! Giesekus alpha; PTT epsilon for model=5/6
+  betav        = 0.1111111111
+  eta_0        = 1.0
+  U_avg        = 1.0
+  planar       = .true.
+  deltat       = 0.1
+  numtimesteps = 200
+  dx_box       = 0.1
+  dx_wall      = 0.1
+  dx_inlet     = 0.1
+  vtkevery     = 10
+/
