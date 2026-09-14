@@ -1,53 +1,77 @@
 """Prior distributions."""
+
 import numpy as np
+
+
 class PriorMixin:
 
     def log_prior(self, phi):
+        """Evaluate log-prior density."""
 
         theta = self._to_physical(phi)
+
         bounds = np.asarray(self._get_parameter_bounds())
+        n_params = len(bounds)
 
-        vals = theta[: len(bounds)]
-        lo, hi = bounds[:, 0], bounds[:, 1]
+        params = theta[:n_params]
+        lower = bounds[:, 0]
+        upper = bounds[:, 1]
 
-        if np.any((vals < lo) | (vals > hi)):
+        # Uniform priors
+        if np.any((params < lower) | (params > upper)):
             return -np.inf
 
-        logp = -np.sum(np.log(hi - lo))
+        logp = -np.sum(np.log(upper - lower))
 
-        i = len(bounds)
-        s = theta[i]
-
-        if s <= 0:
+        # Noise standard deviation prior
+        sigma_noise = theta[n_params]
+        if sigma_noise <= 0:
             return -np.inf
 
-        logp += np.log(self.sigma_noise_prior) - self.sigma_noise_prior * s
+        logp += (
+            np.log(self.sigma_noise_prior)
+            - self.sigma_noise_prior * sigma_noise
+        )
 
+        # Bias standard deviation prior
         if self._infer_sigma_bias():
-            b = theta[i + 1]
-            if b <= 0:
+            sigma_bias = theta[n_params + 1]
+
+            if sigma_bias <= 0:
                 return -np.inf
-            logp += np.log(self.sigma_bias_prior) - self.sigma_bias_prior * b
+
+            logp += (
+                np.log(self.sigma_bias_prior)
+                - self.sigma_bias_prior * sigma_bias
+            )
 
         return float(logp)
 
-    def _log_prior(self, rng, n):
+    def _log_prior(self, rng, n_samples):
+        """Draw samples from the prior."""
 
         bounds = self._get_parameter_bounds()
-        phi = np.zeros((n, self._get_ndim()))
+        ndim = self._get_ndim()
 
-        for j, (lo, hi) in enumerate(bounds):
-            phi[:, j] = rng.uniform(lo, hi, n)
+        samples = np.zeros((n_samples, ndim))
 
-        i = len(bounds)
+        # Uniform parameters
+        for j, (low, high) in enumerate(bounds):
+            samples[:, j] = rng.uniform(low, high, size=n_samples)
 
-        phi[:, i] = rng.exponential(
-            1 / self.sigma_noise_prior, n
+        idx = len(bounds)
+
+        # Exponential prior for noise
+        samples[:, idx] = rng.exponential(
+            scale=1.0 / self.sigma_noise_prior,
+            size=n_samples,
         )
 
+        # Optional bias parameter
         if self._infer_sigma_bias():
-            phi[:, i + 1] = rng.exponential(
-                1 / self.sigma_bias_prior, n
+            samples[:, idx + 1] = rng.exponential(
+                scale=1.0 / self.sigma_bias_prior,
+                size=n_samples,
             )
 
-        return phi
+        return samples

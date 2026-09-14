@@ -356,14 +356,18 @@ class PlottingMixin:
         label_size: float = 40,
         physical_only: bool = True,
         show_plot: bool = True,
+        true_param: bool = True,
     ) -> None:
         """Corner plot with the prior on the diagonals, in the reference style.
 
-        All material parameters are uniform on their physical (linear) bounds, so
-        the diagonals show a flat prior density (red). ``log_scale`` is retained
-        for backward compatibility but no longer log-transforms any axis, since no
-        parameter is sampled in log10 space. ``physical_only=False`` also appends
-        sigma_noise/sigma_bias.
+        Material parameters carry a uniform prior on ``[lo, hi]``, so the
+        diagonals show a flat prior density (red) over their bounds.
+        ``log_scale`` is retained for backward compatibility but no longer
+        log-transforms any axis (the samples are already in physical units).
+        ``physical_only=False`` also appends sigma_noise/sigma_bias.
+        ``true_param=True`` (default) draws the ground-truth line (from
+        ``theta_true`` or ``self.true_theta``, plus the realized sigma_noise
+        when hyperparameters are shown); ``true_param=False`` hides it.
         """
         try:
             import corner
@@ -376,7 +380,10 @@ class PlottingMixin:
         ndim = n_phys if physical_only else samples_full.shape[1]
         samples = samples_full[:, :ndim].astype(float).copy()
         labels = list(self._get_parameter_labels()[:ndim])
-        theta_true = theta_true if theta_true is not None else getattr(self, "true_theta", None)
+        if true_param:
+            theta_true = theta_true if theta_true is not None else getattr(self, "true_theta", None)
+        else:
+            theta_true = None
 
         truths = [None] * ndim
         if theta_true is not None:
@@ -387,12 +394,16 @@ class PlottingMixin:
                 if not vals[i] > 0:
                     continue
                 truths[i] = float(vals[i])
-        if not physical_only:
-            names = self._get_parameter_labels(latex=False)
-            sig = getattr(self, "sigma_noise_realized", None)
-            if sig is not None and "sigma_noise" in names[:ndim]:
-                truths[names.index("sigma_noise")] = float(sig)
+        if true_param and not physical_only:
+            names = self._get_parameter_labels(latex=False)[:ndim]
 
+            def _set_truth(pname, value):
+                if value is not None and pname in names:
+                    truths[names.index(pname)] = float(value)
+
+            curve_sig = getattr(self, "sigma_noise_realized", None)
+            _set_truth("sigma_noise", curve_sig)
+            _set_truth("sigma_noise", curve_sig)
         fig = plt.figure(figsize=(8 * ndim, 8 * ndim))
         corner.corner(
             samples,
@@ -420,7 +431,7 @@ class PlottingMixin:
             if i < n_phys:
                 lo, hi = bounds[i]
                 xs = np.linspace(xlo, xhi, 400)
-                dens = np.where((xs >= lo) & (xs <= hi), 1 / (hi - lo), 0)
+                dens = np.where((xs >= lo) & (xs <= hi), 1.0 / (hi - lo), 0.0)
                 ax.plot(xs, dens, color="red", lw=1.5)
             ci = np.percentile(samples[:, i], [q_lo, q_hi])
             ax.axvline(ci[0], color="black", ls=":", lw=1.5)

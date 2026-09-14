@@ -77,7 +77,7 @@ class ROMCurve4BayesianInference(
         eta0_bounds: Optional[Tuple[float, float]] = None,
         use_pressure: bool = False,
         pressure_filename: str = "pressure.txt",
-        augment_eta0: bool = False,
+        augment_eta0: bool = False, seed = 42,
     ) -> None:
         model_family = normalize_forward_model(model)
         inference_mode = normalize_inference_mode(mode)
@@ -225,14 +225,15 @@ class ROMCurve4BayesianInference(
         self.sigma_bias_prior = None
         self.sampler = None
         self.samples = None
-        self.chain_log = None
-        self.log_prob = None
-        self.acceptance_fraction = None
-        self.map_theta = None
-        self.burn_fraction = 0.6
-        self._last_burn_in = None
-        self.nwalkers = None
-
+        # self.chain_log = None
+        # self.log_prob = None
+        # self.acceptance_fraction = None
+        # self.map_theta = None
+        # self.burn_fraction = 0.6
+        # self._last_burn_in = None
+        # self.nwalkers = None
+        self.seed = seed
+        
     def build_rom(self) -> None:
         if getattr(self, "model_family", None) == "tanner":
             self.is_trained = True
