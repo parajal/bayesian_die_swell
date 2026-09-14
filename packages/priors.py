@@ -9,6 +9,8 @@ class PriorMixin:
         """Evaluate log-prior density."""
 
         theta = self._to_physical(phi)
+        if not np.all(np.isfinite(theta)):
+            return -np.inf
 
         bounds = np.asarray(self._get_parameter_bounds())
         n_params = len(bounds)

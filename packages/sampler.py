@@ -17,6 +17,7 @@ class Sampler:
         return np.sqrt(var_hat / W)
 
     def run_mcmc(self, nwalkers=10, nsteps=5000, burn_fraction=0.3):
+        np.random.seed(self.seed)
         rng = np.random.default_rng(self.seed)
         p0 = self._log_prior(rng, nwalkers)
         nburn = int(burn_fraction * nsteps)

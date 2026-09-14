@@ -225,13 +225,6 @@ class ROMCurve4BayesianInference(
         self.sigma_bias_prior = None
         self.sampler = None
         self.samples = None
-        # self.chain_log = None
-        # self.log_prob = None
-        # self.acceptance_fraction = None
-        # self.map_theta = None
-        # self.burn_fraction = 0.6
-        # self._last_burn_in = None
-        # self.nwalkers = None
         self.seed = seed
         
     def build_rom(self) -> None:
@@ -290,6 +283,30 @@ class ROMCurve4BayesianInference(
         if not np.all(np.isfinite(pred)):
             raise FloatingPointError("Pressure GPR prediction produced NaN/Inf.")
         return pred
+
+    def _predict_pressure_batch(self, thetas: np.ndarray) -> np.ndarray:
+        """Vectorized pressure-GPR prediction for many material-parameter rows.
+
+        ``thetas`` has shape ``(m, n_material)``; returns an ``(m, n_pressure)``
+        array equivalent to stacking :meth:`predict_pressure` over the rows but
+        with a single GPR evaluation. Used by the pressure posterior-predictive
+        summary.
+        """
+        if self.pressure_model is None:
+            raise RuntimeError(
+                "Pressure model is untrained. Construct with use_pressure=True and call build_rom()."
+            )
+        thetas = np.atleast_2d(np.asarray(thetas, dtype=float))
+        cols = [thetas[:, 0], thetas[:, 1]]
+        if self.alpha_idx >= 0:
+            cols.append(thetas[:, 2])
+        if getattr(self, "use_uavg", False):
+            cols.append(np.full(thetas.shape[0], float(self.u_avg_obs)))
+        x = self._transform(np.column_stack(cols))
+        preds = np.asarray(self.pressure_model.predict(x), dtype=float)
+        if not np.all(np.isfinite(preds)):
+            raise FloatingPointError("Pressure GPR batch prediction produced NaN/Inf.")
+        return preds
 
     def validate_rom(self) -> None:
         """Report curve ROM test error, and the pressure GPR error when enabled."""

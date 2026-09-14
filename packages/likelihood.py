@@ -12,6 +12,8 @@ class LikelihoodMixin:
         n = r.size
 
         if chol is None:
+            if not (sigma > 0.0 and np.isfinite(sigma)):
+                return -np.inf
             r2 = (r @ r) / sigma**2
             logdet = 2 * n * np.log(sigma)
         else:
@@ -71,24 +73,36 @@ class LikelihoodMixin:
         return y_obs - y_pred
 
     def log_likelihood(self, phi):
+        phi = np.asarray(phi, float)
+        if not np.all(np.isfinite(phi)):
+            return -np.inf
 
-        theta = self._to_physical(phi)
-        sigma_noise, sigma_bias = self._extract_noise_bias(theta)
+        try:
+            theta = self._to_physical(phi)
+            sigma_noise, sigma_bias = self._extract_noise_bias(theta)
+            if not (sigma_noise > 0.0 and np.isfinite(sigma_noise)):
+                return -np.inf
+            if sigma_bias is not None and not (sigma_bias > 0.0 and np.isfinite(sigma_bias)):
+                return -np.inf
 
-        r = self._residual(theta)
+            r = self._residual(theta)
+            if not np.all(np.isfinite(r)):
+                return -np.inf
 
-        if sigma_bias is None:
-            ll = self._log_likelihood(r, sigma=sigma_noise)
-        else:
-            x = self.obs_x_coords[:len(r)]
-            C = self._covariance(x, sigma_noise, sigma_bias)
-            ll = self._log_likelihood(r, chol=cho_factor(C, lower=True))
+            if sigma_bias is None:
+                ll = self._log_likelihood(r, sigma=sigma_noise)
+            else:
+                x = self.obs_x_coords[:len(r)]
+                C = self._covariance(x, sigma_noise, sigma_bias)
+                ll = self._log_likelihood(r, chol=cho_factor(C, lower=True))
 
-        if getattr(self, "use_pressure", False):
-            rp = self.pressure_obs - self.predict_pressure(theta)
-            ll += self._log_likelihood(rp, sigma=sigma_noise)
+            if getattr(self, "use_pressure", False):
+                rp = self.pressure_obs - self.predict_pressure(theta)
+                ll += self._log_likelihood(rp, sigma=sigma_noise)
+        except (FloatingPointError, ValueError, RuntimeError, np.linalg.LinAlgError):
+            return -np.inf
 
-        return ll
+        return ll if np.isfinite(ll) else -np.inf
 
     def log_posterior(self, phi):
         lp = self.log_prior(phi)

@@ -6,4 +6,5 @@ packages/__pycache__/
 *.pyc
 *.pyo
 *.pyd
-
+*.pdf
+*.simulation.out

@@ -15,7 +15,13 @@ class DataLoaderMixin:
         return y + noise
 
     def _sigma_priors_from_data(self, y):
-        self.beta = 1 / (0.10 * _max_disp(y))
+        disp = _max_disp(y)
+        if not (np.isfinite(disp) and disp > 0):
+            raise ValueError(
+                "Observed curve shows no swelling (max height <= die radius); "
+                "cannot set the sigma prior scale."
+            )
+        self.beta = 1.0 / (0.10 * disp)
         self.sigma_noise_prior = self.beta
         self.sigma_bias_prior = self.beta if self._infer_sigma_bias() else None
 

@@ -170,6 +170,33 @@ class ROM:
             epsilon_val=epsilon_val,
         )
 
+    def _predict_curves(self, thetas: np.ndarray, u_avg_val: Optional[float] = None) -> np.ndarray:
+        """Vectorized ROM prediction for many material-parameter rows at once.
+
+        ``thetas`` has shape ``(m, n_material)`` (columns lambda, beta and the
+        optional third material parameter). Returns an ``(m, n_points)`` array of
+        curves, numerically equivalent to stacking :meth:`predict` over the rows
+        but with a single surrogate evaluation. Used by the posterior-predictive
+        summaries, which otherwise call the surrogate once per posterior draw.
+        """
+        if not self.is_trained:
+            raise RuntimeError("Call train() before _predict_curves().")
+        thetas = np.atleast_2d(np.asarray(thetas, dtype=float))
+        cols = [thetas[:, 0], thetas[:, 1]]
+        if self.alpha_idx >= 0:
+            if thetas.shape[1] < 3:
+                raise ValueError("thetas must include the third material parameter for this ROM.")
+            cols.append(thetas[:, 2])
+        if self.use_uavg:
+            if u_avg_val is None:
+                raise ValueError("u_avg_val is required because the ROM was trained with U_avg.")
+            cols.append(np.full(thetas.shape[0], float(u_avg_val)))
+        x = self._transform(np.column_stack(cols))
+        curves = self._reconstruct(self._predict_coefficients(x))
+        if not np.all(np.isfinite(curves)):
+            raise FloatingPointError("ROM batch prediction produced NaN/Inf.")
+        return np.asarray(curves, dtype=float)
+
     def validate_rom(self) -> None:
         if not self.is_trained:
             raise RuntimeError("Call train() before validate_rom().")
@@ -219,22 +246,6 @@ class ROM:
             "num_test_cases": int(self._rom_val_overall_n),
             "relative_l2_error_mean": float(self._rom_val_overall_err),
         }
-
-    def print_rom_test_error(self) -> dict[str, float]:
-        stats = self.rom_test_error_summary()
-        print(
-            f"\nROM test error: {stats['num_test_cases']} cases, "
-            f"mean rel L2 = {stats['relative_l2_error_mean']:.6e}"
-        )
-        return stats
-
-    def info(self) -> None:
-        print(
-            f"ROM(model={self.model_family}, method={self.method}, scaler={self.scaler}, "
-            f"eps={self.eps:g}, material_parameters={self.material_parameter_names}, "
-            f"param_cols={self.param_cols}, trained={self.is_trained})\n"
-            f"  data_dir: {self.data_dir}"
-        )
 
     def _load_pair(self, filenames: Sequence[str]) -> Tuple[np.ndarray, np.ndarray]:
         if len(filenames) != 2:

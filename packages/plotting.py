@@ -301,7 +301,7 @@ class PlottingMixin:
         n_axes = len(bounds) + len(rates)
         fig, axes = plt.subplots(1, n_axes, figsize=(8 * n_axes, 6), squeeze=False)
         axes = axes.ravel()
-        for i, (ax, (lo, hi), label) in enumerate(zip(axes, bounds, labels)):
+        for ax, (lo, hi), label in zip(axes, bounds, labels):
             x = np.linspace(lo, hi, n)
             density = np.full_like(x, 1 / (hi - lo))
             ax.plot(x, density, lw=2)
@@ -333,20 +333,6 @@ class PlottingMixin:
         axes.ravel()[-1].set_xlabel("MCMC step")
         self._save_current_figure("trace_all")
         plt.show()
-
-    def _truth_values(self, ndim: int) -> "list[Optional[float]]":
-        """Ground truth per parameter: true_theta for material params, realized
-        sigma for sigma_noise, and None (unknown) for sigma_bias."""
-        n_material = len(self._get_parameter_bounds())
-        theta = getattr(self, "true_theta", None)
-        truths = [
-            float(theta[i]) if theta is not None and i < len(theta) else None
-            for i in range(n_material)
-        ]
-        truths.append(getattr(self, "sigma_noise_realized", None))
-        if self._infer_sigma_bias():
-            truths.append(None)
-        return truths[:ndim]
 
     def plot_corner(
         self,
@@ -402,7 +388,6 @@ class PlottingMixin:
                     truths[names.index(pname)] = float(value)
 
             curve_sig = getattr(self, "sigma_noise_realized", None)
-            _set_truth("sigma_noise", curve_sig)
             _set_truth("sigma_noise", curve_sig)
         fig = plt.figure(figsize=(8 * ndim, 8 * ndim))
         corner.corner(
@@ -493,16 +478,16 @@ class PlottingMixin:
             raise RuntimeError("_obs_indices is unset. Call load_data() first.")
         obs_idx = np.asarray(obs_idx, dtype=int)
 
+        # Evaluate the surrogate for every draw in one shot, then slice to the
+        # observed (thinned) grid; the per-draw loop below only draws noise.
+        curves = self._predict_curves(draws[:, :n_material], u_avg_val=u_avg)
+        if curves.shape[1] != obs.size and curves.shape[1] >= int(obs_idx[-1]) + 1:
+            curves = curves[:, obs_idx]
+
         latent_mean = np.empty((n_draws, obs.size), dtype=float)
         Y_rep = np.empty((n_draws, obs.size), dtype=float)
-        for k, s in enumerate(draws):
-            alpha = float(s[2]) if n_material > 2 else None
-            g = np.asarray(
-                self.rom_predict_curve(float(s[0]), float(s[1]), u_avg_val=u_avg, alpha_val=alpha),
-                dtype=float,
-            ).ravel()
-            if g.shape != obs.shape and g.size >= int(obs_idx[-1]) + 1:
-                g = g[obs_idx]
+        for k in range(n_draws):
+            g = curves[k]
             sn, sb = float(sn_draws[k]), float(sb_draws[k])
             if not infer_bias or sb <= 0:
                 delta = delta_mean = np.zeros_like(g)
@@ -659,10 +644,12 @@ class PlottingMixin:
         draws = samples[sel]
         sn_draws = np.abs(draws[:, i_sn])
 
+        # One GPR evaluation for all draws; the loop below only draws noise.
+        preds = self._predict_pressure_batch(draws[:, :n_material])
         latent_mean = np.empty((n_draws, p_obs.size), dtype=float)
         Y_rep = np.empty((n_draws, p_obs.size), dtype=float)
-        for k, s in enumerate(draws):
-            p_pred = np.asarray(self.predict_pressure(s[:n_material]), dtype=float).ravel()
+        for k in range(n_draws):
+            p_pred = preds[k]
             latent_mean[k] = p_pred
             Y_rep[k] = p_pred + rng.standard_normal(p_pred.size) * float(sn_draws[k])
 
