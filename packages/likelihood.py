@@ -32,7 +32,7 @@ class LikelihoodMixin:
             if len(theta) > 2:
                 eps = getattr(self, "third_parameter_name", "") == "epsilon"
                 kw["epsilon_val" if eps else "alpha_val"] = theta[2]
-            y = self.rom_predict_curve(theta[0], theta[1], u_avg_val=self.u_avg_obs, **kw)
+            y = self.predict(theta[0], theta[1], u_avg_val=self.u_avg_obs, **kw)
 
         y = np.asarray(y, float).ravel()
         if y.size > y_obs.size:
@@ -51,12 +51,12 @@ class LikelihoodMixin:
             if not all(np.isfinite(s) and s > 0 for s in (s_noise, s_bias) if s is not None):
                 return -np.inf
 
-            r = self._residual(theta)
+            r = self._residual(theta) - self._extract_mean_bias(theta)  # curve channel only
             if s_bias is None:
                 cov = s_noise**2
             else:
                 x = self.obs_x_coords[:r.size]
-                K = np.exp(-np.abs(np.subtract.outer(x, x)) / self.l_bias)
+                K = self._bias_correlation_matrix(x, self._extract_l_bias(theta))
                 cov = s_noise**2 * np.eye(r.size) + s_bias**2 * K
             ll = self._gauss_ll(r, cov)
 

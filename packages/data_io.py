@@ -20,7 +20,15 @@ class DataLoaderMixin:
             raise ValueError("no swelling in observed curve (max height <= die radius)")
         self.max_displacement = disp
         self.beta = self.sigma_noise_prior = rate = 1.0 / (0.10 * disp)
-        self.sigma_bias_prior = rate if self._infer_sigma_bias() else None
+        self.sigma_bias_prior = 1.0 / (self._sigma_bias_frac * disp) if self._infer_sigma_bias() else None
+        self.c_bias_prior_sd = 0.10 * disp if self._infer_mean_bias() else None
+        if self._infer_l_bias() and self.l_bias_prior == "pc":
+            # PC prior (Fuglstad/Simpson) on the length scale: penalizes short (rough)
+            # scales toward the smooth base model, set by P(l < l0) = alpha with l0 a
+            # fraction of the x-range. 1-D range: lambda = -ln(alpha) * l0**0.5.
+            frac, alpha = self.l_bias_pc
+            self._l0 = frac * float(x.max() - x.min())
+            self.l_bias_pc_lambda = -np.log(alpha) * self._l0 ** 0.5
 
         self.sigma_noise_target = self.sigma_noise_percent / 100 * disp
         noise = np.random.default_rng(0).normal(0, self.sigma_noise_target, y.shape)
@@ -36,7 +44,16 @@ class DataLoaderMixin:
             "height range": f"[{y.min():.4g}, {y.max():.4g}]",
             "max displacement": f"{disp:.4g}",
             "sigma_noise prior": f"Exp(rate={rate:.4g}), mean {1 / rate:.4g}",
-            "sigma_bias prior": "same as sigma_noise" if self.sigma_bias_prior else "not inferred",
+            "sigma_bias prior": f"Exp(mean={self._sigma_bias_frac * disp:.4g})" if self.sigma_bias_prior else "not inferred",
+            "c_bias prior": f"Normal(0, {self.c_bias_prior_sd:.4g})" if self.c_bias_prior_sd else "not inferred",
+            "l_bias prior": (
+                f"Uniform({self.l_bias_bounds[0]:g}, {self.l_bias_bounds[1]:g})"
+                if self._infer_l_bias() and self.l_bias_prior == "uniform" else
+                f"PC: P(l<{self._l0:.4g})={self.l_bias_pc[1]:g}, lambda={self.l_bias_pc_lambda:.4g}"
+                if self._infer_l_bias() else f"fixed {self.l_bias:g}"),
+            "bias anchor": f"delta({self.bias_anchor:g})=0" if self.bias_anchor is not None else "none",
+            "bias flat": (f"delta'=0 on [{self.bias_flat[0]:g},{self.bias_flat[1]:g}] ({self.bias_flat_n} pts)"
+                          if self.bias_flat is not None else "none"),
             "curve noise": f"{self.sigma_noise_percent}% of disp, sigma {self.sigma_noise_target:.4g} "
                            f"(realized {self.sigma_noise_realized:.4g})",
         }

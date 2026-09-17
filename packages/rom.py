@@ -137,10 +137,6 @@ class ROM:
         third = alpha_val if epsilon_val is None else epsilon_val
         return self._predict_curves([[*theta, third][:self.n_material_params]], u_avg_val)[0]
 
-    def rom_predict_curve(self, *theta, u_avg_val=None, alpha_val=None, epsilon_val=None):
-        """Descriptive alias of :meth:`predict` (used by the likelihood and plots)."""
-        return self.predict(*theta, u_avg_val=u_avg_val, alpha_val=alpha_val, epsilon_val=epsilon_val)
-
     # ---------------------------------------------------------------- pressure GPR
     def train_pressure(self, filename):
         """Train a GPR from the material parameters to the wall pressure in ``filename``."""

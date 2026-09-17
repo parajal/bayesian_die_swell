@@ -248,12 +248,13 @@ class PlottingMixin:
 
         u_avg = float(u_avg_val if u_avg_val is not None else self.u_avg_obs)
         y_fom = np.atleast_2d(self.y_obs_matrix)[0]
-        y_rom = self.rom_predict_curve(
+        has_third = self.n_material_params == 3
+        y_rom = self.predict(
             float(lambda_val),
             float(beta_val),
             u_avg_val=u_avg,
-            alpha_val=(alpha_val if self.alpha_idx >= 0 else None),
-            epsilon_val=(epsilon_val if self.alpha_idx >= 0 else None),
+            alpha_val=(alpha_val if has_third else None),
+            epsilon_val=(epsilon_val if has_third else None),
         )
         idx = getattr(self, "_obs_indices", None)
         if idx is not None and y_rom.shape != y_fom.shape:
@@ -305,7 +306,7 @@ class PlottingMixin:
             lambda_val, beta_val, alpha_val, epsilon_val)
 
         theta = [float(lambda_val), float(beta_val)]
-        if self.alpha_idx >= 0:
+        if self.n_material_params == 3:
             third = epsilon_val if epsilon_val is not None else alpha_val
             if third is None:
                 raise ValueError("The third material parameter is required for this model.")
@@ -328,27 +329,47 @@ class PlottingMixin:
         print(f"Pressure GPR relative L2 error against observed pressure:    {rel_l2:.6e}")
         return rel_l2
 
-    def plot_prior(self, n: int = 5000) -> None:
-        bounds = self._get_parameter_bounds()
-        labels = self._get_parameter_labels()
-        rates = [self.sigma_noise_prior]
-        if self._infer_sigma_bias():
-            rates.append(self.sigma_bias_prior)
-        n_axes = len(bounds) + len(rates)
-        fig, axes = plt.subplots(1, n_axes, figsize=(8 * n_axes, 6), squeeze=False)
-        axes = axes.ravel()
-        for ax, (lo, hi), label in zip(axes, bounds, labels):
+    def _prior_curves(self, n: int = 5000) -> "list[tuple[np.ndarray, np.ndarray]]":
+        """(x, density) for every inferred parameter, in vector order.
+
+        material -> uniform; sigma_noise/sigma_bias -> exponential;
+        l_bias -> PC (range) or uniform; c_bias -> Normal(0, sd).
+        """
+        curves = []
+        for lo, hi in self._get_parameter_bounds():                 # material params
             x = np.linspace(lo, hi, n)
-            density = np.full_like(x, 1 / (hi - lo))
-            ax.plot(x, density, lw=2)
-            ax.set(xlabel=label, ylim=(0, 1.2 * float(np.max(density))))
+            curves.append((x, np.full_like(x, 1.0 / (hi - lo))))
+        rates = [self.sigma_noise_prior] + [self.sigma_bias_prior] * self._infer_sigma_bias()
+        for rate in rates:                                          # sigma_noise (+ sigma_bias): exponential
+            x = np.linspace(0, 5.0 / rate, n)
+            curves.append((x, rate * np.exp(-rate * x)))
+        if self._infer_l_bias():
+            if self.l_bias_prior == "uniform":                       # l_bias: Uniform(lo, hi)
+                lo_l, hi_l = self.l_bias_bounds
+                x = np.linspace(lo_l, hi_l, n)
+                curves.append((x, np.full_like(x, 1.0 / (hi_l - lo_l))))
+            else:                                                     # l_bias: PC prior (range, 1-D)
+                lam = self.l_bias_pc_lambda
+                mode = (lam / 3.0) ** 2              # anchor the view on the mode (tail is heavy)
+                x = np.linspace(max(mode / 20, 1e-3), 15 * mode, n)
+                curves.append((x, 0.5 * lam * x ** -1.5 * np.exp(-lam * x ** -0.5)))
+        if self._infer_mean_bias():                                # c_bias: Normal(0, sd)
+            sd = self.c_bias_prior_sd
+            x = np.linspace(-4 * sd, 4 * sd, n)
+            curves.append((x, np.exp(-0.5 * (x / sd) ** 2) / (sd * np.sqrt(2 * np.pi))))
+        return curves
+
+    def plot_prior(self, n: int = 5000) -> None:
+        labels = self._get_parameter_labels()
+        curves = self._prior_curves(n)
+        m = len(curves)
+        fig, axes = plt.subplots(1, m, figsize=(8 * m, 6), squeeze=False)
+        axes = axes.ravel()
+        for ax, (x, dens), label in zip(axes, curves, labels):
+            ax.plot(x, dens, lw=2)
+            ax.set(xlabel=label, ylim=(0, 1.2 * float(np.max(dens))))
             ax.grid(True, alpha=0.25)
         axes[0].set_ylabel("Prior density")
-        for ax, rate, label in zip(axes[len(bounds):], rates, labels[len(bounds):]):
-            x = np.linspace(0, 5 / rate, n)
-            ax.plot(x, rate * np.exp(-rate * x), lw=2)
-            ax.set(xlabel=label, ylim=(0, 1.1 * rate))
-            ax.grid(True, alpha=0.25)
         self._save_current_figure("prior")
         plt.show()
 
@@ -464,14 +485,53 @@ class PlottingMixin:
         kwargs.setdefault("physical_only", False)
         self.plot_corner(**kwargs)
 
-    @staticmethod
-    def _bias_correlation_matrix(x, l_bias) -> np.ndarray:
-        """Exponential correlation matrix ``K_ij = exp(-|x_i - x_j| / l_bias)``.
+    def _bias_correlation_matrix(self, x, l_bias) -> np.ndarray:
+        """Squared-exponential discrepancy correlation, optionally GP-conditioned on
+        linear constraints (Brynjarsdottir & O'Hagan 2014; derivatives of a GP are
+        jointly Gaussian):
 
-        Matches the discrepancy covariance used in the likelihood.
+        * ``bias_anchor=x0``  -> delta(x0)=0     (die-exit value constraint)
+        * ``bias_flat=(a,b)`` -> delta'(x)=0 at ``bias_flat_n`` points in [a, b]
+          (flat discrepancy in the plateau).
+
+        Returns ``K' = K - C A^{-1} C^T`` (PSD; zero variance along the constraints),
+        with ``C``/``A`` the value/derivative cross- and auto-covariances of the SE
+        kernel. With no constraints it is the plain SE correlation.
         """
         x = np.asarray(x, dtype=float).ravel()
-        return np.exp(-np.abs(np.subtract.outer(x, x)) / l_bias)
+        l2 = float(l_bias) ** 2
+        kf = lambda a, b: np.exp(-np.subtract.outer(a, b) ** 2 / (2.0 * l2))
+        K = kf(x, x)
+
+        Vc, Dc = [], []
+        if getattr(self, "bias_anchor", None) is not None:
+            Vc = [float(self.bias_anchor)]                                   # delta(x0)=0
+        flat = getattr(self, "bias_flat", None)
+        if flat is not None:
+            Dc = list(np.linspace(flat[0], flat[1], int(self.bias_flat_n)))  # delta'(x_p)=0
+        if not Vc and not Dc:
+            return K
+        Vc, Dc = np.asarray(Vc, float), np.asarray(Dc, float)
+
+        C_blocks = []
+        if Vc.size:
+            C_blocks.append(kf(x, Vc))                                       # Cov(d(x),  d(Vc))
+        if Dc.size:
+            C_blocks.append(np.subtract.outer(x, Dc) / l2 * kf(x, Dc))       # Cov(d(x),  d'(Dc))
+        C = np.hstack(C_blocks)
+
+        nv, nd = Vc.size, Dc.size
+        A = np.zeros((nv + nd, nv + nd))
+        if nv:
+            A[:nv, :nv] = kf(Vc, Vc)
+        if nd:
+            dd = np.subtract.outer(Dc, Dc)
+            A[nv:, nv:] = kf(Dc, Dc) / l2 * (1.0 - dd ** 2 / l2)             # Cov(d'(Dc), d'(Dc))
+        if nv and nd:
+            gVD = np.subtract.outer(Vc, Dc) / l2 * kf(Vc, Dc)               # Cov(d(Vc), d'(Dc))
+            A[:nv, nv:], A[nv:, :nv] = gVD, gVD.T
+        A[np.diag_indices_from(A)] += 1e-10
+        return K - C @ np.linalg.solve(A, C.T)
 
     @staticmethod
     def _correlated_normal(rng, corr, sigma) -> np.ndarray:
@@ -491,10 +551,15 @@ class PlottingMixin:
         draws, n_material, rng = self._select_draws(nsamples_pred)
         n_draws, i_sn = len(draws), n_material
         infer_bias = self._infer_sigma_bias()
+        infer_l = self._infer_l_bias()
         sn_draws = np.abs(draws[:, i_sn])
         sb_draws = np.abs(draws[:, i_sn + 1]) if infer_bias else np.zeros(n_draws)
-        corr = (self._bias_correlation_matrix(x, float(getattr(self, "l_bias", 1) or 1))
-                if infer_bias else None)
+        i_l = i_sn + 1 + int(infer_bias)          # l_bias column (if inferred)
+        l_draws = draws[:, i_l] if infer_l else None
+        c_draws = (draws[:, i_l + int(infer_l)] if self._infer_mean_bias()
+                   else np.zeros(n_draws))
+        corr = (self._bias_correlation_matrix(x, float(self.l_bias))
+                if infer_bias and not infer_l else None)
         obs_idx = getattr(self, "_obs_indices", None)
         if obs_idx is None:
             raise RuntimeError("_obs_indices is unset. Call load_data() first.")
@@ -509,19 +574,21 @@ class PlottingMixin:
         for k in range(n_draws):
             g = curves[k]
             sn, sb = float(sn_draws[k]), float(sb_draws[k])
+            corr_k = (self._bias_correlation_matrix(x, float(l_draws[k]))
+                      if infer_bias and infer_l else corr)
             if not infer_bias or sb <= 0:
                 delta = delta_mean = np.zeros_like(g)
             elif condition_discrepancy:
-                A = sb * sb * corr
+                A = sb * sb * corr_k
                 Sigma = 0.5 * (A + A.T) + sn * sn * np.eye(len(g))
                 Sinv = np.linalg.pinv(Sigma, hermitian=True)
                 delta_mean = A @ Sinv @ (obs - g)
                 delta = delta_mean + self._correlated_normal(rng, A - A @ Sinv @ A, 1)
             else:
-                delta = self._correlated_normal(rng, corr, sb)
+                delta = self._correlated_normal(rng, corr_k, sb)
                 delta_mean = np.zeros_like(g)
-            latent_mean[k] = g + delta_mean
-            Y_rep[k] = g + delta + rng.standard_normal(len(g)) * sn
+            latent_mean[k] = g + c_draws[k] + delta_mean
+            Y_rep[k] = g + c_draws[k] + delta + rng.standard_normal(len(g)) * sn
 
         return self._band_and_diag(obs, latent_mean, Y_rep, n_sigma)
 

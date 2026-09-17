@@ -11,3 +11,11 @@ packages/__pycache__/
 *.pdf
 *.vtk
 *.simulation.out
+
+*.o
+*.mod
+*.a
+*.so
+*.exe
+datas/generate_rom_data/extrudate
+datas/generate_rom_data/extrudate_swell
