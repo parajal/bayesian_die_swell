@@ -1,0 +1,76 @@
+
+% New page styles
+
+\def\chaptertitle{}
+
+\def\ps@tfemch{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill Chapter~\thechapter \qquad \chaptertitle}
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate} 
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thechapter}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thechapter}.\thepage\hfill}
+ \def\chaptermark##1{}\def\sectionmark##1{}%
+ \def\subsectionmark##1{}}
+
+\def\ps@tfemchA{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill Appendix~\thechapter \qquad \chaptertitle}
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate} 
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thechapter}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thechapter}.\thepage\hfill}
+ \def\chaptermark##1{}\def\sectionmark##1{}%
+ \def\subsectionmark##1{}}
+
+\def\ps@tfemsec{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill Chapter~\thechapter \qquad \chaptertitle}
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate} 
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thesection}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thesection}.\thepage\hfill}
+ \def\chaptermark##1{}\def\sectionmark##1{}%
+ \def\subsectionmark##1{}}
+
+\def\ps@tfemsecA{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill Appendix~\thechapter \qquad \chaptertitle}
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate} 
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thesection}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thesection}.\thepage\hfill}
+ \def\chaptermark##1{}\def\sectionmark##1{}%
+ \def\subsectionmark##1{}}
+
+\def\ps@tfemsubsec{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill Chapter~\thechapter \qquad \chaptertitle}
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate} 
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thesubsection}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thesubsection}.\thepage\hfill}
+ \def\chaptermark##1{}\def\sectionmark##1{}%
+ \def\subsectionmark##1{}}
+
+\def\ps@tfemsubsecA{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill Appendix~\thechapter \qquad \chaptertitle}
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate} 
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thesubsection}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thesubsection}.\thepage\hfill}
+ \def\chaptermark##1{}\def\sectionmark##1{}%
+ \def\subsectionmark##1{}}
+
+\def\ps@plain{\let\@mkboth\@gobbletwo
+ \def\@oddhead{\sl \headdate\hfill\chaptertitle}%
+ \def\@evenhead{\sl \tfem\ User's Guide\hfill \headdate}%
+ \def\@oddfoot{\reset@font\rm\hfil{\bf\thechapter}.\thepage}
+ \def\@evenfoot{\reset@font\rm{\bf\thechapter}.\thepage\hfill}}
+
+% Bibliography
+                                                                                
+\renewenvironment{thebibliography}[1]
+     { \list{\@biblabel{\@arabic\c@enumiv}}%
+           {\settowidth\labelwidth{\@biblabel{#1}}%
+            \leftmargin\labelwidth
+            \advance\leftmargin\labelsep
+%            \@openbib@code
+            \usecounter{enumiv}%
+            \let\p@enumiv\@empty
+            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+      \sloppy\clubpenalty4000\widowpenalty4000%
+      \sfcode`\.\@m}
+     {\def\@noitemerr
+       {\@latex@warning{Empty `thebibliography' environment}}%
+      \endlist}
+

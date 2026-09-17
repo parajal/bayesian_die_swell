@@ -1,0 +1,16 @@
+#set terminal pdf color 
+#set output 'steady_extension25.pdf'
+
+#set terminal epslatex standalone color solid \
+#    header "\\usepackage{amsmath,amssymb}" 12
+# set the name of the .tex output file
+#set output 'steady_extension25.tex'
+
+set log
+plot "steady25.out" us 1:(($2-$5)) w l title "$\tau_{xx}-\tau_{yy}$"
+replot "steady25.out" us 1:($10) w l title "regime"
+pause -1
+plot "steady25.out" us 1:(($2-$5)/$1) w l title "$\eta_E=(\tau_{xx}-\tau_{yy})/x$"
+pause -1
+#plot "steady25.out" us 1:(($7-$5)/$1) w l title "$\eta_{E2}=(\tau_{zz}-\tau_{yy})/x$"
+#pause -1

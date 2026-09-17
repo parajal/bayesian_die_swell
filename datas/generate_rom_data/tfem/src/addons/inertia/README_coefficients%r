@@ -1,0 +1,11 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+
+  1-100: all relevant real parameters from the stokes & viscoelastic add-on
+101-150: reserved for diffuse_interface add-on
+
+
+151  rho: density of the fluid
+
+152-200 reserved for future use

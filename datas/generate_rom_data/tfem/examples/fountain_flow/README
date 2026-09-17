@@ -1,0 +1,40 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+fountain_flow1:
+
+ Fountain flow problem (2D). Newtonian fluid.
+ Free surface position determined using a height function approach.
+ Walls move with velocity -U in x-direction (no slip). 
+ At the left boundary a parabolic profile is assumed with Q=0.
+ Optional surface tension on moving surface.
+ P2 shape function for the height function.
+
+fountain_flow1a:
+
+ Fountain flow problem (2D). Newtonian fluid.
+ Free surface position determined using a height function approach.
+ Walls move with velocity -U in x-direction (no slip). 
+ At the left boundary a parabolic profile is assumed with Q=0.
+ Optional surface tension on moving surface.
+ P1 shape function for the height function.
+
+ Similar to fountain_flow1, but now with:
+   P1 shape function for the height function.
+
+fountain_flow1b:
+
+ Fountain flow problem (2D). Newtonian fluid.
+ Free surface position determined using a height function approach.
+ Walls move with velocity -U in x-direction (no slip). 
+ At the left boundary a parabolic profile is assumed with Q=0.
+ Optional surface tension on moving surface.
+ P1isoP2 shape function for the height function.
+
+ Similar to fountain_flow1, but now:
+   Q1isoQ2 for velocities 
+   P1isoP2 line elements for height function.
+   Correction for velocity (Dirichlet) to make Q=0 for the approx. profile
+

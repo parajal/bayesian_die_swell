@@ -1,0 +1,42 @@
+The examples in this directory are described in the userguide.
+
+Short description:
+-----------------
+
+bulkstress1:
+
+  Stokes problem on a square domain with a disk at the center.
+  Shear flow boundary conditions (set in "stokes_functions_m").
+  Freely rotating conditions on the disk boundaries.
+  Gmsh mesh (in the file "meshP2_1.msh").
+  Integration of fields over the domain and boundaries.
+
+bulkstress2:
+
+  2D viscoelastic problem on a square domain with a disk at the center.
+  Shear flow boundary conditions (set in "stokes_functions_m").
+  Freely rotating conditions on the disk boundaries.
+  Gmsh mesh (in the file "meshP2_2.msh").
+  Integration of fields over the domain and boundaries.
+  Conformation tensor for the unfilled fluid at inflow sections.
+ 
+  DEVSS-G/SUPG
+  Implicit bilinear terms of CE in momentum balance.
+  first-order time integration to steady state
+
+bulkstress3:
+
+  Stokes problem on a square domain with a disk at the center.
+  Shear flow boundary conditions (set in "stokes_functions_m").
+  Freely rotating conditions on the disk boundaries.
+  Constraint on the boundary using collocation.
+  Integration of fields over the domain and boundaries.
+
+bulkstress4:
+
+  Stokes problem on a square domain with a disk at the center.
+  Shear flow boundary conditions (set in "stokes_functions_m").
+  Freely rotating conditions on the disk boundaries.
+  Weak constraint on the boundary.
+  Integration of fields over the domain and boundaries.
+

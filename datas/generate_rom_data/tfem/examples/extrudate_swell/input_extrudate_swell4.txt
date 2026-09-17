@@ -1,0 +1,18 @@
+&comppar
+    numtimesteps = 300   ! number of time steps
+    plot_mesh_every = 30 ! plot mesh every .. steps
+    restart = 0          ! restart=1: restart, 
+                         ! restart=2: restart+Euler first time step
+    ctime = T            ! continue time in output after restart
+    file_append = T      ! append radius output to existing file after restart
+    eta = 1.0            ! viscosity
+    gammac = 0.2         ! surface tension coefficient
+    surface_tension = F  ! include surface tension
+    deltat = 2.e-2       ! time step
+    rs_up = 1.5          ! real_storage velocity-pressure LU (HSL)
+    is_up = 1.5          ! integer_storage velocity-pressure LU (HSL)
+    U_avg = 1.0          ! average velocity at the entry
+    eps_h0 = 1e-16       ! initial height of the free boundary points is given
+                         ! by h0-eps_h0 to avoid that interface is exactly
+                         ! at element edges.
+/

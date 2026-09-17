@@ -1,0 +1,71 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+eltree1:
+
+ Example program for using the eltree module
+ Use eltree (quadtree) to eltree the region.
+ Compute an integral on a circle or sphere for which the exact solution is known
+
+eltree2:
+
+ simple illustration for the use of the module submesh (part of eltree)
+
+eltree3:
+
+ Example program for using the eltree module
+ Use eltree (quadtree) together with aligned triangles/tets near the
+ interface to eltree the region.
+ Compute an integral on a circle or sphere for which the exact solution is known
+
+eltree4:
+
+ Example program for using the eltree module
+ Use eltree (quadtree/octree) together with aligned triangles/tets near the
+ interface to eltree the region.
+ Compute an integral on a (the boundary of a) circle or sphere for which the 
+ exact solution is known
+
+eltree5:
+
+ Example program for using the eltree module
+ A 2D region is divided into finite elements.
+ Use eltree (quadtree) together with aligned triangles near the
+ interface to eltree the elements.
+ Compute an integral on a (the boundary of a) circle for which the exact 
+ solution is known
+
+eltree6:
+
+ Example program for using the eltree module
+ A 3D region is divided into finite elements.
+ Use eltree (octtree) together with aligned tets near the
+ interface to eltree the elements.
+ Compute an integral on a (the boundary of a) sphere 
+ for which the exact solution is known
+
+eltree7:
+
+ Example program for using the eltree module for triangles and tetrahedra
+ Use eltree to subdivide the region and integrate over the interface of a 
+ circle.
+
+eltree8:
+
+ Example program for using the eltree module for triangles and tetrahedra.
+ Use eltree to subdivide the region and integrate over the interface of a 
+ sphere.
+
+eltree9:
+
+ Example program for using the eltree module for triangles.
+ Use eltree to subdivide the region and integrate over the volume of a 
+ circle.
+
+eltree10:
+
+ Example program for using the eltree module for tetrahedra.
+ Use eltree to subdivide the region and integrate over the volume of a 
+ sphere.

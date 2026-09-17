@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+#  tfug
+#
+#  tfug is used to view the tfem userguide
+#
+
+tfdoc userguide

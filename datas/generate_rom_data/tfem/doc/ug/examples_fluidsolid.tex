@@ -1,0 +1,255 @@
+% !TEX root = userguide.tex
+
+\def\headdate{31th December 2008}
+
+\section{Fluid-solid interaction}
+\label{sec:fluidsolid}
+
+In this section we will briefly describe fluid-solid interaction and give some
+examples.
+
+\subsection{Interaction constraint}
+
+In fluid-solid interaction problems we have a fluid region $\Omega_\text{f}$
+and a solid region $\Omega_\text{s}$. The interface between the fluid and the
+solid is denoted by $\Gamma_\text{sf}$.
+\begin{center}
+   \includegraphics[scale=0.5]{fluid-solid}
+\end{center}
+
+The fluid will be described by the velocity $\vek u(\vek x,t)$ and 
+additional quantities such as pressure $p(\vek x,t)$ for incompressible fluids
+and structure parameters in case of complex fluids.
+Here we assume that the solid is elastic
+and can be described by the displacement $\vek d(\vek x,t)$ with respect to
+some reference configuration. If the solid is incompressible we need the 
+quantity pressure $p(\vek x,t)$ as well.
+
+Both the fluid and solid region is governed by the mass balance, 
+momentum balance, constitutive equation and suitable boundary and initial
+conditions. In addition we assume the `no-slip' condition and a force balance
+at the interface $\Gamma_\text{sf}$ between fluid and solid:
+\begin{align}
+   \vek t_\text{f}+\vek t_\text{s} &= \vek 0 \label{eq:forcebalance} \\
+    \vek u - \dot{\vek d} &= \vek 0 \label{eq:noslip}
+\end{align}
+where $\vek t_\text{f}$ is the traction on the fluid,
+$\vek t_\text{s}$ the traction on the solid,
+$\vek u$ is the velocity of the fluid and $\vek d$ is the displacement of
+the solid relative to the reference configuration.
+
+We will impose the interface conditions Eqs.~\eqref{eq:forcebalance} and
+\eqref{eq:noslip} using a Lagrange multiplier. However to avoid derivatives
+in constraints we first apply time-discretization 
+to Eq.~\eqref{eq:noslip}, for example:
+\begin{align}
+\intertext{Euler implicit}
+   \vek u_{n+1}-\frac{\vek d_{n+1}-\vek d_n}{\Delta t}&=\vek 0
+   \label{eq:constr_solid_fluid_Euler}\\
+\intertext{Crank-Nicolson}
+   \frac12(\vek u_{n+1}+\vek u_n)-\frac{\vek d_{n+1}-\vek d_n}{\Delta t}&=\vek 0
+   \label{eq:constr_solid_fluid_CN}\\
+\intertext{second-order backwards differencing (Gear)}
+   \vek u_{n+1}-\frac{\frac32\vek d_{
+              n+1}-2\vek d_n+\frac12\vek d_{n-1}}{\Delta t}&=\vek 0
+   \label{eq:constr_solid_fluid_BDF2}
+\end{align}
+where $\Delta t=t_{n+1}-t_n$ is the time step. Note, that the time-derivative
+of $\vek d$ is in a Lagrangian sense and that the corresponding velocity
+at the interface needs to be evaluated in that sense.
+Therefore the Gear method is easier to implement than the Crank-Nicolson method
+in a fictitious domain setting if second-order time stepping is needed.
+
+Focusing now on the Euler implicit scheme
+we have the following constraint term in the
+saddle point problem:
+\begin{equation}
+   \vek\lambda\cdot(\vek u_{n+1}-\frac{\vek d_{n+1}-\vek d_n}{\Delta t})
+\label{eq:saddlepoint}
+\end{equation}
+where $\vek\lambda$ is a Lagrange multiplier. Variation leads to
+\begin{equation}
+   \delta\vek\lambda\cdot(\vek u_{n+1}-\frac{\vek d_{n+1}-\vek d_n}{\Delta t})+
+   \delta\vek u_{n+1}\cdot\vek\lambda
+   -\delta\vek d_{n+1}\cdot\frac{1}{\Delta t}\vek\lambda
+\end{equation}
+where we have ignored the dependence of $\vek u_{n+1}$ on $\vek d_{n+1}$ for
+fictitious domain method\footnote{
+Strictly speaking we need to take into account
+the dependence of $\vek u_{n+1}$ on $\vek d_{n+1}$ for
+the fictitious domain method. Variation of Eq.~\eqref{eq:saddlepoint}
+leads to
+\[
+   \delta\vek\lambda\cdot(\vek u_{n+1}-\frac{\vek d_{n+1}-\vek d_n}{\Delta t})+
+   \delta\vek u_{n+1}\cdot\vek\lambda-
+   \delta\vek d_{n+1}\cdot\big(-(\nabla\vek u)_{n+1}^T+
+               \frac{1}{\Delta t}\ten{I}\big)\cdot\vek\lambda
+\]
+The additional term involving the velocity gradient gives an additional forcing
+on the solid. However compared with the other term in the solid forcing, it will
+vanish for $\Delta t\rightarrow0$. Therefore we think this term might be
+an artifact of putting a constraint on a time discretized equation.
+}.
+The forcing on the fluid will be $\vek\lambda$, whereas the forcing on
+the solid will be $-\vek\lambda/\Delta t$. Therefore we need
+to multiply the momentum balance of the solid with the factor $1/\Delta t$ to
+get the correct force balance Eq.~\eqref{eq:forcebalance} at the fluid-solid
+interface. Note that this factor depends on the time-discretization used!
+
+We will apply 
+an iteration scheme to require equilibrium for the solid at each time step.
+The constraint, like Eq.~\eqref{eq:constr_solid_fluid_Euler}, is in fact a
+nonlinear equation if the fictitious domain method is applied,
+since $\vek u_{n+1}$ depends on $\vek d_{n+1}$ in that case. However, we will
+not take this into account in the linearization and therefore we will apply a
+Picard like iteration scheme for the constraint.
+
+\subsection{A fluid flowing in a channel with an elastic beam attached to the
+wall: fluid-solid interaction}
+\label{sec:elastic2}
+                                                                                
+We consider the Stokes equation for a 2D channel problem. Attached to the wall
+there is an elastic beam that bends due to the friction forces of the fluid
+imposed on the solid. The flow is periodically reversed.
+The interaction between the fluid and the solid is
+modeled using a constraint on a `two-sided' object (see
+Sec.~\ref{sec:objects}). The constraint is put on the surface of the solid.
+
+The object consists of
+points that are positioned at the nodal points of the solid\footnote{The points
+on the object does not have to be equal to the nodal points of the solid, but
+that is what we did here.}
+The constraint equation
+Eq.~\eqref{eq:noslip} will be discretized using collocation
+and solved in a Lagrangian way. The
+points on the object move with the solid and refer to the
+same material point at any time. Eq.~\eqref{eq:noslip} is
+discretized using an implicit Euler scheme as given by
+Eq.~\eqref{eq:constr_solid_fluid_Euler}.
+At each time step there is
+an iteration scheme to require equilibrium at the end of the time step. The
+iteration scheme uses the linear viscous matrix, the Newton-Raphson
+linearization matrix of the solid and a Picard scheme for the constraint
+equation Eq.~\eqref{eq:constr_solid_fluid_Euler}.
+
+The example file is \texttt{elastic2.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample elastic}
+\end{quote}
+The input file is \texttt{input\_elastic2.txt}.
+                                                                                
+Some notes on the source:
+\begin{listing}{396}
+
+!   use boundary curve
+
+    call add_to_mesh ( mesh, object='curve', objectcurve=9, typeofobject=2, &
+      excludegroups=[2], excludegroups2=[1], excludecurves=[5] ) 
+
+\end{listing}
+Here the `two-sided' objects is created that connects the fluid with the solid.
+\begin{listing}{428}
+
+! create updatemesh from real mesh:
+!   mesh: the original mesh. For the elastic solid the reference configuration.
+!   updatemesh: copy of the original mesh, except for the
+!               coordinates of the nodal points, which are redefined and
+!               updated after each time step.
+  call copy ( mesh, updatemesh )
+  call fill_mesh_parts ( updatemesh )
+
+\end{listing}
+Here a mesh \texttt{updatemesh} is created by copying all data in the
+original mesh. The coordinates of \texttt{updatemesh} will be
+updated after each time step so that it can be in plotting.
+Note, that \texttt{copy} is a generic routine that in this case copies 
+\texttt{mesh} to \texttt{updatemesh}, but only the `basic' components.
+Therefore, \texttt{fill\_mesh\_parts} is necessary to make a full mesh.
+\begin{listing}{464}
+! constraint between the fluid and the solid
+
+  call define_constraint ( mesh, input_probdef, object=1, &
+    discretization='collocation', nodedof=2, physq=1 )
+
+\end{listing}
+Here the constraint is defined on the `two-sided' objects.
+\begin{listing}{476}
+
+! all displacements of the solid
+  call create_subscript ( mesh, problem, disp, physqarr=[1], groups=[2], &
+    fillnodes=.true. )
+\end{listing}
+Here a vector subscript is created that points to the displacement degrees of
+freedom in the solid. In the subscript (\texttt{disp}) also the nodes involved
+in the subscript are stored to be used later in updating the coordinates in 
+\texttt{updatemesh}.
+\begin{listing}{555}
+
+!     fluid
+      call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+        coefficients=coefficients_f, elgroup1=1 )
+
+!     solid
+      call build_system ( mesh, problem, sysmatrix, rhsd, &
+        elemsub=elastic_elem, coefficients=coefficients_s, &
+        oldvectors=oldvectors, elgroup1=2, addmatvec=.true., &
+        factormat=1._dp/deltat, factorvec=1._dp/deltat )
+
+!     coupling
+      call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+        elemsub=elementc, addmatvec=.true. )
+
+\end{listing}
+Here the system is build for the fluid, solid and constraint. Note, that the 
+solid system is multiplied by a factor of $1/\Delta t$ to create a correct
+force balance between fluid and solid.
+\begin{listing}{613}
+
+!   update coordinates of mesh
+
+    updatemesh%coor(disp%nodes,:) = mesh%coor(disp%nodes,:) + &
+           transpose ( reshape (soln%u(disp%s),[2,nnd]) )
+
+\end{listing}
+Here the coordinates in \texttt{updatemesh} are updated. Note the use of
+\texttt{disp\%nodes}.
+
+After running the program by
+\begin{quote}
+   \texttt{elastic2 < input\_elastic2.txt}
+\end{quote}
+we get the results shown in Figs.~\ref{fig:velocityfluid} and
+\ref{fig:pressurebeam}.
+Note, that the beam is `wet': there is also fluid inside the beam having the
+same viscosity as the outside fluid. This creates a kind of viscoelastic solid.
+Depending on the flexibility of the beam
+the fluid stresses inside the beam can become important. These can be reduced
+by lowering the viscosity inside the beam.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{velocity0200}
+   \end{center}
+   \caption{Velocity of the fluid and the deformed beam at time $t=10$.}
+    \label{fig:velocityfluid}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \hspace*{1.6cm}\includegraphics[scale=0.7]{pressure2_contour}
+   \end{center}
+   \caption{Pressure in the beam at time $t=10$.}
+    \label{fig:pressurebeam}
+\end{figure}
+
+\subsection{A fluid flowing in a channel with an elastic beam attached to the
+wall: fluid-solid interaction; weak constraints}
+\label{sec:elastic4}
+
+(These examples have been developed by Ioannis Dimakopoulos of the TU/e).
+
+The examples are similar to the example in Sec.~\ref{sec:elastic4}, but now
+it is possible to use a weak constraint for the fluid-solid interaction.
+The example file \texttt{elastic4.f90} use constraints on the solid-fluid interface, whereas
+the example file  \texttt{elastic5.f90} uses
+ a constraint distributed on the whole solid domain and a velocity profile
+sinusoidal in time.

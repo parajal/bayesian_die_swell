@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# showmodules: show contents of modules
+
+function showcontents ()
+{
+  if [ ! -f $1 ]
+  then
+    echo "File not found: " $1
+    exit
+  fi
+  module=`grep '^ *module ' $1 | sed -e "/^.*procedure/d" | \
+         sed -e "s/^.*module //"`
+  echo ""
+  echo MODULE: $module
+  echo ""
+  echo " Derived types:"
+  echo ""
+  grep "end type" $1 | sed -e "s/^ .*end type /   /"
+  echo ""
+  echo " Subroutines:"
+  echo ""
+  grep "end subroutine" $1 | sed -e "s/^ .*end subroutine /   /"
+  echo ""
+}
+
+if [ $# -eq 0 ]
+then
+
+  . settfemroot
+
+  if [ "$tp" = . ]; then
+    cwd=`pwd`
+    tp=`dirname $cwd`
+  fi
+
+  . $tp/bin/setsrcdirs
+
+  for dir in $SRCDIRS
+  do
+    cd $tp/$dir
+    echo ""
+    echo SOURCEDIRECTORY $dir:
+    echo ""
+    if [ -n "`ls *.f90 2>/dev/null`" ]; then
+      for file in *.f90
+      do
+        showcontents $file
+      done
+    fi
+    if [ -n "`ls *.F90 2>/dev/null`" ]; then
+      for file in *.F90
+      do
+        showcontents $file
+      done
+    fi
+  done
+
+else
+
+  while  [ -n "$1" ]
+  do
+    showcontents $1
+    shift
+  done
+
+fi

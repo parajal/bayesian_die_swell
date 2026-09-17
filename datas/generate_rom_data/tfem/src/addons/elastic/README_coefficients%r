@@ -1,0 +1,14 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+1   C1 for the Mooney-Rivlin model 
+    Note: set C1=G/2 for the special case of the neo-Hookean model. Here G is
+    the modulus.
+
+2   C2 for the Mooney-Rivlin model 
+    Notes:
+     - set C2=0 for the special case of the neo-Hookean model.
+     - If model=coefficients%i(3) set to 1 terms with C2 are not even computed
+       and coefficients%i(2) is not used.
+
+3-50 reserved for future use

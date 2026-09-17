@@ -1,0 +1,19 @@
+&comppar
+    rho = 0.1,           ! density
+    grv = 10.0,          ! gravity constant g
+    numtimesteps = 1000  ! number of time steps
+    plot_mesh_every = 10 ! plot mesh every .. steps
+    eta_s = 0.1          ! solvent viscosity
+    eta_p = 1.0          ! polymer viscosity
+    lambda = 2.0         ! relaxation time
+    alphapar = 0.01      ! alpha parameter in the Giesekus model
+    omega = 1.0          ! angular rate of the inner wall 
+    gamma_fa = 0.02      ! surface tension coefficient fluid-air interface
+    dgamma_w = 0.0       ! surface tension difference fluid-air wrt the wall
+    surface_tension = T  ! include surface tension
+    deltat = 2.e-1       ! time step
+    rs_gup = 1.5         ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.5         ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_c  = 1.0          ! real_storage for the conformation LU (HSL)
+    is_c  = 1.5          ! integer_storage for conformation LU (HSL)
+/

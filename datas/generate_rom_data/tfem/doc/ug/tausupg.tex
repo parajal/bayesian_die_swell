@@ -1,0 +1,181 @@
+% !TEX root = userguide.tex
+
+\chapter{Factor $\tau$ and $\text{Pe}_h$ in the SUPG method}
+\pgst{tfemchA}
+\label{chap:tausupg}
+
+\def\chaptertitle{Factor $\tau$ and $\text{Pe}_h$ in the SUPG method}
+\def\headdate{11th February 2020}
+
+The stabilization factor $\tau$ in the SUPG
+method is given by (see Eq.~\eqref{eq:taufactor}):
+\begin{equation}
+       \tau = \frac{\beta h}{2 U}
+    \label{eq:taufactor_A}
+\end{equation}
+where $\beta$ is a dimensionless parameter,
+$h$ is a typical size of the element in the direction of velocity and $U$ is a
+characteristic velocity magnitude. For convection-diffusion problems the parameter $\beta$ is taken to be a function of the mesh P\'{e}clet number $\text{Pe}_h$, given by
+\begin{equation}
+  \mathrm{Pe}_h = \frac{U h}{2\nu}\label{eq:PehA}
+\end{equation}
+where $\nu$ is a diffusion coefficient (dimension: [L$^2$/T]).
+In this appendix the options in \tfem\ for choosing $h$ and $U$ in the computing of $\tau$ and $\mathrm{Pe}_h$ will be discussed.
+
+\section{The characteristic length $h$}
+
+The characteristic size of an element in the direction of the velocity,
+ $h$ needs to be chosen carefully.
+If taken too small, wiggly solutions are generated, even in
+smooth flows like a flow around a sphere. If taken too large, numerical
+instabilities can be generated leading to fast blow up of the solution. Furthermore,
+for deformed/stretched elements the optimal value of $h$ depends on the direction
+of the local velocity vector.
+
+In \tfem\ the choice for $h$ is determined by the parameters \texttt{htype} and 
+\texttt{hlocation}, where the latter only indicates whether $h$ is a constant
+in the element (\texttt{hlocation=1}; computed in the center of the element) or
+ different for each integration point (\texttt{hlocation=2}).  
+
+\subsection{Projection (\texttt{htype=1})}
+
+A possible definition for $h$ is the projection method as suggested by Brooks
+and Hughes \cite{Brooks82}:
+\begin{equation}
+   h = \frac{|\vek h_1\cdot \vek u| + |\vek h_2\cdot \vek u|}{\|\vek u\|}
+\end{equation}
+where $\vek u$ is the velocity vector and $\vek h_1$ and $\vek h_2$ are defined
+in Figure~\ref{fig:appA} for a quadrilateral element.
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[scale=0.8]{quad}
+\caption{Projection in quad element.}
+\label{fig:appA}
+\end{center}
+\end{figure}
+
+It is possible to define one $h$ value for an element and then the velocity in the center of the element is used for defining $h$ (\texttt{hlocation=1}).
+It is however possible to define the value $h$ in each integration point separately using the
+local velocity vector (\texttt{hlocation=2}). 
+
+Although the projection method works quite well in 2D for viscoelastic fluid
+flow, preliminary calculations in 3D seem to suggest that this method is not
+very stable for the natural extension to hexahedral elements. Also the method
+is quite ad-hoc and it is not obvious how to extend it to triangular and
+tetrahedral shaped element. Therefore we will discuss a different method based
+on mapping.
+
+\subsection{Mapping (\texttt{htype=2})}
+
+For deriving an easy but general formula for $h$ that can be used for each
+element type we assume the following:
+\begin{enumerate}
+   \item For elements that have a shape that can be
+         obtained from the reference element by 
+         isotropic expansion only, it is sufficient to have an element size
+         $h$ independent from the direction of the velocity. For this we will
+         take
+          \[
+               h = h_0 \times \texttt{1D expansion factor along a line}
+          \]
+          where $h_0$ is the typical size of the reference element\footnote{The reference
+          element for quadrilaterals and hexahedra is taken to be the standard square reference element
+          with edge length of 2. For a triangle or tetrahedron the standard reference element is insufficient, since
+          the edges are not of the same length. Therefore, the regular triangle/tetrahedron
+          having the length of all edges equal to 1 will be used. This requires an additional mapping matrix $\mat F$
+          from the standard to the regular reference element of
+          \[
+              \mat F = \begin{pmatrix}
+                          1 & \frac12 \\[3pt]
+                          0 & \frac12\sqrt{3}
+                       \end{pmatrix}
+         \qquad\text{and}\qquad
+              \mat F = \begin{pmatrix}
+                          1 & \frac12 & \frac12 \\[3pt]
+                          0 & \frac12\sqrt{3} &\frac16\sqrt{3} \\[3pt]
+                          0 & 0 & \frac13\sqrt{6}
+                       \end{pmatrix}
+          \]
+          for a triangle and a tetrahedron, respectively. For a prism only the triangular base needs to be transformed and the mapping matrix $\mat F$ from the standard to the regular reference element becomes
+          \[
+              \mat F = \begin{pmatrix}
+                          1 & \frac12 & 0 \\[3pt]
+                          0 & \frac12\sqrt{3} & 0\\[3pt]
+                          0 & 0 & 1 
+                       \end{pmatrix}
+          \]
+          }, for which
+          we take the average length derived from the area or volume. So we
+          get: $h_0=2$ for quadrilaterals and hexahedra, $h_0=\sqrt[4]{3}/2$ for
+          triangles, $h_0=(\sqrt{2}/12)^{\frac13}$ for tetrahedra, 
+          $h_0=(\sqrt{3}/2)^{\frac13}$ for prisms and $h_0=\sqrt[3]{4}$ for pyramids.
+   \item For elements of arbitrary shape we take a circle (2D) or sphere (3D)
+         in the reference element having a diameter of $h_0$. After mapping 
+         the circle/sphere onto the actual element we get an ellipse (2D) or
+         ellipsoid (3D). We define
+         $h$ as the size of the ellipse/ellipsoid (3D) in the
+         direction of the velocity. If we denote the
+         mapping tensor of the reference element onto the actual element
+         by $\ten F$, we find that
+         \[
+            \frac{\vek u}{\|\vek u\|} h= \ten F\cdot \vek e_0h_0 
+         \]
+         where $\vek e_0$ is a vector in the reference element on the unit
+         circle/sphere. Taking the inverse and the norm we find that
+         \[
+             h= \frac{h_0\|\vek u\|}{ \|\ten F^{-1}\cdot\vek u\|}
+         \]
+\end{enumerate}
+The idea of using the mapping tensor for obtaining $h$ has been introduced in
+\cite{Hughes86}, apparently using a general value of $h_0=2$.
+
+It is possible to define one $h$ value for an element and then the velocity in the center of the element is used for defining $h$ (\texttt{hlocation=1}).
+It is however possible to define the value $h$ in each integration point separately using the
+local velocity vector (\texttt{hlocation=2}). 
+
+Early calculations seem to suggest that the mapping
+technique has (much) better stability properties for 3D viscoelastic flow than
+the projection technique.
+
+\subsection{Constant $h$ defined per element, independent from the velocity vector (\texttt{htype=3})}
+
+The most simple method is taking a constant value $h$ for an element only depending on the size of the element and independent of the velocity. For that, we take  $h=\sqrt{A_\text{e}}$ (2D) and $h=\sqrt[3]{V_\text{e}}$ (3D) with
+$A_\text{e}$ and $V_\text{e}$ the area and volume of the element, respectively.
+
+NOTE: this choice of $h$ is expected to work best for non-stretched meshes, such as using triangles and tetrahedrons that have close to optimal shape (all angles equal).
+
+\section{The characteristic velocity $U$}
+
+Various possibilities exist for computing a characteristic velocity $U$
+in an element:
+\begin{enumerate}
+   \item The magnitude of the velocity in the center of the element:
+\[
+         U = \|\vek u_0\|
+\]
+where $\vek u_0$ is the velocity in the center (of gravity) of the element.
+This approach, already suggested in \cite{Brooks82}, works quite well in
+regions where the velocity is nearly constant.
+However, near the center of a vortex, the value of $U$ can be much smaller than
+the velocity magnitude in the integration points leading to a value for $\tau$
+that is much too large. This can lead to numerical instabilities.
+   \item The average of the magnitude of the velocities in all integration
+points:
+\[
+         U = \frac1N\sum_{i=1}^N\|\vek u_i\|
+\]
+where $N$ is the number of integration points in the element.
+This procedure
+works quite well. It resembles the procedure in \cite{Fan97}, where the
+average of the values in the vertices is being used. It is claimed in
+\cite{Fan97} that this procedure has accuracy advantages in a spectral element
+context. It is unclear whether this is true in a standard FEM approach.
+   \item The magnitude of the velocity in the integration points:
+\[
+         U_i = \|\vek u_i\|, \quad i=1,\dots,N
+\]
+The characteristic velocity is now different for each integration point. 
+This procedure also works quite well.
+   \item A global velocity scale $U=U_\text{glob}$, the same for all elements.
+This procedure has been used in \cite{Lunsmann93}.
+\end{enumerate}

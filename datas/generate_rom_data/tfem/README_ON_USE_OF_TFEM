@@ -1,0 +1,42 @@
+Use of TFEM
+===========
+
+I have developed TFEM for academic research (and also advanced courses) on
+numerical methods in complex flows. I expect users to share code and/or
+examples with other users by submitting these to me for possible inclusion
+in TFEM. In this way we can all benefit from each others' work.
+
+The use of TFEM is free of charge for academic researchers and students.
+However, it is not open source software. It is not allowed to give TFEM to
+others without my permission.
+
+In order to be able to have all the decision rights, I will not allow multiple
+copyright owners. Source code that goes in must have a single copyright
+owner (me) or no copyright at all. Examples usually have no copyright.
+Not all code that is developed together with TFEM needs to go in however,
+but then it will not be maintained by me.
+
+The vast majority of code has been developed by me. I have invested a
+substantial amount of time in TFEM. Therefore, giving the source to someone
+is not just one-way traffic. I expect something in return, from which our group
+benefits in some way. For example, by being a coauthor on papers from work
+we do together that involves TFEM. If you have permission to use TFEM for your
+own research, at least add at an acknowledgment to a paper similar to:
+"The authors thank M.A. Hulsen at the Eindhoven University of Technology (TU/e)
+for access to the TFEM software libraries."
+
+As has been stated above, TFEM has been primarily developed for academic
+research. However, I will not explicitly rule out the possibility of
+commercial use. In any case, the use of TFEM beyond university education
+and research is not allowed without my permission.
+
+Users of TFEM must agree with the rules as given above.
+
+Martien Hulsen
+m.a.hulsen@tue.nl
+
+History:
+28-04-2008: Initial version
+05-04-2011: Stressed the primary use of academic research and leave the
+            possibility for commercial use open.
+17-04-2024: Add a sentence about adding an acknowlegment in a paper.

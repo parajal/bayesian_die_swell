@@ -1,373 +1,164 @@
-"""Compact non-intrusive curve ROM: train and predict only."""
+"""Compact non-intrusive curve ROM: POD + GPR."""
 
+import warnings
 from pathlib import Path
-from typing import Optional, Sequence, Tuple
 
-from scipy.interpolate import RBFInterpolator
 import numpy as np
+from scipy.spatial.distance import cdist
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 MODEL_PARAMETER_NAMES = {
+    "ratio": ("Sr",),
     "oldroyd": ("lambda", "beta"),
     "giesekus": ("lambda", "beta", "alpha"),
     "ptt": ("lambda", "beta", "epsilon"),
 }
+SCALERS = {"minmax": MinMaxScaler, "standard": StandardScaler}
 
 
-def normalize_model_family(model_family: str) -> str:
-    """Return a canonical constitutive-model name."""
+def normalize_model_family(model_family):
     name = str(model_family).strip().lower()
     if name not in ("auto", *MODEL_PARAMETER_NAMES):
-        allowed = "', '".join(("auto", *MODEL_PARAMETER_NAMES))
-        raise ValueError(f"model must be one of '{allowed}'.")
+        raise ValueError(f"model must be one of {['auto', *MODEL_PARAMETER_NAMES]}")
     return name
 
 
 class ROM:
-    """Train an SVD + RBF/GPR reduced model for curve snapshots.
+    """POD basis + GPR from material parameters (and optional U_avg) to POD coefficients."""
 
-    The Bayesian-inference class inherits this, so the inference object *is* the
-    ROM: ``train()`` populates it in place and ``predict()`` is the forward model.
-    """
+    lam_bounds = beta_bounds = third_parameter_bounds = alpha_bounds = epsilon_bounds = sr_bounds = None
+    use_uavg = is_trained = False
+    pressure_model = pressure_train = None
 
-    def __init__(
-        self,
-        data_dir: "str | Path",
-        filenames_train: Sequence[str] = ("curve4_y.txt", "parameters.txt"),
-        filenames_test: Sequence[str] = ("curve4_y_test.txt", "parameters_test.txt"),
-        method: str = "gpr",
-        scaler: Optional[str] = "minmax",
-        eps: float = 1e-6,
-        kernel: str = "quintic",
-        smoothing: float = 0.0,
-        epsilon: Optional[float] = None,
-        gpr_restarts: int = 20,
-        random_state: int = 42,
-        model_family: str = "auto",
-    ) -> None:
+    def __init__(self, data_dir, filenames_train=("curve4_y.txt", "parameters.txt"),
+                 scaler="minmax", eps=1e-6, gpr_restarts=20, random_state=42,
+                 model_family="auto"):
         self.data_dir = Path(data_dir)
         self.filenames_train = list(filenames_train)
-        self.filenames_test = list(filenames_test)
-        self.method = method.lower()
-        self.scaler = None if scaler is None else scaler.lower()
-        self.eps = float(eps)
-        self.kernel = kernel
-        self.smoothing = float(smoothing)
-        self.epsilon = None if epsilon is None else float(epsilon)
-        self.gpr_restarts = int(gpr_restarts)
-        self.random_state = int(random_state)
-        self.param_scaler = None
+        self.scaler, self.eps, self.gpr_restarts, self.random_state = scaler, eps, gpr_restarts, random_state
         self.model_family = normalize_model_family(model_family)
-        self._auto_material_parameters = self.model_family == "auto"
+        self._set_names("giesekus" if self.model_family == "auto" else self.model_family)
 
-        initial_model = "giesekus" if self._auto_material_parameters else self.model_family
-        self._set_material_parameter_names(MODEL_PARAMETER_NAMES[initial_model])
+    def _set_names(self, family):
+        self.material_parameter_names = list(MODEL_PARAMETER_NAMES[family])
+        self.n_material_params = len(self.material_parameter_names)
+        self.third_parameter_name = self.material_parameter_names[2] if self.n_material_params == 3 else None
 
-        self.param_cols = list(range(self.n_material_params))
-        self.lam_idx = 0
-        self.beta_idx = 1
-        self.use_uavg = False
-        self.lam_bounds = None
-        self.beta_bounds = None
-        self.third_parameter_bounds = None
-        self.alpha_bounds = None
-        self.epsilon_bounds = None
-        self.is_trained = False
-
-    def _set_material_parameter_names(self, names: Sequence[str]) -> None:
-        names = tuple(str(name) for name in names)
-        if len(names) not in (2, 3) or names[:2] != ("lambda", "beta"):
-            raise ValueError("material parameters must be [lambda, beta] or [lambda, beta, third].")
-        self.material_parameter_names = list(names)
-        self.n_material_params = len(names)
-        self.third_parameter_name = names[2] if len(names) == 3 else None
-        if len(names) == 3:
-            self.alpha_idx = 2
-            return
-        self.alpha_idx = -1
-
-    def train(self) -> None:
-        if not all((self.data_dir / f).exists() for f in self.filenames_test):
-            self.filenames_test = self.filenames_train.copy()
-
-        self.snapshots_train, self.parameters_train = self._load_pair(self.filenames_train)
-        self.snapshots_test, self.parameters_test = self._load_pair(self.filenames_test)
-
-        self._set_parameter_columns()
-        self._compute_basis()
-
-        x_train = self._fit_transform(self.parameters_train[:, self.param_cols])
-        if self.method == "rbf":
-            self.model = self._train_rbf(x_train, self.coeffs)
-        elif self.method == "gpr":
-            self.model = self._train_gpr(x_train, self.coeffs)
-        else:
-            raise ValueError("method must be 'rbf' or 'gpr'.")
-
-        self._set_rom_bounds()
-        self.is_trained = True
-
-    def predict(
-        self,
-        lambda_val: float,
-        beta_val: float,
-        alpha_val: Optional[float] = None,
-        u_avg_val: Optional[float] = None,
-        epsilon_val: Optional[float] = None,
-    ) -> np.ndarray:
-        if not self.is_trained:
-            raise RuntimeError("Call train() before predict().")
-
-        params = [float(lambda_val), float(beta_val)]
-        if self.alpha_idx >= 0:
-            if epsilon_val is not None:
-                if self.third_parameter_name != "epsilon":
-                    raise ValueError("epsilon_val is only valid for model='ptt'.")
-                if alpha_val is not None and not np.isclose(float(alpha_val), float(epsilon_val)):
-                    raise ValueError("Pass only one value for the third material parameter.")
-                third_value = epsilon_val
-            else:
-                third_value = alpha_val
-            if third_value is None:
-                arg_name = "epsilon_val" if self.third_parameter_name == "epsilon" else "alpha_val"
-                raise ValueError(
-                    f"{arg_name} is required because the ROM was trained with {self.third_parameter_name}."
-                )
-            params.append(float(third_value))
-
-        if self.use_uavg:
-            if u_avg_val is None:
-                raise ValueError("u_avg_val is required because the ROM was trained with U_avg.")
-            params.append(float(u_avg_val))
-
-        x = self._transform(np.asarray([params], dtype=float))
-        curve = self._reconstruct(self._predict_coefficients(x)).ravel()
-        if not np.all(np.isfinite(curve)):
-            raise FloatingPointError("ROM prediction produced NaN/Inf.")
-        return curve
-
-    def rom_predict_curve(
-        self,
-        lambda_val: float,
-        beta_val: float,
-        u_avg_val: Optional[float] = None,
-        alpha_val: Optional[float] = None,
-        epsilon_val: Optional[float] = None,
-    ) -> np.ndarray:
-        """predict() using the loaded observation's U_avg as the default."""
-        if u_avg_val is None:
-            return self.predict(
-                lambda_val,
-                beta_val,
-                alpha_val=alpha_val,
-                u_avg_val=getattr(self, "u_avg_obs", 1),
-                epsilon_val=epsilon_val,
-            )
-        return self.predict(
-            lambda_val,
-            beta_val,
-            alpha_val=alpha_val,
-            u_avg_val=float(u_avg_val),
-            epsilon_val=epsilon_val,
-        )
-
-    def _predict_curves(self, thetas: np.ndarray, u_avg_val: Optional[float] = None) -> np.ndarray:
-        """Vectorized ROM prediction for many material-parameter rows at once.
-
-        ``thetas`` has shape ``(m, n_material)`` (columns lambda, beta and the
-        optional third material parameter). Returns an ``(m, n_points)`` array of
-        curves, numerically equivalent to stacking :meth:`predict` over the rows
-        but with a single surrogate evaluation. Used by the posterior-predictive
-        summaries, which otherwise call the surrogate once per posterior draw.
-        """
-        if not self.is_trained:
-            raise RuntimeError("Call train() before _predict_curves().")
-        thetas = np.atleast_2d(np.asarray(thetas, dtype=float))
-        cols = [thetas[:, 0], thetas[:, 1]]
-        if self.alpha_idx >= 0:
-            if thetas.shape[1] < 3:
-                raise ValueError("thetas must include the third material parameter for this ROM.")
-            cols.append(thetas[:, 2])
-        if self.use_uavg:
-            if u_avg_val is None:
-                raise ValueError("u_avg_val is required because the ROM was trained with U_avg.")
-            cols.append(np.full(thetas.shape[0], float(u_avg_val)))
-        x = self._transform(np.column_stack(cols))
-        curves = self._reconstruct(self._predict_coefficients(x))
-        if not np.all(np.isfinite(curves)):
-            raise FloatingPointError("ROM batch prediction produced NaN/Inf.")
-        return np.asarray(curves, dtype=float)
-
-    def validate_rom(self) -> None:
-        if not self.is_trained:
-            raise RuntimeError("Call train() before validate_rom().")
-
-        params = np.asarray(self.parameters_test, dtype=float)
-        truth = np.asarray(self.snapshots_test, dtype=float)
-        u_col = 3 if self.use_uavg and params.shape[1] > 3 else None
-        groups = np.unique(np.round(params[:, u_col], 8)) if u_col is not None else [None]
-
-        all_errors = []
-        print(f"{'U_avg':>10}  {'n_test':>6}  {'mean rel L2 error':>18}")
-        print("-" * 40)
-        for u in groups:
-            mask = np.isclose(params[:, u_col], u) if u is not None else np.ones(len(params), dtype=bool)
-            errors = []
-            for p, y_true in zip(params[mask], truth[mask]):
-                if self.third_parameter_name == "epsilon" and self.alpha_idx >= 0:
-                    third_kwargs = {"epsilon_val": float(p[self.alpha_idx])}
-                else:
-                    third_kwargs = {
-                        "alpha_val": float(p[self.alpha_idx])
-                        if self.alpha_idx >= 0
-                        else None
-                    }
-                y_pred = self.predict(
-                    float(p[self.lam_idx]),
-                    float(p[self.beta_idx]),
-                    u_avg_val=(float(u) if u is not None else None),
-                    **third_kwargs,
-                )
-                errors.append(
-                    float(np.linalg.norm(y_pred - y_true) / (np.linalg.norm(y_true) + 1e-14))
-                )
-            all_errors.extend(errors)
-            label = f"{u:.4g}" if u is not None else "N/A"
-            print(f"{label:>10}  {len(errors):>6d}  {np.mean(errors):>18.4e}")
-
-        self._rom_val_overall_n = len(all_errors)
-        self._rom_val_overall_err = float(np.mean(all_errors))
-        print("-" * 40)
-        print(f"{'Overall':>10}  {self._rom_val_overall_n:>6d}  {self._rom_val_overall_err:>18.4e}")
-
-    def rom_test_error_summary(self) -> dict[str, float]:
-        if not hasattr(self, "_rom_val_overall_err"):
-            self.validate_rom()
-        return {
-            "num_test_cases": int(self._rom_val_overall_n),
-            "relative_l2_error_mean": float(self._rom_val_overall_err),
-        }
-
-    def _load_pair(self, filenames: Sequence[str]) -> Tuple[np.ndarray, np.ndarray]:
-        if len(filenames) != 2:
-            raise ValueError("filenames must be [curve_file, parameters_file].")
-        y = np.atleast_2d(np.loadtxt(self.data_dir / filenames[0], dtype=float))
-        p = np.atleast_2d(np.loadtxt(self.data_dir / filenames[1], dtype=float))
-        if y.shape[0] != p.shape[0]:
-            raise ValueError("Curve and parameter files must have the same number of rows.")
+    def _load(self, filenames):
+        y, p = (np.loadtxt(self.data_dir / f, ndmin=2) for f in filenames)
+        if len(y) != len(p):
+            raise ValueError("curve and parameter files must have the same number of rows")
         return y, p
 
-    def _set_parameter_columns(self) -> None:
-        params = np.asarray(self.parameters_train, dtype=float)
-        if params.shape[1] < 2:
-            raise ValueError("Training parameters must contain at least lambda and beta columns.")
+    def train_curve(self):
+        Y, P = self.snapshots_train, self.parameters_train = self._load(self.filenames_train)
 
-        self.param_cols = [0, 1]
-        if self._auto_material_parameters:
-            if params.shape[1] > 2 and np.ptp(params[:, 2]) > 1e-12:
-                self._set_material_parameter_names(MODEL_PARAMETER_NAMES["giesekus"])
-                self.param_cols.append(2)
-            else:
-                self._set_material_parameter_names(MODEL_PARAMETER_NAMES["oldroyd"])
-        elif self.n_material_params == 3:
-            if params.shape[1] <= 2:
-                raise ValueError(
-                    f"model='{self.model_family}' requires training parameters "
-                    f"[lambda, beta, {self.third_parameter_name}]."
-                )
-            self.param_cols.append(2)
+        # Parameter columns: material parameters, plus U_avg (column 3) if it varies
+        varies = lambda j: P.shape[1] > j and np.ptp(P[:, j]) > 1e-12
+        auto = self.model_family == "auto"
+        self._set_names(("giesekus" if varies(2) else "oldroyd") if auto else self.model_family)
+        if P.shape[1] < self.n_material_params:
+            raise ValueError(f"training parameters need columns {self.material_parameter_names}")
+        self.use_uavg = bool(auto and varies(3))
+        self.param_cols = list(range(self.n_material_params)) + [3] * self.use_uavg
 
-        if self._auto_material_parameters and params.shape[1] > 3 and np.ptp(params[:, 3]) > 1e-12:
-            self.param_cols.append(3)
+        # POD basis
+        self.snap_mean = Y.mean(axis=0)
+        centered = Y - self.snap_mean
+        U, s, _ = np.linalg.svd(centered.T, full_matrices=False)
+        self.basis = U[:, :max(1, int(np.sum(s >= self.eps * s[0])))]
 
-        self.alpha_idx = 2 if 2 in self.param_cols else -1
-        self.use_uavg = 3 in self.param_cols
+        # Input scaling stored as an affine map: X_scaled = X * a + b
+        X = P[:, self.param_cols]
+        self._a, self._b = np.ones(X.shape[1]), np.zeros(X.shape[1])
+        if self.scaler:
+            sc = SCALERS[self.scaler]().fit(X)
+            self._a, self._b = ((sc.scale_, sc.min_) if self.scaler == "minmax"
+                                else (1 / sc.scale_, -sc.mean_ / sc.scale_))
 
-    def _set_rom_bounds(self) -> None:
-        train = np.asarray(self.parameters_train, dtype=float)
-        if self.lam_bounds is None:
-            self.lam_bounds = (
-                float(np.min(train[:, self.lam_idx])),
-                float(np.max(train[:, self.lam_idx])),
-            )
-        if self.beta_bounds is None:
-            self.beta_bounds = (
-                float(np.min(train[:, self.beta_idx])),
-                float(np.max(train[:, self.beta_idx])),
-            )
-        if self.alpha_idx >= 0 and self.third_parameter_bounds is None and self.alpha_bounds is not None:
-            self.third_parameter_bounds = self.alpha_bounds
-        if self.alpha_idx >= 0 and self.third_parameter_bounds is None:
-            self.third_parameter_bounds = (
-                float(np.min(train[:, self.alpha_idx])),
-                float(np.max(train[:, self.alpha_idx])),
-            )
-        if self.alpha_idx >= 0:
-            self.alpha_bounds = self.third_parameter_bounds
+        # GPR, then precompute a fast predictor: curve = amp * exp(-d²/2) @ W + mean
+        self.model = self._gpr(self._scale(X), centered @ self.basis)
+        k = self.model.kernel_
+        self._amp, self._ls = k.k1.constant_value, k.k2.length_scale
+        self._Xtrain = self.model.X_train_ / self._ls
+        self._W = self.model.alpha_.reshape(len(X), -1) @ self.basis.T
+
+        self._set_bounds()
+        self.is_trained = True
+        return self
+
+    def _gpr(self, X, Y):
+        kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(np.ones(X.shape[1]), (1e-3, 1e3))
+        gpr = GaussianProcessRegressor(kernel, n_restarts_optimizer=self.gpr_restarts,
+                                       random_state=self.random_state)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", ConvergenceWarning)
+            return gpr.fit(X, Y)
+
+    def _scale(self, X):
+        return X * self._a + self._b
+
+    def _inputs(self, thetas, u_avg_val=None):
+        """Scaled GPR inputs for material-parameter rows, plus U_avg if trained with it."""
+        X = np.atleast_2d(np.asarray(thetas, float))[:, :self.n_material_params]
+        if self.use_uavg:
+            u = getattr(self, "u_avg_obs", None) if u_avg_val is None else u_avg_val
+            X = np.column_stack([X, np.full(len(X), float(u))])
+        return self._scale(X)
+
+    def _set_bounds(self):
+        """Fill any bounds not set by the user from the training range."""
+        lo, hi = self.parameters_train.min(axis=0), self.parameters_train.max(axis=0)
+        rng = lambda j: (float(lo[j]), float(hi[j]))
+        if self.model_family == "ratio":
+            self.sr_bounds = self.sr_bounds or rng(0)
+            return
+        self.lam_bounds = self.lam_bounds or rng(0)
+        self.beta_bounds = self.beta_bounds or rng(1)
+        if self.third_parameter_name:
+            self.third_parameter_bounds = self.alpha_bounds = (
+                self.third_parameter_bounds or self.alpha_bounds or rng(2))
             if self.third_parameter_name == "epsilon":
                 self.epsilon_bounds = self.third_parameter_bounds
 
-    def _compute_basis(self) -> None:
-        self.snap_mean = self.snapshots_train.mean(axis=0)
-        centered = self.snapshots_train - self.snap_mean
-        basis_full, svals, _ = np.linalg.svd(centered.T, full_matrices=False)
-        if svals.size == 0:
-            raise ValueError("Cannot compute ROM basis from empty snapshots.")
-        rel = svals / svals[0] if svals[0] > 0 else svals
-        nmodes = max(1, min(int(np.sum(rel >= self.eps)), basis_full.shape[1]))
-        self.basis = basis_full[:, :nmodes]
-        self.coeffs = centered @ self.basis
+    def _predict_curves(self, thetas, u_avg_val=None):
+        """Curves (m, n_points) for material-parameter rows (m, n_material)."""
+        X = self._inputs(thetas, u_avg_val) / self._ls
+        Y = self._amp * np.exp(-0.5 * cdist(X, self._Xtrain, "sqeuclidean")) @ self._W + self.snap_mean
+        if not np.isfinite(Y).all():
+            raise FloatingPointError("ROM prediction produced NaN/Inf.")
+        return Y
 
-    def _fit_transform(self, x: np.ndarray) -> np.ndarray:
-        x = np.asarray(x, dtype=float)
-        if self.scaler is None:
-            self.param_scaler = None
-            return x
-        if self.scaler == "minmax":
-            from sklearn.preprocessing import MinMaxScaler
+    def predict(self, *theta, u_avg_val=None, alpha_val=None, epsilon_val=None):
+        """Single curve; theta is (Sr,), (lambda, beta) or (lambda, beta, third)."""
+        third = alpha_val if epsilon_val is None else epsilon_val
+        return self._predict_curves([[*theta, third][:self.n_material_params]], u_avg_val)[0]
 
-            self.param_scaler = MinMaxScaler()
-        elif self.scaler == "standard":
-            from sklearn.preprocessing import StandardScaler
+    def rom_predict_curve(self, *theta, u_avg_val=None, alpha_val=None, epsilon_val=None):
+        """Descriptive alias of :meth:`predict` (used by the likelihood and plots)."""
+        return self.predict(*theta, u_avg_val=u_avg_val, alpha_val=alpha_val, epsilon_val=epsilon_val)
 
-            self.param_scaler = StandardScaler()
-        else:
-            raise ValueError("scaler must be None, 'minmax', or 'standard'.")
-        return self.param_scaler.fit_transform(x)
+    # ---------------------------------------------------------------- pressure GPR
+    def train_pressure(self, filename):
+        """Train a GPR from the material parameters to the wall pressure in ``filename``."""
+        P = self.parameters_train
+        self.pressure_train = np.loadtxt(self.data_dir / filename, ndmin=2)
+        if len(self.pressure_train) != len(P):
+            raise ValueError("pressure file rows must match parameters_train rows")
+        self.pressure_model = self._gpr(self._scale(P[:, self.param_cols]), self.pressure_train)
 
-    def _transform(self, x: np.ndarray) -> np.ndarray:
-        x = np.asarray(x, dtype=float)
-        if self.param_scaler is None:
-            return x
-        return self.param_scaler.transform(x)
+    def predict_pressure(self, thetas):
+        """GPR-predicted pressure for one (1-D) or many (2-D) material-parameter rows.
 
-    def _predict_coefficients(self, x: np.ndarray) -> np.ndarray:
-        if self.method == "rbf":
-            return np.asarray(self.model(x), dtype=float)
-        pred = np.asarray(self.model.predict(x), dtype=float)
-        if pred.ndim == 1:
-            return pred.reshape(-1, 1)
-        return pred
-
-    def _reconstruct(self, coeffs: np.ndarray) -> np.ndarray:
-        return coeffs @ self.basis.T + self.snap_mean
-
-    def _train_rbf(self, x: np.ndarray, coeffs: np.ndarray) -> RBFInterpolator:
-        kwargs = dict(kernel=self.kernel, smoothing=self.smoothing)
-        if self.epsilon is not None:
-            kwargs["epsilon"] = self.epsilon
-        return RBFInterpolator(x, coeffs, **kwargs)
-
-    def _train_gpr(self, x: np.ndarray, coeffs: np.ndarray):
-        from sklearn.gaussian_process import GaussianProcessRegressor
-        from sklearn.gaussian_process.kernels import ConstantKernel, RBF
-
-        kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(
-            length_scale=np.ones(x.shape[1]), length_scale_bounds=(1e-3, 1e3)
-        )
-        return GaussianProcessRegressor(
-            kernel=kernel,
-            alpha=1e-10,
-            normalize_y=False,
-            n_restarts_optimizer=self.gpr_restarts,
-            random_state=self.random_state,
-        ).fit(x, coeffs)
+        Returns a 1-D vector for a single theta, else an ``(m, n_pressure)`` array.
+        """
+        if self.pressure_model is None:
+            raise RuntimeError("pressure model untrained; use use_pressure=True and build_rom()")
+        pred = self.pressure_model.predict(self._inputs(thetas))
+        if not np.isfinite(pred).all():
+            raise FloatingPointError("pressure GPR prediction produced NaN/Inf.")
+        pred = pred.reshape(-1, self.pressure_train.shape[1])
+        return pred[0] if np.ndim(thetas) == 1 else pred

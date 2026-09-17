@@ -1,0 +1,23 @@
+Real coefficients for the element routines in this addon.
+---------------------------------------------------------
+
+1   E: Young's modulus.
+
+2   mu_stab: parameter for the stabilized elements
+
+3   nu: Poisson's ratio.
+    NOTE: if coefficient%i(4)=1, the Poisson's ratio is set to 0.5 and 
+    this coefficient is not used.
+
+4   constant change in temperature DT
+
+5   linear coefficient of thermal expansion (alpha)
+
+6-22 reserved for future use 
+           
+23  Pressure level subtracted from the pressure field solution for determining
+    the L2-norm of the error. Used in linear_elastic_L2_error_norm.
+
+24  Normal traction value 
+
+25-50 reserved for future use

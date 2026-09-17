@@ -1,0 +1,281 @@
+% !TEX root = userguide.tex
+
+\chapter{Subdivision of simplexes (triangles, tetrahedrons)}
+\pgst{tfemchA}
+\label{chap:subdivide}
+
+\def\chaptertitle{Subdivision of simplexes (triangles, tetrahedrons)}
+\def\headdate{10th October 2012}
+
+(This appendix has been contributed by Nick Jaensson of the TU/e).\bigskip
+
+The subdivision of a square (the reference region in the eltree for quads) and a cube (the reference region in the 
+eltree for hexahedrons) is quite straightforward. A square can be divided into four subsquares while a cube can be 
+divided into eight subcubes. In both cases the edges of the subfigures will be half of the length of the edges of the 
+initial simplex. However, for triangles and especially tetrahedrons, this subdivision is less trivial. 
+
+\section{Subdivision in 2D: triangles}
+In the eltree for quads, every subelement can be found by two coordinates (the bottom left and top right, given by 
+\texttt{coor(1)} and \texttt{coor(2)} resp.). This system can be used for triangles by adding one piece of 
+information: each triangle can be the upper of lower part of the square. The variable \texttt{conf} (for configuration)
+contains this information by taking the value 1 for lower triangles and the value 2 for upper triangles as shown in 
+in Figure \ref{fig:triangle_confs}.
+
+\begin{figure}[bhtp!]
+\begin{center}
+\includegraphics[width = 0.3\linewidth]{confs}
+\caption{There are two possible configurations for a triangle. }
+\label{fig:triangle_confs}
+\end{center}
+\end{figure}
+
+The subdivision is done by connecting the midpoints of the three edges, this will yield 3 triangles that are similar 
+to the original one, and one that triangle that is flipped. The initial (or 'root' level) of the subdivision will 
+take place on a triangle with \texttt{conf} = 1, \texttt{coor(1) = (0,0)} and \texttt{coor(2) = (1,1)}, which is 
+equal to the reference region for the isoparametric elements in \tfem. The subdivision of both configurations with 
+the resulting \texttt{conf} and \texttt{coor(1)} are shown in Figures \ref{fig:el1} and \ref{fig:el2}. Here, the 
+italic numbers denote the configuration number, the encircled numbers give the numbering of the subelements, and the 
+numbers in a square show the numbering of the vertices. Note that \texttt{coor(2)} is always equal to 
+\texttt{coor(1) + h/2}.
+
+\renewcommand{\arraystretch}{1.5}
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=0.8\textwidth]{el1_triangle}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{4cm} | c }
+%      \hline
+      subel. & coor(1)  & conf  \\ 
+      \hline%\hline
+      1 & ($x_0$,     $y_0$)                     & 1 \\ %\hline
+      2 & ($x_0$,    $y_0$)                     & 2 \\ %\hline
+      3 & ($x_0$ + $\frac{h(1)}{2}$,  $y_0$)    & 1 \\ %\hline
+      4 & ($x_0$, $y_0$ + $\frac{h(2)}{2}$ )    & 1 %\\
+     % \hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of triangles with \texttt{conf = 1}.}    
+\label{fig:el1}
+\end{figure}
+
+
+\renewcommand{\arraystretch}{1.5}
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=0.8\textwidth]{el2_triangle}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{4cm} | c }
+      %\hline
+      subel. & coor(1)  & conf  \\ 
+      \hline%\hline
+      1 & ($x_0$ + $\frac{h(1)}{2}$,  $y_0$)                     & 2 \\% \hline
+      2 & ($x_0$,    $y_0$ + $\frac{h(2)}{2}$)                     & 2 \\% \hline
+      3 & ($x_0$ + $\frac{h(1)}{2}$,  $y_0$ + $\frac{h(2)}{2}$)    & 1 \\% \hline
+      4 & ($x_0$ + $\frac{h(1)}{2}$, $y_0$ + $\frac{h(2)}{2}$ )    & 2 %\\
+     % \hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of triangles with \texttt{conf = 2}.}    
+\label{fig:el2}
+\end{figure}
+
+To fill the root element for triangles correctly, the first call to \texttt{fill\_node\_eltree} will always look 
+like: \newline
+
+\noindent
+\texttt{coor(1,:) = [ 0.0\_dp, 0.0\_dp ] } \newline
+\texttt{coor(2,:) = [ 1.0\_dp, 1.0\_dp ] } \newline
+\texttt{conf = 1}\newline
+\texttt{eltype = 1}\newline
+\texttt{call fill\_node\_eltree ( eltree, coor, conf, eltype )}\newline
+
+
+
+
+
+\section{Subdivision in 3D: tetrahedrons}
+For tetrahedrons, a subdivision into congruent subtetrahedrons is not obvious. In fact, \cite{matousek2011} mention 
+that the 'Hill-simplex' is the only tetrahedron that can be subdivided into eight congruent subtetrahedrons. A Hill-simplex
+is constructed by the vertices (0,0,0), (1,0,0), (1,1,0) and (1,1,1). By performing the subdivision into eight subelements 
+(as shown in \cite{matousek2011}), 5 configurations are found. These configurations can also be subdivided, after which
+it becomes clear that there are only 6 returning configurations. The subdivisions for the 6 possible configurations are 
+shown in Figures \ref{fig:tet_el1} to \ref{fig:tet_el6}. Here the italic numbers denote the configuration number, the 
+encircled numbers give the numbering of the subelements, and the numbers in a square show the numbering of the 
+vertices. The red color means the subelements are found by rotating, whereas the blue ones need an additional mirroring.
+
+\renewcommand{\arraystretch}{1.5}
+
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=0.9\textwidth]{el1_tet}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{5.2cm} | c }
+      %\hline
+      \footnotesize{subel.} & \footnotesize{\texttt{coor(1)}}  & \footnotesize{conf.}  \\ 
+      \hline%\hline
+      1 & ($x_0$,                  $y_0$,                  $z_0$)                  )        & 1 \\% \hline
+      2 & ($x_0 + \frac{h(1)}{2}$, $y_0$,                  $z_0$                   )        & 2 \\% \hline
+      3 & ($x_0 + \frac{h(1)}{2}$, $y_0$,                  $z_0$                   )        & 3 \\% \hline
+      4 & ($x_0 + \frac{h(1)}{2}$, $y_0$,                  $z_0$                   )        & 1 \\% \hline
+      5 & ($x_0 + \frac{h(1)}{2}$, $y_0 + \frac{h(2)}{2}$, $z_0$                   )        & 4 \\% \hline
+      6 & ($x_0 + \frac{h(1)}{2}$, $y_0 + \frac{h(2)}{2}$, $z_0$                   )        & 1 \\% \hline
+      7 & ($x_0 + \frac{h(1)}{2}$, $y_0 + \frac{h(2)}{2}$, $z_0$                   )        & 5 \\% \hline
+      8 & ($x_0 + \frac{h(1)}{2}$, $y_0 + \frac{h(2)}{2}$, $z_0 + \frac{h(3)}{2}$  )        & 1% \\% \hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of tetrahedrons with \texttt{conf = 1}}    
+\label{fig:tet_el1}
+\end{figure}
+
+
+
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=1.0\textwidth]{el2_tet}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{5.2cm} | c }
+      %\hline
+      \footnotesize{subel.} & \footnotesize{\texttt{coor(1)}}  & \footnotesize{conf.}  \\ 
+      \hline%\hline
+      1 & ($x_0$,                  $y_0$,                   $z_0$)                  )        & 2 \\ %\hline
+      2 & ($x_0$,                  $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 2 \\ %\hline
+      3 & ($x_0$,                  $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 6 \\ %\hline
+      4 & ($x_0$,                  $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 4 \\ %\hline
+      5 & ($x_0$,                  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 2 \\ %\hline
+      6 & ($x_0$,                  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 3 \\ %\hline
+      7 & ($x_0$,                  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 1 \\ %\hline
+      8 & ($x_0 + \frac{h(1)}{2}$, $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 2 %\\ %\hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of tetrahedrons with \texttt{conf = 2}}    
+\label{fig:tet_el2}
+\end{figure}
+
+
+
+
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=1.0\textwidth]{el3_tet}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{5.2cm} | c }
+      %\hline
+      \footnotesize{subel.} & \footnotesize{\texttt{coor(1)}}  & \footnotesize{conf.}  \\ 
+      \hline%\hline
+      1 & ($x_0$,                   $y_0$,                   $z_0$)                  )        & 3 \\ %\hline
+      2 & ($x_0$,                   $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 5 \\ %\hline
+      3 & ($x_0$,                   $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 3 \\ %\hline
+      4 & ($x_0$,                   $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 1 \\ %\hline
+      5 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 6 \\ %\hline
+      6 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 2 \\ %\hline
+      7 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0$                   )        & 3 \\ %\hline
+      8 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 3 %\\ %\hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of tetrahedrons with \texttt{conf = 3}}    
+\label{fig:tet_el3}
+\end{figure}
+
+
+
+
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=1.0\textwidth]{el4_tet}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{5.2cm} | c }
+      %\hline
+      \footnotesize{subel.} & \footnotesize{\texttt{coor(1)}}  & \footnotesize{conf.}  \\ 
+      \hline%\hline
+      1 & ($x_0$,                   $y_0$,                   $z_0$)                  )        & 4 \\% \hline
+      2 & ($x_0$,                   $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 1 \\% \hline
+      3 & ($x_0$,                   $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 5 \\% \hline
+      4 & ($x_0$,                   $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 4 \\ %\hline
+      5 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 6 \\% \hline
+      6 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 2 \\% \hline
+      7 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 4 \\% \hline
+      8 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 4 %\\% \hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of tetrahedrons with \texttt{conf = 4}}    
+\label{fig:tet_el4}
+\end{figure}
+
+
+
+
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=1.0\textwidth]{el5_tet}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{5.2cm} | c }
+      %\hline
+      \footnotesize{subel.} & \footnotesize{\texttt{coor(1)}}  & \footnotesize{conf.}  \\ 
+      \hline%\hline
+      1 & ($x_0$,                   $y_0$,                   $z_0$                   )        & 5 \\% \hline
+      2 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0$                   )        & 6 \\% \hline
+      3 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0$                   )        & 4 \\% \hline
+      4 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0$                   )        & 5 \\% \hline
+      5 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 3 \\% \hline
+      6 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 1 \\% \hline
+      7 & ($x_0 + \frac{h(1)}{2}$,  $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 5 \\% \hline
+      8 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 5% \\% \hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of tetrahedrons with \texttt{conf = 5}}    
+\label{fig:tet_el5}
+\end{figure}
+
+\begin{figure}[bhtp!]
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \includegraphics[width=1.0\textwidth]{el6_tet}
+  \end{minipage}
+  \begin{minipage}[c]{0.45\linewidth}\centering
+    \begin{tabular}{c | p{5.2cm} | c  }
+      %\hline
+      \footnotesize{subel.} & \footnotesize{\texttt{coor(1)}}  & \footnotesize{conf.}  \\ 
+      \hline%\hline
+      1 & ($x_0$,                   $y_0$,                   $z_0$                   )        & 6 \\% \hline
+      2 & ($x_0$,                   $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 6 \\% \hline
+      3 & ($x_0$,                   $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 2 \\ %\hline
+      4 & ($x_0$,                   $y_0$,                   $z_0 + \frac{h(3)}{2}$  )        & 3 \\ %\hline
+      5 & ($x_0$,                   $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 6 \\% \hline
+      6 & ($x_0$,                   $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 4 \\% \hline
+      7 & ($x_0$,                   $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 5 \\% \hline
+      8 & ($x_0 + \frac{h(1)}{2}$,  $y_0 + \frac{h(2)}{2}$,  $z_0 + \frac{h(3)}{2}$  )        & 6% \\% \hline
+    \end{tabular}
+  \end{minipage}
+\caption{Subdivision of tetrahedrons with \texttt{conf = 6}}    
+\label{fig:tet_el6}
+\end{figure}
+
+
+The only problem is that the reference region on which the eltree subdivision takes places (the Hill-simplex) is 
+different from the reference region for isoparametric elements for tetrahedrons in \tfem. To solve this problem, a 
+simple mapping is performed which is shown in Figure \ref{fig:mapping}. Note that the mapping is only defined for a 
+tetrahedron of \texttt{conf = 2} (because this transformation is relatively easy), therefore, the root element must 
+always have \texttt{conf = 2}
+
+\begin{figure}[bhtp!]
+\begin{center}
+\includegraphics[width = 0.8\linewidth]{mapping}
+\caption{Mapping from the eltree reference region to the isoparametric reference region for tetrahedrons.}
+\label{fig:mapping}
+\end{center}
+\end{figure}
+
+To fill the root element for tetrahedrons correctly, the first call to \texttt{fill\_node\_eltree} will always look like: \newline
+
+\noindent
+\texttt{coor(1,:) = [ 0.0\_dp, 0.0\_dp, 0.0\_dp ] } \newline
+\texttt{coor(2,:) = [ 1.0\_dp, 1.0\_dp, 1.0\_dp ] } \newline
+\texttt{conf = 2}\newline
+\texttt{eltype = 1}\newline
+\texttt{call fill\_node\_eltree ( eltree, coor, conf, eltype )}\newline

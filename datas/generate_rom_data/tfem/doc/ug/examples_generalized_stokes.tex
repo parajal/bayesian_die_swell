@@ -1,0 +1,93 @@
+% !TEX root = userguide.tex
+
+\def\headdate{28th March 2023}
+
+\section{The generalized Stokes equation}
+\label{sec:genstokes}
+
+In this section some examples using the Stokes equation with
+a varying coefficient (viscosity) $\eta$
+will be given. We will refer to this as the generalized Stokes equation
+in contrast to the usual Stokes equation, which has a constant coefficient $\eta$.
+See Sec.~\ref{sec:stokesweak} for the theory, which is valid for both constant
+and varying viscosity. For solving flows with generalized Newtonian fluids, we refer to
+Sec.~\ref{sec:gennewtonian}.
+
+\subsection{A generalized Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; collocation;
+         layers with different viscosity.}
+\label{sec:genstokes1}
+                                                                                
+We consider the generalized Stokes equation for a channel problem on a unit square
+similar to the problem \texttt{stokes2.f90} in Sec.~\ref{sec:stokes2}. Near the upper
+and lower wall there exist fluid layers that have a lower viscosity than the layer in the middle. 
+                                                                                
+The example files are \texttt{generalized\_stokes1.f90} and \texttt{generalized\_stokes2.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample generalized\_stokes}
+\end{quote}
+In both examples the viscosity is a function of $y$:
+\[
+     \eta(y) = 
+\begin{cases}
+ 0.2 & \quad y\in[0,0.2)\text{ or }y\in(0.8,1]\\
+  1  & \quad y\in(0.2,0.8)
+\end{cases}
+\]
+In example \texttt{generalized\_stokes1.f90} the viscosity is computed
+using a function routine in the
+element. 
+In \texttt{generalized\_stokes2.f90} the problem is solved
+by filling a vector defined
+per element of type \texttt{elvector\_t} with the Gauss point values of
+$\eta$. The resulting velocity profile has been plotted in
+Fig.~\ref{fig:vprofile1}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{vprofile1}
+   \end{center}
+   \caption{Velocity profile in the generalized\_stokes1 and 
+    generalized\_stokes2 problem.}
+    \label{fig:vprofile1}
+\end{figure}
+
+\subsection{A generalized Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; collocation;
+         Generalized Newtonian fluid model.}
+\label{sec:genstokes3}
+                                                                                
+We consider the generalized Stokes equation for a channel problem on a unit square
+similar to the problem \texttt{stokes2.f90} in Sec.~\ref{sec:stokes2}. The
+viscosity is now given by a generalized Newtonian model.
+                                                                                
+The example files are \texttt{generalized\_stokes3.f90} and
+\texttt{generalized\_stokes4.f90},
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample generalized\_stokes}
+\end{quote}
+In \texttt{generalized\_stokes3.f90} the problem is solved
+by filling a vector defined
+per element of type \texttt{elvector\_t} with the Gauss point values of
+$\eta$ according to a generalized Newtonian model. The solution is obtained
+using a Picard iteration scheme. See also Sec.~\ref{sec:gennewtonian}, where this problem is solved using the more convenient module \texttt{generalized\_newtonian\_elements\_m}.
+
+In \texttt{generalized\_stokes4.f90},
+the viscosity is given by a regularized Bingham model \cite{Papanastasiou87}:
+\[
+     \eta(\dot\gamma) = \eta_0 +
+       \dfrac{\tau_\text{y} \left( 1 - \exp(-r \dot\gamma) \right)}{\dot\gamma}
+\]
+where $\eta_0$ is the viscosity of the yielded material, $\tau_\text{y}$ is the yield stress, and $r$ is the regularization parameter.
+The resulting velocity profile has been plotted in Fig. \ref{fig:vprofile3}.
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{vprofile3}
+   \end{center}
+   \caption{Velocity profile in the generalized\_stokes4 problem.}
+    \label{fig:vprofile3}
+\end{figure}

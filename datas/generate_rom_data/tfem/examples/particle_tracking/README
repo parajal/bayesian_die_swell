@@ -1,0 +1,22 @@
+NOTE: 
+
+streamfunction1 is for particle_tracking1
+
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+particle_tracking1
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Periodic cavity flow.
+ Tracking of an initially circular interface.
+
+particle_tracking2
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Periodic cavity flow.
+ Tracking of an initially circular interface.
+ Using the option to reorder the nodes of a pcurve for easier post-processing
+ Matlab file for plotting the particle using the reordered pcurve coordinates

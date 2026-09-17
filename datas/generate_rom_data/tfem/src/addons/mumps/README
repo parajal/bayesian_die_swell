@@ -1,0 +1,85 @@
+The mumps add-on is an interface to the MUMPS package. The MUMPS package
+contains a sparse direct solver and can be compiled in two ways:
+  - sequential version, which is a free alternative for MA41 and MA57.
+  - parallel version using MPI.
+
+Directions for the installation of the MUMPS package are given in the
+README.mumps file in the install folder in the root of tfem.
+
+Note: compilation of the add-on requires the MUMPS package to be installed.
+
+Usage
+=====
+
+Please read the manual of MUMPS first. (Read at least chapters 1,2,3 and 10).
+Read the source of mumps.f90 to see how it is composed.
+
+A simple main program will look like
+
+  program myprog
+
+  ...
+
+  use mumps_m
+
+  ...
+
+  type(dmumps_struc) :: mumps_par
+
+  ...
+
+! start mpi
+
+  call mpi_init(ierr)
+
+! create mumps_par structure
+
+  call create ( mumps_par )
+
+! build matrix on the host
+
+  if ( mumps_par%myid == 0 ) then
+
+    ... ( build matrix on the host )
+
+  end if
+
+! solve on all processors
+
+  call solve_system_mumps ( sysmatrix, rhsd, sol, mumps_par )
+
+! delete all data for building the matrix
+
+  if ( mumps_par%myid == 0 ) then
+
+    ... ( delete all data )
+
+  end if
+
+! delete mumps_par structure
+
+  call delete ( mumps_par )
+
+! stop mpi
+
+  call mpi_finalize(ierr)
+
+  end program myprog
+
+
+Remarks
+=======
+
+For sequential use, the mpi calls are not needed.
+
+To run a program which was build with MPI the following command must be issued
+
+  mpirun -n X example
+
+where X is the number of cores. If OpenMP is also used it is recommended to set
+OMP_NUM_THREADS by the command
+
+  export OMP_NUM_THREADS = Y
+
+such that, X*Y < number of cores, otherwise performance might be seriously
+compromised.

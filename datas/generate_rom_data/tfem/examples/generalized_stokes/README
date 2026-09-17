@@ -1,0 +1,33 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+generalized_stokes1
+
+ Generalized Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Varying viscosity eta using a function.
+
+generalized_stokes2
+
+ Generalized Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Varying viscosity eta using a separate element to fill the Gauss
+ point values of eta.
+
+generalized_stokes3
+
+ Generalized Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Varying viscosity eta using a separate element to fill the Gauss
+ point values of eta according to a generalized Newtonian model.
+ Picard iteration.
+
+generalized_stokes4
+
+ Generalized Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Varying viscosity eta using a separate element to fill the Gauss
+ point values of eta according to a regularized Bingham model.
+ Picard iteration.

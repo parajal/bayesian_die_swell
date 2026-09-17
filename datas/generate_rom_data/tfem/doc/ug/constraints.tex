@@ -1,0 +1,849 @@
+% !TEX root = userguide.tex
+
+\chapter{Constraints}
+\pgst{tfemch}
+
+\label{ch:constraints}
+
+\def\chaptertitle{Constraints}
+\def\headdate{18th February 2015}
+
+In this chapter it is shown how to handle constraints in \tfem.
+
+\section{Type of constraints}
+
+Constraints need to be defined on some type of geometrical entity: 
+a point, curve, surface, nodeset, elementset or object.
+On such an entity
+there are two types of constraints available in \tfem:
+\emph{global} constraints and \emph{distributed} constraints\footnote{At the
+time of writing
+only global constraints
+have been implemented 
+on elementsets (see Sec.~\ref{sec:elementsets}).}.
+
+Global
+constraints act on all degrees of freedom in the geometrical entity and are
+thus not tied to particular (nodal) points. For example imposing the flow rate
+through a surface involves all degrees of freedom on that surface.
+
+Distributed constraints are tied to particular points. For example connecting
+two curves together requires a constraint in each point along the curves that
+locally connects the degrees of freedom on both sides of the connection.
+
+Both type of constraints (global and distributed) are not static and can
+still contain unknowns. For example along a curve it is known that the degree
+of freedom is a linear function of a coordinate along that curve, but the
+function is unknown. This means that there are two \emph{additional unknowns}
+(the two constants of the linear function) which are added to the system vector
+of unknowns and solved along with all other degrees of freedom.
+
+Examples:
+\begin{enumerate}
+\item Applying Dirichlet boundary conditions. In Fig.~\ref{fig:slip} a flow
+geometry is given where along curves C1, C2 and C3 there is perfect slip along
+the wall.
+\begin{figure}[ht!]
+   \begin{center}
+      \includegraphics{slip}
+   \end{center}
+   \caption{Flow region with a curve not along the coordinate directions}
+    \label{fig:slip}
+\end{figure}
+ The normal velocity component is zero:
+\begin{equation}
+    \vec u\cdot\vec n =0
+  \label{eq:normalvel}
+\end{equation}
+Applying this condition along C1 and C3 is easy: essential boundary conditions
+for the $u_y$ component. Along C2 a local coordinate
+transformation can be used (see Chapter~\ref{ch:transformations}). An alternative is to specify Eq.~\eqref{eq:normalvel} as a constraint
+along curve C2. This is a distributed constraint.
+
+\item Periodic boundary conditions. Consider a flow region given in
+Fig.~\ref{fig:channel}.
+\begin{figure}[ht!]
+   \begin{center}
+      \includegraphics{channel}
+   \end{center}
+   \caption{Flow region with periodic boundary conditions}
+    \label{fig:channel}
+\end{figure}
+If we assume periodic boundary conditions the
+velocity profile along C1 is the same as C2:
+\begin{equation}
+    \vec u_1(y) = \vec u_2(y)
+  \label{eq:periodic}
+\end{equation}
+This could be implemented by eliminating all unknowns on C2 by identifying them
+with the corresponding unknowns on C1. This option is not available in \tfem.
+Another option is to implement Eq.~\eqref{eq:periodic} as a constraint that
+involves both C1 and C2. This is a distributed constraint.
+
+\item Imposing a flow rate. It is sometimes more convenient to specify the flow
+rate instead of the pressure difference. For example in Fig.~\ref{fig:channel}
+we would like to impose:
+\begin{equation}
+     \int_{C1}u_x\D y = Q
+  \label{eq:flowrate}
+\end{equation}
+where $Q$ is a constant. This is a global constraint on curve C1.
+
+\item Unknowns in the constraint. In the driven cavity problem
+Fig.~\ref{fig:driven2}
+\begin{figure}[ht!]
+   \begin{center}
+      \includegraphics{driven_cavity2}
+   \end{center}
+   \caption{Driven cavity flow with unknown velocity $U$}
+    \label{fig:driven2}
+\end{figure}
+the lid is driven by a known force. So we know that all velocities on the upper
+curve must be the same $(U,0)$, but the value of $U$ is unknown. We can
+implement this boundary condition using a constraint along the upper boundary
+with an additional unknown $U$.
+   
+\end{enumerate}
+
+\section{Implementation with Lagrange multipliers}
+
+Constraints are implemented using \emph{Lagrange multipliers}. To illustrate
+this, we consider the following minimization problem related to linear
+elasticity problems (minimum potential energy): find the vector
+$\col u_{\text{min}}$ that minimizes the function
+\begin{equation}
+   I(\col u) = \frac 12\col u^T\mat S\col u-\col u^T\col f
+   \label{eq:I}
+\end{equation}
+where $\col u$ and $\col f$ are vectors of dimension $N$ and
+ $\mat S$ is a $N\times N$ symmetric matrix.
+We can find the minimum by variation (differentiation):
+\[
+ \begin{split}
+    \delta I(\col u)&=\frac12\delta\col u^T\mat S\col u+\frac12\col u^T\mat S\delta\col u
+    -\delta\col u^T\col f\\
+    &=\delta\col u^T(\mat S\col u - \col f) = 0,\quad\text{for all }\delta \col u
+ \end{split}
+\]
+or $\col u_{\text{min}}$ is the solution of the system of equations
+\[
+ \mat S\col u = \col f
+\]
+Now we constrain the minimization process with the following $N_c$ constraints
+having $N_\text{add}$ additional unknowns:
+\begin{equation}
+    \mat A \col u + \mat B \col u_\text{add}=\col g
+   \label{eq:constraint}
+\end{equation}
+where $\mat A$ is a $N_c\times N$ matrix, 
+      $\mat B$ is a $N_c\times N_\text{add}$ matrix, $\col g$ is vector of
+dimension $N_c$ and $\col u_\text{add}$ is a vector of additional unknowns 
+of dimension $N_\text{add}$. The solution of this constrained minimization
+process, i.e.\ the minimum of $I(\col u)$ in Eq.~\eqref{eq:I}
+under the constraint Eq.~\eqref{eq:constraint} is given by the
+\emph{stationary value} of the function (saddle point problem):
+\[
+   J(\col u,\col\lambda,\col u_\text{add})= I(\col u) +
+    \col\lambda^T ( \mat A \col u + \mat B \col u_\text{add}-\col g )
+\]
+where (the components of) $\col\lambda$ are called \emph{Lagrange
+multipliers}.
+
+Sometimes there are external tractions/forces on the unknowns involved in the
+constraint. In the formulation above the tractions/forces should be specified 
+using the vector $\col f$. 
+For example, on some curve the displacements are constrained to
+be a linear functions given by an unknown position vector and a rotation. The
+remaining external force and torque on this curve can be specified using
+tractions on the curve and are added to $\col f$. However, in this problem it
+would be more convenient to just specify the integral force and torque. This
+can be done most easily by realizing that these integral quantities are just
+the `dual' forces of the general displacements given by $\col u_\text{add}$. So
+instead of adding tractions to $\col f$ we can equivalently find the
+stationary value of the function
+\[
+  \begin{split}
+   \hat{J}(\col u,\col\lambda,\col u_\text{add})&= 
+        J(\col u,\col\lambda,\col u_\text{add})-\col u^T_\text{add}\col h \\
+        &=\frac 12\col u^T\mat S\col u-\col u^T\col f
+    +\col\lambda^T ( \mat A \col u + \mat B \col u_\text{add}-\col g )
+                                               -\col u^T_\text{add}\col h
+  \end{split}
+\]
+where $\col h$ is the vector of external forces on the additional unknowns.
+The stationary value of $\hat J$ is given by
+\[
+   \delta \hat{J} = \delta \col u^T(\mat S\col u -\col f +\mat A^T\col\lambda)
+  + \delta\col\lambda^T(\mat A\col u+\mat B\col u_\text{add}-\col g)
+  + \delta\col u^T_\text{add}(\mat B^T\col\lambda-\col h) = 0
+\]
+for all $\delta\col u$, $\delta\col\lambda$ and $\delta\col u_\text{add}$,
+which leads to the following system of equations
+\begin{align*}
+   \mat S\col u +\mat A^T\col\lambda &=\col f \\
+\mat A\col u+\mat B\col u_\text{add}&=\col g\\
+\mat B^T\col\lambda&=\col h
+\end{align*}
+or in matrix form
+\begin{equation}
+  \begin{bmatrix}
+     \mat S & \mat A^T & \mat 0 \\
+     \mat A & \mat 0 & \mat B   \\
+     \mat 0 & \mat B^T & \mat 0
+  \end{bmatrix}
+  \begin{bmatrix}
+     \col u \\
+     \col\lambda \\
+     \col u_\text{add}
+  \end{bmatrix}
+=
+  \begin{bmatrix}
+     \col f \\
+     \col g \\
+     \col h
+  \end{bmatrix}
+\label{eq:constraintsystem}
+\end{equation}
+Note that
+\begin{itemize}
+   \item The Lagrange multipliers add forcing to the original equations.
+   \item The system is symmetric.
+   \item The additional equations have zero blocks on the diagonal.
+   \item The additional unknowns constrain the Lagrange multipliers. 
+\end{itemize}
+
+\section{Numerical implementation}
+
+The matrices $\mat A$ and $\mat B$ and vectors $\col g$ and $\col h$ 
+in Eq.~\eqref{eq:constraintsystem} need to be supplied to the system matrix by
+an `element-routine' and
+are assembled nodal-point-wise or element-wise, depending on the discretization
+used (see below). Also the matrix $\mat A$ is split into two separate matrices
+($\mat A_1$ and $\mat A_2$) if two
+geometrical entities are
+involved (like two curves, surfaces or objects that are connected) or
+the constraint is on two-sided
+objects (like in fluid-solid interaction problems):
+\[
+\mat A\col u = \mat A_1\col u_1+\mat A_2\col u_2
+\]
+where $\col u_1$ and $\col u_2$ are the unknowns on the first and second
+entity or `side' of the object, respectively.
+
+\subsection*{Global constraints}
+
+Global constraints such as Eq.~\eqref{eq:flowrate} are usually build
+element-wise along the curve, surface, elementset or
+object\footnote{An object needs to
+have a topology in order to be used in `element-wise' global constraints}.
+The contribution to the integral is computed on element level and the matrix
+$\mat A_e$ and vector $\col g_e$ need to be filled. The matrix $\mat A_e$ is of
+size $N_c\times n_\text{fe}$, where $n_\text{fe}$ is the number of unknowns
+in element $e$. The
+right-hand side value $Q$ is set in $g_1$ (the first element) and $g_2$, $g_3$,
+\ldots are set to zero.
+
+Another possibility is to build global constraints nodal point
+wise\footnote{This is the only possibility for a constraint in a point
+or on a nodeset.}. For
+example building the constraint
+\[
+        \sum_1^n u_i=0
+\]
+where $n$ is the number of nodes, should be build nodal point wise.
+
+\subsection*{Distributed constraints}
+
+As an example we take the periodic boundary condition Eq.~\eqref{eq:periodic}.
+The condition Eq.~\eqref{eq:periodic} can be assumed to be valid exactly in the
+nodal points of the curve (collocation):
+\begin{equation}
+      \vec\lambda_k\cdot\bigl( \vec u^k_1(y) - \vec u^k_2(y) \bigr)=0,
+   \qquad\text{for all $\vec\lambda_k$, $k=1,\ldots,n$}
+    \label{eq:collocationconnection}
+\end{equation}
+ or in an integral way (weak):
+\begin{equation}
+    \int_{C1} \vec\lambda\cdot\bigl( \vec u_1(y) - \vec u_2(y) \bigr)\D y=0,
+   \qquad\text{for all $\vec\lambda$}
+    \label{eq:weakconnection}
+\end{equation}
+The constraint are build nodal-point-wise and element-wise,
+respectively\footnote{For a constraint in a point or on a nodeset it is only
+possible to build it nodal-point wise, since elements are not defined on these
+geometric entities.}.
+In case of weak constraints on objects Eq.~\eqref{eq:weakconnection} is build
+integration point wise, i.e.\ on element level the contribution to the integral
+of a single integration point must be supplied.
+
+It is possible to connect two parts of the domain
+having elements that are not compatible
+(mortars). 
+One way to do this is using two curves (or two surfaces).
+In that case, it is assumed that the Lagrange multipliers are
+defined in the nodes of C1 and that all unknowns on C2 are involved in
+all constraints (row dimension of $\mat A_{2e}$ is $\dim{\col u_2}$).
+Another, more flexible, way to achieve this is to use connecting objects.
+
+The heading of the element subroutine defining a constraint is given by
+\begin{listing}{1}
+   
+  subroutine elemsub ( mesh, problem, constr, elem, node, matrix, vector, &
+    first, last, coefficients, oldvectors, elemmat, elemmat2, elemmatadd, &
+    elemvec, elemvecadd )
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: constr, elem, node
+    logical, intent(in) :: matrix, vector, first, last
+    real(dp), intent(out), dimension(:,:) :: elemmat, elemmat2, elemmatadd
+    real(dp), intent(out), dimension(:) :: elemvec, elemvecadd
+
+     ....
+
+  end subroutine elemsub
+
+\end{listing}
+
+with\\[2ex]
+\begin{tabular}{ll}
+\texttt{mesh, problem} & mesh and problem structure as in the heading of
+                           \texttt{build\_system\_constraint}\\
+\texttt{constr} & constraint number \\
+\texttt{elem} & element number within this constraint \\
+\texttt{node} & node or integration point number within this constraint\\
+\texttt{matrix, vector} & logicals defined by \texttt{buildmatrix} and
+                         \texttt{buildvector} in the heading \\
+                        & of \texttt{build\_system\_constraint}.\\
+\texttt{first, last} & logicals indicating whether the current element or node
+    is the first/last \\ & in this constraint. \\
+\texttt{coefficients, oldvectors} & coefficients and oldvectors structure as in the heading of
+                           \texttt{build\_system\_constraint}\\
+\texttt{elemmat} & matrix $\mat A$ or $\mat A_1$ for this element/node. \\
+\texttt{elemmat2} & matrix $\mat A_2$ for this element/node. \\
+\texttt{elemmatadd} & matrix $\mat B$ for this element/node. \\
+\texttt{elemvec} & vector $\col g$ for this element/node. \\
+\texttt{elemvecadd} & vector $\col h$ for this element/node. \\
+\end{tabular}
+
+\section{Non-linear constraints}
+\label{sec:nonlinearconstraint}
+Assume that we have a constraint minimization problem that is non-linear, i.e.\
+the functional $I(\col u)$ is non-linear (not just quadratic) and the
+constraint is non-linear as well:
+\begin{equation}
+   \col F(\col u) = \col 0
+\end{equation}
+For simplicity we have not included the additional unknowns.
+The problem is equivalent to finding the stationary value of
+\[
+   J(\col u,\col\lambda)= I(\col u) +
+    \col\lambda^T \col F(\col u )
+\]
+The stationary value is given by
+\begin{equation}
+   \delta {J} = \delta \col u^T(\pderiv{I(\col u)}{\col u}+
+                                \pderiv{F(\col u)^T}{\col u}\col\lambda)+
+                              \delta \col\lambda^T \col F(\col u ) = 0
+\end{equation}
+for all $\delta \col u$ and $\delta\col\lambda$, which leads to the system
+\begin{align}
+\pderiv{I(\col u)}{\col u}+
+                 \pderiv{\col F(\col u)^T}{\col u}\col\lambda&=\col 0\\
+\col F(\col u )\hspace*{2cm} & = \col 0
+\end{align}
+or written in index notation
+\begin{align}
+\pderiv{I}{u_i}+
+                 \pderiv{\col F_l}{u_i}\lambda_l&= 0\\
+\col F_k\hspace*{1.5cm} & = 0
+\end{align}
+Iteration is required for solving this nonlinear system of equations. For
+example, a Picard type iteration scheme might lead to a nonsymmetric system
+matrix. A full Newton-Raphson iteration scheme will lead to a symmetric Jacobian
+$J$:
+\begin{equation}
+   J=\begin{pmatrix}
+      \pderivxy{^2I}{u_i}{u_j}+\pderivxy{^2F_l}{u_i}{u_j}\lambda_l &
+   \pderiv{F_m}{u_i} \\[3ex]
+   \pderiv{F_k}{u_j} & 0
+   \end{pmatrix}
+\end{equation}
+
+For the implementation of a non-symmetric Picard type iteration scheme, the 
+element subroutine \texttt{elemsub1} in the call of
+\texttt{build\_system\_constraint} can be used instead of the usual 
+\texttt{elemsub}. With \texttt{elemsub1} the transposed matrices 
+$\mat A^T$ or $\mat A_1^T$ (\texttt{elemmatt}), 
+$\mat A_2^T$ (\texttt{elemmat2t}) and
+$\mat B^T$ (\texttt{elemmataddt}) need to be filled by the user, giving the
+possibility to build a non-symmetric matrix. In addition, element vectors added
+to the right-hand side $\col f$ need to be filled (\texttt{elemvecf} and
+\texttt{elemvecf2}).
+
+For the implementation of the symmetric Newton-Raphson system the usual
+\texttt{elemsub} element routine can be used to build the Lagrange multiplier
+part. However the ``direct stiffness'' term 
+$\plderivxy{^2F_l}{u_i}{u_j}\lambda_l$ and the corresponding right-hand side
+need to be build using 
+standard tools, such as build on an object using (\texttt{build\_system})
+or \texttt{build\_system\_connection} if the constraint is two-sided, like in
+fluid-solid interactions.
+
+\section{Examples of problems with constraints}
+
+\subsection{A Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; collocation}
+\label{sec:stokes2}
+                                                                                
+We consider the Stokes equation for a channel problem on a unit square
+(see Fig.~\ref{fig:channel2}). On the upper and lower boundary the velocity is
+set to zero. The velocities on curve C2 and C4 are assumed to be the same
+(periodic).
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{channel2}
+   \end{center}
+   \caption{Channel problem}
+    \label{fig:channel2}
+\end{figure}
+                                                                                
+The example file is \texttt{stokes2.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+                                                                                
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+\begin{listing}{61}
+! create mesh
+                                                                                
+  meshgen_options%elshape = 6
+  meshgen_options%nx = nx
+  meshgen_options%ny = ny
+                                                                                
+  call quadrilateral2d ( mesh, meshgen_options )
+                                                                                
+  call add_to_mesh ( mesh, curve=[-4] )     ! curve 5
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 69] here an extra curve (it becomes C5) is created that is
+defined in the opposite direction as curve C4. The reason is that curves that
+become connected using constraints must be defined in the same direction.
+\end{description}
+\begin{listing}{93}
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, curve1=2, nglobalc=1 )
+                                                                                
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, curve1=2, curve2=5, discretization='collocation', exclude=3 )
+                                                                                
+  call problem_definition ( input_probdef, mesh, problem )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 93--94] here the global constraint for the flow rate along curve
+     C2 is defined. Note that only physical quantity 1 (velocity) is involved
+     in the constraint.
+   \item[line 96--97] here the constraint connecting curve C2 and C5 
+     is defined. Note that only physical quantity 1 (velocity) is involved
+     in the constraint. Also collocation is used to connect the curves. Note,
+     that the first and the last point on the curves are excluded from the
+     constraint. The reason is that in these points the velocities are imposed
+     using essential conditions and thus completely removed from the equations.
+     Imposing a constraint in these points leads to a singular matrix (row and
+     column with only zeros).
+\end{description}
+\begin{listing}{115}
+! create system matrix
+                                                                                
+  call create_sysmatrix_structure_base ( sysmatrix, mesh, problem )
+  call create_sysmatrix_structure_constraint ( sysmatrix, mesh, problem )
+  call finalize_sysmatrix_structure ( sysmatrix )
+                                                                                
+  call create_sysmatrix_data ( sysmatrix )
+                                                                                
+! build (assemble) matrix and vector from elements
+
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+    coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=1, elemsub=stokes_constr_flowr, addmatvec=.true., &
+    coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=2, elemsub=stokes_constr_node_conn, addmatvec=.true., &
+    coefficients=coefficients  )
+
+\end{listing}
+\begin{description}
+   \item[line 117--121] here the system matrix is created. First the structure:
+     base \fem\ structure (line 117) + constraints structure (line 118) and the
+     finalizing of the structure (line 119).
+     The data itself is allocated on line 121.
+   \item[line 128--130] here the system matrix concerning the flowrate
+     constraint is built using the element routine
+     \texttt{stokes\_contr\_flowr}. Note that \texttt{addmatvec=.true.} to
+     avoid the initializing of the matrix to zero. In the element routine
+     \texttt{stokes\_contr\_flowr} the element
+      matrix $\mat A_e$ is filled with
+     \[
+          \int_{\Gamma_e}\phi_i\D y
+     \]
+     and the elementvector is filled with the flow rate $Q$ in the first element
+     along the curve. Note that the actual value of the flowrate has been
+     specified in the \texttt{coefficients}.
+   \item[line 132--134] here the system matrix concerning the periodic
+     connection constraint is built using the element routine
+     \texttt{stokes\_constr\_node\_conn}. Note that \texttt{addmatvec=.true.} to
+     avoid the initializing of the matrix to zero. In the element routine
+     \texttt{stokes\_constr\_node\_conn} the element
+      matrix $\mat A_{1e}$ is filled with
+     \[
+          \begin{pmatrix}
+             1 & 0 \\
+             0 & 1
+          \end{pmatrix}
+     \]
+     and the matrix $\mat A_{2e}$ is filled with
+     \[
+          \begin{pmatrix}
+             -1 & 0 \\
+             0 & -1
+          \end{pmatrix}=-\mat A_{1e}
+     \]
+     The elementvector $\col g_e$ is set to zero.
+\end{description}
+\begin{listing}{148}
+
+! write profile to a file for plotting with gnuplot
+
+  call printtofile ( mesh, problem, 'vprofile.out', curve=2, &
+    vector=velocity )
+   
+\end{listing}
+Here the velocity profile is printed to a file.
+
+Run the problem by typing
+\begin{quote}
+   \texttt{stokes2}
+\end{quote}
+Typing the command
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+will show something like
+Figs.~\ref{fig:velocity2}, \ref{fig:vorticity2}, 
+      and \ref{fig:pressure2}. The velocity profile is plotted in
+Fig.~\ref{fig:vprofile}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{velocity2}
+   \end{center}
+   \caption{Plot of the velocity vector for the periodic channel problem}
+    \label{fig:velocity2}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{vorticity2}
+   \end{center}
+   \caption{Plot of the vorticity for the periodic channel problem}
+    \label{fig:vorticity2}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{pressure2}
+   \end{center}
+   \caption{Plot of the pressure for the periodic channel problem}
+    \label{fig:pressure2}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{vprofile}
+   \end{center}
+   \caption{Plot of the velocity profile in the periodic channel problem}
+    \label{fig:vprofile}
+\end{figure}
+
+A similar example is available as \texttt{stokes33.f90}, but it is build using
+nodesets instead of curves.
+
+\subsection{A Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; weak constraint}
+\label{sec:weakflowrate}
+                                                                                
+Again we consider the Stokes equation for a channel problem on a unit square
+(see Fig.~\ref{fig:channel2}), as in the previous section. The difference is
+the weak implementation of the connection
+between 
+curves C2 and C4 where the velocities are assumed to be the same
+(periodic) using Eq.~\eqref{eq:weakconnection}.
+
+The example file is \texttt{stokes3.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+                                                                                
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+Some notes on the source:
+\begin{listing}{92}
+
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, curve1=2, nglobalc=1 )
+                                                                                
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, curve1=2, curve2=5, discretization='weak', elementdof=[2,0,2] )
+                                                                                
+  call problem_definition ( input_probdef, mesh, problem )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 96--97] here the constraint connecting curve C2 and C5 
+     is defined. Note that only physical quantity 1 (velocity) is involved
+     in the constraint. The connection is assumed to be weak and the Lagrange
+     multipliers for both the $u$ and $v$ are interpolated using linear shape
+     functions. This is reflected in the parameter
+     \texttt{elementdof=[2,0,2]}, which represents the degrees of freedom of
+     the Lagrange multipliers in the nodes of an element along the curve.
+     In the weak implementation it is not necessary to exclude any points
+     from the constraint, in contrast to the collocation implementation.
+\end{description}
+\begin{listing}{123}
+
+! build (assemble) matrix and vector from elements
+
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+    coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=1, elemsub=stokes_constr_flowr, addmatvec=.true., &
+     coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=2, elemsub=stokes_constr_elem_conn, addmatvec=.true., &
+     coefficients=coefficients )
+
+\end{listing}
+\begin{description}
+   \item[line 133--135] here the system matrix concerning the periodic
+     connection constraint is built using the element routine
+     \texttt{stokes\_constr\_elem\_conn}. Note that \texttt{addmatvec=.true.} to
+     avoid the initializing of the matrix to zero. In the element routine
+     \texttt{stokes\_contr\_elem\_conn} the element
+      matrix $\mat A_{1e}$ is filled as follows
+\[
+   \mat A_{1e}=
+   \begin{pmatrix}
+       \int_{e}\psi_i\phi_j\D y & 0 \\
+       0 & \int_{e}\psi_i\phi_j\D y 
+   \end{pmatrix}
+\]
+     where $\psi_i$ are the linear shape functions
+     of $\lambda$ and $\psi_j$ the quadratic shape functions of the velocity.
+The matrix contains four partitions.
+The row partitioning represents the
+Lagrange multiplier in horizontal ($x$) and vertical ($y$) direction,
+respectively. The
+column partitioning represents the contribution of the $u$ velocity component
+and the $v$ velocity component to the constraints, respectively.
+The contribution of the $v$ ($u$) component to the horizontal (vertical)
+direction is zero \footnote{In \tfem\ it is assumed that \emph{all}
+ components of 
+a physical quantity contribute to \emph{all}
+constraint directions. Therefore the off-diagonal
+blocks have to be filled with zeros here. The only way to avoid this is to
+define each velocity component as a separate physical quantity.}.
+The matrix $\mat A_{2e}$ is equal to $-\mat A_{1e}$ and
+     the elementvector $\col g_e$ is set to zero.
+\end{description}
+Run the problem by typing
+\begin{quote}
+   \texttt{stokes3}
+\end{quote}
+and view the plot files with
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+
+\subsection{A Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified pressure difference using
+         additional unknowns; weak constraint}
+                                                                                
+In the source code \texttt{stokes4.f90} the flow rate $Q$ is defined as an
+additional unknown:
+\[
+     \int_{C1}u_x\D y - Q = 0
+\]
+and a matrix $\mat B$ is filled. The single component of the
+right-hand side vector $\col h$
+is now $\Delta p$, the pressure difference between the inflow
+and outflow of the channel. This is a bit of an artificial problem, since the
+pressure difference can easily be imposed using natural boundary elements on
+either C2 or C4 without using any constraints.
+
+\subsection{A Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; collocation on
+         two objects}
+                                                                                
+We consider again the Stokes equation for a channel problem on a unit square
+(see Fig.~\ref{fig:channel2}). On the upper and lower boundary the velocity is
+set to zero. The velocities on curve C2 and C4 are assumed to be the same
+(periodic). In this problem we connect the flow exit and entry using two 
+objects.
+                                                                                
+The example file is \texttt{stokes15.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+                                                                                
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+\begin{listing}{132}
+                                                                                
+   call quadrilateral2d ( mesh, meshgen_options )
+
+   call add_to_mesh ( mesh, object='curve', objectcurve=2, &
+     excludepoints=[2,3] )
+   call add_to_mesh ( mesh, object='curve', objectcurve=2, &
+     excludepoints=[2,3] )
+
+ ! shift object 2 to entry side
+   mesh%objects(2)%coor(:,1) = mesh%objects(2)%coor(:,1) - 1._dp
+
+   call fill_mesh_parts ( mesh )
+
+\end{listing}
+\begin{description}
+   \item[line 135--136] here an object is created on curve C2, using the curve
+C2. In fact, the object has the same coordinates as the curve except for the
+first and last point of the curve (due to \texttt{excludepoints=[2,3]}).
+The first and the last point of the curve has been excluded
+     because in these points the velocities are imposed
+     using essential conditions and thus completely removed from the equations.
+     Imposing a constraint in these points leads to a singular matrix (row and
+     column with only zeros).
+   \item[line 137--138] here again an object is created on curve C2,
+using the curve C2. In fact, the object is identical to the previous object.
+   \item[line 141] here the coordinates of the second object are shifted
+to the entry section.
+\end{description}
+\begin{listing}{167}
+
+   call define_constraint ( mesh, input_probdef, &
+     physq=1, object=1, object2=2, discretization='collocation', nodedof=2 )
+
+\end{listing}
+\begin{description}
+   \item[line 168--169] here the constraint connecting the exit and entry
+section is defined using the previously defined objects.
+     Note that only physical quantity 1 (velocity) is involved
+     in the constraint. Also collocation is used to connect the objects.
+\end{description}
+\begin{listing}{203}
+                                                                                
+   call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+     constraint1=2, elemsub=constraints_object_conn, addmatvec=.true. )
+
+\end{listing}
+\begin{description}
+   \item[line 204--205] here the system matrix concerning the periodic
+     connection constraint is built using the element routine
+     \texttt{constraints\_object\_conn}. Note that \texttt{addmatvec=.true.} to
+     avoid the initializing of the matrix to zero. In the element routine
+     \texttt{constraints\_object\_conn} the element
+      matrix $\mat A_{1e}$ and  $\mat A_{2e}$ are filled with
+     \[
+   \mat A_{e1}=
+          \begin{pmatrix}
+             \phi_{1i}(\vek x_{c1}) & 0 \\
+             0 & \phi_{1i}(\vek x_{c1})
+          \end{pmatrix}
+     \]
+and 
+     \[
+   \mat A_{e2}=
+          \begin{pmatrix}
+             -\phi_{2i}(\vek x_{c2}) & 0 \\
+             0 & -\phi_{2i}(\vek x_{c2})
+          \end{pmatrix}
+     \]
+where $\vek x_{c1}$, $\vek x_{c2}$ are the
+position vectors of the current collocation point in both objects and 
+ $\phi_{1i}$, $\phi_{2i}$ are the shape functions of the velocity in
+the corresponding elements where the connection points are.
+\end{description}
+
+REMARK: the technique described in this section has essential the same result
+as the technique in Sec.~\ref{sec:stokes2} using connecting curves. However,
+the current technique of connecting objects is more general:
+\begin{itemize}
+   \item curves, surfaces need to have exactly the same topology to get
+connected. Especially in 3D this is a big problem for complicated meshes.
+Objects don't suffer from that problem, because they connect
+`volume points', not boundary points.
+   \item since objects connect `volume points', it is also possible to define
+constraints using the gradients of the solution.
+   \item points in the objects don't have to be in nodal points. This means
+that curves/surfaces can be connected having different element distribution or
+resolution. One should be careful here, though, since collocation might not
+always be a mathematical sound way to connect boundaries having different
+resolution. 
+\end{itemize}
+
+\subsection{A Stokes problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; weak constraint;
+         global constraint on an object}
+
+Again we consider the Stokes equation for a channel problem on a unit square
+(see Fig.~\ref{fig:channel2}), as in section~\ref{sec:weakflowrate}.
+The difference is that the flow rate constraint is not on an end curve but on
+a cross section that can be positioned anywhere along the channel.
+The global constraint for the flow rate is on an object that is made from a
+curve and shifted to any position. The pressure jump is now also across the
+object. This example is somewhat artificial, but is shows the possibilities
+of global constraints on objects.
+
+The example file is \texttt{stokes18.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+The example has been made such that it is easy to switch between continuous
+and discontinuous pressure interpolation.
+
+Some notes:
+\begin{itemize}
+   \item For discontinuous pressure ($P_1$) elements the pressure jump
+(=Lagrange multiplier) seems to be exact, even if the object is positioned
+inside elements. The same is true for the velocity profile.
+   \item For continuous pressure ($Q_1$) elements the pressure jump
+(=Lagrange multiplier) is lower than the exact value. The lowest value
+is obtained if the object is positioned at the interface between elements (in
+the example the error is 4\%) and
+the best value is if the object is half way an element (error 0.4\%).
+Correspondingly the
+velocity profile in the channel is proportionally lower than the exact one.
+This means that in the elements at the pressure jump near the object
+``some fluid volume is lost''. This is related to fact that
+Taylor-Hood elements are
+only globally volume conserving (``incompressible'')
+and not locally element by element.
+The error improves with mesh refinement, but only linearly.
+\end{itemize}
+The above notes suggest that discontinuous elements are better for pressure
+jumps, like in fictitious domain methods. In practice, however,
+the differences are likely to be small with sufficient refinement, but it is
+wise to test both type of elements for your problem. Furthermore, discontinuous
+pressure elements lead to instabilities in time-dependent viscoelastic flows
+and are therefore not really an option in that case.

@@ -1,0 +1,34 @@
+% !TEX root = userguide.tex
+
+\def\headdate{12th November 2021}
+
+\section{Blended meshes}
+\label{sec:blendexamples}
+
+In Sec.~\ref{sec:blendedmeshes} blended meshes are introduced to
+easily couple variables with different orders of interpolation. 
+In this section some examples using blended meshes are given.
+
+In the following table an overview of the blended mesh examples in \tfem\ are given\medskip
+
+\begin{tabular}{lll}
+Example & Section & remarks \\\hline
+ \texttt{sphere31.f90} & \ref{sec:stokes31} & Taylor-Hood  $Q_2/Q_1$  \\
+ \texttt{sphere32.f90} & \ref{sec:stokes31} & Taylor-Hood  $Q_4/Q_3$  \\
+ \texttt{mixed\_stokes1.f90} & \ref{sec:mixedcontraction} & mixed Stokes Taylor-Hood $Q_2/Q_1$ with $Q_p$ stress \\
+ \texttt{mixed\_stokes2.f90} & \ref{sec:mixedcontraction} & mixed Stokes Taylor-Hood $Q_2/Q_1$ with $Q_1\text{-iso-}Q_p$ stress \\
+\end{tabular}
+
+
+\subsection{Stokes flow around a sphere in a cylindrical tube}
+\label{sec:stokes31}
+
+The examples in this section are similar to the \texttt{sphere1.f90} problem 
+of Sec.~\ref{sec:sphere}.
+The first example \texttt{sphere31.f90} uses the same  $Q_2/Q_1$  Taylor-Hood
+interpolation for velocity/pressure as \texttt{sphere1.f90}. However,
+the velocity and pressure are now defined on their own mesh using a blended
+mesh. The second example \texttt{sphere32.f90} uses $Q_4/Q_3$ Taylor-Hood
+interpolation on a blended mesh. The latter example would be difficult to
+implement using a single shape element because of the different number and
+positions of the edge nodes for velocity and pressure.

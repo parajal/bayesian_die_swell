@@ -1,0 +1,31 @@
+SPARSKIT2
+=========
+
+Get the package from:
+
+http://www-users.cs.umn.edu/~saad/software/SPARSKIT
+
+Unpack
+
+Now you can either:
+
+1) Build sparskit yourself and add the library to your Mdefs.mk
+
+   or
+
+2) Edit the script getsk and run it from this directory. Typing
+
+      make
+
+   in this directory or
+
+      make sparskit2 
+
+   for the tfem root directory will update your solver lib with the 
+   sparskit routines.
+
+NOTE: if you compile with default 64bit integers the file color.f needs
+to be patched by
+
+   patch color.f <color.diff
+

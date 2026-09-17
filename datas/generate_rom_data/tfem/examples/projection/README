@@ -1,0 +1,59 @@
+The examples in this directory are described in the userguide.
+
+NOTE: intput3 is an input file for both projection3 and projection4 (input by
+redirection, e.g. run by projection3 <input3.txt)
+
+
+Short description
+-----------------
+
+projection1:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ Gmsh mesh with 6 nodes triangles.
+ L2-projection of solution on a second mesh.
+
+projection2:
+
+ Stokes problem on a square domain with a disk at the center.
+ Shear flow boundary conditions.
+ Freely rotating conditions on the disk boundaries.
+ Gmsh mesh.
+ L2-projection of velocity solution on a second mesh
+
+projection3:
+
+ 2D viscoelastic problem: flow around a cylinder confined between two walls.
+ The entry and exit sides are connected by periodical boundary conditions 
+ and a constant flow rate is imposed.
+ Only the upper-half of the domain is modelled and symmetry conditions are
+ assumed (zero tractions).
+ The average velocity is U.
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+ Gmsh generated mesh.
+ The final solution of the conformation is projected onto a new mesh.
+
+projection4: 
+
+ 2D viscoelastic problem: flow around a cylinder confined between two walls.
+ The entry and exit sides are connected by periodical boundary conditions 
+ and a constant flow rate is imposed.
+ Only the upper-half of the domain is modelled and symmetry conditions are
+ assumed (zero tractions).
+ The average velocity is U.
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+ Gmsh generated mesh.
+ The final solution of the conformation and the auxiliary gradient G are
+ projected onto a new mesh.
+
+ This problem is similar to projection3, but now also the auxiliary 
+ gradient G is projected onto a new mesh.
+
+projection5: 
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ Gmsh mesh with 6 nodes triangles.
+ L2-projection of solution on the same mesh, but with a different shape
+ function.

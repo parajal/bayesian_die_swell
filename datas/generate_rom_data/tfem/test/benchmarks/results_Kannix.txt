@@ -1,0 +1,36 @@
+Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz (Kannix cluster)
+
+ifort (IFORT) 18.0.1 20171018, -O2 -xSKYLAKE-AVX512
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+MKL 2018.1.163 (threading)
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.77173 33.49491  0m37.588s 0m36.285s 0m1.279s  2.13268
+   2    1.76873 45.83803  0m28.644s 0m47.962s 0m1.951s  2.12968
+   3    1.77173 55.50956  0m24.959s 0m57.222s 0m2.365s  2.13368
+   4    1.77673 63.28038  0m22.288s 1m5.084s  0m2.293s  2.13467
+   8    1.76973 101.73454 0m19.515s 1m42.749s 0m3.100s  2.12868
+  12    1.77173 150.99605 0m19.441s 2m30.782s 0m4.362s  2.13168
+  16    1.77173 219.24068 0m21.158s 3m25.420s 0m18.023s 2.13667
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys 
+   1    1.81172 48.56762  0m50.583s 0m49.027s 0m1.525s
+   2    1.80073 52.84797  0m31.568s 0m53.181s 0m1.643s
+   3    1.80273 52.96195  0m31.531s 0m53.366s 0m1.574s
+   4    1.80473 62.00158  0m22.156s 1m2.230s  0m1.760s
+   5    1.80373 63.90229  0m22.499s 1m4.083s  0m1.804s
+   6    1.80373 68.41560  0m18.546s 1m8.515s  0m1.894s
+   7    1.80073 68.38261  0m18.496s 1m8.432s  0m1.940s
+   8    1.81573 72.28801  0m16.470s 1m12.226s 0m2.079s
+  12    1.80273 82.62843  0m14.562s 1m22.085s 0m2.568s
+  16    1.80173 110.26824 0m14.755s 1m49.178s 0m3.140s
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    1.96170 98.82298  17.08740 1m59.406s 1m58.860s 0m0.411s  1.21482 

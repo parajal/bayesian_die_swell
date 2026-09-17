@@ -1,0 +1,23 @@
+&sourcepar
+  const = 1
+  sigma = 0.05
+  Lh = 0.5
+/
+&elementpar
+ isource = 0
+ ibeta = 1
+ imeth = 0
+ u = 1
+ alpha = 1e-2
+ gamma = 0
+ betac = 1
+ ninti = 2
+/
+&problempar
+ iboun = 1
+ ne = 10
+ L = 1
+ c0 = 0 
+ cL = 1
+ dcdxL = 0
+/

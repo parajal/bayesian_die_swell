@@ -1,0 +1,49 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+driven_cavity1:
+
+ Viscoelastic problem on a unit square with Dirichlet boundary conditions.
+ DEVSS-G/SUPG
+ first-order time integration
+
+driven_cavity2:
+
+ Viscoelastic problem on a unit square with Dirichlet boundary conditions.
+ DEVSS-G/SUPG
+ second-order time integration
+
+driven_cavity3:
+
+ Viscoelastic problem on a unit square with Dirichlet boundary conditions.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration
+
+driven_cavity5:
+
+ Viscoelastic problem on a unit square with Dirichlet boundary conditions.
+ DEVSS-G/SUPG
+ second-order time integration
+ two viscoelastic modes
+
+driven_cavity6:
+
+ Viscoelastic problem on a unit square with Dirichlet boundary conditions.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration
+ two viscoelastic modes
+
+driven_cavity7:
+
+ Viscoelastic problem on a unit square with Dirichlet boundary conditions.
+ DEVSS-G/SUPG (explicit stress formulation)
+ Giesekus model with two viscoelastic modes
+ Second-order semi-implicit Gear time integration. First step: Euler implicit.
+ One freely moving and rotating object.
+ Weak constraint on the particle domain.
+ Neutrally buoyant particle ( density of particle = density of fluid )
+

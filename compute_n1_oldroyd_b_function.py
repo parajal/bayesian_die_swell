@@ -91,9 +91,9 @@ if __name__ == "__main__":
     result = compute_n1_oldroyd_b(
         U_avg=0.1,
         radius=1.0,
-        lam=1.0,
-        beta=0.75,
-        eta0=0.95,
+        lam=0.527,
+        beta=0.566,
+        eta0=0.951,
     )
 
     print("G =", result["G"])

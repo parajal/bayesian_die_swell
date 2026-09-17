@@ -1,0 +1,14 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+cylinder1:
+
+ Viscoelastic fluid flow around a stationary cylinder
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration
+ XFEM approach
+

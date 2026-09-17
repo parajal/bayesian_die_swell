@@ -1,0 +1,15 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+
+1,2,3 (u,v,w): the constant velocity coefficient
+
+4   deltat: the time step
+
+5   beta: SUPG factor
+
+6   Uglobal: velocity scaling used in SUPG for coefficients%i(14)==1
+    (check for zero velocity).
+
+7-50 reserved for future use
+

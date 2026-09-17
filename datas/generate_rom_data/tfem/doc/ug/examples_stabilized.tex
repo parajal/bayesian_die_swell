@@ -1,0 +1,151 @@
+% !TEX root = userguide.tex
+
+\def\headdate{12th July 2021}
+
+\section{Stabilized elements for the Stokes problem}
+\label{sec:stabilizedstokes}
+Various stabilization techniques exist for velocity/pressure elements that are
+not LBB stable (such as equal order elements). Most of these stabilization
+techniques are based on the
+residual. Drawbacks of that approach are:
+\begin{enumerate}
+ \item The residual contains second-order derivatives.
+ \item If the momentum balance contains other terms, like in Navier-Stokes or
+       viscoelastic flows, these terms need to be taken into
+       account in the residual.
+ \item Tweaking parameters need to be introduced for
+       which it is not straightforward what values need to be taken.
+       Usually, these depend on the relative magnitude of the various terms and
+       the size of the elements.
+  \item The system becomes non-symmetric, even for the symmetric Stokes system.
+\end{enumerate}
+In \cite{Dohrmann04}, Dohrmann \& Bochev introduced a simple stabilization
+technique based on local pressure projections (and thus does not use the
+residual). Only
+a least-squares pressure term is added to the weak form.
+The additional term can be
+computed using standard finite element techniques, adds only to the zero
+diagonal block, does not need a tweaking parameter and is symmetric.
+
+For the Dohrmann-Bochev stabilization we need to introduce an additional
+pressure finite element space $P'_h$, consisting of piecewise discontinuous
+polynomials:
+\[
+     p_h'=\tsum_i \psi'_i p'_i
+\]
+in addition to the normal continuous pressure finite element space $P_h$
+\[
+     p_h=\tsum_k \psi_k p_k
+\]
+Now we consider the projection $\Pi p_h\in P'_h$ of $p_h\in P_h$ on $P'_h$:
+\[
+    (q'_h,\Pi p_h-p_h) \text{\quad for all }q_h'\in P'_h
+\]
+Writing $\Pi p_h= \psi'_i p'_i$ (omitting the $\tsum$ over $i$), we find
+\[
+    p'_i=m^{-1}_{ij}(\psi_j',p_h)
+\]
+and thus
+\[
+   \Pi p_h = \psi'_i m^{-1}_{ij}(\psi_j',p_h)=
+                \psi'_i m^{-1}_{ij}(\psi_j',\psi_k)p_k
+\]
+where $m_{ij}=(\psi'_i,\psi'_j)$ is the pressure mass matrix of $P'_h$. Note,
+that $\psi'_i$ is discontinuous across element boundaries and the inverse
+$m^{-1}_{ij}$ matrix can be computed on element level.
+
+The Stokes problem is determined by the stationary value of the functional
+(saddle point problem)
+\[
+   L(\vek u,p) = \frac12\big(\ten D(\vek u),\eta\ten D(\vek u)\big)-
+     (\nabla\cdot\vek u,p) -(\vek u,\vek f)
+\]
+The Dohrmann-Bochev stabilization consists of subtracting a least-squares term
+from the functional $L(\vek u,p)$:
+\[
+  L'(\vek u,p) = \frac12\big(\ten D(\vek u),\eta\ten D(\vek u)\big)-
+     (\nabla\cdot\vek u,p) -(\vek u,\vek f)-
+     \frac1{2\eta'}(p-\Pi p,p-\Pi p)
+\]
+where $\eta'$ is a viscosity parameter for which $\eta'=\eta$ seems to work
+just fine. The least-squares term leads to an additional term in the weak
+ form of
+\[
+     \dots -\frac1{\eta'}(q_h-\Pi q_h,p_h-\Pi p_h) = 0
+\]
+which adds to the continuity equation and fills the ``zero diagonal block''.
+Note, that 
+\[
+    (\Pi q_h,p_h-\Pi p_h)=0 \text{\quad or\quad} (\Pi q_h,\Pi p_h)=(\Pi q_h,p_h)
+\]
+because the difference with respect to the projection should be orthogonal to
+the projection itself. A different proof is by substituting the expressions for
+$\Pi p_h$ and $m_{ij}$:
+\begin{multline*}
+  (\Pi q_h,\Pi p_h)=
+   (\psi'_i m^{-1}_{ij}(\psi_j',q_h), \psi'_k m^{-1}_{km}(\psi_m',p_h))=\\
+   (\psi'_i,\psi'_k) m^{-1}_{ij}(\psi_j',q_h)m^{-1}_{km}(\psi_m',p_h)=
+        m_{ik} m^{-1}_{ij}(\psi_j',q_h)m^{-1}_{km}(\psi_m',p_h)=\\
+        \delta_{kj}(\psi_j',q_h)m^{-1}_{km}(\psi_m',p_h)=
+                   (\psi_k',q_h)m^{-1}_{km}(\psi_m',p_h)=(\Pi q_h,p_h)
+\end{multline*}
+Finally the additional term becomes:
+\[
+   -\frac1{\eta'}[(q_h,p_h)-(q_h,\Pi p_h)]
+\]
+with additional matrix
+\[
+  -\frac1{\eta'}[(\psi_k,\psi_m)-(\psi_k,\psi'_i)m^{-1}_{ij}(\psi'_j,\psi_m)]
+\]
+which is \emph{symmetric} and negative definite. The structure of the system
+matrix becomes
+\[
+ \begin{bmatrix}
+   \mat{S} &-\mat{L}^T \\[1ex]
+   -\mat{L} &-\mat C
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{u}\\[1ex]
+    \col p
+ \end{bmatrix}
+\]
+with $\mat C$ symmetric positive definite.
+
+Remarks:
+\begin{enumerate}
+   \item For equal order elements the polynomial order for $\psi'$ is chosen
+   one order less than $\psi$. 
+   Even lower order is possible (like a constant for quadratic elements), but
+   then accuracy is lost.
+   \item The $P_1/P_1$ pair is an attractive alternative for the mini element
+   ($P_1^+/P_1)$, with less velocity degrees of freedom and constant gradients
+   inside the element.
+   \item In \cite{Dohrmann04} it is mentioned that the stabilization might be
+   beneficial for iterative solvers, but this has not been tested.
+   \item For viscoelastic flow the use of these elements is questionable, for
+   example the $Q_2/Q_2$ pair is unstable. Combining the LBB-stable element
+   $Q_2/Q_1$ with $P_1$ for $\psi'$ is stable for viscoelastic flow. Using 
+   $P_0$ for $\psi'$ is even more stable, but also less accurate.
+   \item The procedure is a way to produce equal-order spectral elements.
+   Such elements might be used together with finite-element
+   preconditioners using stabilized $Q_1/Q_1$ low-order elements (not tested).
+ \item The current implementation is quite general, using Cholesky
+   $LL^T$ decomposition routines from Lapack. For special cases, like spectral
+   elements, it might be more efficient to use/implement special elements.
+\end{enumerate}
+
+The following examples use stabilized elements:\\\medskip
+\begin{center}
+ \begin{tabular}{ll}
+  file& elements \\ \hline
+\texttt{stokes35.f90} &$Q_2/Q_2$ \\
+\texttt{stokes36.f90} &$P_1/P_1$ \\
+\texttt{stokes37.f90} &$Q_1/Q_1$ \\
+\texttt{stokes38.f90} &$Q_p/Q_p$ spectral elements\\
+\texttt{stokes53.f90} &$P_p/P_p$ high-order triangular elements\\
+\texttt{stokes54.f90} &$Q_p/Q_p$ high-order quadrilateral elements\\
+\texttt{sphere29.f90} &$Q_p/Q_p$ high-order quadrilateral elements\\
+\texttt{sphere30.f90} &$P_p/P_p$ high-order triangular elements
+\end{tabular}
+\end{center}
+ 

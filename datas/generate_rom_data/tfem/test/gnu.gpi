@@ -1,0 +1,5 @@
+#set vi map
+set cont
+set pm3d
+sp "out" w l
+pause -1

@@ -1,0 +1,6 @@
+/^LIBCREATE =/c \
+LIBCREATE = libdummy.a
+/^MODPATHWRITE =/c \
+MODPATHWRITE = .
+/^EXTRATAGSSRC =/c \
+EXTRATAGSSRC = \$(TFEMPATH)/src/core/*.[fF]90 \$(TFEMPATH)/src/addons/*/*.[fF]90

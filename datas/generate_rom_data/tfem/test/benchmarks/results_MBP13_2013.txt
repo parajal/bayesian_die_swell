@@ -1,0 +1,53 @@
+Intel(R) Core(TM) i7-4558U CPU @ 2.80GHz (MacBook Pro, 13-inch, Late 2013)
+
+gfortran 8.2.0, -O2 -funroll-loops -fstack-arrays 
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+MKL 2019.1.144 (threading)
+Threading: OMP_NUM_THREADS
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1    2.33521 314.53351 5m22.691s 5m13.206s 0m3.933s
+   2    2.38726 362.44424 3m15.997s 6m1.779s  0m3.310s
+
+Solver: Pardiso, symmetric matrix
+threads build   solve    real      user      sys
+   1    2.36736 38.93221 0m41.718s 0m40.246s 0m1.293s
+   2    2.38557 50.89076 0m29.876s 0m52.214s 0m1.345s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    2.63878 247.53706 4m36.216s 3m49.415s 0m21.263s
+   2    2.70814 317.43365 2m52.590s 5m7.943s  0m12.742s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    2.70736 57.09159  1m2.737s  1m0.631s  0m2.031s  2.61815
+   2    2.69444 71.93599  0m44.090s 1m15.325s 0m2.160s  2.60467
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys
+   1    2.62626 79.35762  1m22.304s 1m19.769s 0m2.457s
+   2    2.63500 103.98897 1m0.649s  1m43.992s 0m2.891s
+
+
+OpenBLAS 0.3.5 (threading)
+Threading: OPENBLAS_NUM_THREADS
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    2.76040 63.84513  1m9.707s  1m7.367s  0m2.147s  2.66470
+   2    2.73774 81.21320  0m49.665s 1m22.832s 0m4.177s  2.71741
+
+
+Apple Framework Accelerate (-framework accelerate)
+threading: VECLIB_MAXIMUM_THREADS
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    2.69543 74.22986  1m19.910s 1m17.539s 0m2.263s  2.64431
+   2    2.71258 85.99129  0m56.530s 1m28.541s 0m3.002s  2.61083
+

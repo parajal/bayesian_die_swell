@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# define IMAGEVIEWER or change eog to your favorite image viewer
+imageviewer=${IMAGEVIEWER:-eog}
+
+type $imageviewer >/dev/null 2>&1
+if [ $? -eq 1 ]; then
+  echo
+  echo $imageviewer: not found
+  echo
+  echo Set environment variable IMAGEVIEWER to a valid image viewer
+  echo
+  exit
+fi
+
+sys=`uname -s | cut -c 1-5`
+
+if [ "$sys" = Darwi -a "$imageviewer" = open ] ; then
+  # Start new instance of preview and wait
+  imageviewer="open -nW"
+fi
+
+echo Converting fig files
+
+if [ $# -eq 0 ]
+then
+     figfiles=*.fig
+else
+     figfiles=$*
+fi
+
+for file in $figfiles
+do
+    if [ ! -f $file ] ; then continue ; fi
+    base=`basename $file .fig`
+    fig2dev -L png $file $base.png
+    pngfiles=$pngfiles" $base.png"
+done
+
+if [ $? -eq 1 ]; then exit 1; fi
+echo Viewing with $imageviewer
+$imageviewer $pngfiles
+echo Deleting image files
+rm $pngfiles

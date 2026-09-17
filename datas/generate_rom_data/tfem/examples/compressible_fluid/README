@@ -1,0 +1,85 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+compressible_fluid1:
+
+ Compressible viscous fluid problem in a (2D) channel or axisymmetric pipe.
+ Flow with a parabolic infow profile and either an open boundary for
+ entry pressure or and an imposed pressure.
+ At the exit the x-direction is free (zero traction) and in the y-direction
+ the velocity is set to zero.
+ The constitutive equation for the extra stress is a Newtonian fluid.
+ First-order time integration for the pressure constitutive equation.
+
+compressible_fluid2:
+
+ Compressible viscous fluid problem in a 2D channel or axisymmetrical pipe.
+ A block infow/outflow profile.
+ The mesh is moving with the fluid (ALE) such that the fluid is moving 
+ between two pistons.
+ To avoid a severe pressure singularity, slip is created on the wall over a 
+ certain length.
+ The constitutive equation for the extra stress is a Newtonian fluid.
+ First-order time integration for the pressure constitutive equation.
+
+compressible_fluid3:
+
+ Compressible viscous fluid problem in a (2D) channel or axisymmetric pipe.
+ Flow with a parabolic infow profile and either an open boundary for
+ entry pressure or and an imposed pressure.
+ At the exit the x-direction is free (zero traction) and in the y-direction
+ the velocity is set to zero.
+ The constitutive equation for the extra stress is a Newtonian fluid.
+ Second-order time integration for the pressure constitutive equation.
+
+ Similar to compressible_fluid1, but now using second-order time integration.
+
+compressible_fluid4:
+
+ Compressible viscous fluid problem in a 2D channel or axisymmetrical pipe.
+ A block infow/outflow profile.
+ The mesh is moving with the fluid (ALE) such that the fluid is moving 
+ between two pistons.
+ To avoid a severe pressure singularity, slip is created on the wall over a 
+ certain length.
+ The constitutive equation for the extra stress is a Newtonian fluid.
+ Second-order time integration for the pressure constitutive equation.
+
+ Similar to compressible_fluid2, but now using second-order time integration.
+
+compressible_fluid5:
+
+ Compressible viscous fluid problem in a 2D channel or axisymmetrical pipe
+ A block infow/outflow profile.
+ The mesh is moving with the fluid (ALE) such that the fluid is moving
+ between two pistons.
+ To avoid a severe pressure singularity, slip is created on the wall over a
+ certain length.
+ The constitutive equation for the extra stress is a Newtonian fluid.
+ Choose either first of second-order time integration for the pressure
+ constitutive equation. Choice handled on element level.
+
+compressible_fluid6:
+
+ Compressible viscous fluid problem in a (2D) channel or axisymmetric pipe.
+ Flow with a parabolic infow profile and either an open boundary for
+ entry pressure or and an imposed pressure.
+ At the exit the x-direction is free (zero traction) and in the y-direction
+ the velocity is set to zero.
+ The constitutive equation for the extra stress is a Newtonian fluid.
+ Fully-implicit time integration with Newton-Raphson iteration for the
+ pressure constitutive equation.
+ Optionally after the final time step do an iteration to steady-state.
+
+compressible_fluid7:
+
+ Startup of flow around a rotating cylinder in a square box.
+ Compressible fluid flow.
+ Fully-implicit with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally after the final time step do an iteration to steady-state.
+

@@ -1,0 +1,590 @@
+% !TEX root = userguide.tex
+
+\def\headdate{8th April 2018}
+
+\section{The Navier-Stokes equation}
+\label{sec:navierstokes}
+
+(This section has been contributed by Michiel Baltussen of the TU/e).
+
+If inertia is important an inertial term has to be incorporated into the momentum equation. 
+For an incompressible Newtonian fluid the following set of equations is obtained, which is known as
+the (incompressible) Navier-Stokes equation:
+\begin{align}
+ \rho \big( \frac{\partial \vek u}{\partial t} +
+     \vek u \cdot \nabla \vek u \big) + \nabla p 
+         - \nabla \cdot ( 2 \eta \ten D) &=\vek f \label{eq:nav_stokes1} \\
+\nabla \cdot \vek u &= 0
+\label{eq:nav_stokes2}
+\end{align} 
+with $\rho$ the density of the fluid. Other parameters and variables are the same as in the Stokes equation \ref{eq:stokes2}.
+The additional terms representing the inertia consist of an instationary term $\rho\partial \vek u/\partial t$ and a non-linear convection
+term $\rho\vek u \cdot \nabla \vek u$. For steady flow the instationary term is zero: $\rho\partial \vek u/\partial t=\vek 0$ and
+time-discretization is not necessary.
+
+\subsection{Time discretization}
+
+Many possible time-discretization schemes exist, and we will discuss only a few here. Furthermore, we will always apply implicit schemes for the viscous term.
+
+In the following we assume that at the initial time $t_0$ the
+initial velocity field $\vek u^0=\vek u(t_0)$ is specified (initial condition). 
+Initial pressures should not be necessary.
+We try to solve the flow equations to
+obtain $\vek u^{n+1}$ and $p^{n+1}$ at time $t^{n+1}$
+from the velocity field $\vek u^{n}$
+at time $t^{n}$. The time step $\Delta t=t^{n+1}-t^n$ can vary for single step methods, but needs to be constant for multi-step methods.
+
+A first class of methods is based on backwards differencing.
+The most simple of these methods is the implicit Euler (IE) or backward Euler scheme:
+\begin{align}
+ \rho \big( \frac{\vek u^{n+1}-\vek u^n}{\Delta t} +
+     \vek u^{n+1} \cdot \nabla \vek u^{n+1} \big) + \nabla p^{n+1} 
+         - \nabla \cdot ( 2 \eta \ten D^{n+1}) &=\vek f^{n+1} \\
+\nabla \cdot \vek u^{n+1} &= 0
+\end{align} 
+It is first-order accurate ($\mathcal{O}(\Delta t)$), but very stable. A
+natural extension is the second-order Gear based or second-order backwards
+differencing (BDF2), see \cite{Hulsen96} for references:
+\begin{align}
+ \rho \big( \frac{\frac32\vek u^{n+1}-2\vek u^n+\frac12\vek u^{n-1}}{\Delta t} +
+     \vek u^{n+1} \cdot \nabla \vek u^{n+1} \big) + \nabla p^{n+1} 
+         - \nabla \cdot ( 2 \eta \ten D^{n+1}) &=\vek f^{n+1} \\
+\nabla \cdot \vek u^{n+1} &= 0
+\end{align} 
+This is a multi-step scheme. It needs to be started, for example by the implicit Euler method.
+
+A second class of methods is based on the trapezoidal rule. 
+The fully implicit trapezoidal rule is also called Crank-Nicolson (CN) or second-order Adams-Moulton (AM2):
+\begin{align}
+ \rho \big( \frac{\vek u^{n+1}-\vek u^n}{\Delta t} +
+     \frac12\vek u^{n+1} \cdot \nabla \vek u^{n+1} +
+     \frac12\vek u^{n} \cdot \nabla \vek u^{n} \big) 
+      + \frac12\nabla p^{n+1} 
+      + \frac12\nabla p^{n} +  \qquad\notag\\
+   - \frac12\nabla \cdot ( 2 \eta \ten D^{n+1})  
+         - \frac12\nabla \cdot ( 2 \eta \ten D^{n}) &=\frac12(\vek f^{n+1}+\vec f^n)\\
+\nabla \cdot \vek u^{n+1} &= 0
+\label{eq:NS_CN2}
+\end{align}
+It is second-order accurate.
+Notes:
+\begin{enumerate}
+   \item By multiplying Eq.~\ref{eq:NS_CN2} with a factor $\frac12$ the Stokes part of the matrix can be made symmetric.
+   \item The Crank-Nicolson scheme needs a starting pressure $p^0$, which is a violation of the required initial conditions,
+         possibly leading to numerical wiggles in the pressure if the initial pressure is unknown.
+         A way to avoid the problem entirely is starting with an implicit Euler scheme in the first time step.
+         Alternatively, it is possible to define ``a time step averaged pressure'' $p^{n+\frac12}=(p^{n+1}+p^{n})/2$, 
+         instead of the pressures at the
+         start/end of a time interval.
+   \item In order to avoid expensive iteration for the non-linear term (see Sec.~\ref{sec:nonlin}), we could use a 
+         predictor $\hat{\vek u}^{n+1}$ for the convection speed:
+\begin{equation}
+ \vek u^{n+1} \cdot \nabla \vek u^{n+1} \approx \hat{\vek u}^{n+1} \cdot \nabla \vek u^{n+1}
+\label{eq:predictor_inertia}
+\end{equation}
+ for example $\hat{\vek u}^{n+1}=2\vek u^{n}-\vek u^{n-1}$, which results from linear extrapolation. Other predictors are also possible.
+Whether this procedure leads to schemes that is preferable over the standard schemes has not been investigated.
+\end{enumerate}
+
+A third class of methods is the class of semi-implicit schemes. The first example is the combination of a second-order
+explicit Adams-Bashforth (AB2) for the nonlinear term and the implicit Crank-Nicolson (Adams-Moulton) for the other terms:
+\begin{align}
+ \rho \big( \frac{\vek u^{n+1}-\vek u^n}{\Delta t} +
+     \frac32\vek u^n \cdot \nabla \vek u^{n} -
+     \frac12\vek u^{n-1} \cdot \nabla \vek u^{n-1} \big) 
+      + \frac12\nabla p^{n+1} 
+      + \frac12\nabla p^{n} +  \qquad\notag\\
+         - \frac12\nabla \cdot ( 2 \eta \ten D^{n+1})  
+         - \frac12\nabla \cdot ( 2 \eta \ten D^{n}) &=\frac12(\vek f^{n+1}+\vec f^n)\\
+\nabla \cdot \vek u^{n+1} &= 0
+\label{eq:NS_AB2}
+\end{align}
+This is a multi-step scheme and second-order accurate.
+Notes:
+\begin{enumerate}
+   \item By multiplying Eq.~\ref{eq:NS_AB2} with a factor $\frac12$ the Stokes part of the matrix can be made symmetric.
+   \item This is a multi-step scheme. This means it must be `started' and we need to do something special in
+         the first time step. A possibility is to use an explicit Euler/CN scheme for the first time step:
+\begin{align}
+ \rho \big( \frac{\vek u^{n+1}-\vek u^n}{\Delta t} +
+     \vek u^n \cdot \nabla \vek u^{n} \big) 
+      + \frac12\nabla p^{n+1} 
+      + \frac12\nabla p^{n} +  \qquad\notag\\
+         - \frac12\nabla \cdot ( 2 \eta \ten D^{n+1})  
+         - \frac12\nabla \cdot ( 2 \eta \ten D^{n}) &=\frac12(\vek f^{n+1}+\vec f^n)\\
+\nabla \cdot \vek u^{n+1} &= 0
+\label{eq:NS_EU}
+\end{align}
+   Note, that the coefficients of the implicit terms are the same for all time steps.
+   \item Like the fully implicit CN scheme, the AB2/CN scheme also needs a starting pressure $p^0$.
+         Also here, it is possible to define ``a time step averaged pressure'' $p^{n+\frac12}=(p^{n+1}+p^{n})/2$, 
+         instead of the pressures at the start/end of a time interval. Alternatively, the first time step can be handled by
+         a semi-implicit Euler scheme:
+\begin{align}
+ \rho \big( \frac{\vek u^{n+1}-\vek u^n}{\Delta t} +
+     \vek u^n \cdot \nabla \vek u^{n} \big) 
+      + \nabla p^{n+1} 
+         - \nabla \cdot ( 2 \eta \ten D^{n+1})  &=\vek f^{n+1}\\
+\nabla \cdot \vek u^{n+1} &= 0
+\label{eq:NS_AB2_firststep}
+\end{align}
+   Note, that the coefficients of the implicit terms are \emph{different} for the first time step. 
+   \item Since all non-linear terms are handled in an explicit way, the system of equations is linear and
+         expensive iteration for the non-linear term (see Sec.~\ref{sec:nonlin}) can be avoided.
+        Also in many problems this matrix doesn't change in time
+        leading to substantial savings in CPU time, since the LU decomposition or the preconditioner needs to be computed only once.
+        The matrix can be made symmetric, which can also lead to memory and CPU savings.
+   \item In convection-dominated flows (large Reynolds numbers) the time step in the AB2/CN scheme is limited by the CFL condition, because the non-linear term is integrated explicitly. For large Reynolds numbers this term is dominating.
+\end{enumerate}
+The second example is a second-order scheme based on BDF2 (Gear) for the time-discretization and an explicit treatment of
+the nonlinear terms (Karniadakis) \cite{Karniadakis91,Hulsen96}:
+\begin{align}
+ \rho \big( \frac{\frac32\vek u^{n+1}-2\vek u^n + \frac12\vek u^{n-1}}{\Delta t} +
+     2\vek u^n \cdot \nabla \vek u^{n} -
+     \vek u^{n-1} \cdot \nabla \vek u^{n-1} \big) 
+      + \nabla p^{n+1} 
+       \qquad\notag\\
+         - \nabla \cdot ( 2 \eta \ten D^{n+1}) &=\vek f^{n+1}\\
+\nabla \cdot \vek u^{n+1} &= 0
+\label{eq:NS_Kar2}
+\end{align}
+This is a multi-step scheme and second-order accurate.
+Notes:
+\begin{enumerate}
+   \item Compared to the AB2/CN scheme, this scheme has a larger stability region and can therefore be useful if stability is
+         a problem. The accuracy is also second-order, but the truncation errors are larger than the AB2/CN scheme.
+         The amount of work for assembling the vector is smaller leading to lower CPU times. 
+   \item This is a multi-step scheme. This means it must be `started' and we need to do something special in
+         the first time step. A possibility is to use an semi-implicit Euler scheme for the first time step:
+\begin{align}
+ \rho \big( \frac{\vek u^{n+1}-\vek u^n}{\Delta t} +
+     \vek u^n \cdot \nabla \vek u^{n} \big) 
+      + \nabla p^{n+1} 
+         - \nabla \cdot ( 2 \eta \ten D^{n+1})  &=\vek f^{n+1}\\
+\nabla \cdot \vek u^{n+1} &= 0
+\label{eq:NS_kar2_firststep}
+\end{align}
+   Note, that the coefficients of the implicit terms are \emph{different} for the first time step. 
+   \item Since all non-linear terms are handled in an explicit way, the system of equations is linear and
+         expensive iteration for the non-linear term (see Sec.~\ref{sec:nonlin}) can be avoided.
+        Also in many problems this matrix doesn't change in time
+  leading to substantial savings in CPU time, since the LU decomposition or the preconditioner needs to be computed only once.
+        The matrix can be made symmetric, which can also lead to memory and CPU savings.
+   \item In convection-dominated flows (large Reynolds numbers) the time step in this scheme is limited by the CFL condition, because the non-linear term is integrated explicitly. For large Reynolds numbers this term is dominating.
+\end{enumerate}
+
+Which scheme to choose must always be based on a balance of stability, accuracy, memory requirements and CPU time.
+For more and higher order integration methods the reader is referred to Heath Chapter 10 \cite{Heath02} and Hulsen \cite{Hulsen96} and
+the references therein.
+
+\subsection{Linearization of the convection term}
+\label{sec:nonlin}
+In order to solve the (steady or unsteady) Navier-Stokes equation, the non-linear term has to be linearized, except when this term is taken explicit.
+Several possibilities exist, of which Picard and Newton iteration are the most well-known. In these schemes the set of equations is solved with an initial guess, leading to a new solution. This process is repeated until the solution has converged, i.e.\ does not change anymore within a certain predefined limit. These linearization schemes, approximate the non-linear term as follows:\vspace*{-2ex}
+\begin{align}
+\intertext{Picard:}
+\vek u_{j+1} \cdot \nabla \vek u_{j+1} & \approx \vek u_{j} \cdot \nabla \vek u_{j+1} \\
+\intertext{Newton:}
+\vek u_{j+1} \cdot \nabla \vek u_{j+1} & = (\vek u_j + \delta \vek u)\cdot \nabla (\vek u_j + \delta \vek u)
+ \approx \vek u_{j} \cdot \nabla \vek u_{j+1} + \vek u_{j+1} \cdot \nabla \vek u_{j} - \vek u_{j} \cdot \nabla \vek u_{j}
+\end{align}
+where $\vek u_{j}$ is the solution at iteration step $j$, $\vek u_{j+1}$ 
+is the solution at iteration step $j+1$ and $\delta \vek u= \vek u_{j+1} - \vek u_{j}$.
+If the linearization is inserted into the \emph{steady state} momentum equation, the following equations
+for $\vek u_{j+1}$ and $p_{j+1}$ are obtained:\vspace*{-2ex}
+\begin{gather}
+\intertext{Picard:}
+\rho \vek u_{j} \cdot \nabla \vek u_{j+1} - \nabla p_{j+1} + \nabla \cdot (2 \eta \ten D_{j+1}) = \vek 0 \\
+\intertext{Newton:}
+\rho \left( \vek u_{j} \cdot \nabla \vek u_{j+1} + \vek u_{j+1} \cdot \nabla \vek u_{j} - \vek u_{j} \cdot \nabla \vek u_{j} \right ) -
+\nabla p_{j+1} + \nabla \cdot ( 2 \eta \ten D_{j+1})= \vek 0
+\end{gather}
+The advantage of the Picard iteration scheme over the Newton scheme is the larger convergence region. The disadvantage 
+is the slow convergence rate (linear) compared to the Newton method (quadratic).
+In practice this might lead to the combination of a few Picard steps
+followed by Newton steps.
+The Picard steps are used to enter the fast converging region of the Newton scheme.
+
+The resulting element matrix is not symmetric and an appropriate solver needs to be used (for example
+\texttt{MA41}, see Sec.~\ref{sec:hslsparse}).
+
+\subsection{Implementation}
+
+In order to give the user a lot of flexibility, individual parts of the momentum equation are available as separate element routines.
+When the system matrix and vector are built, all desired parts can be added and pre-multiplied with a factor.
+This makes it possible to incorporate time integration schemes in an easy and flexible manner. Also terms that remain constant 
+during the iteration process need to be computed only at the start of iteration, saving CPU time.
+                  
+In order to clarify this idea, several examples are given below.
+The examples include Crank-Nicolson time
+integration, second-order implicit Gear,
+convection velocity predictor, the AB2/CN scheme and the  GK2 (Gear-Karniadakis) scheme. All the schemes are
+applied to the same problem having an analytical (manufactured) solution, which will be given shortly.
+         
+\subsection{Convergence and efficiency of time-integration schemes}
+
+The efficiency of the above mentioned integration schemes for the test problem using a manufactured solution 
+(see Sec.~\ref{sec:testproblemNS}) is given in Table~\ref{tab:navstoks_integr_acc}.
+The errors in the velocity ($\epsilon_u$) and pressure ($\epsilon_p$)
+were obtained by comparing the computed solution with the manufactured solution.
+The computation was ended at $t=0.73$ and a $40 \times 40$ mesh was used. All computations were performed for Re$=100$.
+Both $\epsilon_{u}$ and  $\epsilon_{p}$ are the maximum errors attained during the integration process.
+From this table it can be seen that all integration methods are second-order accurate,
+since the error is reduced by a factor between three and four, if the timestep is halved.
+\begin{table}[htb!]
+  \caption{The convergence and efficiency of various integration schemes.}
+  \label{tab:navstoks_integr_acc}
+\begin{center}
+  \begin{tabular}{c|cccc}
+\rule{0pt}{3.5ex}  Scheme & $\Delta t$ & $\epsilon_{u}$ & $\epsilon_{p}$ & CPU time [s]\\\hline
+\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $5.038 \cdot 10^{-5} $ & $ 3.43 \cdot 10^{-3}$ & $53$ \\
+CN               & $5\cdot 10^{-3}$ & $1.28 \cdot 10^{-5} $ & $ 1.09 \cdot 10^{-3}$ & $100$ \\
+                 & $2.5\cdot 10^{-3}$ & $3.91 \cdot 10^{-6} $ & $ 8.09 \cdot 10^{-4}$ & $181$ \\\hline
+\rule{0pt}{2.8ex}& $1\cdot 10^{-2}$ & $1.12 \cdot 10^{-4} $ & $ 4.83 \cdot 10^{-3}$ & $50$ \\
+BDF2             & $5\cdot 10^{-3}$ & $2.80 \cdot 10^{-5} $ & $ 1.28 \cdot 10^{-3}$ & $97$ \\
+                 & $2.5\cdot 10^{-3}$ & $7.16 \cdot 10^{-6} $ & $ 6.21 \cdot 10^{-4}$ & $173$ \\\hline
+\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $6.60 \cdot 10^{-5} $ & $ 3.53 \cdot 10^{-2}$ & $19$ \\
+Conv Pred        & $5\cdot 10^{-3}$ & $1.76 \cdot 10^{-5} $ & $ 8.82 \cdot 10^{-3}$ & $38$ \\
+                 & $2.5\cdot 10^{-3}$ & $5.54 \cdot 10^{-6} $ & $ 2.45 \cdot 10^{-3}$ & $77$\\\hline
+\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $6.98 \cdot 10^{-5} $ & $ 2.64 \cdot 10^{-2}$ & $4.3$ \\
+AB2/CN           & $5\cdot 10^{-3}$ & $1.76 \cdot 10^{-5} $ & $ 6.61 \cdot 10^{-3}$ & $8.4$ \\
+                 & $2.5\cdot 10^{-3}$ & $5.20 \cdot 10^{-6} $ & $ 1.90 \cdot 10^{-3}$ & $16.6$\\\hline
+\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $2.18 \cdot 10^{-4} $ & $ 5.28 \cdot 10^{-2}$ & $2.9$ \\
+GK2              & $5\cdot 10^{-3}$ & $5.43 \cdot 10^{-5} $ & $ 1.32 \cdot 10^{-2}$ & $5.5$ \\
+                 & $2.5\cdot 10^{-3}$ & $1.39 \cdot 10^{-5} $ & $ 3.31 \cdot 10^{-3}$ & $11.0$
+  \end{tabular}
+   
+%\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $5.038 \cdot 10^{-5} $ & $ 3.43 \cdot 10^{-3}$ & $60$ \\
+%CN               & $5\cdot 10^{-3}$ & $1.28 \cdot 10^{-5} $ & $ 1.09 \cdot 10^{-3}$ & $116$ \\
+%                 & $2.5\cdot 10^{-3}$ & $3.91 \cdot 10^{-6} $ & $ 8.09 \cdot 10^{-4}$ & $205$ \\\hline
+%\rule{0pt}{2.8ex}& $1\cdot 10^{-2}$ & $2.05 \cdot 10^{-4} $ & $ 1.35 \cdot 10^{-2}$ & $57$ \\
+%BDF2             & $5\cdot 10^{-3}$ & $5.08 \cdot 10^{-5} $ & $ 3.45 \cdot 10^{-3}$ & $110$ \\
+%                 & $2.5\cdot 10^{-3}$ & $1.29 \cdot 10^{-5} $ & $ 1.04 \cdot 10^{-3}$ & $199$ \\\hline
+%\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $6.60 \cdot 10^{-5} $ & $ 3.53 \cdot 10^{-2}$ & $22$ \\
+%Conv Pred        & $5\cdot 10^{-3}$ & $1.76 \cdot 10^{-5} $ & $ 8.81 \cdot 10^{-3}$ & $44$ \\
+%                 & $2.5\cdot 10^{-3}$ & $5.54 \cdot 10^{-6} $ & $ 2.45 \cdot 10^{-3}$ & $90$\\\hline
+%\rule{0pt}{2.5ex}& $1\cdot 10^{-2}$ & $6.98 \cdot 10^{-5} $ & $ 2.64 \cdot 10^{-2}$ & $5$ \\
+%AB2/CN           & $5\cdot 10^{-3}$ & $1.76 \cdot 10^{-5} $ & $ 6.61 \cdot 10^{-3}$ & $10$ \\
+%                 & $2.5\cdot 10^{-3}$ & $5.19 \cdot 10^{-6} $ & $ 1.90 \cdot 10^{-3}$ & $20$
+\end{center}
+\end{table}
+
+Comparing the methods with Newton iteration (CN and BDF2), CN is slightly more accurate for the same time step.
+So from an efficiency point of view CN is better, however BDF2 has better damping
+properties for fast transients.
+The methods which do not require iteration (Cond Pred, AB2/CN and GK2) result in much faster computation
+for the same (velocity) accuracy than
+the methods with Newton iteration (CN and BDF2). Notice, that GK2 is faster than AB2/CN for the same time step, because there
+is less work to do. However, GK2 is also less accurate than AB2/CN, requiring a smaller time step for the same accuracy.
+
+\subsection{Steady flow in a driven 2D cavity at $\mathrm{Re}=1000$}
+\label{sec:nssteady2D}
+
+An example of steady state inertia-dominated flow is the driven cavity flow at a Reynolds number of $1000$,
+which can be seen in Figure \ref{fig:driven_cavity_Re_1000}.
+Both Picard and Newton iteration can be used, but due to better convergence
+only the Newton method has been used in this example. 
+The example file is \texttt{navier\_stokes1.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample navier\_stokes}
+\end{quote}
+The first guess is the Stokes ($\text{Re}=0$) solution to this problem.
+The Reynolds number is increased gradually, until Re$=1000$ is reached.
+ Note that the center of the main vortex is shifted to the right and bottom with respect to the Stokes solution
+and note also the two vortices in the lower corners.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=100mm]{stream_cavity_Re_1000}
+  \caption{Streamlines for a driven cavity flow at $\text{Re}=1000$.}
+  \label{fig:driven_cavity_Re_1000}
+\end{figure}
+
+In the example file \texttt{navier\_stokes3.f90} the same problem is solved,
+however the Stokes part of the system matrix and vector is build only once,
+since it remains constant during the iteration process. 
+The Stokes matrix and vector are stored in a separate matrix and vector and
+copied to the matrix and vector that are used in the solution process.
+The computation time is reduced by 15\% compared to
+\texttt{navier\_stokes1.f90}. 
+Note, that the entire system matrix is copied and
+memory is needed to store this copy. This can lead to insufficient available
+memory, especially for 3D problems.
+
+\subsection{Steady flow in a driven 3D cavity at $\mathrm{Re}=500$}
+
+This example is a driven 3D cavity with two moving walls.
+The example file is \texttt{navier\_stokes2.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample navier\_stokes}
+\end{quote}
+The resulting velocity field and stream ribbons can be seen in Fig.~\ref{fig:driven_cavity_3D_Re_500}.
+\begin{figure}
+  \centering
+  \includegraphics[width=140mm]{3d_cavity_steady_Re_500}
+  \caption{Velocity field and stream ribbons in a 3D cavity with two moving
+walls at Re$=500$.}
+  \label{fig:driven_cavity_3D_Re_500}.
+\end{figure}
+
+\subsection{A test problem for unsteady flows using a manufactured solution}
+\label{sec:testproblemNS}
+
+In order to test the accuracy of the implementations, a test problem has been designed with the help of the
+Method of Manufactured Solutions \cite{Steinberg85}.
+This method adds a body force to the momentum equation, which is formed in such a way that the predetermined solution
+is obtained if the Navier-Stokes equations are solved.
+In order to obtain the equations for the body force, the desired solution is substituted into the Navier-Stokes equations.
+This is an elegant way of creating an analytical solution for a slightly adapted problem.
+Since the evaluation of an arbitrary solution in the NS equations can be cumbersome and error prone when done by hand,
+the help of an symbolic evaluation toolkit such as \texttt{Matlab}, \texttt{Maple} or \texttt{Mathematica} is recommended.
+ 
+The analytical solution for the velocity is derived from the following streamfunction on the domain $[0,1]\times[0,1]$:
+\[
+  \psi(x,y) = -\frac1{2\pi} \sin(\pi x) \sin( \pi y^{2}) \sin(\pi t)
+\]
+The following solution, which is divergence free, since it is derived from a stream function, is now chosen as:
+\begin{align}
+u_{x} &= -\sin(\pi x)\cos( \pi y^{2}) y \sin(\pi t)  \\
+u_{y} &=\cos(\pi x) \sin( \pi y^{2} )/2\sin(\pi t)\\
+p &= -\cos(\pi x)\sin( \pi y/2) \sin(\pi t) 
+\end{align}
+which is similar to a driven cavity flow with slip boundaries at the left and right wall.
+In addition, the lid is moving in a periodic way.
+The following forcing vector is obtained with help of \texttt{Mathematica}:
+\begin{multline*}
+f_{x} =\frac{1}{4} \biggl(\sin(\pi x) \biggl[ -4 \pi y \rho \cos(\pi t) \cos(\pi y^{2}) + \\
+\sin( \pi t) \bigl( 4 \pi ( -\pi (y+4y^{3}) \eta \cos(\pi y^{2}) + \sin( \pi y / 2) - 6 y \eta \sin( \pi y^{2}) ) - \\
+\rho \cos( \pi x ) \sin( \pi t) (-4 \pi y^{2} + \sin( 2 \pi y^{2} )) \bigr) \biggr] \biggr)
+\end{multline*}\vspace*{-4ex}
+\begin{multline*}
+f_{y} = \frac{1}{4} \biggl( 2 \pi \cos ( \pi x) \biggl[ - ( \cos( \pi y/2) + 2
+\eta \cos( \pi y^{2}) ) \sin( \pi t) + \\
+[ \rho \cos( \pi t) + \pi ( 1 + 4 y^{2} ) \eta \sin(\pi t ) ] \sin(\pi y^{2}) \biggr] + \\
+\pi \rho y \sin( \pi t)^{2} \sin( 2 \pi y^{2}) \biggr)
+\end{multline*}
+
+The examples solving the test problem include Crank-Nicolson time
+integration (\texttt{navier\_stokes4.f90}), second-order implicit Gear
+(\texttt{navier\_stokes5.f90} and \texttt{navier\_stokes15.f90}, the latter
+using spectral elements),
+convection velocity predictor (\texttt{navier\_stokes6.f90}), the AB2/CN
+scheme (\texttt{navier\_stokes7.f90} and \texttt{navier\_stokes10.f90}) and
+the Gear-Karniadakis scheme  
+(\texttt{navier\_stokes11.f90}).
+The example files can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample navier\_stokes}
+\end{quote}
+
+In order to clarify the process of building the system matrix and vector from separate contributions,
+let us take a look at \texttt{navier\_stokes4.f90}.
+
+\begin{listing}{194}
+!   fill right-hand side that is constant during iteration
+
+!  viscous term and pressure at tn
+    call build_system ( mesh, problem, sysmatrix, rhsdn, &
+      elemsub=stokes_rhs_divsigma, coefficients=coefficients, &
+      oldvectors=oldvectors, physqrow=[physqvel], buildmatrix=.false., &
+      factorvec=0.5_dp )
+
+!   rho un grad un term
+    call build_system ( mesh, problem, sysmatrix, rhsdn, &
+      elemsub=inertia_elem_ungradun, coefficients=coefficients, &
+      oldvectors=oldvectors, physqrow=[physqvel], &
+      addmatvec=.true., buildmatrix=.false., factorvec=0.5_dp )
+
+!   body force vector of manufactured solution at tn and tn+1
+
+    coefficients%i(14) = 1
+
+    time_m = tn
+    call build_system ( mesh, problem, sysmatrix, rhsdn, elemsub=stokes_elem, &
+      coefficients=coefficients, addmatvec=.true., buildmatrix=.false., &
+      factorvec=0.5_dp )
+    time_m = tnp1
+    call build_system ( mesh, problem, sysmatrix, rhsdn, elemsub=stokes_elem, &
+      coefficients=coefficients, addmatvec=.true., buildmatrix=.false., &
+      factorvec=0.5_dp )
+
+    coefficients%i(14) = 0
+
+!   fill solution vector with analytical solution, for the boundary conditions
+    call copy ( sol_exact, sol )
+    
+    iterate: do
+
+      iterstep = iterstep + 1
+
+!     copy stored rhsdn
+      call copy ( rhsdn, rhsd )
+
+!     build (assemble) viscous/pressure matrix and vector from elements 
+      call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+        coefficients=coefficients, buildvector=.false., factormat=0.5_dp )
+
+!     first num_picard steps Picard iteration, then Newton iteration for
+!     the term un+1.grad un+1
+      if ( iterstep <= num_picard ) then
+        call build_system ( mesh, problem, sysmatrix, rhsd, &
+          elemsub=inertia_elem_conv_picard, coefficients=coefficients, &
+          oldvectors=oldvectors_iter, physqcol=[physqvel], &
+          physqrow=[physqvel], addmatvec=.true., &
+          factormat=0.5_dp, factorvec=0.5_dp )
+      else
+        call build_system ( mesh, problem, sysmatrix, rhsd, &
+          elemsub=inertia_elem_conv_newton, coefficients=coefficients, &
+          oldvectors=oldvectors_iter, physqcol=[physqvel], &
+          physqrow=[physqvel], addmatvec=.true., &
+          factormat=0.5_dp, factorvec=0.5_dp )
+      end if
+
+!     instationary term ( rho du/dt ) 
+      call build_system ( mesh, problem, sysmatrix, rhsd, &
+        elemsub=inertia_elem_dudt, coefficients=coefficients, &
+        oldvectors=oldvectors, physqcol=[physqvel], physqrow=[physqvel], &
+        addmatvec=.true. )
+
+      call add_effect_of_essential_to_rhs ( problem, sysmatrix, sol, rhsd )
+
+      call solve_system_ma41 ( sysmatrix, rhsd, sol )
+ 
+      ............
+    end do iterate
+\end{listing} 
+
+\begin{description}
+  \item[line 196-200] The viscous and pressure contribution at $t=t^{n}$ is computed and added to the system vector. Since Crank-Nicolson
+integration is used, this term is pre-multiplied with $0.5$, which is set with the option \texttt{factorvec=0.5\_dp}. The use of
+\texttt{buildmatrix=.false.} is obligatory, in order to prevent error messages from the element routine. Since only the momentum equation
+is affected, only contributions to the velocity part of the system vector are allowed.
+  \item[line 203-206] The contribution of the non-linear term at $t=t^{n}$ is added to the system vector \texttt{rhsdn}. The same options are used as for the viscous and pressure contributions.
+  \item[line 210-221] The body forces, generated by the manufactured solution, are added to the system matrix. The global variable \texttt{time\_m} is declared in \texttt{stokes\_functions.f90} and represents the evaluation time. The parameter \texttt{coefficients\%i(14)} is the number for choosing the desired body force. Note that it is set to default after the body forces are computed, in order to prevent errors. Since the element subroutine is \texttt{stokes\_elem}, the body force functions have to be declared in \texttt{stokes\_functions.f90} as a vector function (\texttt{vfunc}).
+  \item[line 224] The exact solution is copied, since it contains the essential boundary conditions.
+  \item[line 231] The system vector is copied to a temporary system vector used in the iteration loop.
+  \item[line 234] The Stokes system matrix is built. Both the velocity and pressure part of the system matrix are made.
+  \item[line 239-251] The non-linear inertia term is added. Either Picard or Newton iteration is used. Since the non-linear term contains only velocity unknowns, it is added to the velocity rows and columns. Both the system matrix and vector have the pre-factor $0.5$, due to the Crank-Nicolson integration scheme.
+  \item[line 254-257] The unsteady inertia term is added, which is computed in the element subroutine \texttt{inertia\_elem\_dudt}.
+\end{description}
+This iteration loop is repeated until convergence of the velocity. After convergence, the solution is copied to another vector, in order to be used in the next timestep and the following iteration procedure.
+
+\subsection{Flow in a driven 2D cavity at $\mathrm{Re}=100$ with a solid
+particle. Weak constraint on the particle domain}
+
+(This example has been contributed by Young Joon Choi of the TU/e).
+
+We consider a driven cavity flow at a Reynolds number of $100$. It contains a
+single solid particle (radius/height=0.075)
+that is generated using a weak constraint on the particle
+domain. The particle is neutrally buoyant (density of particle = density of
+fluid) and freely moving and rotating (no external forcing).
+
+The example file is \texttt{navier\_stokes8.f90} and can be
+obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample navier\_stokes}
+\end{quote}
+In Fig.~\ref{fig:ns8} we show the path of the center of the particle, which is
+initially at the center of the domain. The particle tends to migrate to the
+center of the vortex, at least for the first four cycles.
+The migration is expected because the pressure is minimal in
+the center of a vortex.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=100mm]{ns8}
+  \caption{Particle path of a solid particle in a driven cavity flow
+      at $\text{Re}=100$.}
+  \label{fig:ns8}
+\end{figure}
+
+\subsection{Flow in a rectangular box with a solid particle sedimenting
+under the influence of a gravity force. Weak constraint on the particle domain}
+
+(This example has been contributed by Young Joon Choi of the TU/e).
+
+We consider a 2D flow in a rectangular box of width $W=2$ and height $H=3$. The
+fluid has a viscosity $0.1$ and density $\rho_\text{f}=1$.
+A solid particle (radius $r_\text{p}=0.1$,
+ density $\rho_\text{p}=1.25$) is positioned
+at (1.5,2.5) and starts to fall under gravity until it hits the bottom of the
+box.
+
+The particle is generated using a weak constraint on the particle
+domain. Since the density of the particle is not equal to the density of
+fluid, the additional change of momentum and gravity forces on the particle
+need to be taken into account. We do that by taking the external forcing
+$\col h$ in \eqref{eq:constraintsystem} equal to:
+\begin{equation}
+   \col h=(1-\frac{\rho_\text{f}}{\rho_\text{p}})\Big(-\mat M\deriv{\col U}{t}
++m\col G\Big)
+\end{equation}
+where $\col U^T=(U,V,\Theta)$ are the additional unknowns, 
+$m=\rho_\text{p}\pi r_\text{p}^2$ is the mass of the particle, 
+$\col G^T=-(0,g,0)$ and the matrix
+$\mat M$ is diagonal and given by
+\[ \mat M=
+ \begin{pmatrix}
+    m & 0 & 0 \\
+    0 & m & 0 \\
+    0 & 0 & \frac12m r_\text{p}^2 
+ \end{pmatrix}
+\]
+Note that the last diagonal term is the moment of inertia with respect to the
+center of the particle.
+
+For the time-discretization of $\lderiv{\col U}{t}$ we use the second-order
+implicit Gear scheme:
+\[
+   \deriv{\col U}{t}=
+\frac{\frac32\col U^{n+1}-2\col U^n+\frac12\col U^{n-1}}{\Delta
+t}+\mathcal{O}(\Delta t^2)
+\]
+which means that the diagonal of the matrix block with respect to the additional
+unknowns in \eqref{eq:constraintsystem} becomes filled with non-zeros.
+The example file is \texttt{navier\_stokes9.f90}. The value of $g=9.81$, which
+means that in order for the problem to be realistic the units of length
+and mass must be m and kg, respectively.
+
+In Fig.~\ref{fig:ns9} we show the path of the center of the particle.
+The particle tends to centerline.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=100mm]{ns9}
+  \caption{Particle path of a solid particle in falling under gravity in a
+rectangular box}
+  \label{fig:ns9}
+\end{figure}
+In Fig.~\ref{fig:ns9stream} we show the streamlines at the end of the
+simulation.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=100mm]{ns9stream}
+  \caption{Streamlines at the end of the simulation $t=0.85$.}
+  \label{fig:ns9stream}
+\end{figure}
+
+\subsection{A Navier-Stokes problem on a 2D domain with three velocity components: computation of a 3D developed flow using a 2D domain}            
+\label{sec:navierstokes2D3D}
+
+If we assume $\plderiv{\vek u}{z}=\vek 0$ (developed flow in $z$-direction), the pressure derivative $\plderiv{p}{z}$ is a constant (pressure linear in $z$) and the velocity field $\vek u(x,y)$ and pressure field $p(x,y)$ can be solved on a 2D domain. Note, that the velocity vector $\vek u$ still has three components $(u,v,w)$ and that the pressure field is a cross-sectional `snap-shot' without the linear profile in $z$-direction. The latter must be taken into account by a volume force in $z$-direction or by an imposed flow rate constraint on $w$. Note, that for Navier-Stokes flow, in constrast to a similar problem in Stokes flow in Sec.~\ref{sec:stokes2D3D}, the component $w$ (the velocity in $z$-direction) is coupled to the velocity components $(u,v)$ through the convection term. However, the in-plane velocities $(u,v)$ do not depend on $w$ and could have been solved in a separate smaller system. We did not do that and solve all velocity components in one system. In this way, the element can be used for other problems as well.
+
+An example is given in \texttt{navier\_stokes16.f90}, where $(u,v)$ are determined by the lid-driven cavity problem (see Sec.~\ref{sec:driven_cavity2D}) and $w$ is determined by an imposed flow rate.
+
+\subsection{Flow in curved channel with a square cross section using a 2D domain with 
+three velocity components (axisymmetric with swirl): Dean flow with secondary eddies}
+\label{sec:nsDean2D}
+
+This problem is an extension the straight channel problem of Sec.~\ref{sec:navierstokes2D3D} to a curved channel,
+but without a moving wall.
+This called a Dean flow. The flow is axisymmetric and generated by an imposed flow rate through the curved channel (square torus).
+
+In a cylindrical coordinate system, axi-symmetry means that the velocity components $(u_z,u_r,u_\theta)$ and pressure $p$ only a function of $(z,r)$ (independent from $\theta$) and possibly time $t$. In most cases we additionally assume that $u_\theta=0$, however it can be quite useful to include $u_\theta$ (swirl). Important examples are the analysis of plate-plate and cone-plate rotational rheometers. Note, that we now have to solve three velocity components and pressure on a 2D domain,
+                                                                                
+The example files are \texttt{navier\_stokes17.f90} (steady flow), \texttt{navier\_stokes18.f90} (startup with Crank-Nicolson time-integration) and \texttt{navier\_stokes19.f90} (startup with BDF2 (Gear) time-integration).
+
+ 
+

@@ -1,0 +1,17 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+1   deltat: time step
+
+2   gammac: surface tension coefficient
+
+3   kappac: surface dilatational viscosity
+
+4   muc: surface shear viscosity
+
+5   Kc: surface dilatational elasticity
+
+6   Gc: surface shear elasticity
+
+
+7-50 reserved for future use

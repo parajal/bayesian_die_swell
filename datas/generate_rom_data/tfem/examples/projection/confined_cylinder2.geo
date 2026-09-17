@@ -1,0 +1,12 @@
+L = 15;
+H = 2;
+a = 1;
+cl1 = 0.4;
+cl2 = 0.04;
+cl3 = 0.18;
+
+Include "confined_cylinder.igo";
+
+Mesh.Algorithm = 6; // Frontal
+Mesh.ElementOrder = 2; // Second-order elements
+

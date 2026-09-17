@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+#  tfdoc
+#
+#  tfdoc is used to view the tfem documentation by acroread
+#
+
+. settfemroot
+
+if [ "$tp" = . ]; then
+  tp=..
+fi
+
+if [ $# -eq 0 ]
+then
+  echo "Usage:"
+  echo
+  echo "   tfdoc <document>"
+  echo
+  echo "Available documents in doc:"
+  echo
+  ls -C $tp/doc | sed -e 's/.pdf//g'
+  echo
+  echo "Available documents in external/doc:"
+  echo
+  ls -C $tp/external/doc | sed -e 's/.pdf//g'
+  echo
+  exit
+fi
+
+# define PDFVIEWER or change acroread to your favorite pdf viewer
+pdfviewer=${PDFVIEWER:-acroread}
+
+type $pdfviewer >/dev/null 2>&1
+if [ $? -eq 1 ]; then
+  echo
+  echo $pdfviewer: not found
+  echo
+  echo Set environment variable PDFVIEWER to a valid pdf viewer or browse to
+  echo the directory $tp/doc to view the documentation.
+  echo
+  exit
+fi
+
+doc1=$tp/doc
+doc2=$tp/external/doc
+
+if [ -f $doc1/$1.pdf ] ; then
+  cd $doc1
+  $pdfviewer $1.pdf
+elif [ -f $doc2/$1.pdf ] ; then
+  cd $doc2
+  $pdfviewer $1.pdf
+else
+  echo $1: document not found
+fi

@@ -1,0 +1,26 @@
+% !TEX root = userguide.tex
+
+\def\headdate{11th May 2019}
+
+\section{Stress work}
+\label{sec:stresswork}
+
+The examples in this section are simple illustrations of the use and tests of the stress work term 
+$\ten\tau:\ten D$ in
+the temperature equation for developed flow in a pipe. The numerical solutions are compared to analytical solutions, where available.
+For Newtonian fluids the stress work is the same as the viscous dissipation.
+The steady temperature field in the examples can be found by solving (convection term is zero): 
+\begin{equation}
+  -\kappa\nabla^2 T = \ten \tau : \ten D 
+  \label{eq:steadytemp}
+\end{equation}
+A standard scalar diffusion element are used to solve this equation. The right-hand side containing the stress work is built after solving the flow equations. The stress work is first computed in all integration points and put in a vector defined per element (\texttt{elvector\_t}). This vector is then transferred to the diffusion element for building the right-hand side.
+
+The first example (\texttt{stress\_work1.f90}) computes the axisymmetric Stokes flow in a pipe and the corresponding steady temperature profile due to viscous dissipation. The routine \texttt{fill\_viscous\_dissipation\_gauss} from the generalized Stokes module (see Sec.~\ref{sec:generalized_stokes}) is used to build the stress work vector. The numerical solution is compared to the exact solution.
+
+The second example (\texttt{stress\_work2.f90}) computes the Stokes flow and temperature profile between two concentric cylinders. Both axial and circumferential (swirl) flow is included. The numerical solutions are compared to the exact solutions, except for the temperature profile when axial flow is present.
+
+The third example (\texttt{stress\_work3.f90}) computes the axisymmetrical start-up flow of an Oldroyd-B fluid in a pipe until steady state and the corresponding steady temperature profile due to the stress work. The routine \texttt{fill\_viscoelastic\_stress\_work\_gauss} is used to build the stress work vector for the viscoelastic part. The numerical solution is compared to the exact solution.
+
+The fourth example (\texttt{stress\_work4.f90}) computes the start-up flow between two concentric cylinders of an Oldroyd-B fluid
+and the corresponding steady temperature profile due to the stress work. Both axial and circumferential (swirl) flow is included. The numerical solutions are compared to the exact solutions, except for the temperature profile when axial flow is present.

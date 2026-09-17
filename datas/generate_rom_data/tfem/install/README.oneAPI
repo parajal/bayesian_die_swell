@@ -1,0 +1,47 @@
+OneAPI
+======
+
+OneAPI is a set of tools for Intel processors and is free to use.
+It contains the Intel Fortran compiler and the MKL library.
+
+
+MKL libary
+----------
+
+The MKL library is part of the Intel oneAPI Base toolkit. The MKL library can
+be used with Intel Fortran, but also with other compilers such as gfortran and
+nagfor.
+
+
+Intel Fortran
+-------------
+
+The Intel Fortran compiler is part of the Intel oneAPI HPC toolkit.
+It is available on Windows and Linux, but only on the x86-64 (amd64) processor
+architecture. The compiler is called ifx. Use the most recent version of
+OneAPI, since ifx is able to compile tfem only recently.
+
+
+Installation instructions for tfem (minimal installation)
+---------------------------------------------------------
+
+- Install Intel Fortran
+
+    Go to site:
+       https://www.intel.com/oneapi
+    and then go to "Get the toolkits".
+
+    Go to Intel® oneAPI Base Toolkit
+    Linux/Web & Local/Online (use online)
+    Download file
+    cd ~/Downloads
+    sudo sh l_BaseKit_p....
+    Customized installation
+    Only MKL
+    Go to Intel® oneAPI HPC Toolkit
+    Linux/Web & Local/Online (use online)
+    Download file
+    cd ~/Downloads
+    sudo sh l_HPCKit_p....
+    Customized installation
+    Only Intel Fortran (for now)

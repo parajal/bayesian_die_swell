@@ -1,0 +1,66 @@
+Integer coefficients for the element routines in this addon.
+
+
+List of the coefficients
+------------------------
+
+  1-150: all relevant integer coefficients from the stokes & viscoelastic add-on
+151-200: reserved for diffuse_interface add-on
+201-250: reserved for inertia add-on
+251-300: reserved for generalized Stokes add-on
+
+
+301 Time integration scheme:
+    1: first-order, semi-implicit BDF1 (Euler)
+    2: second-order, semi-implicit BDF2 with convection velocity prediction
+    3: first-order, implicit BDF1
+    4: second-order, implicit BDF2
+
+302 Position in oldvectors%s of the solution vector containing the velocity and
+    pressure at the previous time step n. Older (step n-1,...) solution values
+    are stored sequentially. A Value of 0 means default = 1.
+
+303 Position in oldvectors%s of the _prediction_ for the solution vector
+    (velocity and pressure) for the next time step n+1.
+    A Value of 0 means default = 1.
+    NOTE: this is only used for the convection velocity in the semi-implicit
+          time-integration methods and coefficients%i(304)=0.
+
+304 The predicted convection velocity in semi-implicit time-integration methods
+    is:
+    0: taken from the sysvector as given by coefficients%i(303) (default). In
+       this case, the user must compute uhat=2un-unm1 in the main routine for
+       the second-order method.
+    1: computed on element level from the sysvector(s) given by
+       coefficients%i(302).
+
+305 Position in oldvectors%s of the iteration solution for velocity and
+    pressure. A Value of 0 means default = 1. This is currently only used
+    for the implicit routine implicit_pressure_ce_elem.
+
+306 Indicates whether the time-derivative term in the pressure equation
+    will be included in the routine implicit_pressure_ce_elem:
+    0 yes
+    1 No, the time-derivative term is excluded from the system.
+      Excluding the time-derivative term will only build the Jacobian
+      of the convection term and (minus) the right-hand side of the pressure
+      equation. The main reason for for excluding the time-derivative term is
+      to be able to perform Newton-Raphson iteration for the steady state.
+
+307 Constraint number of the integral pressure constraint to set the level of
+    the pressure field.
+
+308 Indicates which integral pressure constraint is used (see Userguide):
+    1 Constraint F1(p) = \int exp[(p-p0)/K] dV - V0 = 0
+    2 Constraint F2(p) = K F1(p)
+    3 Constraint \bar F1(p) = \int { exp[(p-p0)/K]-1 } dV = 0
+    4 Constraint \bar F2(p) = K \bar F1(p)
+    5 Constraint \int (p - p_level) dV = 0
+    NOTES:
+    - 1 and 2 require V0=coefficients%r(254) to be set.
+    - 3 and 4 does not use V0=coefficients%r(254), but can only be used if
+      the current volume V remains constant and equal to V0.
+    - 5 can be used in any incompressible flow with Newton-Raphson iteration
+      where pressure increments (\Delta p) are computed.
+
+309-350: Reserved for future use. Set to zero for future compatibility.

@@ -1,0 +1,129 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+List of the coefficients
+------------------------
+
+  1-150: all relevant integer coefficients from the stokes & viscoelastic add-on
+151-200: reserved for diffuse_interface add-on
+201-250: reserved for inertia add-on
+251-300: reserved for generalized Stokes add-on
+301-350: reserved for compressible_fluid add-on
+
+351  deformation tensor interpolation (in space)
+
+352  deformation tensor interpolation for DG (in age coordinate tau):
+     1: P1  2: P2
+
+353  number of intervals N in the age coordinate tau
+     NOTE: the age intervals are
+         [tau_j,tau_j+1], j=0,...,N-1
+       where tau_0=0. The N age points tau_j, j=0,...,N need to be given
+       in the array coefficients%ra(1)%a
+     NOTE: the number of fields is N*ninttau, where ninttau the number of
+       fields within a single interval (ninttau=2 for P1,ninttau=3 for P2).
+
+354  time integration:
+     0: default, which is BDF2 (for P1) or BDF3 (for P2) with prediction
+        (extrapolated BDF).
+     1: Euler explicit/implicit, which should only be used as a first step
+        to start the multi-step scheme.
+     2: BDF2 with prediction (extrapolated BDF).
+     3: BDF3 with prediction (extrapolated BDF).
+     NOTE: convection in space is always implicit.
+
+355  spatial discretization:
+     0: standard Galerkin
+     1: SUPG.
+
+356  The projected velocity gradient tensor (G-method) used for time-integration
+     of the deformation gradient tensor is:
+     0: Part of the solution vector (DEVSS).
+     1: Computed as a separate vector using projection.
+     NOTE: this is only relevant for coefficient%i(357)=0.
+
+357  The velocity gradient used for the time integration of the CE for the
+     deformation gradient tensor:
+     0: The projected velocity gradient tensor (G-method).
+        NOTE: for this case coefficient%i(356) determines how the projected
+        gradient is supplied to the element routines.
+     1: The velocity gradient tensor as derived directly from the velocity.
+
+358  choice parameter in computing a derivative.
+     For example coefficient%i(358)=1 means Fxx in dfm_deriv_field.
+     See the sources for the possibilities in various derivative routines.
+
+359  choice parameter in computing a derivative.
+     For example coefficient%i(359) means the interval number in
+     dfm_deriv_field.
+     See the sources for the possibilities in various derivative routines.
+
+360  choice parameter in computing a derivative.
+     For example coefficient%i(360) means the point (field) number within an
+     interval in dfm_deriv_field.
+     See the sources for the possibilities in various derivative routines.
+
+361  The location of the solution for the fields in oldvectors.
+     This is used in dfm_deriv_field, dfm_deriv_stress_tensor, ... as follows:
+       0: solution is in oldvectors%s2 (as used in dfm_elem2)
+       1: solution is in oldvectors%s3 (as used in dfm_elem1)
+     Setting to this to non-zero is therefore only needed for the legacy
+     explicit deformation fields of dfm_elem1.
+
+362  The tau interval (intvaltau) for the implicit part.
+
+363  Type of integral model:
+       0: Separable Rivlin-Sawyers
+       1: Non-separable Rivlin-Sawyers (not yet available).
+
+364  Spectrum for the separable Rivlin-Sawyers integral model:
+       0: discrete spectrum
+          NOTE: the moduli G_i and relaxation times lambda_i are given by
+                     G_i = coefficients%ra(2)%a(i), i=1,...,n
+                lambda_i = coefficients%ra(3)%a(i), i=1,...,n
+          where the number of discrete modes n is given by coefficients%i(365)
+       1: Mittag-Leffler (not yet available).
+       2: Combined discrete spectrum and Carreau (power-law) modes:
+           G(t) = sum G_i*exp(-t/lambda_i) + sum G_i/(1+(t/lambda_i)^2)^(n_i/2)
+
+365  The number of modes in the spectrum (for coefficients%i(364)=0 and 2).
+     NOTE: setting the coefficients%i(365)=0, the number of modes is set to the
+     default value of 1.
+
+366  The damping function(s) for the separable Rivlin-Sawyers integral model:
+       0: default=1
+       1: h1 = 1, h2 = 0 (UCM model)
+       2: h1 = 1/[1+a*(I1-3)], h2 = 0 (used in fractional K-BKZ models)
+          NOTE: a=coefficients%r(303)
+       3: h1 = alpha/[alpha-3+beta*I1+(1-beta)*I2], h2 = 0 (PSM model)
+          NOTE: alpha=coefficients%r(304), beta=coefficients%r(305)
+
+367  The number of discrete modes in the spectrum 2 (coefficients%i(364)=2).
+     NOTE: The first coefficients%i(367) number of modes are the discrete ones.
+     NOTE: coefficients%i(365) gives the total number of modes.
+
+368  Check for zero velocity and avoid dividing by zero in SUPG.
+       0: no
+       1: yes
+     If a zero velocity is detected in ANY of the integration points of an
+     element, the method is switched to using htype=3 and Uscaling=4 with
+     Uglobal = coefficient%r(306) in the velocity scaling for ALL integration
+     points.
+     NOTE: this is a brute force approach to avoid divide by zero, when
+           the velocity is exactly zero. It should be used only for that case
+           and normally be off.
+     NOTE: htype=3 means h is determined by the size of the element:
+             2D: h = (elementsize)**0.5
+             3D: h = (elementsize)**1/3 (not applicable here)
+           hence: h is a constant per element
+     NOTE: Uglobal = coefficient%r(306), used in Uscaling=4, must be set to
+           a positive value.
+
+369-400 Reserved for future use. Set to zero for future compatibility.
+

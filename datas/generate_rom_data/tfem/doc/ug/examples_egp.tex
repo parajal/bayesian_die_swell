@@ -1,0 +1,208 @@
+% !TEX root = userguide.tex
+
+\def\headdate{15th December 2025}
+
+\section{Elastoviscoplastic flow using the EGP model}
+\label{sec:egp_flow}
+
+This section describes some examples of elastoviscoplastic (evp) flow using
+the EGP constitutive model as described in
+Appendix~\ref{chap:viscoelasticmodels}. We differentiate between two models: the EGP model for incompressible flow (\texttt{model=23}) and the EGP model for compressible flow (\texttt{model=24}). The first assumes the volume to be constant ($J=1$), whereas in the latter the model depends on $J$ in addition to the conformation tensor $\ten c$.
+Here, the $J=\det\ten F$ with $\ten F$ the deformation gradient tensor
+between the initial (reference) configuration
+$\Omega_0$ and the current configuration $\Omega$ (see
+Sec.~\ref{sec:elasticsolid}).
+In the following we denote the two models by incompressible and compressible EGP, respectively.
+
+The incompressible model is obviously for use in incompressible flows, but it can also be used in compressible flows, like all other models. However, it is up to the user whether it makes any physical sense to do that.
+
+The compressible model is obviously for use in compressible flows, where $J\neq 1$. In compressible flows we assume the following elastic relation between $J$ and the pressure $p$ (see Sec.~\ref{sec:compressible}):
+\[
+   p = p_0 - K\ln J\quad\text{or}\quad J=\exp(-\frac{p-p_0}{K}) 
+\]
+where $p_0$ is the reference pressure at $J=1$ and $K$ is the compression modulus. This means that the compressible EGP model basically becomes pressure dependent. This also means that in the Jacobian matrix when applying Newton-Raphson (see Sec.~\ref{sec:implicit}), a matrix is added to the $\vek u-p$ block and that the $\ten c-p$ blocks become non-zero. For the DEVSS-G scheme the Jacobian matrix looks like for uncoupled modes:
+\[
+   \begin{pmatrix}
+     E & F & 0 & 0 & 0 & \cdots & 0 \\
+     F^T & S & L\blue{+H} & B_1 & B_2 & \cdots & B_m \\
+     0 & L^T+\blue{K} & \blue{M} & 0 & 0 & \cdots & 0 \\
+     G_1 & C_1 & \blue{I_1} & D_1 & 0 & \cdots & 0 \\
+     G_2 & C_2 & \blue{I_2} & 0 & D_2 & \cdots & 0 \\
+      \vdots &\vdots  & \vdots & \vdots & \vdots & \ddots & \vdots \\
+     G_m & C_m& \blue{I_m} & 0 & 0& \cdots & D_m \\
+    \end{pmatrix}
+\]
+with a partitioning of the matrix according to $(\ten G,\vek u,p,\ten c_1,\ten c_2,\dots,\ten c_m)$ and $m$ the number of modes. The additional matrices are $H$, $I_1$, $I_2$, \ldots, $I_m$, $K$, $M$ are denoted in blue. The matrices $H$, $I_1$, $I_2$, \ldots, $I_m$ come from the linearization with respect to $J$ of the $\nabla\cdot\ten \tau$ term in the momentum balance and the constitutive equation of each mode, respectively. The matrices $K$ and $M$ come from the linearization of the pressure equation for compressible flow (see Sec.~\ref{sec:compressible}). Note, that for the EGP model with a global von-Mises stress the `\textit{D}'-matrix is full, like in Eq.~\eqref{eq:fullDmatrix}.
+
+Since, there is a direct relation between $J$ and pressure $p$, we can use the compressible EGP model also in an incompressible flow. Obviously, the value of $|J-1|$ should be small to make physical sense, since there is no actual change in volume in the flow. This is somewhat similar to the Boussinesq approximation in natural convection where density differences due to temperature variations create buoyancy forces, although the actual flow is considered to be incompressible, i.e.\ $\nabla\cdot\vek u=0$. The matrices  $K$ and $M$ are zero and the Jacobian matrix now looks like for uncoupled modes:
+\[
+   \begin{pmatrix}
+     E & F & 0 & 0 & 0 & \cdots & 0 \\
+     F^T & S & L\blue{+H} & B_1 & B_2 & \cdots & B_m \\
+     0 & L^T & 0 & 0 & 0 & \cdots & 0 \\
+     G_1 & C_1 & \blue{I_1} & D_1 & 0 & \cdots & 0 \\
+     G_2 & C_2 & \blue{I_2} & 0 & D_2 & \cdots & 0 \\
+      \vdots &\vdots  & \vdots & \vdots & \vdots & \ddots & \vdots \\
+     G_m & C_m& \blue{I_m} & 0 & 0& \cdots & D_m \\
+    \end{pmatrix}
+\]
+Note, that for the EGP model with a global von-Mises stress the `\textit{D}'-matrix is full, like in Eq.~\eqref{eq:fullDmatrix}. For an EGP model with multiple processes (see \cite{van_breemen_rate_2012}) the matrix 
+`\textit{D}'-matrix has a block-diagonal structure with the numbers of blocks equal to the number of processes. For example with two processes the `\textit{D}'-matrix will look like
+\[
+    \begin{pmatrix}
+     D_{11} & D_{12} & 0 & 0 \\
+     D_{21} & D_{22} & 0 & 0 \\
+     0      & 0      & D_{33} & D_{34} \\
+     0      & 0      & D_{43} & D_{44} 
+    \end{pmatrix}\label{eq:blockDmatrix}
+\]
+where we assumed four modes and two processes with two modes each. Each process has its own von Mises shear stress. There are off-diagonal zero blocks and \tfem\ can take that into account to avoid unnecessary filling of the system matrix (see Sec.~\ref{sec:excludezeroblocks}).
+
+If the EGP model includes the equivalent plastic strain for softening (see Sec.~\ref{sec:strainsoftening}), the system is extended with an additional scalar physical quantity $\bar\gamma_\text{p}$.
+For the DEVSS-G scheme the Jacobian matrix for a compressible model and uncoupled modes looks like:
+\[
+   \begin{pmatrix}
+     E & F & 0 & \blue{0} & 0 & 0 & \cdots & 0 \\
+     F^T & S & L+H & \blue{0} & B_1 & B_2 & \cdots & B_m \\
+     0 & L^T+K & M &\blue{0} & 0 & 0 & \cdots & 0 \\
+     \blue{0} & \blue{P} & \blue{Q} & \blue{R} & \blue{T_1} & \blue{0} & \cdots & \blue{0} \\ 
+     G_1 & C_1 & I_1 & \blue{N_1} & D_1 & 0 & \cdots & 0 \\
+     G_2 & C_2 & I_2 & \blue{N_2}& 0 & D_2 & \cdots & 0 \\
+      \vdots &\vdots  & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+     G_m & C_m& I_m & \blue{N_m}& 0 & 0& \cdots & D_m \\
+    \end{pmatrix}
+\]
+with a partitioning of the matrix according to $(\ten G,\vek u,p,\bar\gamma_\text{p},\ten c_1,\ten c_2,\dots,\ten c_m)$ and $m$ the number of modes. The additional matrices are $P$, $Q$, $R$, $T_1$, $N_1$, $N_2$, \ldots, $N_m$ are denoted in blue. Note, that there is only a coupling with mode 1, if modes are decoupled (see Sec.~\ref{sec:strainsoftening}). However if modes are coupled due the definition of the global von Mises stress,
+the equation for $\bar\gamma_\text{p}$ is coupled to other modes also.
+
+Solving a system consisting of many coupled modes with Newton-Raphson can be quite resource heavy (memory, CPU). To reduce the computer demands, it might be a good idea to find ways to reduce the size of the matrix. For example, it might be possible to remove the coupling between modes in the matrix (block-diagonal) without sacrificing convergence rate too much. It might also be a good idea to decouple (some of the modes of) the constitutive equation from the momentum balance. Finding the best strategy is part of future work.
+
+\subsection{Poiseuille flow}
+
+The example files are \texttt{poiseuille5.f90} and \texttt{poiseuille6.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poiseuille}
+\end{quote}
+The examples uses a unit square domain and
+periodical boundary conditions between in and outflow.
+The model is an incompressible EGP model (\texttt{model=23}).
+The example \texttt{poiseuille5.f90} is a startup flow generated by imposing a constant flow rate using a constraint.
+The time integration is fully implicit BDF2 (see Sec.~\ref{sec:implicit}).
+The example \texttt{poiseuille6.f90} computes a sequence of steady states found by direct Newton-Raphson iteration (see Sec.~\ref{sec:steadyviscoelastic}).
+Inspect the source files to see which output files are generated.
+
+\subsection{Flow around a cylinder between two plates}
+
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_egp}
+\end{quote}
+and describes the flow
+around a fixed cylinder positioned between two walls.
+
+The examples are almost verbatim copies of a selection of the examples in the directory example \texttt{confined\_cylinder\_b}, but modified for use with the incompressible EGP model (\texttt{model=23}). The example names are the same for easy comparison.
+
+Example \texttt{cylinder1a.f90} uses the numerical scheme
+stress-explicit (see Sec.~\ref{sec:explicitstress}) together with the CDT formulation with element level rotation reinitialization for the $\ten b$-equation. The original problem using the Giesekus model is described in Sec.~\ref{sec:confcyl1}. The example \texttt{cylinder1a\_mm.f90} is similar to \texttt{cylinder1a.f90}, but has been adapted to multiple modes and there is an option to use a global von-Mises stress instead of a von-Mises stress defined per mode. The example \texttt{cylinder1a\_mm\_gammap.f90} is similar to \texttt{cylinder1a\_mm.f90}, but has been with plastic strain softening. The extension \texttt{\_gammap} to the example name denotes the use of the $g(\bar\gamma_\text{p})$ factor in the relaxation term as described in Sec.~\ref{sec:strainsoftening}.
+
+The example \texttt{cylinder3a.f90} uses an implicit scheme for the $\ten b$-equation that is decoupled with the
+stress-explicit approach (see Sec.~\ref{sec:explicitstress}). The example \texttt{cylinder6a.f90}
+shows the use of a fully implicit scheme. The original problem using the Giesekus model is described in Sec.~\ref{sec:cylinderimplicit}.
+
+The example \texttt{cylinder7.f90} uses
+fully-implicit time discretization for a few steps and the last step uses Newton-Raphson iteration to
+find the steady state solution. The example is similar to the example \texttt{cylinder6a.f90}, but now with a last step for finding the steady state by iteration.
+
+The example \texttt{cylinder8.f90} computes a sequence of steady state solution for increasing flow rate (Weissenberg number), where each solution is the starting solution for the next iteration process. The original problems using the Giesekus model are described in Sec.~\ref{sec:confcyl2}.
+
+The example \texttt{cylinder8\_mm.f90} is similar to \texttt{cylinder8.f90}, but has been adapted to multiple modes and there is an option to use a global von-Mises stress instead of a von-Mises stress defined per mode. The latter creates a coupling between the modes, which needs to be taken into account in the system matrix.
+
+The example \texttt{cylinder9.f90} is similar to \texttt{cylinder1a\_mm.f90}, but has been adapted to an EGP model with two processes.
+
+The example \texttt{cylinder10.f90} is similar to \texttt{cylinder8\_mm.f90}, but has been adapted to an EGP model with two processes. The off-diagonal zero blocks are optionally taken into account.
+
+Note, that the stress-implicit examples in \texttt{confined\_cylinder\_b} have not been converted to the EGP model, since the stress-implicit formulation is not available (yet) due to the $\tr\ten c$ term in the extra stress expression.
+
+A default coarse mesh (\texttt{confined\_cylinder1.msh}) is supplied, but in the
+subdirectory \texttt{meshes} of the original example directory of \texttt{confined\_cylinder\_b}, files are available to generate more refined meshes.
+
+For comparison, the examples \texttt{cylinder\_c1.f90}, \texttt{cylinder\_c1\_mm.f90}, \texttt{cylinder\_c3.f90}, \texttt{cylinder\_c6.f90}, \texttt{cylinder\_c7.f90}, \texttt{cylinder\_c8.f90} and \texttt{cylinder\_c9.f90} are also available.
+These are similar as the problems described above, however
+the problem is solved using the conformation tensor formulation. Note, the log-conformation can only be used with the fully explicit approach in \texttt{cylinder\_c1.f90}, \texttt{cylinder\_c1\_mm.f90} and \texttt{cylinder\_c9.f90}.
+
+\subsection{Flow around a rotating cylinder inside a square box}
+\label{sec:cylinderegp}
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample cylinder\_in\_box\_egp}
+\end{quote}
+and describes the flow
+between a rotating cylinder and a stationary square box. The examples are an extension of the Newtonian flow example in Sec.~\ref{sec:cylinderrotating}.
+In Fig.~\ref{fig:curves_cylinder_in_box} the points and curves defined in the creation of the mesh and shown. In this flow the total volume of fluid is constant. Since there are no inflow and outflow sections it is ideally suited to test the compressible EGP in both an incompressible and compressible flow. To run the examples it is needed to first make the mesh by
+\begin{quote}
+   \texttt{mesh\_cylinder\_in\_box < meshinput1.txt}
+\end{quote}
+The following table shows the differentiating features of the examples\footnote{There are two additional examples
+\texttt{cylinder\_egp1a} and \texttt{cylinder\_egp7a}, that use a 2D array in \texttt{coefficients\%ra2} (see Sec.~\ref{sec:coefficients}) to input the viscoelastic material data.}:\medskip\\
+\scalebox{0.8}{ \begin{tabular}{llll}
+Example & EGP model  & flow & problem \\\hline
+ \texttt{cylinder\_egp1} & incompressible & incompressible & startup time stepping + steady state \\
+ \texttt{cylinder\_egp2} & incompressible & incompressible & sequence of steady states \\
+ \texttt{cylinder\_egp3} & compressible & incompressible & startup time stepping + steady state \\
+ \texttt{cylinder\_egp4} & compressible & incompressible & sequence of steady states \\
+ \texttt{cylinder\_egp4\_hJ} & compressible, $h(J)$ & incompressible & sequence of steady states \\
+ \texttt{cylinder\_egp5} & compressible & compressible & startup time stepping + steady state \\
+ \texttt{cylinder\_egp6} & compressible & compressible & sequence of steady states \\
+ \texttt{cylinder\_egp6\_hJ} & compressible, $h(J)$ & compressible & sequence of steady states \\
+ \texttt{cylinder\_egp7} & compressible & compressible & startup time stepping; PMMA \\
+ \texttt{cylinder\_egp7\_hJ} & compressible, $h(J)$ & compressible & startup time stepping; PMMA \\
+  \texttt{cylinder\_egp7\_hJ\_gammap} & compressible, $h(J)$, $g(\bar\gamma_\text{p})$ & compressible & startup time stepping; PMMA \\
+\end{tabular}}\medskip\\
+where the extension \texttt{\_hJ} to the example name denotes the use of the $h(J)$ factor (pressure dependence) in the relaxation term as described in Sec.~\ref{sec:pressuredependenthJ} and the extension \texttt{\_gammap} to the example name denotes the use of the $g(\bar\gamma_\text{p})$ factor (plastic strain softening) in the relaxation term as described in Sec.~\ref{sec:strainsoftening}. The examples \texttt{cylinder\_egp7}, 
+\texttt{cylinder\_egp7\_hJ} and \texttt{cylinder\_egp7\_hJ\_gammap} use a model for PMMA from \cite{van_breemen_rate_2012}. It is a 14-mode model consisting of a 12-mode $\alpha$-process, a single mode $\beta$ process and an elastic mode. The elastic mode is created by
+setting the relaxation term of that mode to zero.
+As usual, by studying the difference between the source files, the user can learn about what is needed to solve the problem case.
+
+All examples use fully-implicit methods with Newton-Raphson iteration and apply an integral pressure constraint to set the pressure level. The incompressible flow examples apply a linear pressure constraint
+\[
+     \int ( p - p_\text{level} ) \,dV = 0
+\]
+where is $p_\text{level}$ is a pressure level, which is set to zero in the examples\footnote{Note, that in the incompressible flow examples with a \emph{compressible} EGP model the actual pressure value is important. 
+Therefore, the choice of $p_\text{level}$ is important and should probably be set to $p_0$ as used in the relation between $J$ and $p$. Another option is to use the nonlinear constraint as used in the compressible flow examples.}.
+The compressible flow examples apply
+a pressure constraint as explained in Sec.~\ref{sec:compressible}, where it is also discussed why the constraint is applied even if theoretically it is not needed.
+
+\subsection{Uniaxial compression}
+
+\label{sec:uniaxialegp}
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample uniaxial\_stress\_egp}
+\end{quote}
+and describe the flow under uniaxial compressive stress for obtaining the compression stress-strain curve. An axisymmetric flow problem in a fixed $L\times R$ domain (we take $L=R=1$) consisting of a single element is used to find the compression curve. The domain is basically given in Fig.~\ref{fig:unitsquare}, where the coordinate system is $(z,r)$, thus the $z$-axis is in horizontal direction. The boundary conditions are as follows and lead to a deformation and stress field that varies in time, but is constant in space.
+On the $r=0$ axis C1 the radial velocity is set to zero ($u_r=0$) to avoid singular behavior.
+The right boundary C2 has a velocity component $u_z=\dot\epsilon L$ imposed and zero tangential ($r$-direction) traction. 
+The upper boundary C3 is stress free. The left boundary C4 has zero velocity component $u_z=0$ imposed and traction in $r$-direction is zero. 
+The left and right boundaries are periodically coupled for the conformation and the plastic strain.
+The domain can be seen as a local RVE, where material flows in on C2 and out on C3.
+
+The examples \texttt{uniaxial\_stress\_egp[1-4].f90} compute the stress-strain curves using the fits of the EGP model for PMMA, iPP, PS and PLLA, respectively, from \cite{van_breemen_rate_2012}. In Fig.~\ref{fig:compressionEGPfits} the compression curves\footnote{Note: $\sigma_{zz}=\tau_{zz}-p$ and 
+since $p=\tau_{rr}$ due to the free boundary, we find $\sigma_{zz}=\tau_{zz}-\tau_{rr}$.}
+ are shown. Since the material is compressed, there is a decrease in volume in addition to the negative stretching in the $z$-direction. However, the change in volume is minor: around 1\,\%, due to the large compression modulus of the materials considered.
+
+Comparing the curves in Fig.~\ref{fig:compressionEGPfits} with the Figures~12a, 13a, 14a and 15a in 
+\cite{van_breemen_rate_2012}, we see that results for iPP and PLLA compare very well. However, the curves for PMMA obtained with \tfem\ are somewhat higher at higher strain rates in the lower strain region, whereas the curves for PS at the higher strain rate curves are higher for all strains. At the time of writing, it is unclear what is causing the discrepancy for higher strain rates. This issue requires further investigation\footnote{A check with the actual data used in the simulations of \cite{van_breemen_rate_2012}, if possible, might be a start. For example, setting $\eta_{0,\text{ref},\beta}=4.13\cdot10^{-2}$ instead of $\eta_{0,\text{ref},\beta}=4.13\cdot10^{-1}$ as specified in Table~3 of \cite{van_breemen_rate_2012}, gives good correspondence with PMMA. Similarly, we can match PS by both increasing $V^*_\beta$ to $3.65$~nm and lowering $G_r$ of the elastic mode to $5.0$~MPa. However, there could also be a difference in the actual implementation of the EGP model between \tfem\ and \texttt{Marc}. Finally, since the \tfem\ implementation is rather recent, a bug in the \tfem\ code is a possibility as well.}.
+%In Fig.~\ref{fig:compressionPMMAJ} the relative change in volume curves\footnote{$J$ is computed from the pressure $p$ using Eq.~\eqref{eq:compress1}. Note, that for the EGP model $\tr\ten\tau=\tau_{zz}+2\tau_{rr}=0$ and thus $p=\tau_{rr}=-\frac12\tau_{zz}$ in uniaxial stress state. Also $\sigma_{zz}=\tau_{zz}-p=-3p$ and thus $p=-\frac13\sigma_{zz}$.} are shown. 
+\begin{figure}[hptp!]
+\begin{center}
+    \includegraphics[scale=0.5]{compression_PMMA} 
+    \includegraphics[scale=0.5]{compression_iPP} 
+    \includegraphics[scale=0.5]{compression_PS} 
+    \includegraphics[scale=0.5]{compression_PLLA} 
+\end{center}
+   \caption{Stress vs strain curves for uniaxial compression of the PMMA, iPP, PS and PLLA fits of the EGP model as given in \cite{van_breemen_rate_2012} for various extension rates $\dot\epsilon$.}
+    \label{fig:compressionEGPfits}
+\end{figure}
+

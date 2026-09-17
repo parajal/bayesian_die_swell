@@ -1,0 +1,460 @@
+
+\chapter{Post-processing}
+\pgst{tfemch}
+
+\label{ch:postprocessing}
+
+\def\chaptertitle{Post-processing}
+\def\headdate{27th April 2012}
+
+\tfem\ has some basic post-processing facilities for extracting and
+manipulating data in sysvectors and vectors:
+\begin{description}
+   \item[transferring:] transfer (part of) the data in a sysvector or vector to 
+   another sysvector or vector.
+   \item[subscripting:] generate vector subscripts pointing to a subset of the
+    data in a vector in order to extract or manipulate values.
+   \item[deriving:] derive vectors and sysvectors using element subroutines.
+   \item[sampling:] find the data in sysvectors and vectors in points, on
+    curves, surfaces or objects. 
+   \item[integration:] generate a small number of integrated quantities over
+    the internal domain or the boundary of a domain (curves, surfaces). For
+    example: flow rate, drag, bulk stress.
+\end{description}
+ For
+graphical post-processing we need add-ons and/or external programs.
+
+\section{Transfer data between vectors}
+
+A common use of transfer of data is to generate a vector containing a
+single physical quantity. For example, in the driven cavity problem in
+Sec.~\ref{sec:driven_cavity2D} the velocity and pressure are extracted from the
+system vector using the routine \texttt{extract\_physvector}. 
+\begin{listing}{1}
+
+    call extract_physvector ( mesh, problem, sysvector, physvector )
+
+\end{listing}
+The inverse
+routine, transferring a single physical quantity to a system vector, is also
+available:
+\begin{listing}{1}
+
+    call store_physvector ( mesh, problem, sysvector, physvector )
+ 
+\end{listing}
+
+The routine \texttt{extract\_vector} has been designed to transfer data between
+vectors.
+It is also possible to reduce vectors by extracting only part of the data to a
+new vector. For example:
+\begin{listing}{1}
+
+  call extract_vector ( mesh, problem, velocity, v_x, indegfd=[1] )
+
+\end{listing}
+will transfer the first degree of freedom of the vector \texttt{velocity} to the
+first degree of freedom of a new vector \texttt{v\_x}. Note that:
+\begin{itemize}
+   \item both the input and output vector must already have been created,
+   \item both the degrees of freedom of the input and output vector can be
+specified,
+   \item all degrees of freedom specified must exist, except for nodes that
+         have zero degrees of freedom.
+\end{itemize}
+The latter property of the routine makes it easy to extract, for example, only
+the values in the vertices to a new vector.
+
+The most general routine for transferring data between sysvectors and/or vectors
+is \texttt{transfer\_data}. Note, that:
+\begin{itemize}
+   \item transfer between different problems is possible,
+   \item transfer from any sysvector/vector to any other sysvector/vector is
+possible,
+   \item restricting the data to physical quantities, degrees and a layer is
+possible,
+   \item the transfer of data is only done where possible and no data is
+``invented''. 
+   \item transfer is done ``node for node'' and can be somewhat slower than the
+other routines above.
+\end{itemize}
+For example:
+\begin{listing}{1}
+
+  call transfer_data ( mesh, problem, problem2, &
+    sysvector1=sol, vector2=vec2, physq1=[1], layer1=1 )
+
+\end{listing}
+will transfer layer 1 of physical quantity 1 in sysvector \texttt{sol} of
+problem \texttt{problem} to
+vector \texttt{vec2} of problem \texttt{problem2} (which might not have layers
+defined). Note, that in nodes where layer 1 is not present, no data is
+transferred and data in the vector \texttt{vec2} might not be properly defined
+in some nodes. It is the responsibility of the user that all data in a vector is
+properly defined by, for example, properly initializing a vector before
+transferring data.
+
+\section{Vector subscripts}
+\label{sec:vectorsubscript}
+
+Vector subscripts are one-dimensional integer arrays in \ftn\ 
+that selects a section of a large array. In \tfem\ we have defined two
+new types
+\texttt{subscript\_t} and \texttt{subscriptcon\_t} 
+that contain an
+integer array component \texttt{s} that can be used as a vector subscript in
+the data component \texttt{u} of a sysvector. The first type points to
+nodal point degrees of freedom, whereas the second type points to
+degrees of freedom related to the constraints.
+A third type \texttt{subscriptvec\_t} has been defined
+that contains an
+integer array component \texttt{s} that can be used as a vector subscript in
+the data component \texttt{u} of a vector.
+
+In Sec.~\ref{sec:solidbar} an example is given where vector subscripts are
+created for the displacement and the pressure in the solution vector. In an
+increment only the displacements are updated. Another example is given in
+the problem discussed in Sec.~\ref{sec:bcfcouette}:
+\begin{listing}{1}
+
+  type(subscript_t) :: vely
+  type(subscriptvec_t) :: cxx, cxy, cyy
+  type(vector_t) :: ctensor
+
+  ...
+
+! create a vector subscript for the vertical velocity for post processing
+
+  call create_subscript ( mesh, problem, vely, physqarr=[physqvel], degfd=2 )
+
+  ...
+
+! subscripts and vector for ctensor
+
+  call create_subscript ( mesh, problemq, cxx, degfd=1, vec=3 )
+  call create_subscript ( mesh, problemq, cxy, degfd=2, vec=3 )
+  call create_subscript ( mesh, problemq, cyy, degfd=3, vec=3 )
+
+  call create_vector ( problemq, ctensor, vec=3 )
+
+  ...
+
+!  write monitor data
+
+   write(unit=13,fmt=*) &
+     step, step*deltat, maxval(sol%u(vely%s)), minval(sol%u(vely%s)), &
+     sqrt( &
+     sum( ( ctensor%u(cxx%s) - csteady(1) )**2 + &
+          ( ctensor%u(cxy%s) - csteady(2) )**2 + &
+          ( ctensor%u(cyy%s) - csteady(3) )**2 ) / 3 / size(cxx%s) )
+
+\end{listing}
+Here the velocity component in $y$-direction and the three tensor components
+$c_{xx}$, $c_{xy}$ and $c_{yy}$ are selected for further processing using
+vector subscripts. Note, that vector subscript act directly on the data itself.
+
+Various heading parameters exists to limit the vector subscript to degrees of
+freedom in specified points, curves, surfaces, nodesets, elementsets or groups of elements
+(\texttt{points}, \texttt{curves}, \texttt{surfaces}, \texttt{nodesets}, \texttt{elementsets},
+\texttt{groups})
+or to exclude degrees of freedom from
+certain points (\texttt{excludepoints}, \texttt{excludecurves},
+\texttt{excludesurfaces}, \texttt{excludenodesets}, \texttt{excludeelementsets},
+\texttt{xmin}, \texttt{xmax}).
+
+An example using a vector subscript for getting constraint data from
+the sysvector is \texttt{stokes17} (see Sec.~\ref{sec:rotatingobject}).
+
+\section{Deriving vectors}
+
+A general way of extracting (derived) data from sysvectors and vector is
+the routine \texttt{derive\_vector}. It is used in about every example in this
+userguide and uses element subroutines to generate complicated data, such as
+gradients. By default it performs averaging of values at
+common nodes between elements, however this can be turned off. In the latter
+case (no averaging), all individual element data can be extracted by defining
+the computed vector as stored `elementwise':
+\begin{listing}{1}
+   
+  call create_vector ( problem, vector, vec=1, elementwise=.true. )
+
+\end{listing}
+The vector defined elementwise can be plotted using Figplot
+(see Sec.~\ref{sec:figplot}) and sampled (see Sec.~\ref{sec:sample}), but
+usually cannot be handled by external graphics packages\footnote{Except gmsh,
+ see Sec.~\ref{sec:gmshwrite}.}.
+
+A routine that is similar to \texttt{derive\_vector} but now producing a system
+vector is \texttt{fill\_sysvector\_elem}. It cannot do averaging.
+
+A `bare bones' approach of the element by element filling of data vectors is
+the routine \texttt{loop\_over\_elements}. All input/output must be done by the
+user via the structure \texttt{old\_vectors}. Note that there are routines
+available, starting all with \texttt{get\_}, to obtain coordinates,
+data and position of the data in sysvectors and vectors (see
+Sec.~\ref{sec:elemsub}). In this way, the user is able to extract and store
+data in the structure \texttt{old\_vectors}.
+
+\section{Sampling}
+\label{sec:sample}
+
+Sampling is extracting data from the sysvectors and vectors in a number
+of sampling points. For sampling you need to define a sample, which is of the
+type \texttt{sample\_t} (see source code with \texttt{tfvi sample\_t}):
+\begin{listing}{1}
+
+  type(sample_t) :: sample
+
+\end{listing}
+The sample needs to be filled with data from nodes, points, a curve, surface or
+object using the subroutine \texttt{fill\_sample}.
+Additional curves, objects for
+sampling can be defined using the routine \texttt{add\_to\_mesh} (see
+Sec.~\ref{sec:addtomesh}).
+
+\subsection{Sampling nodal values using points, curves, \ldots}
+
+Geometrical entities like points and curves are linked to nodal points. Since
+vectors (of type \texttt{sysvector\_t} and \texttt{vector\_t}) are defined in
+nodal points, the data in these vectors can be sampled directly from the nodal
+point data. For example:
+\begin{listing}{1}
+  call fill_sample ( mesh, problem, sample, ndegfd=1, curve=2, vector=pressure )
+\end{listing}
+will fill the sample using the vector \texttt{pressure} of type
+\texttt{vector\_t} and
+\begin{listing}{1}
+  call fill_sample ( mesh, problem, sample, ndegfd=1, physq=2, &
+    points=[3, 5], sysvector=sol )
+\end{listing}
+will sample the physical quantity 2 from solution vector \texttt{sol} in the
+points \texttt{P3} and \texttt{P5} using the first degree of freedom of that
+quantity. It is also possible to sample by using nodal point numbers:
+\begin{listing}{1}
+  call fill_sample ( mesh, problem, sample, ndegfd=2, physq=1, &
+    nodes=[1336, 12999, 22], sysvector=sol )
+\end{listing}
+will sample the physical quantity 1 from solution vector \texttt{sol} in the
+the nodal points 1336, 12999 and 22 using the first two degrees of freedom.
+
+The number of samples in the structure sample (after sampling) is in
+\texttt{sample\%nnodes}, the coordinates of the sample are in
+\texttt{sample\%coor(:,:)} and the data in \texttt{sample\%u(:,:)}. The first
+index of both arrays is the sample number.
+
+\subsection{Sampling objects}
+\label{sec:samplingobjects}
+
+Objects have points that can be anywhere in the mesh. Sampling data from
+vectors needs to be performed by interpolation. Since \tfem\ doesn't know
+anything about the actual \fem\ shape functions being used for the data values
+in the vector data, the user must supply an interpolating subroutine in a
+similar way as an element subroutine in the matrix build step.
+
+In the example file \texttt{stokes9.f90}, which is an extension of
+\texttt{stokes8.f90} (use \texttt{getexample stokes}) two different samples
+have been used: one single point which is sampled at each time step and points
+on a line which is sampled only once.
+
+\begin{listing}{120}
+  integer, parameter :: nc = 101 ! number of nodes in cross section
+  real(dp) :: xs(1,2), xc(nc,2)
+                                                                                
+\end{listing}
+The coordinate arrays for sampling are defined here.
+\begin{listing}{189}
+
+! one object for sampling the velocity in a single point
+
+  xs(1,:) = [0.5_dp,0.85_dp]
+
+  call add_to_mesh ( mesh, object='coordinates', nnodes=1, coor=xs )
+
+! one object for sampling the velocity on a line (diagonal)
+
+  xc(:,1) = [ (i*0.01_dp, i=0,nc-1) ]
+  xc(:,2) = [ (i*0.01_dp, i=0,nc-1) ]
+
+  call add_to_mesh ( mesh, object='coordinates', nnodes=nc, coor=xc )
+
+\end{listing}
+Here two new objects are defined for sampling. Note, that there is already one
+object defined earlier (the particle).
+\begin{listing}{340}
+
+!   sample in one point
+
+    oldvectors%s(1)%p => sol
+
+    call fill_sample ( mesh, problem, sample1, ndegfd=2, object=2, &
+      elemsub=stokes_sample_velocity, coefficients=coefficients, &
+      oldvectors=oldvectors )
+
+    write( unit=10, fmt=* ) time, sample1%u(1,1), sample1%u(1,2)
+
+\end{listing}
+At line 343 the solution vector is directed towards the subroutine
+\texttt{stokes\_sample\_velocity} using a pointer in oldvectors.
+The sample is filled and
+subsequently written to a file. This happens at each time step. So after the
+program stops the value of the velocity in a single point is written to the
+file as a function of time.
+\begin{listing}{357}
+
+! sample velocity on a diagonal line
+
+  oldvectors%s(1)%p => sol
+
+  call fill_sample ( mesh, problem, sample2, ndegfd=2, object=3, &
+    elemsub=stokes_sample_velocity, coefficients=coefficients, &
+      oldvectors=oldvectors )
+
+  open( unit=10, file='sample2.out' )
+  do i = 1, nc
+    write( unit=10, fmt=* ) sample2%coor(i,1), sample2%coor(i,2), &
+                            sample2%u(i,1), sample2%u(i,2)
+  end do
+  close( unit=10 )
+
+\end{listing}
+Here the sample on a line is created, filled and written to a file.
+\begin{listing}{409}
+  call delete ( sample1, sample2 )   
+\end{listing}
+The samples are released from memory.
+
+\red{WARNING}: if the co-ordinates of an object are
+changed directly by the user, the reference coordinates of the object
+points\footnote{
+\texttt{mesh\%objects(:)\%refcoor} and for two-sided objects
+also \texttt{mesh\%objects(:)\%refcoor2}}
+and the element and group information 
+of the object points\footnote{\texttt{mesh\%objects(:)\%grpelm}
+and for two-sided objects also \texttt{mesh\%objects(:)\%grpelm2}}
+are out of sync.
+In that case,
+the routine \texttt{find\_refcoor\_objects} must be called for each
+affected object to make the data up-to-date. Note, that
+\texttt{find\_refcoor\_objects} is called in the routine
+\texttt{fill\_mesh\_parts}. So that when you make a new mesh and finalize the
+mesh with \texttt{fill\_mesh\_parts} the object data is up-to-date.
+
+\red{WARNING}: the routine \texttt{find\_refcoor\_objects} uses blocks (see
+Sec.~\ref{sec:blocks}) to find the elements and reference co-ordinates.
+This means that if the coordinates of the mesh have been
+changed directly by the user (e.g.\ when an ALE mesh is used),
+the bounds of the blocks need to be updated before calling
+\texttt{find\_refcoor\_objects}:
+\begin{listing}{1}
+
+  call find_bounds_blocks ( mesh )
+  call find_refcoor_objects ( mesh )
+
+\end{listing}
+It is also possible to fully redefine the blocks (see Sec.~\ref{sec:blocks}),
+but this takes more time.
+If only the coordinates of the objects change,
+there is no need to update the blocks.
+
+\subsection{Avoiding deallocate/allocate of sample data in \texttt{fill\_sample}}
+
+In the routine \texttt{fill\_sample} the sample memory is allocated on demand.
+If the previously allocated memory of the sample is too small the memory is
+deallocated and new memory is allocated. If this becomes time critical, it is
+better to define a big enough sample from the start by using the 
+routine \texttt{create\_sample} before the first call of \texttt{fill\_sample}.
+For example
+\begin{listing}{1}
+  call create_sample ( mesh, sample, ndegfd=3, nnodes=5000 )
+\end{listing}
+which will create a sample that can accommodate 5000 sampling points with
+3 degrees of freedom per point. If the actual number of sampling points and the
+number of degrees of freedom needed is less than
+or equal to 5000 and 3, respectively, no data is deallocated/allocated in the
+call of \texttt{fill\_sample}.
+
+\subsection{Sampling all nodes}
+
+Samples can be invalid:
+\begin{itemize}
+   \item a sample point is outside the domain or outside a layer (if
+         specified).
+   \item the number of degrees of freedom \texttt{ndegfd} is larger than the
+number of degrees available in a node.
+   \item the number of degrees of freedom \texttt{ndegfd} is not equal to the
+number of degrees specified with \texttt{degfd}.
+\end{itemize}
+By default, invalid samples are just skipped and no sample is taken. This
+means, that the number of samples can be different from the number of nodes in
+the object, curve, etc. and the correspondence of the samples with nodes is
+lost. To avoid that, an optional keyword \texttt{allnodes} is available for
+the routine
+\texttt{fill\_sample} (and also \texttt{create\_sample}). By setting the
+keyword to \texttt{.true.} the number of samples will be equal to the number of
+nodes and the sequence will be the same as in the object, curve etc. Whether a
+sample is valid is indicated by the logical array \texttt{valid} in the
+structure \texttt{sample}.
+
+\section{Integration}
+\label{sec:integration}
+
+Two types of integration are available:
+\begin{itemize}
+   \item Integration over the internal domain of the mesh 
+         (internal elements) using the subroutine
+         \texttt{integrate}. An element subroutine must be provided for
+         integration on a single element.
+         The routine \texttt{integrate} is similar to the
+         \texttt{build\_system} for assembling the system, but now the element
+         vectors are just added.
+   \item Integration over the boundaries  using the subroutine
+         \texttt{integrate\_boundary\_elements}.
+         An element subroutine must be provided for integration on a single 
+         boundary element.
+         The \texttt{integrate\_boundary\_elements}
+         routine is similar to the routine \texttt{add\_boundary\_elements},
+         but now the element vectors are just added.
+   \item Integration over an object using the subroutine
+         \texttt{integrate\_object}.
+         An element subroutine must be provided for contribution of 
+         a single integration point of a single element of the object.
+\end{itemize}
+For example:
+\begin{listing}{1}
+
+    call integrate_boundary_elements ( mesh, problem, resultsum, &
+      elemsub=stokes_flowrate, curve=2, coefficients=coefficients, &
+      oldvectors=oldvectors )
+
+\end{listing}
+will compute the flow rate through curve 2
+(output value in \texttt{resultsum(1)}) using the element subroutine
+\texttt{elem\_flowrate} available in the module 
+\texttt{stokes\_elements\_m} of add-on stokes
+(see Sec.~\ref{sec:stokesaddon}).
+
+\section{Graphical post-processing}
+
+The core of \tfem\ doesn't have any graphical routines.
+
+For 1D plotting
+(xy-plots) you need an external program, such as Matlab or
+the free gnuplot program. For interfacing to Matlab and
+gnuplot the module printtofile (part of the add-on IO-utils) can be used 
+(see Sec.~\ref{sec:printtofile}).
+
+For 2D and simple 3D
+plotting there is an add-on figplot (see Sec.~\ref{sec:figplot}).
+
+For advanced 2D and 3D graphical post-processing an external program is needed,
+At the time of writing interfaces to the following
+programs are available as an add-on in \tfem:
+\begin{itemize}
+\item
+The freely available Paraview program (see Sec.~\ref{sec:vtk}).
+\item
+The commercial Tecplot program (see Sec.~\ref{sec:tec}).
+\item
+The freely available Gmsh program (see Sec.~\ref{sec:gmshwrite}).
+\end{itemize}
+

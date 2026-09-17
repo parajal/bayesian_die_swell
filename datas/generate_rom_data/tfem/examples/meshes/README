@@ -1,0 +1,41 @@
+Short description
+-----------------
+
+contraction.f90
+
+  constraction mesh build from 7 submeshes (2D)
+
+contraction3D.f90
+
+  constraction mesh build from 7 submeshes (3D)
+
+objects_in_mesh.f90
+
+  simple example mesh with objects
+
+mesh_center_refine3D.f90
+
+ 3D mesh, with refinement near the middle
+
+mesh_center_refine3D_2.f90
+
+ 3D mesh, with refinement near the middle
+ similar to mesh_center_refine3D.f90, but now using add_to_mesh with
+ matchingsurface to change orientation of the surfaces.
+
+mesh_spectral_quad.f90
+
+ A curved quadrilateral region meshed using spectral elements. 
+ Ratio and factor is used to refine the elements towards a boundary.
+ mesh_convert is used to make a mesh that can be plotted.
+
+adaptive_mesh_pos.f90
+
+ In this program, a scalar function is used to refine a mesh. The value of 
+ the scalar function indicates the mesh element size at that location
+
+ellipsoid_in_a_box.geo
+
+ ellipsoidal object in a box using gmsh. Volume between surface of the object
+ and the box is meshed. 
+

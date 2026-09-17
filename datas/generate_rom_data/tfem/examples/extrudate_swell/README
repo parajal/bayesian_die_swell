@@ -1,0 +1,68 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+extrudate_swell1:
+
+ Extrudate swell problem of a Newtonian fluid (Stokes)
+ Optionally include surface tension (using an object).
+ Planar or axisymmetrical flow
+
+extrudate_swell2:
+
+ Viscoelastic extrudate swell problem
+ Planar flow for a UCM/Oldroyd-B model
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration
+
+extrudate_swell3:
+
+ Viscoelastic extrudate swell problem
+ Axisymmetrical flow for a Giesekus model
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration
+
+extrudate_swell4:
+
+ Extrudate swell problem of a Newtonian fluid (Stokes)
+ Planar or axisymmetrical flow
+ XFEM approach
+ Optionally include surface tension
+
+extrudate_swell5:
+
+ Viscoelastic extrudate swell problem
+ Planar flow for a UCM/Oldroyd-B model
+ DEVSS-G/SUPG
+ XFEM approach
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration
+ Optionally include surface tension
+
+extrudate_swell6:
+
+ Extrudate swell problem of a Newtonian fluid (Stokes)
+ Optionally include surface tension (using a curve).
+ Planar or axisymmetrical flow
+ This problem is similar to extrudate_swell1, but now implemented using a
+ more simple approach of using a boundary integral on a curve.
+
+extrudate_swell7:
+
+ 3D extrudate swell problem of a Newtonian fluid (Stokes).
+ Die is a square and contains sharp edges.
+ Free surfaces are expanded according to the movement of material lines.
+
+extrudate_swell8:
+
+ 3D extrudate swell problem of a viscoelastic fluid.
+ DEVSS-G/SUPG
+ Optional DEVSS. If DEVSS is not used, the G-method is still used
+ Implicit bilinear terms of CE in momentum balance.
+ Second-order Gear time integration.
+ This problem is similar to extrudate_swell7, but now for
+ a viscoelastic fluid.

@@ -1,0 +1,22 @@
+
+Point(1) = {-L, 0, 0, cl1};
+Point(2) = {-a, 0, 0, cl2};
+Point(3) = {0, 0, 0};
+Point(4) = {a, 0, 0, cl2};
+Point(5) = {L, 0, 0, cl1};
+Point(6) = {L, H, 0, cl1};
+Point(7) = {a, H, 0, cl3};
+Point(8) = {-a, H, 0, cl3};
+Point(9) = {-L, H, 0, cl1};
+Line(1) = {1, 2};
+Circle(2) = {4, 3, 2};
+Line(3) = {4, 5};
+Line(4) = {5, 6};
+Line(5) = {6, 7};
+Line(6) = {7, 8};
+Line(7) = {8, 9};
+Line(8) = {9, 1};
+Line Loop(8) = {1, -2, 3, 4, 5, 6, 7, 8};
+Plane Surface(9) = {8};
+
+// vim: set filetype=gmsh :  //

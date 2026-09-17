@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# getexample: get examples from the tfem directory
+
+. settfemroot
+. testdir
+
+SRCDIRS="$tp/examples"
+
+# functions
+
+function helptext ()
+{
+  echo "Usage: getexample [OPTIONS] example(s)"
+  echo
+  echo "Options:   (Description)"
+  echo "   -M      generate Mdefs.mk and Makefile"
+  echo "   -b      build (make) all executables"
+  echo "   -h      this text is shown (on standard error)"
+
+}
+
+
+# get options
+
+mmk=
+bld=
+while getopts Mbh optvar; do
+  case "$optvar"
+  in
+     M) mmk=1 ;;
+     b) mmk=1; bld=1 ;;
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+  esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ $# -eq 0 ]
+then
+     helptext >/dev/stderr
+     echo ""
+     echo "Examples available:"
+     echo ""
+	for dir in $SRCDIRS
+	do
+          cd $dir
+          echo "-> in directory $dir:"
+          echo ""
+	  for ex in *
+          do
+        	if [ -d $ex ]
+		then
+                        echo "      $ex"
+		fi
+          done
+          echo ""
+	done
+     exit
+fi
+
+# start core script
+
+while  [ -n "$1" ]
+do
+  notfound=t
+  for dir in $SRCDIRS
+  do
+    if [ -d $dir/$1 ]
+    then
+      notfound=
+      example=$1
+      echo "Copying example $example"
+      if [ -d $example ]
+      then
+        echo Error: directory $example exists
+        echo -n "Remove directory? (y or n (=default) ) ? > "
+        read input; goahead=${input:=n}
+        if [ $goahead = y ] ; then
+          rm -r $example
+        else
+          echo "Not continuing and stopping script"
+          exit 1
+        fi
+      fi
+      mkdir $example
+      cp -r $dir/$example/* $example
+      cd $example
+      if [ $mmk ]; then
+        getmdefs >Mdefs.mk
+        fmm -a >Makefile
+      fi
+      if [ $bld ]; then
+        make
+      fi
+      cd ..
+      break
+    fi
+  done
+  if [ $notfound ]
+  then
+    echo "Example $1 could not be found"
+  fi
+  shift
+done

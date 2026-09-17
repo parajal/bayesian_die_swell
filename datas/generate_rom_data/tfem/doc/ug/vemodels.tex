@@ -1,0 +1,880 @@
+% !TEX root = userguide.tex
+
+\chapter{Viscoelastic and elastoviscoplastic fluid models}
+\pgst{tfemchA}
+\label{chap:viscoelasticmodels}
+
+\def\chaptertitle{Viscoelastic fluid models}
+\def\headdate{6th August 2025} 
+
+In this Appendix some information is provided on the viscoelastic and elastoviscoplastic fluid
+models available in the add-on `viscoelastic models'.
+
+\section{Notation}
+
+The Cauchy stress tensor is denoted by $\ten\sigma$. We assume that
+the fluid is incompressible.  Hence, we split $\ten\sigma$
+as follows
+\[
+   \ten\sigma = -p\ten 1 +\ten\tau_\text{ex},
+\]
+where $p$ is the pressure and $\ten\tau_\text{ex}$ is the extra-stress tensor,
+which vanishes in equilibrium.
+The tensor $\ten\tau_\text{ex}$ is split into a solvent part and a polymer part
+\[
+   \ten\tau_\text{ex} = 2\eta_\text{s}\ten D + \ten\tau, 
+\]
+where $\eta_\text{s}$ is the solvent viscosity and $\ten D$ is Euler's
+rate-of-deformation tensor: 
+\[
+         \ten D=\frac12(\ten L + \ten L^T)\quad\text{with}\quad 
+         \ten L^T= \nabla\vek u.
+\]
+Basically, the constitutive models give the
+relation between $\ten\tau$ and the deformation history. 
+The models are usually characterized
+based on the mathematical form: differential, integral or
+stochastic models. 
+In the add-on `viscoelastic models' only differential models are available.
+
+For some models it is common practice to split the polymer stress into
+modes as follows
+\begin{equation}
+     \ten\tau=\sum_{k=1}^K \ten\tau^{(k)}.
+\end{equation}
+In the following we will drop the mode number superscript and
+therefore $\ten\tau^{(k)}$ should be read instead of
+$\ten\tau$ when a multi-mode model is available.
+
+There are two common ways of formulating differential models:
+either directly in $\ten\tau$
+or split into an equation for a structure tensor $\ten\alpha$
+and a stress function $\ten\tau(\ten\alpha)$. We prefer the latter.
+The structure tensor
+$\ten\alpha$ is positive definite and isotropic in equilibrium:
+\[
+   \ten\alpha_{\rm eq}=c\ten1 \quad \text{with $c>0$}.
+\]
+A structure tensor that is $\ten 1$ in equilibrium will be called a
+\emph{conformation tensor} and denoted by $\ten c$. Any structure tensor
+can be scaled to a conformation tensor as follows
+\[
+   \ten c=3\ten\alpha/\tr\ten\alpha_{\text{eq}}.
+\]
+In the following we will start with
+the formulation using the conformation tensor $\ten c$, because this is the way
+it is implemented in the add-on. 
+For some models also the sometimes more familiar formulation will be given.
+
+We will use the following definition of derivatives
+\[
+  \stackbox{\ten a}=\dot{\ten a}-\hat{\ten{L}}\cdot\ten a
+                    -\ten a\cdot\hat{\ten{L}}^T,
+\]
+where
+\[
+    \hat{\ten{L}}=\ten L-\xi\ten D,\quad\ten L^T=
+          \nabla\vek u,\quad\ten D=\frac12(\ten L + \ten L^T).
+\]
+For $\xi=0$ we have the upper-convected derivative
+\[
+  \upper{\ten a}=(\stackbox{\ten a})_{\xi=0}=
+             \dot{\ten a} -\ten L\cdot\ten a
+                    -\ten a\cdot\ten L^T.
+\]
+Furthermore, we will use the notation
+\[
+\ten a^{\text{d}}=\ten a-\frac13(\tr\ten a)\ten 1
+\]
+for the deviatoric part of the tensor $\ten a$.
+% and
+%\begin{equation}
+%    \tilde{\ten a} = \ten a/(\det\ten a)^\frac13
+%    \label{eq:isochoric}
+%\end{equation}
+%for the isochoric part if a tensor $\ten a$, assuming $\det\ten a\neq0$. Note, that $\det\tilde{\ten a}=1$.
+
+In addition to the formulation using the conformation tensor $\ten c$, some of
+the models have also been implemented using the b-tensor formulation $\ten b$ \cite{hutter_fluctuating_2018}. The conformation tensor $\ten c$ can computed by $\ten c=\ten b\cdot\ten b^T$. 
+ 
+\section{Viscoelastic constitutive models} 
+
+\newcommand{\model}[2]{
+    \subsection{#2 \textmd{(\texttt{model=#1})}}
+}
+%    \addcontentsline{toc}{subsection}{#2 (\texttt{model=#1}) } }
+
+\model{1}{Leonov}
+\[
+  \lambda\stacktridown{\ten c}+\frac12\left({\ten c}^2-\ten 1
+                   -\frac13(I_{1}-I_{2}){\ten c}\right) = \ten 0
+\]
+where
+\begin{align*}
+    I_{1}&=\tr{\ten c}\\
+    I_{2}&=\frac12\left[I_{1}^2-\tr({\ten c}^2)\right]
+\end{align*}
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. When combined with an incompressible flow, the solution for $\ten c$ will satisfy $\det\ten c=1$ for any time $t$ if it is 1 initially.
+
+\model{2}{Upper-convected Maxwell/Oldroyd-B}
+\label{sec:appucm}
+\[
+  \lambda\stacktridown{\ten c}+\ten c-\ten 1=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stacktridown{\ten\tau}+\ten\tau=2\eta\ten D
+\]
+where $\eta=G\lambda$.
+
+\model{3}{Giesekus}
+\[
+  \lambda\stacktridown{\ten c}+\ten c-\ten 1+\alpha(\ten c-\ten 1)^2=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stacktridown{\ten\tau}+\ten\tau+\frac{\lambda\alpha}{\eta} \ten\tau^2
+           =2\eta\ten D
+\]
+where $\eta=G\lambda$.
+\model{4}{Larson}
+\[
+ \lambda\stacktridown{\ten c}+\frac{1}{f}({\ten c}-\ten 1)=\ten 0
+\]
+with
+\[
+      f=\frac{1}{1+\gamma(\tr{\ten c}-3)}
+\]
+and
+\[
+     \ten\tau=G(f\ten c - \ten 1)
+\]
+where $G$ is a modulus. When written directly in $\ten c^*=f\ten c$ the
+Larson differential model has the more familiar form
+\[
+ \stacktridown{\ten c}\!\!{}^*+2\gamma({\ten c^*}:\ten D){\ten c^*}+({\ten c^*}-\ten 1)/\lambda=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c^* - \ten 1)
+\]
+
+\model{5}{Phan-Thien/Tanner (linear; no slip)}
+\[
+  \lambda\stacktridown{\ten c}+Y(\tr\ten c)(\ten c-\ten 1)=\ten 0
+\]
+where 
+\[
+   Y(\tr\ten c)= 1+\epsilon(\tr\ten c - 3)
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stacktridown{\ten\tau}+Y(\tr\ten\tau)\ten\tau=2\eta\ten D
+\]
+where 
+\[
+   Y(\tr\ten\tau)= 1+\frac{\epsilon\lambda}{\eta}\tr\ten\tau
+\]
+and $\eta=G\lambda$.
+\model{6}{Phan-Thien/Tanner (exponential; no slip)}
+\[
+  \lambda\stacktridown{\ten c}+Y(\tr\ten c)(\ten c-\ten 1)=\ten 0
+\]
+where 
+\[
+   Y(\tr\ten c)= e^{\displaystyle \epsilon(\tr\ten c - 3)}
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stacktridown{\ten\tau}+Y(\tr\ten\tau)\ten\tau=2\eta\ten D
+\]
+where 
+\[
+   Y(\tr\ten\tau)=
+   e^{\displaystyle\frac{\epsilon\lambda}{\eta}{\rm tr}\,\ten\tau}
+\]
+and $\eta=G\lambda$.
+\model{7}{Modified Leonov}
+\[
+  \lambda\stacktridown{\ten c}+\frac12\phi(I_{1}+I_{2})\left({\ten c}^2-\ten 1
+                   -\frac13(I_{1}-I_{2}){\ten c}\right) = \ten 0
+\]
+where
+\begin{align*}
+    I_{1}&=\tr{\ten c}\\
+    I_{2}&=\frac12\left[I_{1}^2-\tr({\ten c}^2)\right]\\
+        \phi(x)&=\left\{1+\frac{2\alpha}{\pi}
+                 \arctan[\frac{\beta}{4}(x-6)]\right\}^{-1}
+\end{align*}
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. When combined with an incompressible flow, the solution for $\ten c$ will satisfy $\det\ten c=1$ for any time $t$ if it is 1 initially.
+
+\model{8}{Chilcott-Rallison}
+\[
+ \lambda\stacktridown{\ten c}+f({\ten c}-\ten 1)=\ten 0
+\]
+with
+\[
+      f=\frac{1}{1-\tr{\ten c}/L^2}
+\]
+and
+\[
+     \ten\tau=G(f\ten c - \frac{L^2}{L^2-3}\ten 1)
+\]
+where $G$ is a modulus. This model has a constant viscosity equal to
+$\eta=G\lambda$. Note, that the coefficients $G$ and $\lambda$ are \emph{not} the linear modulus and and relaxation time, respectively (see \texttt{model=21}). The relation with the coefficients of \texttt{model=21} is 
+\[G=G_\text{model=21}\,(L^2-3)/L^2 \quad\text{ and } \quad
+\lambda=\lambda_\text{model=21}\,L^2/(L^2-3).\]
+
+
+\model{9}{FENE-P (closed form)}
+\[
+ \lambda_H\stacktridown{\ten c}+f\ten c-\frac{b+3}b\ten 1=\ten 0
+\]
+with
+\[
+      f=\frac{1}{1-\tr\ten c/(b+3)}
+\]
+and
+\[
+     \ten\tau=G(\frac b{b+3}f\ten c - \ten 1)
+\]
+where $G=nkT$. Note, that the zero-shear-rate viscosity $\eta_0=G\lambda_H b/(b+3)$ for this model. 
+
+A more familiar form is obtained when we write the model using
+the structure tensor $\ten\alpha=b/(b+3)\ten c$: 
+\[
+ \lambda_H\stacktridown{\ten\alpha}+f\ten\alpha-\ten 1=\ten 0
+\]
+with
+\[
+      f=\frac{1}{1-\tr\ten\alpha/b}
+\]
+and
+\[
+     \ten\tau=G(f\ten\alpha - \ten 1)
+\]
+where $G=nkT$. Note that in equilibrium we have
+$\ten\alpha_{\text{eq}}=b/(b+3)\ten 1$.
+This model is a closed form solution of the FENE-P dumbbell.
+
+\model{10}{Johnson-Segalman}
+\[
+  \lambda\stackbox{\ten c}+\ten c-\ten 1=\ten 0
+\]
+and
+\[
+     \ten\tau=\frac{G}{1-\xi}(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stackbox{\ten\tau}+\ten\tau=2\eta\ten D
+\]
+where $\eta=G\lambda$.
+\model{11}{Phan-Thien/Tanner (linear; slip)}
+\[
+  \lambda\stackbox{\ten c}+Y(\tr\ten c)(\ten c-\ten 1)=\ten 0
+\]
+where 
+\[
+   Y(\tr\ten c)= 1+\frac{\epsilon}{1-\xi}(\tr\ten c - 3)
+\]
+and
+\[
+     \ten\tau=\frac{G}{1-\xi}(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stackbox{\ten\tau}+Y(\tr\ten\tau)\ten\tau=2\eta\ten D
+\]
+where 
+\[
+   Y(\tr\ten\tau)= 1+\frac{\epsilon\lambda}{\eta}\tr\ten\tau
+\]
+with $\eta=G\lambda$.
+\model{12}{Phan-Thien/Tanner (exponential; slip)}
+\[
+  \lambda\stackbox{\ten c}+Y(\tr\ten c)(\ten c-\ten 1)=\ten 0
+\]
+where 
+\[
+   Y(\tr\ten c)= e^{\displaystyle \frac{\epsilon}{1-\xi}(\tr\ten c - 3)}
+\]
+and
+\[
+     \ten\tau=\frac{G}{1-\xi}(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A more familiar form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stackbox{\ten\tau}+Y(\tr\ten\tau)\ten\tau=2\eta\ten D
+\]
+where 
+\[
+   Y(\tr\ten\tau)=
+   e^{\displaystyle\frac{\epsilon\lambda}{\eta}{\rm tr}\,\ten\tau}
+\]
+with $\eta=G\lambda$.
+
+\model{13}{Marrucci}
+\[
+  \lambda\stacktridown{\ten c}
+         +\frac{\ten c-\ten 1}{1-\beta(\tr\ten c-3)}=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. A different form is obtained when
+the conformation tensor $\ten c$ is eliminated:
+\[
+  \lambda\stacktridown{\ten\tau}
+         +\frac{\ten\tau}{1-\beta\lambda\tr\ten\tau/\eta}=2\eta\ten D
+\]
+
+\model{14}{XPP model (``$\alpha=0$'; double equation implementation')}
+\begin{gather*}
+  \stacktridown{\ten S}+2(\ten D:\ten S)\ten S
+         +\frac1{\lambda_b\Lambda^2}[\ten S-\frac13\ten 1]=\ten 0\\
+  \dot\Lambda - \Lambda \ten D:\ten S +
+         \frac{\exp[\nu(\Lambda-1)]}{\lambda_s}(\Lambda-\frac1\Lambda) = 0
+\end{gather*}
+and
+\[
+     \ten\tau=G(3\Lambda^2\ten S - \ten 1)
+\]
+where $G$ is a modulus. Note that the orientation tensor
+ $\ten S=\dfrac13\ten 1$ in equilibrium.
+
+\model{15}{Rolie-Poly model}
+\medskip
+\[
+  \stacktridown{\ten c}
+  + \frac1{\tau_d}(\ten c - \ten 1)
+ +\frac{1-\sqrt{3/\tr\ten c}}{\tau_R}[\ten c+
+       \beta(\tr\ten c/3)^\delta (\ten c-\ten 1)]=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. 
+
+\model{16}{XPP model (``$\alpha=0$'; single equation implementation')}
+\label{sec:XPPmodel}
+\medskip
+\[
+  \stacktridown{\ten c}
+ +2\frac{\exp[\nu(\sqrt{\tr\ten c/3}-1)]}{\lambda_s}
+     \big(1-\frac3{\tr\ten c}\big)\ten c
+   +\frac1{\lambda_b}\big(\frac{3{\ten c}}{\tr\ten c}-\ten 1\big)=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. This is the thermodynamically consistent variation of the XPP model \cite{verbeeten2004numerical}. 
+Note that the stretch is given by $\Lambda=\sqrt{\tr\ten c/3}$ and the
+orientation tensor by $\ten S=\ten c/(3\Lambda^2)$.
+
+\model{17}{XPP model (``$\alpha=0$''; double equation implementation;
+$\log\Lambda$)}
+This model is the same as \texttt{model=14}. However, the implementation is
+different: the stretch equation has been transformed to solve for $\log\Lambda$
+instead of $\Lambda$.
+
+\model{18}{PTT-XPP model (`single equation implementation'; four components in 2D)}
+\medskip
+\[
+  \stacktridown{\ten c}
+ +2\frac{\exp[\nu(\sqrt{\tr\ten c/3}-1)]}{\lambda_s}
+     \big(1-\frac3{\tr\ten c}\big)\big(\ten c - \ten 1\big)
+   +\frac1{\lambda_b}\big[\frac{3}{\tr\ten c}\big(\ten c -\ten 1\big)\big]=\ten 0
+\]
+and
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus. The PTT-XPP model \cite{tanner2003simple} is a model of the PTT family
+which follows from the XPP model when assuming that the $F-1$ term is
+negligible, which is the case for high elongation rates. The resulting
+model has the extensional behavior of the XPP model, while the shear
+behavior resembles a PTT model. The excessive shear thinning of the XPP
+model is not present in this model. The model is based on the thermodynamically consistent form of the XPP model \cite{verbeeten2004numerical}.
+Note, that the stretch is given by $\Lambda=\sqrt{\tr\ten c/3}$ and the
+orientation tensor by $\ten S=\ten c/(3\Lambda^2)$. Note, that in a 2D flow the solution for $c_{zz}=1$, like the original PTT model. However, in the implementation of \texttt{model=18} the component $c_{zz}$ is retained, like in the real XPP model. 
+
+\model{19}{PTT-XPP model (`single equation implementation'; three components in 2D)}
+This model is the same as \texttt{model=18}. However, in the implementation for 2D flow the $c_{zz}$-component is not solved (only $c_{xx}$, $c_{xy}$ and $c_{yy}$), since it is 1.
+
+\model{20}{FENE-P (closed form; alternative formulation)}
+\[
+ \lambda\stacktridown{\ten c}+\hat f\ten c-\ten 1=\ten 0
+\]
+with
+\[
+      \hat f=\frac{b}{b+3-\tr\ten c}
+\]
+and
+\[
+     \ten\tau=G(\hat f\ten c - \ten 1)
+\]
+where $G=nkT$. Note, that the zero-shear-rate viscosity $\eta_0=G\lambda$ for this model. This model is a different formulation for the FENE-P model consistent with \cite{wapperom_thermodynamics_1998,hutter_fluctuating_2018}. The model is identical to \texttt{model=9} for
+$\lambda=\lambda_Hb/(b+3)$ and $\hat f=fb/(b+3)$.
+
+\model{21}{Chilcott-Rallison (alternative formulation)}
+\[
+ \lambda\stacktridown{\ten c}+f({\ten c}-\ten 1)=\ten 0
+\]
+with
+\[
+      f=\frac{L^2-3}{L^2-\tr{\ten c}}
+\]
+and
+\[
+     \ten\tau=G(f\ten c - \ten 1)
+\]
+where $G$ is a modulus. This model has a constant viscosity equal to
+$\eta=G\lambda$. Note, that the coefficients $G$ and $\lambda$ are the linear modulus and  relaxation time, respectively. The relation with the coefficients of \texttt{model=8} is 
+\[G=G_\text{model=8}\,L^2/(L^2-3) \quad\text{ and } \quad
+\lambda=\lambda_\text{model=8}\,(L^2-3)/L^2.\]
+
+\model{22}{Saramito based on Drucker-Prager plasticity (SRM3)}
+This model is proposed in \cite{saramito_new_2021} with elasticity restricted to neo-Hookean and damage not included.
+The extra-stress tensor is defined by:
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+where $G$ is a modulus and the evolution of the conformation tensor $\ten c$ is given by
+\[
+ \stacktridown{\ten c}+\ten f({\ten c})=\ten 0
+\]
+For determining the tensor function $\ten f({\ten c})$, the following three regimes are defined (see Figure~\ref{fig:regimes})
+\[
+      \begin{cases}
+              \text{Regime 1: ``Sticking''} & \text{if } \mu\tr\ten\tau-3\tau_\text{y}\leq-3\tau_\text{d}\\
+              \text{Regime 3: ``Losing contact''}& \text{if } \mu\tr\ten\tau-3\tau_\text{y}\geq 2\mu^2\tau_\text{d}\\
+              \text{Regime 2: ``Sliding''}&\text{otherwise} 
+             \end{cases}
+\]
+where $\tau_\text{y}$ is the cohesion, $\mu$ is the friction coefficient and $\tau_\text{d}$ the von Mises equivalent shear stress (see Sec.~\ref{sec:alammodels}). The tensor function $\ten f({\ten c})$ now becomes:
+\[
+      \ten f(\ten c)=\begin{cases}
+              \ten 0 & \text{Regime 1: ``Sticking''}\\[1ex]
+              \dfrac{\tau_\text{d}-\tau_\text{y}+\mu\frac13\tr\ten\tau}{\eta(1+\frac23\mu^2)\tau_\text{d}}\big[\ten\tau-(\frac13\tr\ten\tau-\frac23\mu\tau_\text{d})\ten 1\big] & \text{Regime 2: ``Sliding''}\\[3ex]
+              \dfrac1\eta\Big(\ten\tau-\dfrac{\tau_\text{y}}{\mu}\ten 1\Big)&\text{Regime 3: ``Losing contact''}
+             \end{cases}
+\]
+where $\eta=G\lambda$, with $\lambda$ a time constant. Note, that in order to compare our notation to \cite{saramito_new_2021}, apply $\sigma_\text{y}=\sqrt{2}\tau_\text{y}$, $|\dev\ten\sigma|=\sqrt{2}\tau_\text{d}$, $\mu'=\sqrt{2/3}\mu$, where $\mu'$ is the $\mu$ parameter in \cite{saramito_new_2021}.
+
+\begin{figure}[htbp!]
+\begin{center}
+    \includegraphics[scale=0.7]{Regimes_SRM3}
+\end{center}
+   \caption{Regimes in the SRM3 model \cite{saramito_new_2021}.}
+    \label{fig:regimes}
+\end{figure}
+
+\model{23}{EGP model for incompressible flow}
+The EGP (Eindhoven Glassy Polymer) model for incompressible flow (see \cite{pagani_no_2024} and the reference therein) is defined as follows.
+The extra-stress tensor is given by:
+\begin{equation}
+     \ten\tau=G\ten c^{\text{d}}
+     \label{eq:tauEGPincomp}
+\end{equation}
+where $G$ is a modulus. The evolution equation of the conformation tensor $\ten c$ is given by\footnote{In \cite{pagani_no_2024} the conformation tensor is denoted with $\ten B_\text{e}$.}.
+\begin{equation}
+  \dot{\ten c} -(\ten L-\ten D_\text{p})\cdot\ten c
+                    -\ten c\cdot(\ten L-\ten D_\text{p})^T=\ten 0
+\end{equation}
+with the plastic deformation rate $\ten D_\text{p}$ determined by the extra-stress $\ten\tau$:
+\[
+    \ten D_\text{p}=\frac{\ten\tau}{2\eta}
+\]
+with $\eta=G\lambda$. Since for isotropic fluids $\ten\tau$ and $\ten c$ are coaxial, we can also write
+the evolution of $\ten c$ as follows
+\begin{equation}
+  \stacktridown{\ten c} + \ten c\cdot\ten \tau/\eta=\ten 0
+\end{equation}
+or when the $\ten\tau$ expression Eq.~\eqref{eq:tauEGPincomp} is
+substituted\footnote{The logical \texttt{USE\_EGP\_STRESS\_TENSOR\_FORM} in the module \texttt{limits\_m} can be used to switch between the two forms of the evolution equation for $\ten c$.}
+\begin{equation}
+  \lambda\stacktridown{\ten c} + \ten c^2 -\tfrac13(\tr\ten c)\ten c=\ten 0
+\end{equation}
+ When combined with an incompressible flow, the solution for $I_3=\det\ten c$ will satisfy $I_3=1$ for any time $t$ if $I_3=1$ initially. To complete the EGP model it should be combined with either the Eyring or Ree-Eyring adapted $\lambda$ model (see Sec.~\ref{sec:alammodels}). 
+
+
+\model{24}{EGP model for compressible flow}
+\label{sec:EGPcompress}
+The EGP (Eindhoven Glassy Polymer) model for compressible flow (see \cite{pagani_no_2024} and the reference therein) is defined as follows.
+The extra-stress tensor is given by:
+\begin{equation}
+     \ten\tau=\frac{G}J\ten c^{\text{d}}
+     \label{eq:tauEGPcomp}
+\end{equation}
+where $G$ is a modulus and $J$ is the relative change in volume with respect to the initial equilibrium state ($\ten c=\ten 1$). The value of $J$ is given by
+\[
+    \dot J = J \nabla\cdot \vek u
+\]
+with initial condition $J=1$ in the initial equilibrium state.
+The evolution equation of the conformation tensor $\ten c$ is given by
+\begin{equation}
+  \dot{\ten c} -(\ten L^\text{d}-\ten D_\text{p})\cdot\ten c
+                    -\ten c\cdot(\ten L^\text{d}-\ten D_\text{p})^T=\ten 0
+\end{equation}
+with the plastic deformation rate $\ten D_\text{p}$ determined by the extra-stress $\ten\tau$:
+\[
+    \ten D_\text{p}=\frac{\ten\tau}{2\eta}
+\]
+with $\eta=G\lambda$. Since for isotropic fluids $\ten\tau$ and $\ten c$ are coaxial, we can also write
+the evolution of $\ten c$ as follows
+\begin{equation}
+  \stacktridown{\ten c}+\tfrac23\ten c\nabla\cdot\vek u + \ten c\cdot\ten \tau/\eta=\ten 0
+  \label{eq:EGPc}
+\end{equation}
+or when the $\ten\tau$ expression Eq.~\eqref{eq:tauEGPcomp} is
+substituted\footnote{The logical \texttt{USE\_EGP\_STRESS\_TENSOR\_FORM} in the module \texttt{limits\_m} can be used to switch between the two forms of the evolution equation for $\ten c$.}
+\begin{equation}
+  \lambda(\stacktridown{\ten c} +\tfrac23\ten c\nabla\cdot\vek u)+ [\ten c^2 -\tfrac13(\tr\ten c)\ten c]/J=\ten 0
+\end{equation}
+The initial condition for $\ten c=\ten 1$. 
+Using $\tr\ten\tau=0$, it is easy to show that $\lderivmat{(\det\ten c)}t=0$
+and since $\det \ten c=1$ initially, we find the solution of Eq.~\eqref{eq:EGPc} to be such that $\det \ten c=1$ for any time. Hence, $\ten c$ can be interpreted as the isochoric (constant volume) conformation tensor\footnote{In \cite{pagani_no_2024} the isochoric conformation tensor is denoted with $\tilde{\ten B}_\text{e}$.}.
+
+To complete the EGP model it should be combined with either the Eyring or Ree-Eyring adapted $\lambda$ model (see Sec.~\ref{sec:alammodels}). For compressible materials, a compressible fluid model needs to be used as well (see Sec.~\ref{sec:compressible}).
+
+\section{Adapted $\lambda$ models (including elastoviscoplastic models)}
+\label{sec:alammodels}
+\subsection{Introduction}
+The upper-convected Maxwell model/Oldroyd-B model can be written as
+\begin{equation}
+   \stacktridown{\ten c}+\dfrac1\lambda(\ten c-\ten 1)=\ten 0 \label{eq:clambdamodel}
+\end{equation}
+or with the extra-stress
+\[
+     \ten\tau=G(\ten c - \ten 1)
+\]
+this can be written as
+\begin{equation}
+   \stacktridown{\ten c}+\dfrac1{\eta}\ten\tau=\ten 0 \label{eq:etamodel}
+\end{equation}
+where $\eta=G\lambda$ is the viscosity. 
+
+By adapting $\lambda$ (or better $1/\lambda$) we can create additional models, which we here address as `adapted $\lambda$ models'. For example, by setting $1/\lambda=0$ 
+ we obtain a neo-Hookean elastic solid. 
+
+\subsection{Saramito functions (SRM1 and SRM2)}
+The elastoviscoplastic models of Saramito \cite{saramito_new_2007,saramito_new_2009,saramito_complex_2016} can be fit into this framework as well. The original model in \cite{saramito_new_2007} (SRM1) resembles a Bingham viscoplastic model in that there is a discrete yield stress, however below yield the material is an elastic or viscoelastic solid\footnote{If the solvent viscosity $\eta_\text{s}=0$ it is an elastic solid and if $\eta_\text{s}>0$ it is a viscoelastic solid (Kelvin-Voigt) below yield.} and above yield a viscoelastic fluid. The model in \cite{saramito_new_2009} (SRM2) modifies the constant viscosity above yield to a power-law viscosity resembling the Herschel-Bulkley viscoplastic model.
+
+The SRM1 model is obtained by replacing $1/\lambda$ by
+\begin{equation}
+      \dfrac1\lambda \quad\rightarrow\quad\dfrac1\lambda \max(0,\dfrac{\tau_\text{d}-\tau_\text{y}}{\tau_\text{d}}) \label{eq:replambda}
+\end{equation}
+where $\tau_\text{y}$ is the yield shear stress and $\tau_\text{d}$ the von Mises equivalent shear stress, given by\footnote{Note, that we use the definition for the norm of a stress tensor given by $|\ten \tau|=\sqrt{\frac12\ten\tau:\ten\tau}$. For a pure shear stress state this norm reduces to the absolute value of
+ the shear stress. This definition is consistent with \cite{saramito_complex_2016,saramito_progress_2017} but not with \cite{saramito_new_2007,saramito_new_2009}, where the norm is based on the uniaxial tensile stress to be the base case. The latter approach leads to `spurious' 2's in the model equations to deal with that.}
+\[
+    \tau_\text{d} = \sqrt{\frac12\ten\tau^{\text{d}}:\ten\tau^{\text{d}}}
+\]
+with $\ten\tau^{\text{d}}=\ten\tau-\frac13(\tr\ten\tau)\ten 1$, the deviatoric part of $\ten\tau$. Note, that for $\tau_\text{d} \le \tau_\text{y}$ the model behaves as a neo-Hookean elastic solid. 
+For $\tau_\text{d} > \tau_\text{y}$
+the material starts to `yield' and becomes a visco-elastic fluid, approaching the UCM/Oldroyd-B model for $\tau_\text{d} \gg \tau_\text{y}$. Of course, this comes with the usual caveats, i.e.\ a constant steady state shear viscosity ($\eta$) and unlimited extensional viscosity. In \cite{saramito_new_2007} this has been fixed by using a PTT model instead of the Oldroyd-B model and similarly replacing $1/\lambda$ with Eq.~\eqref{eq:replambda}. In \tfem, this approach can be combined with all appropriate models that have a single relaxation time (so excluding Roly-Poly, XPP and derivatives thereof).
+
+The SRM2 model is obtained after replacing the constant $\eta$ in \eqref{eq:etamodel} by a function of $\tau_\text{d}$ such that the steady shear viscosity behavior is similar to a power-law viscosity $K\dot\gamma^{n-1}$. 
+This translates to replacing $1/\lambda$ in Eq.~\eqref{eq:clambdamodel} as follows:
+\begin{equation}
+      \dfrac1\lambda \quad\rightarrow\quad G\max(0,\dfrac{\tau_\text{d}-\tau_\text{y}}{K\tau_\text{d}^n})^{1/n}=    
+\begin{cases}
+     0 & \text{ if }\tau_\text{d} \le  \tau_\text{y} \\[1ex]
+      \dfrac G{\tau_\text{d}}(\dfrac{\tau_\text{d}-\tau_\text{y}}{K})^{1/n} & \text{ if }\tau_\text{d} > \tau_\text{y} \label{eq:replambda2}
+\end{cases}
+\end{equation}
+Note, that in this model the value of $\lambda$ is not used, except that it should not be set to zero. The time scale is determined by the values of $G$, $K$ and $n$. For $n=1$ the model reduces to the SRM1 model  with $1/\lambda=G/K$ or $\lambda=K/G$. 
+Again, in \tfem, this approach can be combined with all appropriate models that have a single relaxation time (so excluding Roly-Poly, XPP and derivatives thereof).
+
+\subsection{Eyring and Ree-Eyring functions}
+The Eyring viscosity function is obtained after replacing the constant $\eta$ in \eqref{eq:etamodel} by the function
+\[
+    \eta(\tau_\text{d})=G\lambda \dfrac{\tau_\text{d}/\tau_\text{ref}}{\sinh{(\tau_\text{d}/\tau_\text{ref})}}
+\]
+This translates to replacing $1/\lambda$ in Eq.~\eqref{eq:clambdamodel} as follows:
+\begin{equation}
+    \dfrac1\lambda \quad\rightarrow\quad 
+       \dfrac1\lambda \dfrac{\sinh{(\tau_\text{d}/\tau_\text{ref})}}{\tau_\text{d}/\tau_\text{ref}}
+\end{equation}
+The Eyring viscosity function is most commonly used in the EGP model. However again
+in \tfem, the Eyring viscosity function can be combined with all appropriate viscoelastic models that have a single relaxation time (so excluding Roly-Poly, XPP and derivatives thereof).
+
+The Ree-Eyring viscosity function is obtained after replacing the constant $\eta$ in \eqref{eq:etamodel} by the  function
+\[
+    \eta(\tau_\text{d})=G\lambda \Big[f_1\dfrac{\tau_\text{d}/\tau_\text{ref1}}{\sinh{(\tau_\text{d}/\tau_\text{ref1})}}+
+    f_2\dfrac{\tau_\text{d}/\tau_\text{ref2}}{\sinh{(\tau_\text{d}/\tau_\text{ref2})}} \Big]
+\]
+with $f_2=f_1-1$.
+This translates to replacing $1/\lambda$ in Eq.~\eqref{eq:clambdamodel} as follows:
+\begin{equation}
+    \dfrac1\lambda \quad\rightarrow\quad 
+       \dfrac1\lambda \Big[f_1\dfrac{\tau_\text{d}/\tau_\text{ref1}}{\sinh{(\tau_\text{d}/\tau_\text{ref1})}}+
+    f_2\dfrac{\tau_\text{d}/\tau_\text{ref2}}{\sinh{(\tau_\text{d}/\tau_\text{ref2})}} \Big]^{-1}
+\end{equation}
+The Ree-Eyring viscosity function is most commonly used in the EGP model. However again
+in \tfem, the Ree-Eyring viscosity function can be combined with all appropriate viscoelastic models that have a single relaxation time (so excluding Roly-Poly, XPP and derivatives thereof).
+
+\subsection{Pressure dependence: the $h(J)$ function}
+\label{sec:pressuredependenthJ}
+Denoting the SRM1, SRM2, Eyring and Ree-Eyring functions with $f(\tau_\text{d})$, in \tfem\ an additional factor (function $h(J)$) can be added to $f(\tau_\text{d})$:
+\begin{equation}
+    \dfrac1\lambda \quad\rightarrow\quad 
+       \dfrac1\lambda h(J) f(\tau_\text{d})
+\end{equation}
+where $J$ is the relative change in volume with respect to the initial equilibrium state. At the time of writing there is only one possible function available:
+\begin{equation}
+   h(J) = J^\beta
+\end{equation}
+where $\beta$ is a dimensionless material constant. Note, that for the compressible EGP model (see Sec.~\ref{sec:EGPcompress}) there is an implicit dependence on $J$ of $f(\tau_\text{d})$ in addition to the function $h(J)$.
+
+Since in \tfem\ $J$ is a function of the pressure given by Eq.~\eqref{eq:compress1}, the function $h(J)$ can be seen as an exponential function of the pressure:
+\begin{equation}
+   h(J) = J^\beta=\exp(-\dfrac{p-p_0}{K})^\beta=\exp(-\beta\,\dfrac{p-p_0}{K})
+\end{equation}
+In the EGP model the viscosity function also depends on the pressure using an exponential function \cite{van_breemen_rate_2012}, which translates to:
+\begin{equation}
+    \dfrac1\lambda \quad\rightarrow\quad 
+        \dfrac1\lambda\exp(-\mu\,\dfrac{p-p_0}{\tau_\text{ref}}) f(\tau_\text{d})
+\end{equation}
+where $\mu$ is a dimensionless material parameter. Comparing this expression with our function $h(J)$ above, we see that the relation between $\beta$ and $\mu$ for the EGP model is given by
+\begin{equation}
+    \beta = \dfrac{\mu K}{\tau_\text{ref}}
+\end{equation}
+
+\subsection{Plastic strain softening}
+\label{sec:strainsoftening}
+In \cite{van_breemen_rate_2012} plastic strain softening is described, where an additional factor is introduced for adapting $\lambda$:
+\begin{equation}
+    \dfrac1\lambda \quad\rightarrow\quad 
+       \dfrac1\lambda g(\bar{\gamma}_\text{p}) h(J) f(\tau_\text{d})
+\end{equation}
+with
+\begin{equation}
+   g(\bar{\gamma}_\text{p})=\exp(-S_\text{a}R(\bar{\gamma}_\text{p}))
+\end{equation}
+and softening function $R$ given by
+\begin{equation}
+   R(\bar{\gamma}_\text{p})=
+    \dfrac{(1+(r_0\exp(\bar{\gamma}))^{r_1})^{\frac{r_2-1}{r_1}}}{(1+r_0^{r_1})^\frac{r_2-1}{r_1}}
+\end{equation}
+Here, $S_\text{a}$ is the state parameter and $r_0$, $r_1$ and $r_2$ are fitting parameters.
+In these equations $\bar{\gamma}_\text{p}$ is the equivalent plastic strain, which is governed by the evolution equation
+\begin{equation}
+   \dot{\bar{\gamma}}_\text{p}=\dfrac1\lambda \dfrac{\tau_\text{d}}{G}|_1
+\end{equation}
+where the subindex 1 means that the right-hand side, i.e.\ adapted $\lambda$, $G$ and $\tau_\text{d}$ is evaluated by using the mode with the largest relaxation time.
+\subsection{Multiple modes}
+For multi-mode models, by default the functions described above are applied per mode. In the EGP model (see \cite{pagani_no_2024} and the reference therein) the von Mises $\tau_\text{d}$ is based on the global stress, instead of the stress per mode. Therefore, in the multi-mode EGP model, there is a \emph{coupling} between modes. In \tfem\ this coupling is optional and can be set for all models that depend on the von Mises stress (SRM and EGP models). For that, the optional argument \texttt{vmglobal=.true.} needs to be set in the call to the routine \texttt{create\_viscoelastic\_model}. In the flow computations the option is set via the structure of type \texttt{coefficients\_t}. In the actual use of the model, the range of modes used to compute the von-Mises stress can be optionally set to handle multiple relaxation processes one-by-one from a single set of linear spectrum data (see \cite{van_breemen_rate_2012} for a description for the $\alpha$ and $\beta$ processes). The addition of the multiple relaxation processes needs to performed by the user from multiple calls to the model with different mode ranges.
+
+\section{Filling of the material parameters}
+
+The properties of the model are stored in a structure of type
+\texttt{vemodel\_t}. The structure must first be constructed by calling the
+routine \texttt{create\_viscoelastic\_model}. Then the material parameters must
+be filled in the components \texttt{modulus}, \texttt{lambda}, \texttt{nonlin}
+of the structure. In Table~\ref{tab:matpar} it is shown which parameters need
+to be filled for each model
+\begin{table}[!hbtp]
+\begin{center}
+   
+  \caption{Material parameters}\label{tab:matpar}\medskip
+  \begin{tabular}{c|ccc}
+    \texttt{model} & \texttt{modulus} & \text{lambda} & \texttt{nonlin}\\\hline
+          1     &  $G$ & $\lambda$ & - \\
+          2     &  $G$ & $\lambda$ & - \\
+          3     &  $G$ & $\lambda$ & $\alpha$ \\
+          4     &  $G$ & $\lambda$ & $\gamma$ \\
+          5     &  $G$ & $\lambda$ & $\epsilon$ \\
+          6     &  $G$ & $\lambda$ & $\epsilon$ \\
+          7     &  $G$ & $\lambda$ & $\alpha$, $\beta$ \\
+          8     &  $G$ & $\lambda$ & $L^2$ \\
+          9     &  $nkT$ & $\lambda_H$ & $b$ \\
+          10    &  $G$ & $\lambda$ & $\xi$ \\
+          11    &  $G$ & $\lambda$ & $\epsilon$, $\xi$ \\
+          12    &  $G$ & $\lambda$ & $\epsilon$, $\xi$ \\
+          13    &  $G$ & $\lambda$ & $\beta$ \\
+          14    &  $G$ & $\lambda_b$ & $\lambda_s$, $\nu$ \\
+          15    &  $G$ & $\tau_d$ & $\tau_R$, $\beta$, $\delta$ \\
+          16    &  $G$ & $\lambda_b$ & $\lambda_s$, $\nu$ \\
+          17    &  $G$ & $\lambda_b$ & $\lambda_s$, $\nu$ \\
+          18    &  $G$ & $\lambda_b$ & $\lambda_s$, $\nu$ \\
+          19    &  $G$ & $\lambda_b$ & $\lambda_s$, $\nu$ \\
+          20    &  $nkT$ & $\lambda$ & $b$ \\
+          21    &  $G$ & $\lambda$ & $L^2$ \\
+          22    &  $G$ & $\lambda$ & $\tau_\text{y}$, $\mu$ \\
+          23    &  $G$ & $\lambda$ & - \\
+          24    &  $G$ & $\lambda$ & -
+  \end{tabular}
+
+\end{center}
+\end{table}
+
+For adapted $\lambda$ models, additional material parameters need to be filled in the component \texttt{alam} of the structure of type \texttt{vemodel\_t} according to Table~\ref{tab:matparl}.
+
+\begin{table}[!hbtp]
+\begin{center}
+   
+  \caption{Material parameters for adapted $\lambda$ models}\label{tab:matparl}\medskip
+  \begin{tabular}{c|cl}
+    \texttt{alam\_model} & \texttt{alam} & \text{note} \\\hline
+          1     &  - & neo-Hookean elastic solid \\
+          2     &  $\tau_\text{y}$ & elastoviscoplastic SRM1  \\
+          3     &  $\tau_\text{y}$, $K$, $n$ & elastoviscoplastic SRM2 \\
+          4     &  $\tau_\text{ref}$ & Eyring viscosity function \\
+          5     &  $\tau_\text{ref1}$, $f_1$, $\tau_\text{ref2}$ & Ree-Eyring viscosity function
+\end{tabular}
+
+\end{center}
+\end{table}
+
+For adapted $\lambda$ models using the function $h(J)$ for pressure dependence, additional material parameters need to be filled in the component \texttt{alamJ} of the structure of type \texttt{vemodel\_t} according to Table~\ref{tab:matparl2}.
+
+For adapted $\lambda$ models using the function $g(\bar\gamma)$ for plastic strain softening, additional material parameters need to be filled in the component \texttt{alam\_gammap} of the structure of type \texttt{vemodel\_t} according to Table~\ref{tab:matparl3}.
+
+\begin{table}[!hbtp]
+\begin{center}
+   
+  \caption{Additional material parameters for adapted $\lambda$ models using the $h(J)$ function}\label{tab:matparl2}\medskip
+  \begin{tabular}{c|cl}
+    \texttt{alamJ\_model} & \texttt{alamJ} & \text{note} \\\hline
+          1     &  $\beta$ & power function $h(J)=J^\beta$  
+\end{tabular}
+
+\end{center}
+\end{table}
+
+\begin{table}[!hbtp]
+\begin{center}
+   
+  \caption{Additional material parameters for adapted $\lambda$ models using the $g(\bar\gamma)$ function}\label{tab:matparl3}\medskip
+  \begin{tabular}{c|cl}
+    \texttt{alam\_gammap\_model} & \texttt{alam\_gammap} & \text{note} \\\hline
+          1     &  $S_\text{a}$, $r_0$, $r_1$, $r_2$ &  plastic strain softening with function $g(\bar\gamma)$
+\end{tabular}
+
+\end{center}
+\end{table}
+%\red{WARNING: the input for the material parameters in \dyn\ \cite{Hulsen05b}
+%are different from
+%the add-on `viscoelastic models' described here.
+%For most differential models in \dyn\ 
+% the viscosity $\eta$ must be given instead of the modulus $G$.}
+
+\section{Implementation of differential models}
+
+\subsection{Number of components}
+
+All the models, except the FENE-P, XPP, PTT-XPP (\texttt{model=18}), Rolie-Poly model, SRM3 \texttt{(model=22}) and
+EGP model (\texttt{model=23, 24}), are implemented
+ with three conformation tensor component equations
+($xx$, $xy$ and $yy$) for planar flow and four conformation tensor component equations 
+($zz$, $zr$, $rr$, $\theta\theta$) for axi-symmetrical flow.
+The FENE-P model, the Rolie-Poly model, the single equation XPP and PTT-XPP (\texttt{model=18})
+models, the SRM3 model (\texttt{model=22}) and
+EGP model (\texttt{model=23, 24}) have four components in both planar (includes $zz$) and axi-symmetrical
+flow.
+The double equation XPP model has five components in both planar (includes $zz$ and $\Lambda$ or
+$\log\Lambda$) and axi-symmetrical flow.
+
+For the models having an implementation using the $\ten b$-tensor,
+it should be noted that the tensor $\ten b$ is non-symmetric. This means that, as compared to using the conformation tensor, in the 2D and axi-symmetrical cases one additional component is present, whereas in the 3D case three additional components are present.
+
+In Table~\ref{tab:numcomp} the number of components in a single mode of all the models has been summarized.
+\begin{table}[!hbtp]
+\begin{center}
+  \caption{Number of components in a single mode of the viscoelastic models}\label{tab:numcomp}\medskip
+  \begin{tabular}{c|cccc}
+    \texttt{model} & $\ten c$ 2D/axisym  & $\ten c$ 3D  & $\ten b$ 2D/axisym  & $\ten b$ 3D \\\hline
+     9, 15, 16, 18, 20, 22, 23, 24 & 4/4 & 6 & 5/5 & 9 \\
+     14, 17                & 5/5 & 7 & 6/6 & 10 \\
+      all other models & 3/4 & 6 & 4/5 & 9
+   \end{tabular}
+\end{center}
+\end{table}
+
+
+
+\subsection{Initial conditions and boundary conditions}
+
+For specification of boundary inflow and initial conditions it is
+important to know that the macroscopic models are implemented by
+means of the conformation tensor, except for the double equation XPP model.
+In particular the unknowns that are
+solved are $\ten c$ for each mode. This means that for
+specification of boundary inflow and initial conditions $\ten c$
+must be specified. Note that this tensor is $\ten 1$ in equilibrium.
+The double equation XPP model is implemented using the
+variables $\ten S$ and $\Lambda$ (\texttt{model=14}) 
+or $\log\Lambda$
+(\texttt{model=17}), which
+are $\frac13\ten 1$ and $1$ (\texttt{model=14}) or $0$ (\texttt{model=17})
+ in equilibrium, respectively.
+ 
+\subsection{Stabilization of the EGP model}
+
+Note, the EGP model lacks relaxation in $I_3=\det\ten c$. This leads to problems applying Newton-Raphson iteration in implicit schemes and direct steady state iteration. To avoid these problems we solve in case of the incompressible \texttt{model=23}:
+\begin{equation}
+  \stacktridown{\ten c} + \ten c\cdot\ten \tau/\eta  \blue{+\tfrac{1}{3}(I_3-1)\ten c/\lambda}=\ten 0
+\end{equation}
+or
+\begin{equation}
+  \lambda\stacktridown{\ten c} + \ten c^2 -\tfrac13(\tr\ten c)\ten c \blue{+\tfrac{1}{3}(I_3-1)\ten c}=\ten 0
+\end{equation}
+and in case of the incompressible \texttt{model=24}:
+\begin{equation}
+  \stacktridown{\ten c} -\tfrac23\ten c\nabla\cdot\vek u+ \ten c\cdot\ten \tau/\eta \blue{+ \tfrac{1}{3}(I_3-1)\ten c/\lambda}=\ten 0
+\end{equation}
+or 
+\begin{equation}
+  \lambda(\stacktridown{\ten c} -\tfrac23\ten c\nabla\cdot\vek u)+ [\ten c^2 -\tfrac13(\tr\ten c)\ten c]/J\blue{+\tfrac{1}{3}(I_3-1)\ten c}=\ten 0
+\end{equation}
+where the \blue{blue} terms have been added\footnote{In \tfem\ the first variants with $1/\lambda$ have been implemented. If combined with an adapted $\lambda$, such as an Eyring function, the question remains whether  the $1/\lambda$ in the stabilization should also be adapted. In \tfem\ the default is to use the adapted $\lambda$, which makes the stabilization term of the same order of magnitude as the real relaxation term. However, the user has the option to use the not adapted $\lambda$ constant by setting \texttt{USE\_ADAP\_LAMBDA\_FOR\_EGP\_DET\_STAB=.false.} in the
+module \texttt{limits\_m}.}
+Since $I_3=1$ for any time, the solution for $\ten c$ will be identical to the solution without the blue term. Note, that the evolution equation for $I_3$ is 
+\[
+   \dot I_3+(I_3-1)/\lambda=0
+\]
+which shows that any difference between $I_3$ and 1 will relax and die out.
+
+For the $\ten b$-tensor implementation we could have just transformed the stabilizing term to the $\ten b$ tensor form, but we chose to add $\blue{\tfrac13(\det\ten b-1)\ten b/\lambda}$ instead, which has a Jacobian that is cheaper to compute. 
+This added term leads to
+\[
+   \derivmat{(\det\ten b)}t+(\det\ten b-1)/\lambda=0
+\]
+which shows that any difference between $\det\ten b$ and 1 will relax and die out. Note, that $\det\ten c=(\det\ten b)^2$.
+
+

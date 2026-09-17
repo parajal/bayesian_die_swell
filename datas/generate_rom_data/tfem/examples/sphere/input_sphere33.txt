@@ -1,0 +1,12 @@
+&comppar
+    timeint = 1          ! (first-order) time integration
+    numtimesteps = 300   ! number of time steps
+    logc = 1             ! standard scheme or log transformation
+    eta_s = 0.0          ! solvent viscosity
+    eta_p = 1.0          ! polymer viscosity
+    lambda = 2           ! relaxation time
+    deltat = 2e-1        ! time step
+    beta = 1.0           ! upwinding parameter in the SUPG method
+    U = 1.0              ! velocity of sphere
+    restart = 0          ! restart
+/

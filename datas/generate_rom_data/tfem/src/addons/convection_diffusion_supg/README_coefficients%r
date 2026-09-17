@@ -1,0 +1,33 @@
+
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+
+  1-100: reserved for stokes & viscoelastic add-ons
+101-150: reserved for diffuse-interface add-on
+151-200: reserved for inertia add-on
+201-250: reserved for generalized Stokes add-on
+251-300: reserved for compressible fluid add-on
+301-350: reserved for deformation fields add-on
+
+351  deltat
+
+*** the following four parameters are defined according to:
+    gamma ( dc/dt + u . nabla c ) - alpha nabla^2 c + beta c = f
+
+352  gamma
+
+353  alpha
+
+354  beta
+
+355  constant RHS source term f (only used if coefficients%i(405)==1)
+
+356  constant beta in SUPG (only used if coefficients%i(411)==5)
+     NOTE: this beta is different from beta coefficient in the equations given
+     by coefficients%i(354).
+
+357  the global scaling velocity Uglobal for U in tau parameter for SUPG;
+     only needed for Uscaling=coefficients%i(410)=4
+
+358-400 reserved for future use

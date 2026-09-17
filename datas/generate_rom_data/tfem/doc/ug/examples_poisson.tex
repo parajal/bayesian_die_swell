@@ -1,0 +1,355 @@
+% !TEX root = userguide.tex
+
+\def\headdate{17th November 2022}
+
+\section{The Poisson equation}
+
+See Sec.~\ref{sec:poissonweak} for the theory.
+
+\subsection{A Poisson problem on a unit square with Dirichlet
+            and Neumann boundary conditions. Axisymmetric}
+
+\label{sec:poisson13}
+We consider the Poisson problem on a unit square, like in
+Sec.~\ref{sec:poisson2}, however we assume the solution is axisymmetrical.
+The $(x,y)$ coordinate changes now to $(z,r)$. The curve \texttt{C1} in
+Fig.~\ref{fig:unitsquare} is at $r=R_0$ and \texttt{C3} at $r=R_1$. We assume
+the flux is given at $r=R_0$ (curve \texttt{C1}):
+\begin{equation}
+   -\pderiv{u}{n} = h_\text{0}\text{ on \texttt{C1}}
+\end{equation}
+The following solution fulfills the Poisson equation:
+\begin{equation}
+   u(r,z) = u_1 - h_0R_0\ln\frac{R_1}r
+\end{equation}
+where $u_1$ is the constant value of $u$ at $r=R_1$.
+
+The source is in the file \texttt{poisson13.f90}.
+
+\subsection{A Poisson problem on a unit square with Dirichlet
+            and Robin boundary conditions}
+
+\label{sec:poisson12}
+We consider the Poisson problem on a unit square, like in
+Sec.~\ref{sec:poisson2}. 
+We change the boundary condition on curve \texttt{C2} to a Robin boundary
+condition, meaning that we have to specify (see Sec.~\ref{sec:bounc})
+\begin{equation}
+   -\pderiv{u}{n} - \sigma u = h_\text{R}\text{ on \texttt{C2}}
+\end{equation}
+We use $\sigma=1$ in the example.
+We substitute the following exact solution for $u$:
+\begin{equation}
+     u=\cos(\pi x)\cos(\pi y) + x^3y^3
+\end{equation}
+and find the corresponding $f$:
+\begin{equation}
+     f=2\pi^2\cos(\pi x)\cos(\pi y) - 6(xy^3+x^3y)
+\end{equation}
+We specify $h_R$ by a function \texttt{func}. The exact value on \texttt{C2}
+is given by
+\begin{equation}
+   h_R= \pi\sin(\pi x)\cos(\pi y) - 3x^2y^3 - \cos(\pi x)\cos(\pi y) - x^3y^3
+\end{equation}
+The source is in the file \texttt{poisson12.f90} and the difference with respect
+to \texttt{poisson2.f90} will be discussed. The changes/added lines are:
+\bigskip
+\begin{listing}{22}
+    bfuncnr=13            ! function number for the flux h_R on the Robin b
+\end{listing}
+\bigskip
+\begin{listing}{26}
+    sigma = 1._dp     ! coefficient sigma in the Robin bc
+\end{listing}
+\bigskip
+\begin{listing}{48}
+    coefficients%i(15) = bfuncnr
+\end{listing}
+\bigskip
+\begin{listing}{51}
+`\end{listing}
+\bigskip
+\begin{listing}{99}
+  call add_boundary_elements ( mesh, problem, rhsd, curve=2, &
+    sysmatrix=sysmatrix, elemsub=poisson_natboun, coefficients=coefficients )
+
+\end{listing}
+\begin{description}
+   \item[line 22] changed \texttt{vfuncnr} to \texttt{bfuncnr}.
+   \item[line 26] define $\sigma$
+   \item[line 48] put the function number for $h_R$ into
+\texttt{coefficients\%i}.
+   \item[line 51] put $\sigma$ into \texttt{coefficients\%r}.
+   \item[line 99 and 100]here the natural boundary integrals are
+ added using the element subroutine
+\texttt{poisson\_natboun}
+and using the function \texttt{func}. The function number
+is supplied via the coefficients. Both a system matrix and vector are build,
+by specifying \texttt{sysmatrix=sysmatrix}.
+\end{description}
+
+\subsection{A Poisson problem on two unit squares with Dirichlet boundary 
+            conditions. Coupling of the two domains using a weak
+            constraint on an object.}
+\label{sec:poisson8}
+
+We consider the Poisson problem on two unit squares. The problem is similar to
+the problem in Sec.~\ref{sec:poisson1}, but now extended to two squares and
+shifted a distance of 0.2 to the right. The two separate squares are coupled
+using a weak coupling, implemented using Lagrange multipliers one order lower
+than the primary variable (see \cite{SeSu00} for the theory).
+
+The source is in the file \texttt{poisson8.f90}. 
+
+In Fig.~\ref{fig:mesh_mortar} the meshes used are shown, and typical results
+are shown in Fig.~~\ref{fig:sol_mortar}.
+\begin{figure}[phb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{mesh_left}\medskip\\
+   \includegraphics[scale=0.5]{mesh_right}
+   \end{center}
+   \caption{Mesh with the Lagrange multipliers defined on the left part
+(top) and the right part of the mesh (bottom), respectively. The red dots are
+the nodes of the quadratic line elements of the object
+at the interface. The Lagrange
+multipliers are only defined at the end nodes of an element (continuous linear
+interpolation).}
+    \label{fig:mesh_mortar}
+\end{figure}
+\begin{figure}[pthb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{sol_left}\medskip\\
+   \includegraphics[scale=0.5]{sol_right}
+   \end{center}
+   \caption{Results with the Lagrange multipliers defined on the left part
+(top) and the right part of the mesh (bottom), respectively.}
+    \label{fig:sol_mortar}
+\end{figure}
+
+\subsection{A Poisson problem on a unit cube with Dirichlet
+            and Neumann boundary conditions}
+
+\label{sec:poisson5}
+
+We consider the Poisson problem on a unit cube. The problem is similar to
+the problem in Sec.~\ref{sec:poisson2}, but now extended to 3D. The Neumann
+boundary condition, where that we have to specify $\plderiv{u}{n}$,
+is now on surface 3 (see Fig.~\ref{fig:curves3D}).
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{curves}
+   \end{center}
+   \caption{Plot of points, curves and surfaces on the unit cube.}
+    \label{fig:curves3D}
+\end{figure}
+We substitute the following exact solution for $u$:
+\begin{equation}
+     u=\cos(\pi x)\cos(\pi y)\cos(\pi z) + x^3y^3z^3
+\end{equation}
+and find the corresponding $f$:
+\begin{equation}
+     f=3\pi^2\cos(\pi x)\cos(\pi y)\cos(\pi z) - 6(xy^3z^3+x^3yz^3+x^3y^3z)
+\end{equation}
+Specifying $\plderiv{u}{n}$ is easy for the unit cube, but for a
+curvilinear domain it is very difficult. In that case, it is much easier to
+specify $\nabla u$ by a function
+and let the boundary element compute $\plderiv{u}{n}=\vec n\cdot\nabla u$.
+This is what we do here as well and specify $\nabla u$ by a vector function
+\texttt{vfunc}. The exact $\nabla u$ is given by
+\begin{equation}
+   \nabla u=
+\begin{pmatrix}
+     -\pi\sin(\pi x)\cos(\pi y)\cos(\pi z) + 3x^2y^3z^3 \\
+     -\pi\cos(\pi x)\sin(\pi y)\cos(\pi z) + 3x^3y^2z^3 \\
+     -\pi\cos(\pi x)\cos(\pi y)\sin(\pi z) + 3x^3y^3z^2
+\end{pmatrix}
+\end{equation}
+The source is in the file \texttt{poisson5.f90}. The mesh is generated using
+the routine \texttt{hexahedron} from the \tfem\ mesh generator.
+\begin{figure}[pt!]
+   \begin{center}
+   \includegraphics[scale=0.5]{mesh3D}
+   \end{center}
+   \caption{Mesh on a unit cube using $5\times5\times5$ elements.}
+    \label{fig:mesh3D}
+\end{figure}
+
+Typing at the command line 
+\begin{quote}
+    \texttt{poisson5}
+\end{quote}
+will show something like
+\begin{quote}
+  \texttt{1.520878241239032E-04}
+\end{quote}
+on your screen. In Fig.~\ref{fig:datasurface3} the solution on surface 3 is
+plotted.
+\begin{figure}[pt!]
+   \begin{center}
+   \includegraphics[scale=0.5]{color}
+   \end{center}
+   \caption{Plot of data on surface 3 for \texttt{poisson5}.}
+    \label{fig:datasurface3}
+\end{figure}
+
+The examples \texttt{poisson27.f90} and \texttt{poisson28.f90} are similar to \texttt{poisson5.f90}, but now the elements are prisms with linear and quadratic base functions, respectively. The meshes are generated using gmsh with the files \texttt{cube1.geo} and \texttt{cube2.geo} as input.
+
+The examples \texttt{poisson29.f90} and \texttt{poisson30.f90} are similar to
+\texttt{poisson5.f90}, but now hybrid meshes are used where both tetrahedra and
+pyramids are used. The example  \texttt{poisson29.f90} uses linear base
+functions, whereas  \texttt{poisson30.f90} uses quadratic ones. The meshes are generated using gmsh with the files \texttt{cube3.geo} and \texttt{cube4.geo} as input.
+
+The example \texttt{poisson31.f90} is similar to \texttt{poisson30.f90}, but
+now uses a mapped integration rule on the pyramid elements.
+
+\subsection{A Poisson problem on a unit cube with Dirichlet
+            and periodic boundary conditions; collocation}
+\label{sec:poisson6}
+
+We consider the Poisson problem on a unit cube. The problem is similar to
+the problem in Sec.~\ref{sec:poisson5}, but now with periodical boundary
+conditions in $x$-direction using collocation of the constraint.
+
+We substitute the following exact solution for $u$:
+\begin{equation}
+     u=\cos(2\pi x+1)\cos(\pi y)\cos(\pi z) + y^3z^3
+\end{equation}
+and find the corresponding $f$:
+\begin{equation}
+     f=6\pi^2\cos(2\pi x+1)\cos(\pi y)\cos(\pi z) - 6(yz^3+y^3z)
+\end{equation}
+The source is in the file \texttt{poisson6.f90}.
+Typing at the command line 
+\begin{quote}
+    \texttt{poisson6}
+\end{quote}
+will show something like
+\begin{quote}
+   \texttt{8.762962829161891E-04}
+\end{quote}
+on your screen.
+
+\subsection{A Poisson problem on a unit cube with Dirichlet
+            and periodic boundary conditions; weak connection}
+
+We consider the Poisson problem on a unit cube. The problem is similar to
+the problem in Sec.~\ref{sec:poisson6}, but now 
+using a weak form of the constraint.
+
+The source is in the file \texttt{poisson7.f90}.
+Typing at the command line 
+\begin{quote}
+    \texttt{poisson7}
+\end{quote}
+will show something like
+\begin{quote}
+   \texttt{2.958958242691212E-03}
+\end{quote}
+on your screen.
+
+
+\subsection{A Poisson problem on a unit square with Dirichlet boundary 
+            conditions. Line source. Build system on an object.}
+\label{sec:poisson9}
+
+We consider the Poisson problem on a unit square. On the outside boundary we
+impose $u=0$. We assume the following singular source term on a line $C$
+ inside the domain:
+\[
+   f=(a+bu)\,\delta(n)
+\]
+where $\delta(n)$ is a delta function in the normal direction of the line.
+A physical meaning is, for example, a temperature dependent heat source
+concentrated on a line (a line source).
+The right-hand side of \eqref{eq:weakformpoisson} now becomes:
+\[
+(v,f)=\int_C v(a+bu)\D s=\int_C va\D s+\int_C bvu\D s
+\]
+where $s$ is a curve coordinate along the line $C$. The two terms lead to 
+contributions to the system vector and system matrix, respectively. The
+integrals are computed on an object consisting of line elements. The object is
+constructed from a mesh consisting of line elements.
+
+The source is in the file \texttt{poisson9.f90}. 
+
+In Fig.~\ref{fig:poisson_linesource} a typical result is shown.
+\begin{figure}[phbt!]
+   \begin{center}
+   \includegraphics[scale=0.5]{poisson_linesource}
+   \end{center}
+   \caption{Solution of the poisson equation with a line source ($a=1$, $b=-1$)
+on a unit square.}
+    \label{fig:poisson_linesource}
+\end{figure}
+
+\subsection{A Poisson problem on a unit square with Dirichlet boundary 
+            conditions using spectral or high-order elements}
+\label{sec:poisson20}
+
+The examples are similar to \texttt{poisson1.f90} (see
+Sec.~\ref{sec:poisson1}), but now with spectral or high-order elements\footnote{In \tfem\ high-order refers to elements with high-order polynomial interpolation using standard Gauss integration and regular (equidistant) nodal point distribution. Spectral elements also use high-order polynomial interpolation, but Gauss-Lobatto points for both integration and nodal point distribution.}
+The source files are \texttt{poisson20.f90} (spectral) and \texttt{poisson34.f90} (high-order quadrilaterals).
+The files and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+
+\subsection{A Poisson problem on a curved quadrilateral region with Dirichlet 
+            and Neumann boundary conditions using spectral or high-order elements} 
+\label{sec:poisson21}
+
+This examples are similar to \texttt{poisson3.f90} (see
+Sec.~\ref{sec:poisson3}), but now with spectral or high-order elements.
+The source files are \texttt{poisson21.f90} (spectral) and \texttt{poisson35.f90} (high-order quadrilaterals).
+The files and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+
+\subsection{A Poisson problem on a curved quadrilateral region with Dirichlet 
+            and Neumann boundary conditions. Derived quantities. Spectral or high-order
+            elements (quadrilaterals and triangles)} 
+\label{sec:poisson22}
+
+This examples are similar to \texttt{poisson4.f90} (see
+Sec.~\ref{sec:poisson4}), but now with spectral or high-order elements (quadrilaterals and triangles).
+The source files are \texttt{poisson22.f90} (spectral), \texttt{poisson36.f90} (high-order quadrilaterals) and \texttt{poisson37.f90} (high-order triangles).
+The files and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+
+\subsection{A Poisson problem on a unit cube with Dirichlet
+            and periodic boundary conditions; collocation; non-symmetric solver MA41 with \metis\ renumbering}
+\label{sec:poisson24}
+
+We consider the Poisson problem on a unit cube. The problem is similar to
+the problem in Sec.~\ref{sec:poisson6}, but now using the non-symmetric 
+solver MA41 (see Sec.~\ref{sec:hslsparse}) together with \metis\ renumbering (see Sec.~\ref{sec:metis5}). The purpose of this example is to illustrate how to use \metis\ with MA41, which can speedup the solver significantly ($3.6$ times for a $30\times30\times30$ mesh!). The source is in the file \texttt{poisson24.F90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+
+\subsection{A Poisson problem on a unit cube with Dirichlet
+            and periodic boundary conditions; collocation; Sparskit2 with \metis\ renumbering of the degrees of freedom}
+\label{sec:poisson25}
+
+We consider the Poisson problem on a unit cube. The problem is similar to
+the problem in Sec.~\ref{sec:poisson6}, but now using the Sparskit2/sk\_solve (see Sec.~\ref{sec:sksolve})
+together with \metis\ renumbering of the degrees of freedom and/or nodes (see Sec.~\ref{sec:metis5}). The source is in the file \texttt{poisson25.F90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+
+\metis\ renumbering of the degrees of freedom instead of only nodes renumbering can positively influence 
+the memory/CPU requirements for building the preconditioner and/or the convergence rate. However, it is not guaranteed. As always with iterative solvers: experiment with the available parameters.
+
+The example in \texttt{poisson26.F90} is similar to \texttt{poisson25.F90}, however the preconditioner has
+been changed from \texttt{ilut} to \texttt{ilutp}, which uses column pivoting. The effect is rather small, at least for this example.

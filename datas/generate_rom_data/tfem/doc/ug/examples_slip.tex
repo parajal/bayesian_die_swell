@@ -1,0 +1,153 @@
+% !TEX root = userguide.tex
+
+\def\headdate{17th November 2022}
+
+\section{Slip}
+
+\subsection{Wall slip}
+
+The Navier slip condition is given by
+\begin{equation}
+   \vek t_\| =
+   -\eta_\text{slip} (\vek u - \vek u_\text{wall})_\|
+   \label{eq:slip1}
+\end{equation}
+where $\vek t$ is the traction on the fluid at the boundary near the wall,
+$\eta_\text{slip}$ is the slip coefficient,
+$\vek u$ the velocity of the fluid at the boundary and $\vek u_\text{wall}$ is
+the wall velocity (which can be zero). The subscript $()_\|$ means the
+component in the direction tangential to the wall, which can also be written
+as $()_\|=(\ten I-\vek n\vek n)\cdot()$, with $\vek n$ the local normal vector.
+ The slip coefficient can be written as
+$\eta_\text{slip}=\eta/b$, where $\eta$ is a characteristic viscosity
+coefficient of the fluid
+and $b$ is a length scale. For a Newtonian fluid the slip length $b$ is the
+length needed ``inside the wall'' for the velocity to become zero after
+linearly extrapolating the velocity profile.
+
+The contribution of the tangential traction $\vek t_\|$
+to the right-hand side of the weak form of the momentum balance is given by
+\begin{equation}
+   (\vek v, \vek t_\|)=
+-\big(\vek v,\eta_\text{slip} (\vek u - \vek u_\text{wall})_\|\big)=
+-\big(\vek v,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot
+                            (\vek u - \vek u_\text{wall})\big)
+   \label{eq:slip2}
+\end{equation}
+Hence, in the weak form we both get a matrix and a vector contribution:
+\begin{equation}
+  \dots + \big(\vek v,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot\vek u\big)=
+\big(\vek v,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot\vek u_\text{wall}\big)
++\dots 
+\end{equation}
+This has been implemented in the element routine
+\texttt{stokes\_natboun\_slip}. The element is applicable to curves (2D) and
+surfaces (3D). If the wall is not curved and in the direction of the global
+coordinate axes, the routine can be combined with a standard Dirichlet
+condition normal to the wall. If not, the normal condition must be imposed
+with a weak constraint for the normal velocity $\vek u\cdot\vek n$.
+
+\subsection{Interfacial slip}
+If we have slip at the interface between fluid 1 and fluid 2, the 
+ Navier slip condition is given by
+\begin{equation}
+   {\vek t_1}_\| = -{\vek t_2}_\| = 
+   -\eta_\text{slip} (\vek u_1 - \vek u_2)_\|
+   \label{eq:slip3}
+\end{equation}
+where $\vek t_1$ is the traction on fluid 1 exerted by fluid 2 and 
+$\vek t_2$ is the traction on fluid 2 exerted by fluid 1 at the interface,
+$\eta_\text{slip}$ is the slip coefficient,
+$\vek u_1$ the velocity of fluid 1 at the interface and $\vek u_2$ is
+the velocity of fluid 2 at the interface. The subscript $()_\|$ means the
+component in the direction tangential to the interface, which can also be written
+as $()_\|=(\ten I-\vek n\vek n)\cdot()$, with $\vek n$ the local normal vector of the interface.
+
+The contribution of the tangential tractions ${\vek t_1}_\|$ and ${\vek t_2}_\|$
+to the right-hand side of the weak form of the momentum balance is given by
+\begin{equation} 
+\begin{split}
+   (\vek v_1, {\vek t_1}_\|)+(\vek v_2, {\vek t_2}_\|) &=
+-\big(\vek v_1,\eta_\text{slip} (\vek u_1 - \vek u_2)_\|\big)
++\big(\vek v_2,\eta_\text{slip} (\vek u_1 - \vek u_2)_\|\big)\\
+&=-\big(\vek v_1-\vek v_2,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot
+                            (\vek u_1 - \vek u_2)\big)
+\end{split}
+   \label{eq:slip4}
+\end{equation}
+Hence, in the weak form we get a matrix contribution (no vector):
+\begin{equation}
+  \dots + \big(\vek v_1-\vek v_2,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot(\vek u_1-\vek u_2)\big)=
+\dots 
+\end{equation}
+which can be splitted into four terms:
+\begin{multline}
+  \dots + \big(\vek v_1,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot\vek u_1\big)\\
+        - \big(\vek v_1,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot\vek u_2\big)
+        - \big(\vek v_2,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot\vek u_1\big)\\
+        + \big(\vek v_2,\eta_\text{slip} (\ten I-\vek n\vek n)\cdot\vek u_2\big)=
+\dots 
+\label{eq:slip5}
+\end{multline}
+The four terms in the expression above can be implemented using connections (See Chap.~\ref{ch:connections}) and
+correspond to the 
+four element matrices $\mat S_{11}$, $\mat S_{12}$, $\mat S_{21}$,
+$\mat S_{22}$, as introduced in Sec.~\ref{sec:connimpl}. Note, that Eq.~\eqref{eq:slip5} is a generalisation of
+\eqref{eq:slipst20}, which is for a straight horizontal interface.
+
+%This has been implemented in the element routine
+%\texttt{stokes\_natboun\_slip}. The element is applicable to curves (2D) and
+%surfaces (3D). If the wall is not curved and in the direction of the global
+%coordinate axes, the routine can be combined with a standard Dirichlet
+%condition normal to the wall. If not, the normal condition must be imposed
+%with a weak constraint for the normal velocity $\vek u\cdot\vek n$.
+
+\subsection{Examples}
+
+(The examples have been developed by Gaetano d'Avino of the University of
+Naples)
+
+The first example is \texttt{stokes39.f90}, an extension
+of example \texttt{stokes2.f90} (Sec.~\ref{sec:stokes2}) with slip on the wall.
+The periodicity is imposed with collocation, where in the inner nodes two
+velocities components are coupled and in the wall nodes only one component.
+A result is given in Fig.~\ref{fig:velocity_slip}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{slip_velocity}
+   \end{center}
+   \caption{Plot of the velocity vector for the periodic channel problem with
+slip.}
+    \label{fig:velocity_slip}
+\end{figure}
+
+The second example is \texttt{channel5.f90}, an extension
+of example \texttt{channel1.f90} (Sec.~\ref{sec:stokes3Dchannel})
+with slip on the wall.
+The periodicity is imposed with collocation, where in the inner nodes three
+velocities components are coupled, in the inner
+wall nodes two components and in the corner points only one.
+A result is given in Fig.~\ref{fig:velocity_slip2}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{slip_velocity2}
+   \end{center}
+   \caption{Plot of the velocity vector for the 3D periodic channel problem with
+slip.}
+    \label{fig:velocity_slip2}
+\end{figure}
+
+The third example is \texttt{stokes42.f90}, describing a 2D flow between two fixed walls in which we drag a 
+circular disk (rigid particle) through the fluid using an imposed force and torque. There is slip between the particle wall and the fluid. The particle is modelled as a separate closed ring mesh of line elements conforming with the fluid circular boundary. The rigid particle constraint is imposed on the ring mesh. The slip layer is modelled as a connection between the fluid circular boundary and the ring mesh using Eq.~\eqref{eq:slip5}.
+
+The fourth example is \texttt{stokes43.F90}. It is from the generic `stokes' example and requires the pardiso add-on 
+to be available (see Sec.~\ref{sec:pardiso}). It is a 3D problem of a rigid sphere dragged through a fluid
+in a very large cubic box. There is slip between the particle wall and the fluid. The particle is modelled as a separate closed spherical surface mesh of triangular elements conforming with the fluid spherical boundary. The rigid particle constraint is imposed on the spherical surface mesh. The slip layer is modelled as a connection between the fluid spherical boundary and the spherical surface mesh using Eq.~\eqref{eq:slip5}.
+
+The fifth example is \texttt{stokes44.f90}, 
+describing an axi-symmetrical flow in a cylindrical container 
+in which we drag a 
+sphere at the centreline (rigid particle) through the fluid using an imposed force. There is slip between the particle wall and the fluid. The particle is modelled as a separate half-ring mesh of line elements conforming with the fluid semi-circular boundary. The rigid particle constraint in $z$-direction is
+imposed on the half-ring mesh. Furthermore, the radial velocity of the half-ring is set to zero using an essential boundary condition. The slip layer is modelled as a connection between the fluid circular boundary and the half-ring mesh using Eq.~\eqref{eq:slip5}.
+
+

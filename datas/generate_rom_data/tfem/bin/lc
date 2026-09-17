@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# lc counts lines, comment lines and statement lines of Fortran 95 code.
+# It prints the grand total of all files.
+#
+# Usage:
+#
+#       lc [files]
+#
+# If files are omitted, all *.f90 and *.F90 files are assumed.
+
+if [ $# -eq 0 ]
+then
+  files="*.[fF]90"
+else
+  files=$*
+fi
+
+lines=`cat $files | wc | awk '{ print $1 }'`
+echo Number of lines: $lines
+commentlines=`grep "^!" $files | wc | awk '{ print $1 }'`
+echo Number of comment lines: $commentlines
+emptylines=`grep "^ *$" $files | wc | awk '{ print $1 }'`
+echo Number of empty lines: $emptylines
+sourcelines=`expr $lines - $commentlines - $emptylines`
+echo Number of source lines: $sourcelines

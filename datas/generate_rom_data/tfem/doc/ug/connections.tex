@@ -1,0 +1,305 @@
+% !TEX root = userguide.tex
+
+\chapter{Connections}
+\pgst{tfemch}
+
+\label{ch:connections}
+
+\def\chaptertitle{Connections}
+\def\headdate{18th February 2015}
+
+In this chapter it is shown how to handle connections in \tfem.
+
+\section{Use of connections}
+
+Connections are used to add `direct stiffness' between degrees of freedom in
+one part of the mesh and another part of the mesh. By `direct stiffness' we
+mean that no additional unknowns, such Lagrange multipliers in constraints
+(see Chap.~\ref{ch:constraints}) or from additional meshes, are used. Only
+the sparsity of the existing matrix changes due to adding of stiffness between
+unknowns that would otherwise have zero direct interaction.
+Examples:
+\begin{enumerate}
+\item Two-phase flow with interface tension. In Fig.~\ref{fig:interface} a
+fluid mesh is shown with an additional mesh for the interface between two
+fluids. The unknowns are the velocity/pressure in the fluid nodes and the
+position vector in the interface nodes.
+\begin{figure}[ht!]
+   \begin{center}
+      \includegraphics[scale=0.7]{interface}
+   \end{center}
+   \caption{Mesh consisting of fluid elements and interface elements}
+    \label{fig:interface}
+\end{figure}
+The effect of the interface tension is a distributed force contribution to the
+momentum balance of the fluid. This force depends on the position of the
+interface. The position of the interface depends on the local velocity at the
+interface. In the standard finite-element matrix there is no coupling between
+the velocity and the position vectors at the interface. By defining a
+connection along the interface, the coupling can be achieved at the matrix
+level. This opens up the possibility to compute the movement of the droplet
+using fully implicit schemes avoiding very small time steps.
+
+\item Coupling of domains of different resolution using the discontinuous
+Galerkin method at the interface between the domains.
+
+\item Coupling of two fluid domains with a viscous slip law (or other interface
+rheology) in between the fluids.
+
+\end{enumerate}
+
+For a connection there are always two sides. The first is the defining side
+and the second is the side that is connected to the first.
+The possibilities implemented in \tfem\ are
+given in the following table:
+\begin{center}
+\begin{tabular}{llcc}
+side1 & side2 & weak & collocation \\\hline
+point1 & point2 & $-$ & $+$ \\
+nodeset1 & nodeset2 & $-$ & $+$ \\
+curve1 & curve2 & $+$ & $+$  \\
+      & elementset2 & $+$ & $+$ \\
+      & nodeset2 & $-$ & $+$ \\
+surface1 & surface2 & $+$ & $+$  \\
+        & elementset2 & $+$ & $+$ \\
+      & nodeset2 & $-$ & $+$ \\
+volume1 & volume2 & $+$ & $+$  \\
+        & elementset2 & $+$ & $+$ \\
+      & nodeset2 & $-$ & $+$ \\
+elementset1 & elementset2 & $+$ & $+$  \\
+object & second side of object & $+$ & $+$  \\
+object & object2 & $+$ & $+$  \\
+       & curve2 & $+$ & $+$  \\
+       & surface2 & $+$ & $+$  \\
+       & volume2 & $+$ & $+$  \\
+       & elementset2 & $+$ & $+$ \\
+       & nodeset2 & $-$ & $+$ 
+\end{tabular}
+\end{center}
+Remarks:
+\begin{itemize}
+\item   
+A connection
+is distributed, but is always \emph{local}, i.e.\ along the
+defining side (side1) there will be a connection between elements or nodes that
+are connected locally to the elements or nodes on the connected side (side2).
+\item A \emph{weak} connection connects the two sides element by element,
+whereas a \emph{collocated} connection connects the two sides node for node.
+\item There is a fundamental difference between using objects and the other
+geometrical entities.
+Objects do not define degrees of freedom. The degrees of freedom are
+defined by the elements that are intersected by the object. The connection
+involves the degrees of freedom in the
+\emph{intersected elements} both for weak and collocated
+connections. The other geometrical entities
+do define degrees of freedom and the connection involves the degrees of
+freedom in the \emph{elements} for weak connections and \emph{nodes} for
+collocation connections.
+\item For points and nodesets only collocation makes sense. Degrees of freedom
+in nodes are connected. The sequence of the nodes in both nodesets is
+important, since the connection is node for node.
+\item Curves and surfaces represent element edges and faces. Connections
+between curves or surfaces create connections between degrees of freedom on
+element edges/faces (weak) or nodes (collocation).
+\item Curves, surfaces and volume can also be connected to elementsets and
+nodesets. The latter obviously only with collocation.
+Note, that elementsets represent full mesh elements and not just
+element edges or faces. 
+\item Objects can be connected to itself (double-sided objects) or to another
+object.
+\item Objects can also be connected to curves, surfaces, volumes,
+ elementsets and nodesets. The latter obviously only with collocation. 
+\item Restrictions:
+\begin{itemize}
+   \item For a weak connection the number of elements must be the same on both
+         sides.
+   \item In addition, objects on both sides of a weak connection need to have
+         the same element type and the same number of integration points.
+   \item For a collocated connection the number of nodes must be the same on
+         both sides.
+\end{itemize}
+Note, that it is allowed to use different element types on both sides of the
+connection, except for objects on both sides of the connection.
+\end{itemize}
+
+\section{Implementation}
+
+\label{sec:connimpl}
+
+For geometrical entities that are not objects (on side1), the system
+matrix is built element wise (weak) or
+nodal point wise (collocation). 
+Note, that for the weak case, the element matrix of the connection
+involves degrees of freedom of two elements, one on each
+side of the connection. For the collocation case,
+the element matrix of the connection
+involves degrees of freedom of two nodes, one on each 
+side of the connection\footnote{Be careful here, since
+it is tricky to define the correct stiffness at the nodes. The
+stiffness is more like discrete `springs' attached to the nodes.}.
+
+For objects (on side1), the system matrix is built integration
+point wise (weak) or
+nodal point wise (collocation).
+If the second side is not an object, but another
+geometrical entity (curve,\ldots), keep in mind that
+the system matrix is still built
+integration point wise (on the object of side1) for the weak case. 
+Note, that for objects
+the element matrix of the connection
+involves degrees of freedom of intersected elements 
+for both the weak and collocated case.
+
+At the call of the element subroutine, the user must supply
+four element matrices ($\mat S_{11}$, $\mat S_{12}$, $\mat S_{21}$, 
+$\mat S_{22}$) and two element vectors ($\col f_1$, $\col f_2$) that are
+added to the system. The full matrix and vector that is added is
+\[
+ \begin{pmatrix}
+    \mat S_{11} & \mat S_{12} \\
+    \mat S_{21} & \mat S_{22}
+ \end{pmatrix},
+\quad
+ \begin{pmatrix}
+    \col f_{1}  \\
+    \col f_{2} 
+ \end{pmatrix}
+\]
+where the indices 1 and 2 denote the unknowns 
+from side 1 and side 2, respectively. For objects, the weight of the
+integration rule at the current integration point
+needs to be taken into account on element level.
+
+The heading of the element subroutine defining a connection is given by
+\begin{listing}{1}
+   
+  subroutine elemsub ( mesh, problem, conn, elem, node, matrix, vector, &
+    first, last, coefficients, oldvectors, elemmat11, elemmat12, &
+    elemmat21, elemmat22, elemvec1, elemvec2 )
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: conn, elem, node
+    logical, intent(in) :: matrix, vector, first, last
+    type(coefficients_t), intent(in) :: coefficients
+    type(oldvectors_t), intent(in) :: oldvectors
+    real(dp), intent(out), dimension(:,:) :: elemmat11, elemmat12, &
+      elemmat21, elemmat22
+    real(dp), intent(out), dimension(:) :: elemvec1, elemvec2
+
+     ....
+
+  end subroutine elemsub
+
+\end{listing}
+with\\[2ex]
+\begin{tabular}{ll}
+\texttt{mesh, problem} & mesh and problem structure as in the heading of
+                           \texttt{build\_system\_connection}\\
+\texttt{conn} & connection number \\
+\texttt{elem} & element number in the geometry or object
+                for a weak connection \\
+\texttt{node} & node or integration point number within this connection\\
+\texttt{matrix, vector} & logicals defined by \texttt{buildmatrix} and
+                         \texttt{buildvector} in the heading \\
+                        & of \texttt{build\_system\_connection}.\\
+\texttt{first, last} & logicals indicating whether the current call
+    is the first/last \\ & in this connection. \\
+\texttt{coefficients}, & coefficient and oldvectors as supplied
+        in the heading of \\
+\texttt{oldvectors} & \hfill \texttt{build\_system\_connection}.\\
+\texttt{elemmat11} & matrix $\mat S_{11}$. \\
+\texttt{elemmat12} & matrix $\mat S_{12}$. \\
+\texttt{elemmat21} & matrix $\mat S_{21}$. \\
+\texttt{elemmat22} & matrix $\mat S_{22}$. \\
+\texttt{elemvec1} & vector $\col f_{1}$. \\
+\texttt{elemvec2} & vector $\col f_{2}$.
+\end{tabular}\\[2ex]
+
+In addition to \texttt{elemsub}, two alternative element interfaces,
+\texttt{elemsub1} and \texttt{elemsub2}, that have an extended heading with
+\texttt{elgrp1}, \texttt{elem1}, \texttt{elgrp2}, \texttt{elem2} and
+\texttt{nodenr1}, \texttt{nodenr2}, respectively.
+
+Multiple connections can be defined, However, 
+you need to be careful:
+\begin{enumerate}[a.]
+\item   If connections have identical values for BOTH \texttt{physq1} and
+        \texttt{physq2} (\texttt{physq1} may be different from \texttt{physq2})
+        or have different values for BOTH \texttt{physq1} and \texttt{physq2},
+        there are no complications. In the first case the connections are simply
+        merged into basically one single connection. In the second case
+        the degrees of freedom are separated by default.
+\item   If NOT a. then be sure that the connections are FULLY SEPARATED, i.e.
+        the element nodes involved on both sides of the connection MUST NOT
+        OVERLAP!
+\end{enumerate}
+
+
+\section{Examples of problems using connections}
+
+The use of connections is very similar to the use of constraints:
+\begin{enumerate}
+   \item Connections are defined using the routine \texttt{define\_connection}
+     before the problem definition.
+   \item The structure of the matrix is added using the routine
+     \texttt{create\_sysmatrix\_structure\_connection} before the final call
+    to \texttt{finalize\_sysmatrix\_structure}.
+   \item The system matrix contribution of the connections is build using
+     \texttt{build\_system\_connection}.
+\end{enumerate}
+
+In Secs.~\ref{sec:stokes20} and \ref{sec:stokes40} connections are
+ used to add a viscous
+slip layer at an interface between two fluids in a cavity flow.
+In the next section
+(Sec.~\ref{sec:stokes41}) the one-sided connection is explained.
+In Sec.\ref{sec:stick_slip}, example \texttt{stick\_slip5.f90}, uses a one-sided
+connection to create a developed entry flow profile.
+
+\subsection{A Stokes problem on a unit square with a one-sided connected
+            boundary condition}
+\label{sec:stokes41}
+
+This example is similar to \texttt{stokes2.f90} (see
+Sec.~\ref{sec:stokes2}), but the constraint for the periodical boundary
+conditions has been replaced with a collocated connection between the out- en inflow.
+The source is in the file \texttt{stokes41.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+This is a rather artificial problem, where the outflow is now a free surface 
+and the velocities at the outflow are fed back to the inflow. Note, that this is different
+from periodical boundary conditions. There is no stress continuity between in and out,
+only continuity of velocity. The flow is generated with a constraint for an
+imposed flow rate at the outflow boundary.
+A velocity vector plot is shown in Figure~\ref{fig:vel41}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.3]{velocity_stokes41}
+   \end{center}
+   \caption{Velocity vector plot for the one-sided connection problem. The
+inflow velocity profile is set equal to the outflow velocity profile.}
+    \label{fig:vel41}
+\end{figure}
+
+The problem is solved basically as follows. First the system is built,
+including the constraint for the imposed flow rate, but  
+without the connection.
+Then the rows in the system matrix and the entries in the right-hand side
+belonging to the degrees of freedom 
+on the inflow curve
+are set to zero. These rows are then filled by 1's and -1's using the connection to
+exactly represent the following equation node for node:
+\[
+   \vek u_\text{in}-\vek u_\text{out}=\vek 0
+\]
+Note, that the system matrix is non-symmetric.
+
+Remark:
+\begin{itemize}
+   \item Constraints should \emph{not} involve the degrees of freedom of which
+the rows in the matrix and right-hand side have been set to zero.
+\end{itemize}
+

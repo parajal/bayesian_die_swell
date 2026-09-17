@@ -1,0 +1,105 @@
+\documentclass[a4paper,twoside]{report}
+
+\usepackage{bigpag}
+\usepackage{tfempagestyle,kopklein}
+\usepackage{amsmath,amssymb}
+\usepackage{enumerate}
+\usepackage{moreverb}
+\usepackage{color,graphicx}
+\usepackage[english]{babel}
+\usepackage{userguide}
+\usepackage[T1]{fontenc}
+\usepackage{tocloft} \setlength\cftsecnumwidth{2.8em} \setlength\cftsubsecnumwidth{4em}
+
+
+\graphicspath{{plots/}}
+
+\def\headdate{16th January 2026}
+
+\includeonly{%
+introduction,%
+poissonstokes,%
+newsource,%
+meshgen,%
+solvers,%
+postprocessing,%
+constraints,%
+connections,%
+transformations,%
+groups,%
+addons,%
+external,%
+examples,%
+bib,%
+vemodels,%
+tausupg,%
+stmodels,%
+subdivision_tri_tet,%
+ownprojecttree,%
+}
+
+\date{}
+
+\title{\tfem\\
+       A toolkit for the finite element method\bigskip \\
+       User's Guide}
+\author{Martien A. Hulsen\bigskip\\
+        {\small Last update: \headdate.} }
+
+% pdf
+
+\usepackage[pdftex,colorlinks,bookmarksopen,bookmarksnumbered,breaklinks]{hyperref}
+
+\begin{document}
+
+\maketitle \newpage \thispagestyle{empty}
+\vspace*{\fill}
+\noindent
+{\large \tfem\ User's Guide}\bigskip\\
+        Martien A. Hulsen\\
+        Eindhoven University of Technology\\
+        Department of Mechanical Engineering\\
+        Section Processing \& Performance of Materials\\
+        PO Box 513\\
+        5600 MB Eindhoven\\
+        The Netherlands\\
+        email:~\texttt{m.a.hulsen@tue.nl}\vspace*{2cm}
+\vfill
+\noindent
+Copyright \copyright 2004--2026 Martien A.~Hulsen\medskip\\
+All rights reserved. No part of this publication may be reproduced,
+stored in a retrieval system or transmitted by any means,
+electronic, mechanical, photocopying,
+recording, or otherwise, without the prior written permission of the
+author.
+
+\clearpage
+
+\setcounter{page}{1}
+
+\def\chaptertitle{\contentsname}
+\tableofcontents
+
+\pagestyle{tfemch}
+
+\include{introduction}
+\include{poissonstokes}
+\include{newsource}
+\include{meshgen}
+\include{solvers}
+\include{postprocessing}
+\include{constraints}
+\include{connections}
+\include{transformations}
+\include{groups}
+\include{addons}
+\include{external}
+\include{examples}
+\include{bib}
+\appendix
+\include{vemodels}
+\include{tausupg}
+\include{stmodels}
+\include{subdivision_tri_tet}
+\include{ownprojecttree}
+\end{document}

@@ -1,0 +1,120 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%vfunc1(1)%p => u ! vector function for velocity u.
+  coefficients%vfunc1(2)%p => u_m ! vector function for velocity u_m.
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+1   interpolation of the position of the interface
+    NOTE: for high-order or spectral interpolation also the polynomial order p
+    needs to be set with coefficients%i(2).
+
+2   Polynomial order p of the spectral/high-order interpolation for the
+    position 
+
+3   Numerical integration rule for the internal domain integrals of elements.
+
+4   nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(3) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(3) to each subdomain.
+
+5   Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle).
+      3: standard Gauss-Legendre (numerical tables)
+
+6   The vector u (=velocity) is determined as follows:
+    0: constant, given by coefficients%r(1:3)
+    1: given by a vector function, vfuncnr=coefficient%i(7)
+       NOTE: vector function must be assigned to coefficients%vfunc1(1)%p
+    2: given by nodal values in the vector oldvectors%v(1)
+    3: given by Gauss values in the vector per element oldvectors%e(1)
+
+7   vfuncnr for the vector u (=velocity)
+
+8   The vector u_m (=arbitrary velocity field) is determined as follows:
+    0: constant, given by coefficients%r(4:6)
+    1: given by a vector function, vfuncnr=coefficient%i(9)
+       NOTE: vector function must be assigned to coefficients%vfunc1(2)%p
+    2: given by nodal values in the vector oldvectors%v(2)
+    3: given by Gauss values in the vector per element oldvectors%e(2)
+
+9   vfuncnr for the vector u_m (=arbitrary velocity field) 
+
+10  If = 1, include the tangential vector u_t. Note, that a scalar field needs
+    to be available from oldvectors%s(1)%p using problem oldvectors%p(1)%p.
+
+11  Time integration scheme (timeint):
+    1: first-order, implicit Euler
+    2: second-order, implicit Gear
+
+12  How to build matrix and vector:
+    0: matrix is for one coordinate direction only; vector is build as a 
+       multiple right-hand side for each coordinate direction separately.
+    1: both matrix are built for all coordinate directions at once, assuming
+       a vector of size ndim in each node. Note, that the system needs to be
+       built with order='DN', which is not the default if no physical
+       quantities have been defined.
+
+13  coordinate system for 2D elements:
+    0: Cartesian planar
+    1: Axisymmetrical
+    Note that for axisymmetrical coordinates we have (z,r), i.e. the first
+    coordinate is the axial coordinate z and the second coordinate is the
+    radial coordinate r.
+
+14  Interpolation of the velocity on the interface for coefficients%i(6)=2:
+      0: interpolation is the same as for the position (coefficients%i(1))
+    >=1: independent interpolation for the velocity.
+    NOTE: for high-order or spectral, also the polynomial order p needs to be 
+          set with coefficients%i(15).
+
+15  Polynomial order p of the spectral interpolation for the velocity
+
+16  Shape of the element:
+    0 Use the interpolation of the position (coefficients%i(1))
+    1 Use the interpolation of the velocity (coefficients%i(14))
+
+17  Specifies how the integration rules must be set:
+    0: default, i.e. direcly with the value in coefficients.
+    1: by specifying the minimal polynomial order that the rule must be able
+       to integrate exactly.
+    Note, that the value of coefficients%i(17) is overruled by setting
+    SET_GAUSS_BY_ORDER = .true. in the module limits_m.
+
+18--100 Reserved for future use. Set to zero for future compatibility.
+

@@ -1,0 +1,39 @@
+% !TEX root = userguide.tex
+
+\def\headdate{20th February 2018}
+
+\section{Diffuse-interface model with particles}
+\label{sec:dim_with_particles}
+
+(These examples have been developed by Nick Jaensson of the TU/e)
+
+\subsection{Particle-covered droplet sheared between two plates}
+
+Example \texttt{dimpart1.f90} describes a Newtonian droplet in a Newtonian
+matrix which is covered by rigid particles. The fluid-fluid interface is 
+described by the Cahn-Hilliard diffuse-interface model (see Section 
+\ref{sec:examples_dim}). The particle-fluid interface is described by a
+sharp-interface model using boundary-fitted meshes and an ALE formulation 
+(see Section \ref{sec:ale}). To
+include the effect of surface tension, the stress-form of the Cahn-Hilliard
+theory is used \cite{Jaensson2015}. The (static) contact angle between the
+fluid-fluid interface and the particle boundaries can be adapted. The example 
+makes extensive use of adaptive meshing using refinement points, as explained
+in Section \ref{sec:examples_dim}. The example can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample dim\_with\_particles}
+\end{quote}
+
+In Figure~\ref{fig:dimpart} the result of a sheared particle-covered droplet
+(initially circular) after a number of time steps is shown. Note, how the
+particles are located ``on the outside'' of the droplet due to the imposed 
+contact angle.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.3]{dimpart}
+   \end{center}
+   \caption{Particle-covered droplet sheared between two plates.
+     Results obtained using example \texttt{dimpart1.f90}.}
+    \label{fig:dimpart}
+\end{figure}

@@ -1,0 +1,23 @@
+NOTE: 
+
+streamfunction1 is for open_boundary1, open_boundary2
+
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+open_boundary1
+
+ 2D Stokes problem with an open boundary condition.
+ pressure imposed in a single point at the obc
+ 
+open_boundary2
+
+ 2D Stokes problem with an open boundary condition.
+ zero integral pressure imposed on the obc
+
+open_boundary3
+
+ 3D Stokes problem with an open boundary condition. 
+ zero integral pressure imposed on the obc

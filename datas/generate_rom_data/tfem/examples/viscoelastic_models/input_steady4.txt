@@ -1,0 +1,24 @@
+&comppar
+  flowtype = 1           ! flow type:
+                         ! 1: shear
+                         ! 2: planar elongation
+                         ! 3: uniaxial elongation
+  includesolvent = F     ! solvent included only if .true. (T)
+  eta_s = 0.0            ! solvent viscosity
+  model   = 5            ! 5: PTT linear model 6: PTT exponential
+  G      = 20            ! modulus G
+  lambda = 0.1           ! relaxation time
+  epsptt = 0.1           ! eps parameter for PTT
+  tau_y  = 10            ! tau_y
+  Kfac    = 1            ! K viscosity factor
+  nexp    = 0.7          ! n power-law exponent
+  numdatapoints = 1000   ! number of steady data points for functions of
+                         !    shear rate (for flowtype=1)
+                         !    extension rate (for flowtype=2,3)
+  eps = 1.e-9            ! Newton-Raphson accuracy
+  maxnumiterations = 100 ! maximum number of iterations
+  start_rate = 1e-2      ! start data point
+  end_rate = 1e3         ! end data point
+  factor = 1e5           ! data point distance: last=factor * first 
+  eigen = F              ! compute eigenvalues/vectors of Jacobian of rhs
+/

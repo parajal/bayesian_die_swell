@@ -1,0 +1,456 @@
+Integer coefficients for the element routines in this addon..
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%cinflow => cinflow  ! c tensor at an inflow boundary (DG only).
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+1-12 USED by/SHARED with the stokes add-on
+
+12  conformation tensor interpolation
+    for a triangle
+      2: P1
+    for a quadrilateral
+      4: Q1
+    for a hexahedron
+      4: Q1
+    for a prism
+     15: P1Q1
+
+13-17 USED by/SHARED with the stokes add-on
+
+18  viscoelastic fluid model
+
+19  number of modes
+
+20  if >0:
+      start index in coefficient%r of the viscoelastic model material data.
+      The value must be at least 501, which is where the free range begins.
+    else if <0:
+      (minus) array number in coefficients%ra2 containing the viscoelastic model
+      material data. Thus, assuming m=-coefficients%i(20) then the 2D array
+      coefficients%ra2(m)%a(1:np,1:nmodes), with np the number of parameters
+      per mode, contains the model data.
+
+21  log conformation transformation:
+    0: no
+    1: yes
+    Note, that the log-conformation transformation and the btensor-formulation
+    (coefficients%i(71)>=1) cannot be used at the same time.
+
+22  Time integration scheme:
+    1: first-order, semi-implicit Euler
+    2: second-order, semi-implicit Crank-Nicolson/Adams-Bashforth
+    3: first-order, explicit Euler
+    4: second-order, explicit Adams-Bashforth
+    5: second-order, semi-implicit Gear/Karniadakis
+    6: second-order, semi-implicit Crank-Nicolson/conformation prediction
+    7: second-order, semi-implicit Gear/conformation prediction
+    8: first-order, implicit Euler (BDF1)
+    9: second-order, implicit Crank-Nicolson (trapezoidal)
+    10: second-order, implicit Gear (BDF2)
+    11: first-order, theta method
+
+23  USED by/SHARED with the stokes add-on
+
+24  numerical integration rule for boundary integrals in the DG method
+    for curves:
+      n: number of Gauss-Legendre integration points. 1<=n<=5. For example
+         with n=3 a three-point Gauss-Legendre integration is used.
+    for surfaces with quadrilaterals:
+      n: number of Gauss-Legendre integration points in _one_ coordinate
+         direction. 1<=n<=5. For example with n=3 a 3x3 Gauss integration is
+         used for quads
+
+25  Type of implementation of the DG method:
+    1: Explicit DG. The matrix and right-hand side of M dc/dt=... are build and
+       it is up to the user to create a time integration scheme in the main
+       program. coefficients%i(22) and coeffficients%r(8) (delta t) are not used
+       and therefore have no effect.
+
+26  mode1  Include mode1--mode2 in the viscoelastic model computations only.
+27  mode2  Special case: coefficient%i(26)=0 means mode1=1
+           Special case: coefficient%i(27)=0 means mode2=nmodes
+    Thus specifying zeros means: all modes are computed.
+    NOTE: overridden if coefficient%i(85)>0 if applicable.
+
+28  component choice parameter in computing a derivative.
+    For example coefficient%i(28) means the mode number in deriv_conformation
+    and deriv_viscoelastic_stress_tensor.
+    See the sources for the possibilities in various derivative routines.
+    See also coefficients%i(13) in the stokes module.
+
+**** the following two parameters (29,31) determine how h/U in the tau parameter
+     of the SUPG method is computed: (see also coefficients%i(50))
+
+29  htype, the type of h computation:
+         0: take default value (=2)
+         1: the standard velocity projection
+         2: mapping of the reference element
+         3: determined by the size of the element:
+            2D: h = (elementsize)**0.5
+            3D: h = (elementsize)**1/3
+            hence: h is a constant per element
+
+30  USED by/SHARED with the stokes add-on
+
+31  Uscaling, how is the U scaling computed:
+         0: take default value (=3)
+         2: 1/N sum_i |u|_i , i=1,..,N with N the number of integration points.
+         3: |u| in the integration points separately
+         4: global scaling Uglobal = coefficient%r(10)
+
+32-48 USED by/SHARED with the stokes add-on
+
+49  A least square projection of c=exp(s) has been performed.
+    0: no
+    1: yes
+    Note, that this is only relevant if the log-conformation has been set
+    (coefficients%i(21)=1). Furthermore, in the standard routines the
+    projection will only be used for:
+     a) stress-implicit methods
+     b) the stress-work term (for coefficients%i(74)=1)
+
+50  Adjust the tau parameter in SUPG for Courant numbers C=U*deltat/h smaller
+    than 1:
+             { h/2U      for C >= 1
+        tau ={
+             { deltat/2  for C < 1
+    0: no
+    1: yes
+
+51-56 USED by/SHARED with the stokes add-on
+
+57  Add c/lambda to both sides of the constitutive model and handle the lhs
+    term implicitly and the rhs term explicitly. If the stress-implicit
+    formulation is used, the same procedure is used for the substitution in the
+    momentum balance.
+    0: no
+    1: yes
+
+58  Determines the choice of the lambda parameter for coefficients%i(57)=1:
+    0: use the relaxation parameter lambda (second material parameter).
+   >0: use the j^th nonlinear parameter with j the value specified.
+       Currently, this is only useful for the XPP model (models 14,16,17) and
+       the Rolie-Poly model (model 15), where the first nonlinear parameter is
+       a time-scale that is usually smaller than the default relaxation
+       parameter lambda. So specify coefficients%i(58)=1 to use this time scale
+       for these models.
+
+59  USED by/SHARED with the stokes add-on
+
+60  The projected velocity gradient tensor (G-method) used for time-integration
+    of the CE for the conformation tensor is:
+    0: Part of the solution vector (DEVSS).
+    1: Computed as a separate vector using projection.
+    NOTE: this is only relevant for coefficient%i(61)=0.
+
+61  The velocity gradient used for the time integration of the CE for the
+    conformation tensor:
+    0: The projected velocity gradient tensor (G-method).
+       NOTE: for this case coefficient%i(60) determines how the projected
+       gradient is supplied to the element routines.
+    1: The velocity gradient tensor as derived directly from the velocity.
+
+62-67  USED by/SHARED with the stokes add-on
+
+Coefficients 68 - 70 only apply if coefficients%i(73) = 1
+---------------------------------------------------------
+
+68  Determine how the local modulus is evaluated
+    0: modulus is constant and determined in the standard way
+    1: modulus is given by a function of position (coefficients%func1(1)%p
+       where funcnr=md, where md is the mode number)
+    2: modulus is given by nodal values (given in oldvectors%v1(md)%p(1),
+       where md is the mode number)
+    3: modulus is given in integration points (given in the 1d real vector with
+       index md in oldvectors%e(1)%p, where md is the mode number)
+
+69  Determine how the local relaxation time is evaluated
+    0: relaxation time is constant and determined in the standard way
+    1: relaxation time is given by a function of position
+       (coefficients%func1(2)%p where funcnr=md, where md is the mode number)
+    2: relaxation time is given by nodal values (given in
+       oldvectors%v1(md)%p(2), where md is the mode number)
+    3: relaxation time is given in integration points (given in the
+       1d real vector with index md in oldvectors%e(2)%p, where md is the
+       mode number)
+
+70  Determine how the local non-linear parameters are evaluated
+    0: non-linear parameters are constant and determined in the standard way
+    1: non-linear parameters are given by a function of position
+       (coefficients%func1(2+j)%p where funcnr=md, where md is the
+       mode number and j is the index of the non-linear parameter)
+    2: non-linear parameters are given by nodal values (given in
+       oldvectors%v1(md)%p(2+j), where md is the mode number and j is the index
+       of the non-linear parameter)
+    3: non-linear parameters are given in integration points (given in the
+       1d real vector with index md in oldvectors%e(2+j)%p, where md is the
+       mode number and j is the index of the non-linear parameter)
+
+71  Use the b-formulation:
+    0: no
+    1: contravariant deformation tensor (CDT)
+    2: symmetric, i.e. b=sqrt(c)
+    3: Cholesky
+    4: Cholesky with log diagonals
+    Note, that the b-formulation and log-conformation transformation
+    (coefficients%i(21)=1) cannot be used at the same time.
+
+72  A least square projection of c=b.b^T has been performed.
+    0: no
+    1: yes
+    Note, that is only relevant if the use of the b-tensor formulation
+    has been set (coefficients%i(71)>=1). Furthermore, in the standard
+    routines the projection will only be used for:
+     a) stress-implicit methods
+     b) the stress-work term (for coefficients%i(74)=1)
+
+73  Use varying viscoelastic coefficients (modulus,lambda,nonlin,alam).
+      0: no
+      1: yes
+    NOTE: Not all elements have been modified to take this into account.
+          An error message is given if incompatible elements are called.
+
+74  Use the least square projection of c=exp(s) (if coefficients%i(49)=1) or
+    the least squares projection of c=b.b^T (if coefficients%i(72)=1) in the
+    stress work term tau:D.
+      0: no
+      1: yes
+
+75-77  USED by/SHARED with the stokes add-on
+
+78  Check for zero velocity and use htype=3 and Uscaling=4 instead in SUPG.
+      0: no
+      1: yes
+    If a zero velocity is detected in ANY of the integration points of an
+    element, the method is switched to htype=3 and Uscaling=4 for ALL
+    integration points.
+    NOTE: this is a brute force approach to avoid divide by zero, when
+          the velocity is exactly zero. It should be used only for that case
+          and normally be off.
+    NOTE: Uglobal = coefficient%r(10) must be set to a positive value.
+
+79  how cn is computed in the integration points for stress-implicit methods
+         0: take default value (=1)
+         1: from nodal point value interpolation.
+         2: directly in the integration points from c=exp(s) or c=b.b^T.
+    Notes:
+      a. This is only relevant if either the log-conformation has been set
+         (coefficients%i(21)=1) or the use of the b-tensor formulation
+         tensor has been set (coefficients%i(71)>=1). If not, both 1 and 2
+         should give the same result.
+      b. This does not affect the value of gradcn, which is always computed
+         from nodal values of cn.
+      c. A value of 2, garantuees positivity of the c-tensor in the integration
+         points for the LCR of CDT method and stress-implicit schemes.
+      d. The value of coefficients%i(79) does not affect the
+         temporary ALE scheme (coefficients%i(48)=2), which still uses the
+         scheme with value=1.
+
+80  Adapted lambda model. A value of 0 (default) means none.
+    See the userguide for possibilities.
+
+81  Determine how the local adapted lambda parameters are evaluated
+    0: adapted lambda parameters are constant and determined in the
+       standard way
+    1: adapted lambda parameters are given by a function of position
+       (coefficients%func1(2+numnlnpar+j)%p where funcnr=md, where md is the
+       mode number and j is the index of the adapted lambda parameter)
+    2: adapted lambda parameters are given by nodal values (given in
+       oldvectors%v1(md)%p(2+numnlnpar+j), where md is the mode number and
+       j is the index of the adapted lambda parameter)
+    3: adapted lambda parameters are given in integration points (given in the
+       1d real vector with index md in oldvectors%e(2+numnlnpar+j)%p,
+       where md is the mode number and j is the index of the adapted
+       lambda parameter)
+    NOTE: numnlnpar is the number of non-linear parameters of a single mode.
+    NOTE: coefficient only applies if coefficients%i(73) = 1.
+
+82  USED by/SHARED with the stokes add-on
+
+83  physqc: start of the physical quantities for the conformation. The actual
+    physical quantity numbers for each of the modes is given by the array
+       [ ( i, i=physqc,physqc+nmodes-1 ) ]
+    This only applies when all the conformation modes are part of the system
+    vector.
+
+84  Storage in the system vector of the conformation for reading in
+    element routines:
+    0: The default for that routine. It depends on the typical usage. For
+       example rhs_divtau will typically be used together with system vectors
+       where each tensor component is stored in a separate sysvector.
+    1: Each component is stored in a separate sysvector.
+    2: Each mode is stored in a separate sysvector.
+    3: All modes are stored in a single sysvector. physqc=coefficients%i(83) is
+       used to separate the modes.
+    NOTE: some routines force the storage for some vectors and the value
+          of coefficients%i(84) is ignored for that vector. For example,
+          reading projected conformation requires the storage format to be
+          equal to 1 (each component in a separate system vector).
+
+85  Mode number for specifying just a single mode.
+    NOTE: overrides mode1/mode2 given by coefficients%i(26-27)) only if
+          applicable and coefficient%i(85)>0. Only applicable to a few
+          routines that set singlemode=.true. in the call to
+          set_viscoelastic_elem (or directly to set_globals_viscoelastic).
+          Other routines are unaffected by the value of coefficient%i(85).
+
+86  The sysvector number for the velocity vector used for the SUPG weighting
+    function:
+    0: default = 1
+    >0: the sysvector number
+    This is currently only used in order to make the weighting function
+    not dependent on the iteration solution for the velocity in the case
+    of full Newton-Raphson.
+
+87  The sysvector number for the iteration solution of the conformation tensor
+    0: default. The default depends on the routine:
+          implicit_divtau, implicit_ce_vel_supg_elem: 1
+          implicit_ce_supg_elem: 3
+       The reason for the different defaults is compatibility.
+    >0: the sysvector number
+    This is currently only used for the implicit routines.
+
+88  The sysvector number for the conformation tensor at previous time step tn.
+    0: default. The default depends on the routine:
+          implicit_ce_supg_elem: 1
+    >0: the sysvector number
+    This is currently only used for the implicit routines.
+
+89  Indicates whether the time-derivative term in the constitutive equation,
+    and if applicable the evolution equation for gammap, will be included in
+    the routine implicit_ce_supg_elem and implicit_gammap_supg_elem:
+    0 yes
+    1 No, the time-derivative term is excluded from the system.
+      Excluding the time-derivative term will only build the Jacobian
+      of the convection term and (minus) the right-hand side.
+      Possible reasons for excluding the time-derivative term are:
+      a. Perform Newton-Raphson iteration for the steady state, if it exists.
+      b. Together with a separate built of the matrix of the time-derivative
+         with the routine implicit_ce_timederiv_supg_elem, and if applicable
+         the routine implicit_gammap_timederiv_supg_elem, we can assemble a
+         generalized eigenvalue problem for linear stability analysis.
+
+90  Apply rotation reinitialization to the b-tensor on element level:
+    0 no
+    1 Pointwise in each integration point. This is only available if
+      the time integration scheme is such that the convection term needs to
+      be evaluated at the new time step only.
+    NOTE: A value >0 only applies if the contravariant deformation
+    tensor (CDT) formulation tensor has been set (coefficients%i(71)=1)
+
+91  Include Jacobian of the SUPG test function for the Newton-Raphson
+    iteration scheme:
+    0 no
+    1 yes
+    NOTE: This affects _only_ the following routines:
+      implicit_ce_supg_elem
+      steady_ce_timederiv_supg_elem
+      implicit_gammap_supg_elem
+      steady_gammap_timederiv_supg_elem
+    and has no effect on other routines, such as
+      implicit_ce_vel_supg_elem or
+      implicit_ce_timederiv_supg_elem or
+      implicit_gammap_timederiv_supg_elem.
+    NOTE: By setting coefficients%i(91)=0 the routine implicit_ce_supg_elem
+          can be used to iterate only on the conformation and keeping
+          the velocity constant during iteration.
+
+92  Indicates whether in the viscoelastic models that depend on the von Mises
+    stress, the von Mises stress is defined per mode or using multiple modes:
+    0: defined per mode
+    1: using multiple modes. The modes are defined by the range mode1:mode2
+       or coefficients%i(26):coefficients%i(27). The modes must be built in
+       one call to build_system.
+
+93  Specifies the mode that has the relaxation term set to zero (norlxmode).
+    The default value (0) means no mode has its relaxation term set to zero.
+
+94  Reserved for future use. Set to zero for future compatibility.
+
+95  component choice parameter in computing a derivative.
+    For example coefficient%i(95) means the mode number for the regime in
+    the Saramito DP model in deriv_viscoelastic_stress_scalar.
+    See the sources for the possibilities in various derivative routines.
+    See also coefficients%i(13) in the stokes module and coefficients%i(28)
+    above.
+
+96  Adapted lambda model for the J dependance (the h(J) factor).
+    A value of 0 (default) means none (or factor h(J)=1).
+    See the userguide for possibilities.
+
+97  physqpgammap: physical quantity number of the equivalent plastic strain
+    This only applies when the equivalent plastic strain is part of a system
+    vector with multiple physical quantities.
+    NOTE: there is no corresponding interpolation (base function). The
+    interpolation (coefficients%i(12)) for the conformation tensor is used.
+
+98  Adapted lambda model for the equivalent plastic strain dependance (the
+    g(gammap) factor).
+    A value of 0 (default) means none (or factor g(gammap)=1).
+    A value of 1 selects the default softening function in the EGP model.
+    See the userguide for possibilities.
+
+99  Specifies the mode determining the equivalent plastic strain gamma_p.
+    Setting a value is required for coefficients%i(98) == 1.
+    The default value (0) means no mode is set.
+
+100 Storage in the system vector of the equivalent plastic strain for reading in
+    element routines:
+    0: The default for that routine. It depends on the typical usage.
+    1: The equivalent plastic strain is stored in a separate sysvector.
+    2: The equivalent plastic strain is part of a system vector with
+       multiple physical quantities. physqgammap=coefficients%i(97)
+    NOTE: some routines force the storage for some vectors and the value
+          of coefficients%i(100) is ignored for that vector. For example,
+          reading projected conformation requires the storage format to be
+          equal to 1 (separate system vector).
+
+101 The sysvector number for the iteration solution of the equivalent plastic
+    strain
+    0: default=1
+    >0: the sysvector number
+    This is currently only used for the implicit routines.
+
+102 The sysvector number for the equivalent plastic strain at previous
+    time step tn.
+    0: default, dependent on routine.
+    >0: the sysvector number
+    This is used for all routines that read gammap from a sysvector.
+
+103 Include the Jacobian of the convection term u.grad(gammap) with respect to
+    the velocity for the Newton-Raphson iteration scheme in the routine
+    implicit_gammap_supg_elem:
+    0: no
+    1: yes
+    NOTE: In implicit_ce_supg_elem the Jacobian of the convection term
+          u.grad(gammap) with respect to the velocity is not performed and
+          part of the routine implicit_ce_vel_supg_elem. 
+    NOTE: By setting coefficients%i(91)=0 and coefficients%i(103)=0, the
+          routine implicit_gammap_supg_elem can be used to iterate only on the
+          conformation and the plastic strain gammap and keeping
+          the velocity constant during iteration.
+
+104--150 Reserved for future use. Set to zero for future compatibility.

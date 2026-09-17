@@ -1,0 +1,29 @@
+Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz (Papaya cluster)
+
+ifx (IFX) 2024.0.2 20231213, -O3 -xHost -i8
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+MKL 2024.0 (threading)
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    2.56410 33.43075  0m38.794s 0m37.289s 0m1.504s  2.57161
+   4    2.59065 63.70279  0m24.328s 1m6.753s  0m2.406s  2.55957
+   8    2.59118 107.13942 0m22.324s 1m49.333s 0m3.292s  2.56811
+  12    2.57795 159.13416 0m22.369s 2m40.434s 0m4.195s  2.56537
+  16    2.58411 206.86978 0m22.136s 3m26.312s 0m6.082s  2.56228
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys 
+   1    2.57845 51.12865  0m53.990s 0m51.819s 0m2.170s
+   4    2.61191 65.02711  0m25.115s 1m5.241s  0m2.707s
+   8    2.58920 78.06003  0m19.433s 1m17.694s 0m3.274s
+  12    2.61157 89.09700  0m17.559s 1m28.716s 0m3.357s
+  16    2.59841 99.88457  0m16.501s 1m38.656s 0m4.192s
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    2.51802 128.18234 11.97498 2m24.440s 2m23.845s 0m0.411s  1.51987 

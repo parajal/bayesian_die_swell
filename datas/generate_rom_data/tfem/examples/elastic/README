@@ -1,0 +1,48 @@
+NOTE: 
+
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+elastic1
+
+ Elastic problem on a unit square (2D). Mooney-Rivlin solid.
+
+elastic2
+
+ Elastic bar in a Stokes fluid. Mooney-Rivlin solid.
+
+elastic3
+
+ Elastic problem on a unit cube (3D). Mooney-Rivlin solid.
+
+elastic4
+
+ Elastic bar in a Stokes fluid. Mooney-Rivlin solid.
+ Weak constraint on the boundary (interface between solid and fluid).
+
+elastic5
+
+ Elastic bar in a Stokes fluid. Mooney-Rivlin solid.
+ Weak distributed constraint on the full particle domain.
+ Velocity profile sinusoidal in time.
+
+elastic6
+
+ Elastic problem on a unit square (2D). Mooney-Rivlin solid.
+ Spectral elements.
+ This problem is similar to elastic1, but now with spectral elements.
+
+elastic7
+
+ Elastic problem on a unit square (2D). Mooney-Rivlin solid.
+ Crouzeix-Raviart Q2/P1 element.
+ Optionally use global P1 interpolation for pressure.
+
+elastic8
+
+ Elastic problem on a unit cube (3D). Mooney-Rivlin solid.
+ Crouzeix-Raviart Q2/P1 element. 
+ Optionally use global P1 interpolation for pressure.

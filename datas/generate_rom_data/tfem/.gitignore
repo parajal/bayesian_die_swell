@@ -1,0 +1,9 @@
+*.o
+*.mod
+tags
+*.rej
+*~ 
+.*.swp
+.DS_Store
+/Mdefs.mk
+/MAH

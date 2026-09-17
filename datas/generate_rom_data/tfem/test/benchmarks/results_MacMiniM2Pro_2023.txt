@@ -1,0 +1,50 @@
+Apple M2 Pro (Mac Mini, 2023, 32GB).
+
+Output of "system_profiler SPSoftwareDataType SPHardwareDataType":
+
+Software:
+
+    System Software Overview:
+
+      System Version: macOS 13.4.1 (22F82)
+      Kernel Version: Darwin 22.5.0
+
+Hardware:
+
+    Hardware Overview:
+
+      Model Name: Mac mini
+      Model Identifier: Mac14,12
+      Chip: Apple M2 Pro
+      Total Number of Cores: 10 (6 performance and 4 efficiency)
+      Memory: 32 GB
+
+GNU Fortran (Homebrew GCC 13.1.0) 13.1.0
+gfortran 13.1.0, -O2 -march=native -funroll-loops -fstack-arrays
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+Apple Framework Accelerate (-framework accelerate)
+Threading with VECLIB_MAXIMUM_THREADS
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1    1.23834 115.79211 1m57.305s 1m56.474s 0m0.674s
+   2    1.22734 118.23824 1m39.228s 1m58.825s 0m0.743s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    1.31757 83.48329  1m25.098s 1m23.745s 0m1.193s
+   2    1.31625 76.91621  0m44.089s 1m15.701s 0m2.650s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.31845 16.71731  0m19.808s 0m19.030s 0m0.624s  1.48482
+   2    1.31816 18.81153  0m15.598s 0m20.461s 0m1.276s  1.48431
+
+Solver: sparskit2, metis5
+threads build   precond   matvec  real      user      sys       renumber
+   1    1.32494 124.20947 8.19291 2m14.876s 2m14.344s 0m0.379s  .86121
+
+

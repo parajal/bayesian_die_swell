@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# showcoef: show coefficients in add-ons
+
+function helptext ()
+{
+  echo "Usage: showcoef [OPTIONS] [add-on] "
+  echo "Show the README_coefficients files of the add-on."
+  echo "If no add-on is given, all add-ons will be shown"
+  echo ""
+  echo "Options:   (Description)"
+  echo "   -l      list all add-ons having README_coefficients files"
+  echo "   -h      this text is shown (on standard error)"
+}
+
+# get options
+
+list=
+while getopts lh optvar; do
+  case "$optvar"
+  in
+     l) list=1 ;;
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+. settfemroot
+
+if [ "$tp" = . ]; then
+  cwd=`pwd`
+  tp=`dirname $cwd`
+fi
+
+cd $tp/src/addons
+
+if [ $list ]; then
+
+  for dir in *
+  do
+    if [ -f $dir/README_coefficients%i ]; then
+      echo $dir
+    fi
+  done
+
+elif [ $# -eq 0 ];then
+
+  for dir in *
+  do
+    if [ -f $dir/README_coefficients%i ]; then
+      echo ""
+      echo "*************************************************"
+      echo ""
+      echo INTEGER COEFFICIENTS ADD-ON $dir
+      echo ""
+      echo "*************************************************"
+      echo ""
+      cat $dir/README_coefficients%i
+      echo ""
+      echo "*************************************************"
+      echo ""
+      echo REAL COEFFICIENTS ADD-ON $dir
+      echo ""
+      echo "*************************************************"
+      echo ""
+      cat $dir/README_coefficients%r
+    fi
+  done
+
+else
+
+  echo ""
+  echo "*************************"
+  echo ""
+  echo INTEGER COEFFICIENTS ADD-ON $1
+  echo ""
+  echo "*************************"
+  echo ""
+  cat $1/README_coefficients%i
+  echo ""
+  echo "*************************"
+  echo ""
+  echo REAL COEFFICIENTS ADD-ON $1
+  echo ""
+  echo "*************************"
+  echo ""
+  cat $1/README_coefficients%r
+
+fi

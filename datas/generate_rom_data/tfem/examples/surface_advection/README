@@ -1,0 +1,40 @@
+The examples in this directory are NOT described in the userguide.
+
+Examples solve the height function equation
+
+   dH      dH      dH
+   -- + ux -- + uy -- = uz  
+   dt      dx      dy
+
+on a square domain and compare against the analytical manufactured solution
+
+   H(x,y,t) = sin(2x+y-t)
+
+with
+
+   ux = sin(2x+y-t) + 2
+   uy = 1
+   uz = sin[2(2x+y-t)] + 4cos(2x+y-t)
+
+
+Short description
+-----------------
+
+surface_advection1: 
+
+ Test problem for the surface advection add-on (generic routine)
+ An analytical solution on a 2D mesh (3D velocity vector) is tested.
+ First-order time integration.
+
+surface_advection2: 
+
+ Test problem for the surface advection add-on (generic routine)
+ An analytical solution on a 2D mesh (3D velocity vector) is tested.
+ Second-order time integration.
+
+surface_advection3: 
+
+ Test problem for the surface advection add-on (generic routine)
+ An analytical solution on a 2D mesh (3D velocity vector) is tested.
+ Second-order time integration. First time step first-order.
+

@@ -1,0 +1,11 @@
+The examples in this directory are described in the userguide.
+
+convectionreaction1:
+
+ steady convection-reaction equation using DGFEM.
+
+convectionreaction2:
+
+ steady convection-reaction equation using DGFEM.
+ periodic boundaries
+

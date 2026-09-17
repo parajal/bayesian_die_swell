@@ -1,0 +1,990 @@
+% !TEX root = userguide.tex
+
+\def\headdate{3rd January 2021}
+
+\section{The Stokes equation}
+
+In this section more examples using the Stokes equation will be given.
+See Sec.~\ref{sec:stokesweak} for the theory.
+
+\subsection{A Stokes problem on a unit square: driven cavity problem
+ with two fixed objects}
+                                                                                
+We consider the Stokes equation for a driven cavity problem on a unit square
+containing two circular objects (see Fig.~\ref{fig:drivencavity3}).
+On the upper boundary a tangential
+velocity of 1 is imposed and on all other walls and on the objects
+the velocity components are
+zero. In the lower left corner the pressure value is set to zero (Dirichlet).
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{driven_cavity3}
+   \end{center}
+   \caption{Driven cavity problem}
+    \label{fig:drivencavity3}
+\end{figure}
+The boundary conditions on the objects are imposed using constraints
+(fictitious domain).
+
+The example file is \texttt{stokes6.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+The streamfunction can be plotted using \texttt{streamfunction6.f90}.
+                                                                                
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+Some notes on the source:
+\begin{listing}{157}
+                                                                                
+  call add_to_mesh ( mesh, object='coordinates', nnodes=20, objectsub=objectscoor, &
+    objectcoornr=1 )
+  call add_to_mesh ( mesh, object='coordinates', nnodes=20, objectsub=objectscoor, &
+    objectcoornr=2 )
+                                                                                
+\end{listing}
+Here the objects are defined using the routine \texttt{objectscoor} to define
+the coordinates of the points in the objects.
+\begin{listing}{193}
+                                                                                
+  call define_constraint ( mesh, input_probdef, object=1, physq=1, &
+    discretization='collocation', nodedof=2 )
+  call define_constraint ( mesh, input_probdef, object=2, physq=1, &
+    discretization='collocation', nodedof=2 )
+                                                                                
+\end{listing}
+Here the constraints are defined on the two objects using collocation.
+Note, that for constraints
+on objects it is obligatory to specify the number of constraint equations ($=$
+number of Lagrange multipliers) in each node.
+\begin{listing}{228}
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=elementc, addmatvec=.true., coefficients=coefficients )
+
+\end{listing}
+Here the actual constraint equations $\vek u=\vek 0$ on the objects are build
+using the routine \texttt{elementc}.
+In this routine the matrix $\mat A_{e}$ is filled with
+     \[
+   \mat A_{e}=
+          \begin{pmatrix}
+             \phi_i(\vek x_c) & 0 \\
+             0 & \phi_i(\vek x_c)
+          \end{pmatrix}
+     \]
+where
+$\vek x_c$ is the
+position vector of the current collocation point and 
+ $\phi$ is the shape function of the velocity in the corresponding element.
+The vector $\col g_e$ is set to zero.
+
+Run the problem by typing
+\begin{quote}
+   \texttt{stokes6}
+\end{quote}
+which will lead to the results in Fig.~\ref{fig:fixedobjectsvelocity}
+\begin{figure}[ht!]
+   \includegraphics[height=6cm]{fixedobjectsvelocity2}
+   \includegraphics[height=6cm]{fixedobjectsvelocity1}
+   \caption{A vector plot of the velocity $\vek u$ and a color plot of the
+     velocity component $u_x$
+     for the driven cavity problem with two fixed objects}
+    \label{fig:fixedobjectsvelocity}
+\end{figure}
+
+\subsection{A Stokes problem on a unit square: driven cavity problem
+ with a freely translating and rotating object}
+\label{sec:rotatingobject}
+                                                                                
+We consider the Stokes equation for a driven cavity problem on a unit square
+containing one circular object (see Fig.~\ref{fig:drivencavity4}).
+On the upper boundary a tangential
+velocity of 1 is imposed and on all other walls 
+the velocity components are
+zero. On the object the velocity is assumed to be a solid body rotation:
+\[
+    \vek u=\vek u_p + \vek \omega \times (\vek x-\vek x_p)
+\]
+where $\vek u_p$ is the translational velocity of the particle,
+$\vek \omega$ is the rotation rate of the particle, $\vek x$ is the point
+considered and $\vek x_p$ is the center point of the particle. The values of
+$\vek u_p$ and $\vek \omega$ need to be determined from the
+freely translating and rotating condition.
+
+In the lower left corner the pressure value is set to zero (Dirichlet).
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{driven_cavity4}
+   \end{center}
+   \caption{Driven cavity problem}
+    \label{fig:drivencavity4}
+\end{figure}
+The boundary conditions on the objects are imposed using constraints
+(fictitious domain).
+
+The example file is \texttt{stokes7.f90}.
+
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+Some notes on the source:
+\begin{listing}{210}
+                                                                                
+  call define_constraint ( mesh, input_probdef, object=1, physq=1, &
+    discretization='collocation', nodedof=2, naddunknowns=3 )
+                                                                                
+\end{listing}
+Here the constraint on the object is defined using collocation. The three
+additional unknowns are $(u_{px}, u_{py}, \omega_z)$.
+\begin{listing}{243}
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=elementc, addmatvec=.true., coefficients=coefficients )
+
+\end{listing}
+Here the actual constraint equations on the objects are build
+using the routine \texttt{elementc}.
+In this routine the matrix $\mat A_{e}$ is filled with
+     \[
+   \mat A_{e}=
+          \begin{pmatrix}
+             \phi_i(\vek x_c) & 0 \\
+             0 & \phi_i(\vek x_c)
+          \end{pmatrix}
+     \]
+where
+$\vek x_c$ is the
+position vector of the current collocation point and 
+The matrix $\mat B_e$ (=\texttt{elemmatadd}) is filled with
+     \[
+   \mat B_e=
+          \begin{pmatrix}
+             -1 & 0 & r_y \\
+              0 & -1 & -r_x
+          \end{pmatrix}
+     \]
+where $\vek r=\vek x_c-\vek x_p$ is the
+radial position vector of the current collocation point.
+The vector $\col g_e$ is set to zero representing the zero force and torque on
+the particle.
+
+Run the problem by typing
+\begin{quote}
+   \texttt{stokes7}
+\end{quote}
+which will give an output like
+\begin{quote}
+   \texttt{ up =  0.3865903241043489  vp =  -1.603490948281671E-16  omega =
+-1.771510535586235}
+\end{quote}
+and lead to the results in Fig.~\ref{fig:freeobjectvelocity}
+\begin{figure}[ht!]
+   \includegraphics[height=6cm]{freeobjectvelocity2}
+   \includegraphics[height=6cm]{freeobjectvelocity1}
+   \caption{A vector plot of the velocity $\vek u$ and a color plot of the
+     velocity component $u_x$
+     for the driven cavity problem with a freely translating and rotating
+     object}
+    \label{fig:freeobjectvelocity}
+\end{figure}
+
+\subsection{A Stokes problem on a unit square: driven cavity problem
+ with a freely translating and rotating object. Particle tracking.}
+\label{sec:drivenparticle}
+                                                                                
+The example file is \texttt{stokes8.f90} and is an extension of
+\texttt{stokes7.f90} with time-stepping and tracking the position of the
+particle in time. The same example, but using $P_2^+P_1^{(\text{d})}$ triangles (Crouzeix-Raviart) instead
+of $Q_2/Q_1$ quads (Taylor-Hood), is \texttt{stokes23.f90}.
+
+A note on the source:
+\begin{listing}{264}
+
+!     update coordinates of object
+      call objectscoor ( objectnr=1, coor=mesh%objects(1)%coor )
+
+!     update reference coordinates of object
+      call find_refcoor_objects ( mesh )
+
+\end{listing}
+After each time step the coordinates of the points in 
+the object need to be updated using the
+user subroutine \texttt{objectscoor} (line 266). The new corresponding reference
+coordinates in the elements of the points in the object need to be recomputed
+as well using the core \tfem-routine \texttt{find\_refcoor\_objects} (line 269).
+
+In example \texttt{stokes17.f90} the particle has been modeled as a
+\emph{weak} ring constraint instead of the collocated one in
+\texttt{stokes8.f90}.
+
+\subsection{A Stokes problem on a unit square: driven cavity problem
+            Coupling of the two domains using a weak
+            constraint on an object.}
+\label{sec:stokes19}
+
+We again consider the driven cavity flow as described in 
+Sec.~\ref{sec:driven_cavity2D}. We have now split the domain into two parts,
+where in the upper part the number of elements has been increased. The two
+domains are coupled using a weak constraint on an object, similarly to the
+procedure in Sec.~\ref{sec:poisson8} for the Poisson problem. Only the
+velocities are 
+coupled and has been implemented using Lagrange multipliers either one
+(linear) or two orders lower
+than the velocity interpolation
+(see \cite{SeSu00} for the theory on a diffusion problem).
+
+The source is in the file \texttt{stokes19.f90}. The streamfunction can be
+plotted using \texttt{streamfunction19.f90}.
+
+In Fig.~\ref{fig:mesh_cavity_mortar} a typical mesh is shown and a
+typical result for the velocity vectors is
+are shown in Fig.~~\ref{fig:velocity_cavity_mortar}.
+\begin{figure}[phb!]
+   \begin{center}
+   \includegraphics[scale=0.6]{mesh_cavity_mortar}\medskip
+   \end{center}
+   \caption{Mesh with the Lagrange multipliers defined on the lower part
+part of the mesh. The red dots are the nodes of the quadratic line elements
+of the object at the interface. The Lagrange
+multipliers are only defined at the end nodes of an element (continuous linear
+interpolation) or in the middle node of an element (constant interpolation).
+The ratio of the number of elements along the connection of the domains is 2:3.}
+    \label{fig:mesh_cavity_mortar}
+\end{figure}
+\begin{figure}[pthb!]
+   \begin{center}
+   \includegraphics[scale=0.6]{velocity_cavity_mortar}
+   \end{center}
+   \caption{Velocity vectors in the cavity}
+    \label{fig:velocity_cavity_mortar}
+\end{figure}
+
+\subsection{A Stokes problem on a unit square: driven cavity problem
+            Coupling of the two domains using a weak
+            constraint on an object and a connection on an object.
+            Viscous slip layer between two fluid domains}
+\label{sec:stokes20}
+
+We again consider the driven cavity flow as described in 
+Sec.~\ref{sec:stokes19}. 
+Now only the normal (vertical)
+velocities are 
+coupled using Lagrange multipliers. The tangential (horizontal) velocity
+components are coupled using a connection modeling a viscous slip layer between
+the two fluids, where the shear stress $\tau$ is linear with the velocity
+difference:
+\[
+    \tau = \eta_\text{slip} ( u_2 - u_1 )
+\]
+where $u_1$ and $u_2$ are the horizontal velocities
+on both sides of the interface.
+The slip layer is modeled by adding the following integral to (the left-hand
+side of) the weak form:
+\begin{multline}
+       \int_C (v_2 - v_1 ) \eta_\text{slip} ( u_2 - u_1 )\D C=\\
+       \int_C v_1 \eta_\text{slip} u_1\D C -
+       \int_C v_1 \eta_\text{slip} u_2\D C -
+       \int_C v_2 \eta_\text{slip} u_1\D C +
+       \int_C v_2 \eta_\text{slip} u_2\D C
+       \label{eq:slipst20}
+\end{multline}
+where $v_1$ and $v_2$ are the horizontal test functions for the velocities
+on both sides of the interface. Note the four terms in the expression above
+correspond to the 
+four element matrices $\mat S_{11}$, $\mat S_{12}$, $\mat S_{21}$,
+$\mat S_{22}$, as introduced in Sec.~\ref{sec:connimpl}. 
+
+It should be noted that the problem is somewhat artificial. It can be
+considered to be a flow problem with two fluids separated by a viscous slip
+layer. However, the interface moves and this is not taken into account in this
+problem. The current problem can be considered to be the first time step in a
+time-dependent problem of the moving interface.
+
+The source is in the file \texttt{stokes20.f90}. The streamfunction can be
+plotted using \texttt{streamfunction20.f90}.
+
+A typical result for the stream function is shown in
+ Fig.~\ref{fig:stream_cavity_connection}.
+Note the tangential
+velocity jump at the interface. For $\eta_\text{slip}=0$ we get perfect slip
+(as if the connection is not there) and for 
+$\eta_\text{slip}\rightarrow\infty$ we approach the fully coupled problem of
+Sec.~\ref{sec:stokes19}.
+\begin{figure}[pthb!]
+   \begin{center}
+   \includegraphics[scale=0.6]{stream_cavity_connection}
+   \end{center}
+   \caption{Stream function in the cavity. $\eta_\text{slip}=1$. Mesh as shown
+in Fig.~\ref{fig:mesh_cavity_mortar}.}
+    \label{fig:stream_cavity_connection}
+\end{figure}
+
+\subsection{A Stokes problem on a unit square: driven cavity problem.
+            Coupling of the two domains using a collocated
+            constraint on a curve and a weak connection on a curve.
+            Viscous slip layer between two fluid domains}
+\label{sec:stokes40}
+
+We again consider the driven cavity flow as described in 
+Sec.~\ref{sec:stokes20} with two fluids coupled using a viscous slip layer. 
+The difference is that the constraint for the
+normal (vertical) velocities is collocated (discrete Lagrangian multipliers
+in the nodes)
+and that the tangential (horizontal) velocity
+components are coupled using a connection modeling a viscous slip layer between
+the two fluids, using a weak connection on a curve. The number of elements on
+the interface must now be identical.
+
+The source is in the file \texttt{stokes40.f90}. The streamfunction can be
+plotted using \texttt{streamfunction40.f90}.
+
+\subsection{A Stokes problem in a 3D channel with a square cross section:
+developed flow}
+\label{sec:stokes3Dchannel}
+                                                                                
+We consider the Stokes equation for a 3D channel problem. The channel has
+a square cross section. In flow direction only one layer of elements is used
+and periodical conditions in flow direction are assumed. In this way the
+developed flow profile is computed.
+
+The example file is \texttt{channel1.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+                                                                                
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+Some notes on the source:
+\begin{listing}{113}
+! constraints for periodical boundary conditions
+
+! velocities
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, surface1=3, surface2=5, discretization='collocation', &
+      excludecurves=[2,6,7,10] )
+
+\end{listing}
+Here the periodical conditions are imposed. The nodes on the curves in
+\texttt{excludecurves} are excluded from the constraints.
+The reason is that in these points the velocities are imposed
+     using essential conditions and thus completely removed from the equations.
+     Imposing a constraint in these points leads to a singular matrix (row and
+     column with only zeros).
+     
+The example \texttt{channel12.f90} is similar to \texttt{channel1.f90}, but uses prisms instead of hexahedrons.
+
+\subsection{A Stokes problem on a square with a disk at the center in a shear flow. Computation of integral quantities}
+\label{sec:exampleintegration}
+
+(This example has been developed by Gaetano d'Avino of the University of Naples).
+
+We consider the Stokes equation for a shear flow problem on a square with a disk particle at the center. The
+disk radius is chosen equal to 1 and the side of the square is set twenty times the disk radius (in order to set
+the boundary conditions sufficiently far from the disk). On the square boundaries the typical shear flow
+boundary conditions are set, i.e. $u=\dot{\gamma}y$ and $v=0$, where $\dot{\gamma}$ is the shear rate (chosen
+equal to 1). On the disk a solid body rotation is assumed (see Sec.~\ref{sec:rotatingobject}). However, since the particle
+is at the center of the domain, it will not move but only rotate so only the rotation rate is added as unknown.
+The disk boundary conditions are imposed using constraints (see Chapter \ref{ch:constraints}). Finally, the
+pressure is set to zero (Dirichlet condition) in the lower left corner of the square.
+
+After the field computation, the integration of pressure and stresses is performed over the fluid domain as well
+as the disk boundaries in order to calculate the bulk stress according to the Batchelor formula:
+\begin{equation}
+\langle \boldsymbol{\sigma}\rangle=\frac{1}{A}\int_{A}\boldsymbol{\sigma}\D A=\frac{1}{A}\int_{A_{f}}
+\boldsymbol{\sigma}\D A+\frac{1}{A}\int_{\partial
+A_{p}}\boldsymbol{\sigma}\cdot \boldsymbol{nx}\D s
+\label{eqn:Batchelorformula}
+\end{equation}
+where $\langle \cdot \rangle$ is an area average quantity in an area $A$, $A_{f}$ is the area occupied by the
+fluid, $\partial A_{p}$ is the total surface, $\boldsymbol{n}$ is the normal vector to the particle boundary and
+$\boldsymbol{x}$ is a point on the particle boundary.
+
+The example file is \texttt{bulkstress1.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample bulkstress}
+\end{quote}
+The problem uses a Gmsh generated mesh 
+(see Sec.~\ref{sec:readgmshmesh}).
+
+\subsection{A Stokes problem on a square with a freely rotating object at the
+center in a shear flow. Constraints through collocation method.
+Computation of integral quantities through Lagrange multipliers.}
+\label{sec:exampleintegration2}
+
+(This example has been developed by Gaetano d'Avino of the University of Naples).
+
+We consider the same problem as in Sec.~\ref{sec:exampleintegration}.
+A circular particle is
+located at the center of a square domain. Simple shear flow is
+imposed on the external boundaries. The boundary conditions on the object are
+imposed with constraints using a collocation method. 
+The bulk stress, Eq.~\eqref{eqn:Batchelorformula},
+ is computed by means of the Lagrange
+multipliers, according to the following:
+\begin{equation}
+\langle\boldsymbol{\sigma}\rangle=
+\frac{1}{A}\int_{A_{f}}\boldsymbol{\sigma}\D A+\frac{1}{A}\int_{\partial
+A_{p}}\boldsymbol{\sigma}\cdot\boldsymbol{n}\boldsymbol{x}\D s=
+\frac{1}{A}\int_{A}\boldsymbol{\sigma}\D A+\frac{1}{A}\sum_{i=1}^{n_{p}}
+\boldsymbol{\lambda}_i\boldsymbol{x}_i
+\label{eq:bulkstress2}
+\end{equation}
+where $\boldsymbol{\lambda}_i$ are the Lagrange multipliers, $\boldsymbol{x}_i$ are
+the position vectors of the collocation points and $n_{p}$ are
+the number of collocation points.
+
+The example file is \texttt{bulkstress3.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample bulkstress}
+\end{quote}
+The summation in the Eq.~\eqref{eq:bulkstress2} is performed by the
+routine \texttt{lm\_traction} that calls
+\texttt{get\_sysvector\_constraint} in order to get the Lagrange multiplier
+values.
+
+\subsection{A Stokes problem on a square with a freely rotating object at the
+center in a shear flow. Constraints through weak constraints.
+Computation of integral quantities by integration over an object.}
+
+(This example has been developed by Gaetano d'Avino of the University of Naples).
+
+We consider the same problem as in Secs.~\ref{sec:exampleintegration} and
+\ref{sec:exampleintegration2}.
+A circular particle is located at the center of a
+square domain. Simple shear flow is imposed on the external boundaries. The
+boundary conditions on the object are imposed using weak
+constraints. The bulk stress
+is computed by performing an integration of the Lagrange
+multipliers times the point position vectors over the object boundary:
+\begin{equation}
+\langle\boldsymbol{\sigma}\rangle=
+\frac{1}{A}\int_{A_{f}}\boldsymbol{\sigma}\D A+\frac{1}{A}\int_{\partial
+A_{p}}\boldsymbol{\sigma}\cdot\boldsymbol{n}\boldsymbol{x}\D s=
+\frac{1}{A}\int_{A}\boldsymbol{\sigma}\D A+
+\frac{1}{A}\int_{\partial A_{p}}\boldsymbol{\lambda}\boldsymbol{x}\D s
+\label{eq:bulkstress3}
+\end{equation}
+This is
+done through the subroutine \texttt{integrate\_object} that uses
+the user-supplied \texttt{lm\_integration} routine. As in
+Sec.~\ref{sec:exampleintegration2} \texttt{get\_sysvector\_constraint} is used
+to get the Lagrange multiplier values.
+
+The example file is \texttt{bulkstress4.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample bulkstress}
+\end{quote}
+
+\subsection{A Stokes problem on a unit cube: 3D driven cavity flow}
+\label{sec:stokes3Ddrivencavity}
+
+We consider the Stokes problem on a unit cube. The problem is similar to
+the problem in Sec.~\ref{sec:driven_cavity2D}, but now extended to 3D. Since
+there is a symmetry plane we only have to consider half of the domain.
+
+The source is in the file \texttt{stokes11.f90}. The mesh 
+generated using the \texttt{hexahedron} routine. 
+`
+The same problem, using hexahedral $Q_2/P_1^\mathrm{d}$ elements (Crouzeix-Raviart family), is in the file
+\texttt{stokes48.f90}. Note, that this problem optionally uses global $P_1$ interpolation 
+for optimal rate of convergence (see Sec.~\ref{sec:stokes47} for further explanation).
+
+The same problem, using $P_2Q_2/P_1Q_1$ prismatic elements, is in the file
+\texttt{stokes51.f90} and uses 
+the mesh in the file \texttt{cube51.msh}, 
+generated by Gmsh using the file \texttt{cube51.geo}.
+
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+In Fig.~\ref{fig:velocity_3Dcavity} the velocity solution on the surfaces 4 and
+6 is plotted.
+\begin{figure}[ph!]
+   \begin{center}
+   \includegraphics[scale=0.5]{velocity_3Dcavity}
+   \end{center}
+   \caption{Plot of velocity vectors on surfaces 4 and 6 for \texttt{stokes11}.}
+    \label{fig:velocity_3Dcavity}
+\end{figure}
+
+In Figs.~\ref{fig:dudz_3Dcavity} and \ref{fig:pressure_3Dcavity} the
+contours of $\plderiv{u}{z}$ and the pressure $p$ on the surfaces 3, 4 and
+6 are plotted, respectively.
+\begin{figure}[pt!]
+   \begin{center}
+   \includegraphics[scale=0.5]{dudz_3Dcavity}
+   \end{center}
+   \caption{Plot of $\plderiv{u}{z}$ on surfaces 3, 4 and 6 for
+   \texttt{stokes11}.} 
+   \label{fig:dudz_3Dcavity}
+\end{figure}
+\begin{figure}[pt!]
+   \begin{center}
+   \includegraphics[scale=0.5]{pressure_3Dcavity}
+   \end{center}
+   \caption{Plot of the pressure $p$ on surfaces 3, 4 and 6 for
+   \texttt{stokes11}.} 
+   \label{fig:pressure_3Dcavity}
+\end{figure}
+
+\subsection{Axi-symmetric Stokes problem: flow around a sphere in
+ cylindrical tube}
+\label{sec:sphere}
+
+We consider the Stokes problem in a cylindrical tube with a sphere moving along
+the center line with a constant velocity of $U$. We assume that the
+tube has a bottom at infinity, i.e.\ the flow rate though a cross
+section of the cylinder is zero. Equivalently, we can move the cylinder with a
+velocity $-U$ and fix the sphere (see Figure~\ref{fig:sphere}).
+\begin{figure}[pt!]
+   \begin{center}
+   \includegraphics[scale=0.7]{sphere}
+   \end{center}
+   \caption{Sphere in a cylindrical tube}
+    \label{fig:sphere}
+\end{figure}
+Consistent with the `bottom in the cylinder' we assume a uniform
+velocity profile $-U$ at the entry and exit boundaries. We assume the problem
+to be axisymmetric.
+
+The example file is \texttt{sphere1.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+The mesh is in the file \texttt{mesh1.msh} (see Fig.~\ref{fig:mesh_sphere})
+and is generated by Gmsh (see Sec.~\ref{sec:readgmshmesh})
+using the mesh geometry file \texttt{mesh1.geo}.
+\begin{figure}[pt!]
+   \begin{center}
+   \includegraphics[scale=0.8]{mesh_sphere}
+   \end{center}
+   \caption{Mesh in \texttt{mesh1.msh} generated from \texttt{mesh1.geo}.}
+    \label{fig:mesh_sphere}
+\end{figure}
+
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+In Fig.~\ref{fig:streamfunction_sphere} the streamfunction solution computed
+using \texttt{streamfunction.f90} is plotted.
+In Fig.~\ref{fig:pressure_sphere} the pressure solution is plotted.
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.7]{streamfunction_sphere}
+   \end{center}
+   \caption{Streamfunction in problem \texttt{sphere1.f90}.}
+    \label{fig:streamfunction_sphere}
+\end{figure}
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.7]{pressure_sphere}
+   \end{center}
+   \caption{Pressure in problem \texttt{sphere1.f90}.}
+    \label{fig:pressure_sphere}
+\end{figure}
+
+The example file \texttt{sphere6.f90} is extension of \texttt{sphere1.f90}
+that includes the computation of the drag force on the sphere.
+
+\subsection{3D Stokes problem: flow around a sphere in
+ a container with square cross section}
+\label{sec:sphere3D}
+
+This problem is similar to the moving sphere problem in Sec.~\ref{sec:sphere},
+but now the container has a square cross section. The sphere moves along the
+$z$-axis with constant velocity of $-U$.
+
+The example file is \texttt{sphere36.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+
+The same problem, using tetrahedral $P_2^+/P_1^d$ elements, is in the file
+\texttt{sphere38.f90}. It uses the $P_2/P_1$ mesh
+with conversion to extended elements using \texttt{mesh\_convert}.
+
+\subsection{Flow around a cylinder confined between two (2D) walls}
+\label{sec:cylinderStokes}
+
+This problem is the 
+flow of a Stokes fluid around a cylinder confined between two (2D).
+The entry and exit sides are connected by periodical boundary conditions
+and a constant flow rate is imposed.
+Only the upper-half of the domain is modeled and symmetry conditions are
+assumed (zero tractions).
+
+The example files for the 2D problem is \texttt{cylinder1.f90}.
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder}
+\end{quote}
+The example
+\texttt{cylinder1.f90} uses a mesh that is generated by \tfem\ in the
+following way:
+\begin{quote}
+   \texttt{mesh\_confined\_cylinder < meshinput1.txt}
+\end{quote}
+
+For all 2D problems there is a main program \texttt{streamfunction.f90} to
+generate the stream function.
+
+All examples described in this section generate VTK data files (see
+Sec.~\ref{sec:vtk}) for plotting data.
+
+\subsection{Stokes flow with an open boundary condition}
+\label{sec:stokesobc}
+
+(This example has been developed by Tae Gon Kang of the TU/e).
+
+This example uses an open boundary condition (OBC) according to
+\cite{Papanastasiou92}. The OBC can be constructed by basically `not filling in
+the Neumann boundary condition'. So instead of Eq.~\eqref{eq:weakst1} we have
+\begin{equation}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)=(\vek v,\vek t_{\text{O}})_{\Gamma_{\text{O}}}+
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\end{equation}
+where $\Gamma_\text{O}$ is the part of the boundary where we apply the OBC. For the
+normal Neumann boundary $\Gamma_{\text{N}}$ we would just specify the traction
+$\vek t_{\text{N}}$. However for the OBC part of the boundary we `don't do
+anything' and leave $\vek t_{\text{O}}$ as it is defined:
+\begin{equation}
+    \vec t_{\text{O}}=-p\vec n+2\eta \ten D\cdot\vec n
+        \quad\text{ on }\Gamma_{\text{O}}
+\end{equation}
+where $\vek n$ is the outwardly directed unit normal vector. The final weak
+form of the momentum balance now becomes
+\begin{equation}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    +(\vek v,p\vec n)_{\Gamma_{\text{O}}}
+    -(\vek v,2\eta \ten D\cdot\vec n)_{\Gamma_{\text{O}}}=
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:obcstokes}
+\end{equation}
+Note, that the additional terms contribute to the system matrix.
+Also the system matrix becomes unsymmetric. In index notation,
+we find
+\begin{align*}
+   \vek v\cdot2\ten D\cdot\vek n&=v_i2D_{ij}n_j\\
+      &=v_i(u_{i,j}+u_{j,i})n_j\\
+      &=v_i^k\phi_k(u_i^m\phi_{m,j}+u_j^m\phi_{m,i})n_j\\
+      &=v_i^k\big(\phi_ku_i^m\phi_{m,j}n_j+\phi_ku_j^m\phi_{m,i}n_j\big)\\
+      &=v_i^k\big(\phi_k\phi_{m,l}n_l\delta_{ij}
+             +\phi_k\phi_{m,i}n_j\big)u_j^m\\
+\intertext{and}
+   \vek v\cdot p\vek n&=v_ipn_i=v_i^k\phi_k\psi_m n_i p^m
+\end{align*}
+Hence, the additional matrices become
+\begin{align*}
+       \hat S_{ij}^{km}&= -\int_{\Gamma_{\text{O}}}\eta\big(
+\phi_{k}\tsum_l\phi_{m,l}n_l \delta_{ij}+
+          \phi_{k}\phi_{m,i}n_j\big)\D s\\
+    P_i^{km}&=\int_{\Gamma_{\text{O}}}\phi_{k}\psi_mn_i\D s
+\end{align*}
+with a matrix system as follows
+\[
+ \begin{bmatrix}
+   \mat{S} +\mat{\hat{S}} &-\mat{L}^T+\mat P \\[1ex]
+   -\mat{L} &\mat 0
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{u}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+    \col{f}\\[1ex]
+    \col 0
+ \end{bmatrix}
+\]
+We implement the additional terms using a system build on an object.
+
+Note, that for the OBC of the type above 
+it is unclear what is actually being specified (see also \cite{Gresho00}, where
+it is called a `fuzzy boundary condition').
+
+The first example file is \texttt{open\_boundary1.f90}. 
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample open\_boundary}
+\end{quote}
+The streamfunction can be plotted using \texttt{streamfunction1.f90}.
+It should be noted here that 
+at least the pressure level is non-unique in the problem. In the first
+example, which is a 2D problem, this is solved by
+specifying the pressure in a single point
+at the OBC. This gives an acceptable solution for the pressure, but it is still
+not fully regular near the point where the pressure is imposed. Specifying the
+pressure at a point not on the obc curve does not work at all.
+
+In the second example file \texttt{open\_boundary2.f90} we specify the integral
+of the pressure along the obc curve ($Q_1$ pressures) or object ($P_1$
+pressures) to be zero, using a constraint. This gives
+a smooth pressure everywhere and therefore this seems to be the preferred
+method of imposing the pressure level.
+
+In the third example file \texttt{open\_boundary3.f90} we specify the integral
+of the pressure along the obc surface ($Q_1$ pressures) or object ($P_1$
+pressures) to be zero, using a constraint. This gives
+a smooth pressure everywhere. In 3D this seems to be the only possible
+method (for now) to impose the pressure level, since specifying a pressure
+level in a point (by using Dirichlet conditions) does not work at all in 3D.
+
+\subsection{Driven cavity flow. Pressure level set by $\int p\D x=0$.}
+\label{sec:driven_cavity_intpzero}
+
+The problems are similar to the problem in Sec.~\ref{sec:driven_cavity2D} (2D)
+and \ref{sec:stokes3Ddrivencavity} (3D), respectively. The
+pressure level is now set using the constraint $\int p\D x=0$. The
+constraint is put on a surface (2D) (example \texttt{stokes21.f90}) or
+a volume (3D) (example \texttt{stokes22.f90}) that is made from
+the elements in the mesh. A third example (\texttt{stokes32.f90}) uses a
+constraint on an elementset (see Sec.~\ref{sec:elementsets}).
+
+\subsection{Driven cavity flow. User gauss subroutines.}
+\label{sec:driven_cavity_usergauss}
+
+The problems is similar to the problem in Sec.~\ref{sec:driven_cavity2D}, but now a
+simple example is given of how to use user subroutines for the Gauss integration scheme.
+
+The example file is \texttt{stokes25.f90}.
+
+\subsection{A Stokes problem on a unit square with Dirichlet boundary 
+            conditions: driven cavity problem. Spectral elements}
+\label{sec:stokes34}
+
+This example is similar to \texttt{stokes1.f90} (see
+Sec.~\ref{sec:driven_cavity2D}), but now with spectral elements.
+The source is in the file \texttt{stokes34.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+
+\subsection{A Stokes problem on a unit square with Dirichlet boundary 
+            conditions: driven cavity problem. $Q_2/P_1^\mathrm{d}$ quadrilateral elements (Crouzeix-Raviart family).
+            Mapped vs.\ global shape functions for the pressure.}
+\label{sec:stokes47}
+
+This example is similar to \texttt{stokes1.f90} (see
+Sec.~\ref{sec:driven_cavity2D}), but now using $Q_2/P_1^\mathrm{d}$ quadrilateral elements (Crouzeix-Raviart family).
+The source is in the file \texttt{stokes47.f90}.
+
+Note, that in this problem there is an option to use either mapped $P_1$ or
+global $P_1$ interpolation for the pressure. The default is mapped $P_1$, where the interpolation is defined on the reference element and mapped on the deformed element. In \cite{Arnold2002} it has been shown that for \emph{general meshes} of quadrilaterals, optimal convergence is lost for the mapped $P_1$ space. 
+See also \cite{Boffi2002}, where it is shown that for general meshes
+the order of convergence for both velocity and pressure reduces to $\mathcal{O}(h)$ when using the mapped $P_1$ pressure space. It should be noted however, that meshes containing rectangles and/or parallelograms are not affected. Also, meshes obtained after successive refinement of a given mesh and meshes in general that are of nearly parallelogram type, do have optimal convergence (see \cite{Matthies2001}). So, for practical problems the additional error may be small. 
+
+The convergence problem for mapped $P_1$ spaces can be solved by using \emph{global shape functions} for the pressure \cite{Boffi2002}:
+\[
+    \psi_1 = 1, \quad \psi_2=x, \quad \psi_3=y
+\]
+Since this leads to a worse conditioning of the matrix, the shape functions can be scaled as follows:
+\[
+    \psi_1 = 1, \quad \psi_2=(x-x_\text{c})/h_x, \quad \psi_3=(y-y_\text{c})/h_y
+\]
+where $(x_\text{c},y_\text{c})$ is the ``midpoint point'' of an element and $h_x$ and $h_y$ are typical element sizes in the $x$- and $y$-direction, respectively. Another possibility is to scale the system matrix before solving. 
+
+It should be noted here, that the dependence on global coordinates can lead to unexpected behaviour with moving meshes (such as ALE). So use of the global shape functions is not recommended for moving meshes, unless you are of the adventurous type and know what you are doing!
+
+\subsection{A Stokes problem on a square domain with a void (2D bubble), emulating a regular 2D foam structure:
+ constant internal pressure, surface tension, expanding domain.}            
+\label{sec:foam1}
+
+This problem emulates a 2D expanding foam having a regular structure. The domain is a square with a void at the center (initially a circle). The outside boundaries remain straight, but the normal force is zero. Therefore, the domain can freely expand/shrink due internal pressure and/or surface tension on the void boundary. The tangential traction on the outside boundaries is also zero. Therefore, a stacking of the domains is possible and will create a symmetry condition there. The updating of the position of the nodes uses a simple Lagrangian description with forward Euler time integration.
+The source is in the file \texttt{foam1.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample foam}
+\end{quote}
+
+In Figure~\ref{fig:foam1} the expanding foam is shown for an initial domain of $4\times4$, an initial bubble radius of 1.0, fluid viscosity 1.0, surface tension 1.0 and internal pressure of 2.0. Note, the acceleration of the expansion and corresponding thinning of the liquid bridges.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{foam_blowup}
+   \end{center}
+   \caption{Expanding domain (foam) for time $t=0$, $0.75$, $1$, $1.1$.}
+    \label{fig:foam1}
+\end{figure}
+In Figure~\ref{fig:size_foam} the size of the foam domain is shown as a function of time $t$.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{size_foam}
+   \end{center}
+   \caption{Size of the foam domain as a function of time $t$.}
+    \label{fig:size_foam}
+\end{figure}
+
+A related problem is in \texttt{foam3.f90}. It basically solves the same problem (an expanding foam having a regular structure), but it now uses bi-periodic boundary conditions. Although this is more expensive to solve than \texttt{foam1.f90}, it opens up the possibility to have multiple voids of different sizes to create RVE's (representative volume elements). The symmetry conditions in \texttt{foam1.f90} are too artificial for that.
+
+The periodic conditions are imposed using constraints:
+\begin{listing}{1}
+ ! force free contraints
+
+  call define_constraint ( mesh, input_probdef, num=c1, &
+    physq=physqvel, curve1=2, curve2=4, discretization='collocation', &
+    naddunknowns=1 )
+  call define_constraint ( mesh, input_probdef, num=c2, &
+    physq=physqvel, curve1=3, curve2=1, discretization='collocation', &
+    naddunknowns=1, excludepoints=[3] )
+\end{listing}
+For the point and curve numbers, see Figure~\ref{fig:foam3}. First, the velocities on curves 2 and 4 are coupled node for node. Then the velocities on curves 3 and 1 are coupled node for node, but the coupling of the velocities in point 3 to point 2 is excluded. The latter is necessary to avoid a singular matrix, since the coupling of point 3 to 2 is already defined in the coupling of the other nodes, i.e. from $1=2$, $4=1$, $3=4$ it already follows that $3=2$. 
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{geom_mesh3}
+   \end{center}
+   \caption{Geometry of problem foam3.}
+    \label{fig:foam3}
+\end{figure}
+
+\subsection{A Stokes problem on a cubic domain with a void (3D bubble), emulating a regular 3D foam structure:
+ constant internal pressure, surface tension, expanding domain.}            
+\label{sec:foam2}
+
+This problem emulates a 3D expanding foam having a regular structure. The domain is a cube with a void at the center (initially a sphere). The outside boundaries remain straight, but the normal force is zero. Therefore, the domain can freely expand/shrink due internal pressure and/or surface tension on the void boundary. The tangential traction on the outside boundaries is also zero. Therefore, a stacking of the domains is possible and will create a symmetry condition there. The updating of the position of the nodes uses a simple Lagrangian description with forward Euler time integration.
+The source is in the file \texttt{foam2.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample foam}
+\end{quote} 
+
+In Figure~\ref{fig:foam2} the expanding foam is shown for an initial (periodic) domain of $4\times4\times4$, an initial bubble radius of 1.0, fluid viscosity 1.0, surface tension 0.5 and internal pressure of 5.0. 
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{foam3d_1}
+   \includegraphics[scale=0.55]{foam3d_2}
+   \end{center}
+   \caption{Expanding domain (foam) for time $t=0$ (left) and $t=0.75$ (right), where the domain has been cut in half.}
+    \label{fig:foam2}
+\end{figure}
+
+A related problem is in \texttt{foam4.f90}. It basically solves the same problem (an expanding foam having a regular structure), but it now uses tri-periodic boundary conditions. Although this is more expensive to solve than \texttt{foam2.f90}, it opens up the possibility to have multiple voids of different sizes to create RVE's (representative volume elements). The symmetry conditions in \texttt{foam2.f90} are too artificial for that.
+
+The periodic conditions are imposed using constraints:
+\begin{listing}{1}
+! force free contraints
+
+  call define_constraint ( mesh, input_probdef, num=c1, &
+    physq=physqvel, surface1=2, surface2=4, discretization='collocation', &
+    naddunknowns=1 )
+  
+  call define_constraint ( mesh, input_probdef, num=c2, &
+    physq=physqvel, surface1=3, surface2=1, discretization='collocation', &
+    naddunknowns=1, excludesurfaces=[2] )
+  
+  call define_constraint ( mesh, input_probdef, num=c3, &
+    physq=physqvel, surface1=5, surface2=6, discretization='collocation', &
+    naddunknowns=1, excludesurfaces=[2,3] ) 
+\end{listing}
+For the point and surface numbers, see Figure~\ref{fig:foam4}. First, the velocities on surface 2 and 4 are coupled node for node. Then the velocities on surfaces 3 and 1 are coupled node for node, but the coupling of the velocities in the nodes of surface 3 that intersect with the nodes on the surface 2 (nodes on the edge 6--7) are excluded. The latter breaks the dependency of the corner nodes in any 2D intersection parallel to the $xy$-plane, similarly to the 2D case (see problem foam2 in Sec.~\ref{sec:foam1}). Finally surface 5 is coupled to surface 6 node for node. Also here nodes are excluded (nodes on surface 5 that intersect with the surfaces 2 and 3). The latter breaks the dependency of the corner nodes in any 2D intersection parallel to the $xz$- and $yz$-planes, similarly to the 2D case (see problem foam2 in Sec.~\ref{sec:foam1}). Finally, it should be mentioned that there is only one path possible from one vertex point to any other vertex point: for example main path 3-4-1-5-6, with branches 4-8-7 and 1-2 (see Figure~\ref{fig:foam4} where ``not connected'' edges are marked with a blue \textsf{X}).
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{geom_mesh4}
+   \end{center}
+   \caption{Geometry of problem foam4. The blue \textsf{X} marks an edge where the corner vertices are not connected. }
+    \label{fig:foam4}
+\end{figure}
+
+\subsection{A Stokes problem in a segment of a Taylor-Couette flow with a rigid particle}            
+\label{sec:taylorcouettestokes}
+(This example is based on the code developed by Michelle Spanjaards for her MSc thesis at the TU/e).
+
+This problem solves the Stokes flow in an angular segment of a Couette device (Taylor-Couette flow) filled with a rigid spherical particle falling under the influence of a vertical force. The geometry of the mesh is shown in Figure~\ref{fig:geom_taylor_couette}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{taylor_couette_surfaces}
+   \end{center}
+   \caption{Geometry of the mesh for (a segment of) a Taylor Couette flow. Two points (green), four curves (blue) and six surfaces (red)
+   have been defined for imposing the boundary conditions. }
+    \label{fig:geom_taylor_couette}
+\end{figure}
+Only a segment of angle $\theta$ is considered and periodical conditions for the velocities are assumed at the cutting planes in angular directions. On the inner and outer cylinder the velocities are imposed. At the upper and lower surfaces the vertical velocity is set to zero and the tangential tractions are assumed to be zero.
+The source is in the file \texttt{taylor\_couette1.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample taylor\_couette}
+\end{quote}
+The periodical boundaries requires some special attention. On the curves in Figure~\ref{fig:geom_taylor_couette} only the $u_x$ and $u_y$ velocity components can be made periodic using a constraint, since $u_z=0$ has been imposed with a Dirichlet condition. The corresponding code for the definition of the periodical constraint is given by:
+\begin{verbatim}
+!   periodic velocities
+    call define_constraint ( mesh, input_probdef, &
+      physq=physqvel, surface1=4, surface2=2, discretization='collocation', &
+      excludesurfaces=[1,3,5,6] )
+    call define_constraint ( mesh, input_probdef, &
+      physq=physqvel, curve1=2, curve2=3, discretization='collocation', &
+      excludesurfaces=[1,3], nodedof=2 )
+    call define_constraint ( mesh, input_probdef, &
+      physq=physqvel, curve1=4, curve2=5, discretization='collocation', &
+      excludesurfaces=[1,3], nodedof=2 ) 
+\end{verbatim}
+where the \texttt{nodedof=2} keyword only imposes two constraints in the curves (for $u_x$ and $u_y$) instead of the default of three constraint (for $u_x$, $u_y$ and $u_z$).
+
+\subsection{A Stokes problem on a 2D domain with three velocity components: computation of a 3D developed flow using a 2D domain}            
+\label{sec:stokes2D3D}
+
+If we assume $\plderiv{\vek u}{z}=\vek 0$ (developed flow in $z$-direction), the pressure derivative $\plderiv{p}{z}$ is a constant (pressure linear in $z$) and the velocity field $\vek u(x,y)$ and pressure field $p(x,y)$ can be solved on a 2D domain. Note, that the velocity vector $\vek u$ still has three components $(u,v,w)$ and that the pressure field is a cross-sectional `snap-shot' without the linear profile in $z$-direction. The latter must be taken into account by a volume force in $z$-direction or by an imposed flow rate constraint on $w$. Note, that for Stokes flow the component $w$ (the velocity in $z$-direction) is fully decoupled from the velocity components $(u,v)$ and could have been solved by a separate problem on the 2D domain. However, in a more complex fluid (viscoelastic) case this might not be true anymore. Therefore, we solve all velocity components in one system.
+
+An example is given in \texttt{stokes49.f90}, where $(u,v)$ are determined by the lid-driven cavity problem (see Sec.~\ref{sec:driven_cavity2D}) and $w$ is determined by an imposed flow rate. A result is shown in Figure~\ref{fig:3Ddeveloped}.
+\begin{figure}[htb!]
+   \begin{center}
+   \includegraphics{stokes49}
+   \end{center}
+   \caption{Developed 3D flow on a 2D cross section. The arrows denote the velocity vector $\vek u$ and the colors on the 2D plane denore the pressure field in the cross section (difficult to see).}
+    \label{fig:3Ddeveloped}
+\end{figure}
+
+\subsection{A Stokes problem on a 2D domain with three velocity components: flow between two concentric cilinders with swirl component. Axisymmetric.}            
+\label{sec:stokes2D3Dswirl}
+
+In a cylindrical coordinate system, axi-symmetry means that the velocity components $(u_z,u_r,u_\theta)$ and pressure $p$ are only a function of $(z,r)$ (independent from $\theta$). In most cases we additionally assume that $u_\theta=0$, however it can be quite useful to include $u_\theta$ (swirl). Important examples are the analysis of plate-plate and cone-plate rotational rheometers. Note, that we now have to solve three velocity components and pressure on a 2D domain, similar to the developed flow case of Sec.~\ref{sec:stokes2D3D}.
+ Note, that for Stokes flow the component $u_\theta$ is fully decoupled from the velocity components $(u_z,u_r)$ and could have been solved by a separate problem on the 2D domain. However, in a more complex fluid (viscoelastic) case this might not be true anymore. Therefore, we solve all velocity components in one system.
+
+An example is given in \texttt{concentric\_cylinder1.f90}, where we consider the flow between two concentric cylinders. The $(u_z,u_r)$ components
+ are determined by imposing a flow rate in $z$-direction (periodical flow conditions) and the swirl component $u_\theta$ is determined by rotating the outer cilinder. 
+ 
+\subsection{Cone-plate (axisymmetric with swirl)}
+\label{sec:cone-plate_stokes}
+
+(This example has been contributed by Michelle Spanjaards of the TU/e)
+
+The geometry is depicted in Figure~\ref{fig:coneplategeom}. The plate (curve 1) is stationary ($\vek u=\vek 0$). The cone (curve 2) is rotating around the $z$-axis ($\vek u=\omega r \vek e_\theta$). Curve 3 is a traction free surface ($\vek t_\text{N}=\vek 0$) and is of a circular shape having point 1 as its center. The angle between the cone and plate $\theta_\text{cp}$ is 0.1~rad in the figure, but can be adjusted. The shear rate is approximately constant and is given by $\omega/\theta_\text{cp}$.
+\begin{figure}[htb!]
+   \begin{center}
+   \includegraphics[scale=0.3]{ConePlate2d}
+   \end{center}
+   \caption{Geometry of the cone-plate flow. Note the coordinate system is cylindrical (axisymmetric) with coordinates $(z,r,\theta)$. The $(z,r)$ plane is shown in the figure.}
+    \label{fig:coneplategeom}
+\end{figure}
+The source of the example is in the file \texttt{coneplate1.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample coneplate}
+\end{quote}
+
+
+
+

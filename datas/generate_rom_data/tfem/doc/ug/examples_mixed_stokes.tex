@@ -1,0 +1,108 @@
+% !TEX root = userguide.tex
+
+\def\headdate{12th November 2021}
+
+\section{Mixed Stokes}
+\label{sec:mixedstokes}
+
+In this section the mixed Stokes formulation is introduced and some examples
+are given.
+
+\subsection{Mixed Stokes formulation.}
+
+We consider the mixed Stokes formulation in a region $\Omega$:
+Find $(\vek u,p,\ten\tau)$ such that,
+\begin{alignat*}{2}
+      -\nabla\cdot(2\eta_\text{s}\ten D)+\nabla p-\nabla\cdot\ten \tau
+        &=\vek f\qquad&&\text{in }\Omega\\
+\nabla\cdot\vek u&=0\qquad&&\text{in }\Omega\\
+ \ten\tau-2\eta\ten D&=\ten 0\qquad&&\text{in }\Omega
+\end{alignat*}
+where $\ten D=(\nabla\vek u+\nabla\vek u^T)/2$, $\eta_\text{s}$ is the direct (solvent) viscosity
+and $\eta$ is the mixed (polymer) viscosity. The boundary conditions are
+\begin{gather*}
+    \vec u = \vec u_D\text{ on }\Gamma_D\\
+    -p\vec n+2\eta_\text{s} \ten D\cdot\vec n+\ten \tau\cdot\vek n=\vec t_{\text{N}}
+\text{ on }\Gamma_{\text{N}}
+\end{gather*}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part. The Neumann condition is equivalent
+to an imposed traction of $\vec t_{\text{N}}$.
+
+The weak form becomes: Find $(\vek u,p,\ten\tau)$ such that,
+\begin{alignat*}{2}
+  \big((\nabla\vek v)^T,2\eta_s\ten D+\ten \tau\big)-(\nabla\cdot\vek v,p)&=(\vek v,\vek t_\text{N})_{\Gamma_\text{N}}+(\vek v,\vek f)
+&&\qquad\text{for all }\vek v \\
+  (q,\nabla\cdot\vek u)&=0,&&\qquad\text{for all }q\\
+(\ten s,\ten\tau -2\eta\ten D)&=0,&&\qquad\text{for all }\ten s
+\end{alignat*}
+or
+\begin{alignat*}{2}	
+  \big(\ten D_v,2\eta_s\ten D\big)-(\nabla\cdot\vek v,p)
++ \big(\ten D_v,\ten \tau\big)&=(\vek v,\vek t)_\Gamma+(\vek v,\rho\vek b)
+&&\qquad\text{for all }\vek v \\
+  -(q,\nabla\cdot\vek u)\hspace{3.5cm}&=0,&&\qquad\text{for all }q\\
+\big(\ten s,\ten D\big)\hspace{2cm}-\frac1{2\eta}(\ten s,\ten\tau) &=0,&&\qquad\text{for all }\ten s
+\end{alignat*}
+In this equation
+$\ten D_v$ is defined by
+\[
+\ten D_v=(\nabla\vek v+\nabla\vek v^T)/2
+\]
+Notes:
+\begin{itemize}
+   \item System is symmetric. For that, we multiplied the continuity equation and the Newtonian constitutive equation for $\ten\tau$ with -1 and also divided the latter by $2\eta$.
+   \item The weak form is equivalent to the saddle point problem: find the
+         stationary value of the functional
+\[
+         J(\vek u,p,\ten\tau)=
+    \frac122\eta_s\big(\ten D,\ten D)\big)-(\nabla\cdot\vek u,p)
+   +\big(\ten D,\ten \tau\big)-\frac 12\frac1{2\eta}(\ten\tau,\ten\tau)
+\]
+\item
+Compatibility of the three-field system $(\vek u_h,p_h,\ten\tau_h)$ requires \cite{baranger_finite_1992,fortin_convergence_1989}:
+\begin{enumerate}
+   \item The $(\vek u_h,p_h)$ spaces need to be compatible for standard Stokes
+(inf-sup or LBB condition for $(\vek u_h,p_h)$).
+  \item For $\eta_s=0$ (no solvent) an \emph{extra} inf-sup condition for the
+$(\vek u_h,\ten\tau_h)$ combination must be fulfilled.
+\end{enumerate}
+  \item The first compatibility condition is easy: use a standard compatible $(\vek u_h,p_h)$
+    element.
+  \item For $\eta_s\neq0$ the extra inf-sup compatibility condition  for
+    $(\vek u_h,\ten\tau_h)$ is \emph{not necessary} in theory. However,
+    in practise when the mixed Stokes is used for viscoelastic fluid flow,
+    $\eta_s$ can be quite small (for polymer melts $\eta_s=0$) and stabilization
+    due to $\eta_s$ is not enough in that case and the extra inf-sup
+    condition needs to be fulfilled.
+  \item The condition for $(\vek u_h,\ten\tau_h)$ is not easy. The matrix system
+    for $\eta_s=0$ looks like:
+\begin{center}
+\includegraphics{mat2}
+\end{center}
+The $(\vek u_h,\ten\tau_h)$ parts look like a mixed system with a zero block.
+This means that at least 
+\[
+    N_\tau\geq N_u
+\]
+i.e.\ the stress space must be \emph{larger} than the velocity space (``the
+number of gradients must be larger than the primary variable'').
+\item Compatible mixed Stokes elements are, for example, the Marchal \& Crochet $4\times 4$ $Q_1$-subelement \cite{marchal_new_1987} and the $Q_3$ element suggested by Fortin \& Pierre \cite{fortin_convergence_1989}.
+\item Compatibility can also be achieved using the DEVSS technique (see Sec.~\ref{sec:weakviscoelastic}), but requires an additional field variable.
+\end{itemize}
+
+\subsection{Stokes flow through an abrupt contraction using mixed Stokes
+ elements.}
+\label{sec:mixedcontraction}
+
+The example files can be obtained by typing at the command line:
+\begin{quote}
+  \texttt{getexample mixed\_stokes}
+\end{quote}
+
+The first example \texttt{mixed\_stokes1.f90} uses a $Q_2/Q_1$ Taylor-Hood
+interpolation for velocity/pressure and a $Q_p,\, p\geq 1$ (continuous) interpolation for the stress.
+
+The second example \texttt{mixed\_stokes2.f90} uses a $Q_2/Q_1$ Taylor-Hood
+interpolation for velocity/pressure and a $Q_1\text{-iso-}Q_p,\, p\geq 1$ (continuous) interpolation for the stress. For $p=4$, this is the mixed Stokes element of Marchal \& Crochet \cite{marchal_new_1987}.
+

@@ -1,0 +1,19 @@
+The add-on hsl provides an interface to the direct solvers MA57 (symmetric)
+and MA41 from the HSL2002 and current HSL library. Furthermore there is an
+interface to the eigenvectors/value routine EA23 for diagonalizing 3x3
+symmetric matrices.
+
+This add-on requires the packages from the HSL library to be installed 
+as given by either:
+
+1. The files in the file hsl2002.tar.gz as distributed within Mechanical
+   Engineering at the TU/e. The files are from HSL2002 and have been
+   licensed by the Mechanical Engineering department. The files should be
+   the external/hsl2002 folder of tfem
+
+or
+
+2. The target libhsl3 in the root Makefile.
+
+HSL packages can be obtained free of charge by academics for research and
+teaching purposes. See the website: http://hsl.rl.ac.uk

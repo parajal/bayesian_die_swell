@@ -1,0 +1,49 @@
+#!/bin/bash
+                                                                                
+# dotiming         : Run all programs
+# dotiming program : Run a single program
+
+# result is in timing.out
+
+# uncomment the following line if intel libraries on macOS cannot be found
+#export DYLD_LIBRARY_PATH=$LIBRARY_PATH
+
+if [ -f timing.out ]; then
+   rm timing.out
+fi
+
+if [ $# -eq 1 ]
+then
+   src="$1.f90"
+else
+   src="*.f90"
+fi
+
+make clean
+
+programs=
+
+for file in $src
+do
+   base=`basename $file .f90`
+   grep "end program" $file >/dev/null
+   if [ $? == 0 ]; then
+     programs=$programs" $base"
+   fi
+done
+
+make $programs
+
+for prog in $programs
+do
+   if [ -x $prog ]; then
+      echo $prog
+      if [ -f $prog.inp ]; then
+         ./$prog <$prog.inp >>timing.out
+      else
+         ./$prog >>timing.out
+      fi
+   fi
+done
+
+echo "finished timing programs"

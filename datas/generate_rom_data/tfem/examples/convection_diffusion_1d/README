@@ -1,0 +1,20 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+convdiff1
+
+  solve:
+
+    u dc/dx - d/dx ( alpha * dc/dx ) + gamma c = f on (0,L)
+
+  using a FEM (Galerkin, SU, SUPG) with a uniform grid
+
+convdiff2
+
+  solve:
+
+    u dc/dx - d/dx ( alpha * dc/dx ) + gamma c = f on (0,L)
+
+  using a spectral element method with a uniform grid

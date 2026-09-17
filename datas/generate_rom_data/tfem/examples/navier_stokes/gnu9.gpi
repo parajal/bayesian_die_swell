@@ -1,0 +1,11 @@
+#set term postscript eps color solid
+#set output "ns9.eps"
+set size ratio -1
+set xrange [0:2]
+set yrange [0:3]
+unset xtics
+unset ytics
+unset key
+#set key outside
+plot  "out9" us 3:4 w l
+pause -1

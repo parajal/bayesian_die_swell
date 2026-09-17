@@ -1,0 +1,383 @@
+% !TEX root = userguide.tex
+
+\def\headdate{1st June 2007}
+
+\section{Convection-reaction equation using DG}
+
+In this section we consider the convection-reaction equation using the
+discontinuous Galerkin method (DG).
+For an introduction to DG we refer to the 
+book of Johnson \cite{Johnson87}.
+We will only consider problems without diffusion. Diffusion can
+be included with the Baumann-Oden approach
+Baumann-Oden approach \cite{Baumann99}, but we will not do that here.
+
+We consider only steady
+state problems where all unknowns are solved at once, fully coupled. In a
+time-dependent
+approach this would correspond to a fully implicit approach.
+
+\subsection{Weak form of the convection-reaction equation using discontinuous
+ Galerkin \fem}
+
+We consider the steady state convection-reaction equation in a region $\Omega$:
+\begin{equation}
+     \vec a\cdot\nabla u + b u = f\text{ on }\Omega
+\end{equation}
+where $\vek a$ is a divergence free velocity field ($\nabla\cdot\vek a=0$).
+The boundary conditions are
+\begin{gather}
+    u = u_\text{in}\text{ on }\Gamma_\text{in}
+\end{gather}
+where the boundary $\Gamma_\text{in}$ is the inflow boundary ($\vek a\cdot\vek
+n<0$).
+
+For discontinuous Galerkin \fem\ we first start with a finite element mesh
+before defining the weak form:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+The weak form can be now be stated, element wise, as:
+find $u$ for all elements $e$, such that
+\begin{equation}
+ \int_{\Omega_e}v\Big(\vek a\nabla\cdot u+bu-f\Big)\D x
+    +\int_{\Gamma^e_{\text{in}}}v\vek a\cdot\vek n[u]\D s=0,
+        \quad\text{for all }v 
+   \label{eq:DGweak}
+\end{equation}
+where $\Gamma^e_{\text{in}}$ is the inflow boundary of element $e$ and
+$[u]=u^+-u$ is the ``jump'' across that element boundary. Also, $\vek
+n$ is the outwardly directed unit normal vector on the boundary of
+the element and $u^+$ is
+the `outside' value of $u$.
+
+We interpolate $u$ and $v$ by
+polynomials on each element (approximation denoted by $u_h$ and $v_h$):
+\begin{align*}
+    u_h(\vek x,t)&=\tsum_i u_i(t)\phi_i(\vek x)=\col\phi^T(\vek x)\col u(t)
+\\
+    v_h(\vek x,t)&=\tsum_i v_i(t)\phi_i(\vek x)=\col\phi^T(\vek x)\col v(t)
+\end{align*}
+where $\col\phi(\vek x)$ are global shape functions. In contrast to Galerkin
+\fem, the shape functions are \emph{discontinuous} across element boundaries.
+This means that the first integral in Eq.~\eqref{eq:DGweak} only leads to
+coupling
+between unknowns \emph{within} an element. The boundary integral leads to a
+coupling of element unknowns with neighbor elements, but in a non-standard
+\fem\ way: all unknowns in an element are coupled with all unknowns of it's
+neighbors.
+ 
+Substituting the approximations into the weak form leads to
+\[
+ \col v^T\mat K\col u=
+        \col v^T\col f \quad\text{for all }\col v
+\]
+or
+\[
+ \mat K\col u= \col f
+\]
+where the `stiffness matrix' $\mat K$ and
+the right-hand side $\col f$ are given by the element matrices
+\begin{align*}
+ \mat K_e&=(\col\phi,\vek a\cdot\nabla{\col\phi^T}+b\col\phi)_{\Omega_e}
+    -\int_{\Gamma^e_{\text{in}}}\vek a\cdot\vek n\col\phi\col\phi^T\D s
+    +\int_{\Gamma^e_{\text{in}}}\vek a\cdot\vek n\col\phi\col\phi^{+T}\D s\\
+\col f_e&= (\col\phi,f)_{\Omega_e}
+\end{align*}
+where $\phi^{+}$ are the shape functions in \emph{all} neighbor
+elements\footnote{We only need to consider the boundary integration points
+where $\vek a\cdot\vek n<0$, however \tfem\ assumes that there is a full
+coupling between all neighbors (upstream and downstream). This has the
+advantage that it is easy to program, diffusion can be included easily and the
+resulting matrix has a symmetric pattern (preferable for the solvers). It
+is however possible to limit the coupling to certain degrees of freedom, for
+example only to the unknowns on the adjacent sides, greatly reducing the band
+width of the matrix.} and
+\[
+   (a,b)_{\Omega_e}=\int_{\Omega_e}ab\D x
+\]
+Using index notation this becomes:
+\begin{align*}
+ K^e_{ij}&=(\phi_i,\vek a\cdot\nabla{\phi_j}+b\phi_j)_{\Omega_e}
+    -\int_{\Gamma^e_{\text{in}}}\vek a\cdot\vek n\phi_i\phi_j\D s
+    +\int_{\Gamma^e_{\text{in}}}\vek a\cdot\vek n\phi_i\phi^+_j\D s\\
+f^e_i&= (\phi_i,f)_{\Omega_e}
+\end{align*}
+Note, that $\phi_j$ is only non-zero for $j$ in the current element $e$,
+whereas $\phi^+_j$ is only non-zero for $j$ in the neighbor elements.
+This means that the element matrix is \emph{non-square}. In \tfem\ the
+assembling is split as follows:
+\begin{enumerate}
+   \item standard \fem\ assembly for the first term (volume integral) and the
+         second term (boundary integral on the inside).
+   \item assembly of the boundary integral on the outside (third term)
+         is done for each side separately, i.e.\
+         first side 1, then side 2, etc., each needing a different element
+         matrix coupling the unknowns in the current element $e$ with a single
+         adjacent element. 
+\end{enumerate}
+Note, that for an element on the boundary not all sides have an adjacent
+element. If such a side is an inflow boundary, the value of $u^+=u_\text{in}$
+must be specified as boundary condition and the contribution of the boundary
+integral is to the right-hand side vector $\col f_e$ and not to the matrix.
+
+We have opted for an element based assembly of the boundary integral. This
+means that the integral is `scanned' twice, once from each element on a common
+edge. Another option is to use an edge based description and integrate on all
+edges and then compute the contribution to both elements on the common edge.
+However, this would require a completely different bookkeeping that is
+not available in \tfem.
+
+\subsection{Example using an imposed exact solution}
+
+We consider the steady state convection-reaction equation 
+\begin{equation}
+     \vec a\cdot\nabla u + u = f
+\end{equation}
+in a curved region with $\vec a=\vec e_1+2\vec e_2$. We impose the exact
+solution
+\begin{equation}
+     u=1+\sin(\pi x)\sin(\pi y)
+\end{equation}
+by adjusting the right-hand side $f$ accordingly. The example can be obtained
+by:
+\begin{quote}
+   \texttt{getexample convectionreaction}
+\end{quote}
+and the main program is \texttt{convectionreaction1.f90}. The main changes with
+respect to the Poisson problem of Ch.~\ref{ch:examples} are:
+
+\begin{listing}{47}
+! problem definition
+                                                                                
+  call create_input_probdef ( mesh, input_probdef, nvec=1 )
+                                                                                
+  input_probdef%elementdof(1)%a = [(0,i=1,8),9]
+  input_probdef%vec_elementdof(1)%a = reshape ( [(1,i=1,9)], [9,1] )
+                                                                                
+  call problem_definition ( input_probdef, mesh, problem )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 51] all unknowns are located in the center nodal point (node 9)
+since they are discontinuous across element boundaries.
+   \item[line 52] the vector will be used for plotting the solution in a
+continuous way.
+\end{description}
+
+\begin{listing}{61}
+! create system matrix
+                                                                                
+  call create_sysmatrix_structure_base ( sysmatrix, mesh, problem )
+                                                                                
+  call create_sysmatrix_structure_dg ( sysmatrix, mesh, problem, &
+    elemsubzeros=convecreac_sidelem_zeros )
+                                                                                
+  call finalize_sysmatrix_structure ( sysmatrix )
+                                                                                
+  call create_sysmatrix_data ( sysmatrix )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 63--68] the structure of the matrix has been split in a standard
+      \fem\ part, and a DG part.
+   \item[line 63] here the structure of the standard \fem\ part is created, but
+      it is not finalized. You cannot use the routine
+    \texttt{create\_sysmatrix\_structure} here, because this includes the
+     finalizing step.
+   \item[line 65--66] here the DG structure is added. Note, that a parameter
+    \texttt{elemsubzeros} is added, which supplies the name of an element
+     subroutine that delivers an element matrix of type logical that says which
+     components of the matrix are zero. In this particular
+     case only the unknowns on the
+     boundary need to be taken into account.
+   \item[line 68] here the system matrix is finalized and no more additional
+     structure can be added.
+\end{description}
+
+\begin{listing}{72}
+! build system
+                                                                                
+  funcnr = 1
+  funcnrinflow = 2
+  vfuncnr = 1
+                                                                                
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=convecreac_elem )
+                                                                                
+  call build_system_dg ( mesh, problem, sysmatrix, elemsub=convecreac_sidelem,
+&    addmatrix=.true., elemsubzeros=convecreac_sidelem_zeros )
+                                                                                
+  call check ( sysmatrix )
+                                                                                
+\end{listing}
+
+\begin{description}
+   \item[line 74-76] \texttt{funcnr} is for the right-hand side $f$,
+     \texttt{funcnrinflow} is for the value of $u$ at the inflow boundary and
+     \texttt{vfuncnr} is for the velocity $\vec a$.
+   \item[line 78] the standard \fem\ assembly
+   \item[line 80-81] the DG \fem\ assembly. Note that \texttt{addmatrix=.true.}
+    has been added, avoiding setting everything to zero again. Note that also
+    here the routine for the nonzero structure of the matrix has been added with
+    \texttt{elemsubzeros}.
+   \item[line 83] this is just a check that the matrix is indeed fully filled
+      as specified in the structure of the matrix.
+\end{description}
+
+\begin{listing}{89}
+! create exact solution
+                                                                                
+  call create_sysvector ( problem, solexact )
+                                                                                
+  funcnr = 2
+                                                                                
+  call fill_sysvector_elem ( mesh, problem, solexact, &
+    elemsub=convecreac_fillexact )
+                                                                                
+\end{listing}
+
+\begin{description}
+   \item[line 95] this routine fills the sysvector element for element.
+ This is 
+ in a way similar to the assembly process for system vectors.
+ However the difference is,
+ that if a node appears twice the last appearance counts, since the data is just
+ overwritten. Note, that an element routine must be written. Note also that
+ this is the only way the exact solution can be filled in, because the
+coordinate of the center node does not correspond to
+ the position of the unknowns there and \text{fill\_sysvector} cannot be used.
+\end{description}
+
+\begin{listing}{102}
+! compute vector for plotting
+
+  call create_vector ( problem, vector, vec=1, elementwise=.true. )
+
+  solution = sol
+
+  call derive_vector ( mesh, problem, vector, elemsub=convecreac_vecelem )
+
+! plot solution using figplot
+
+  call plot_color_fill ( plot_options, mesh, problem, filename='sol_f.fig', &
+    vector=vector )
+  call plot_color_contour ( plot_options, mesh, problem, filename='sol_c.fig', &
+    vector=vector )
+
+\end{listing}
+\begin{description}
+\item[line 104] Here vector is created for plotting. The vector has been
+defined elementwise (discontinuous across elements). Figplot can handle these
+kind of vectors. For output to other postprocessing programs it may be
+necessary to use a nodal averaged vector.
+\end{description}
+
+For details on the element implementation the reader is referred to the module 
+\texttt{convecreac\_elements\_m} that is in the same directory as the main
+program. An important structure for the implementation is
+\texttt{mesh\%sidelem}, which contains information on the adjacent elements on
+the sides of each element.
+
+Run the problem by typing
+\begin{quote}
+   \texttt{convectionreaction1}
+\end{quote}
+and you will get something like
+\begin{quote}
+   \texttt{7.525107316978308E-03}
+\end{quote}
+on your screen. Typing the command
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+will show something like Fig.~\ref{fig:vec}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{vec}
+   \end{center}
+   \caption{Plot of $u$ for the convection-reaction equation}
+    \label{fig:vec}
+\end{figure}
+
+\subsection{Example with periodic boundaries}
+
+We use the same exact solution as in the previous example, however on a square
+region $(0.2,2.2)\times(0.2,2.2)$. Furthermore, we use periodic boundaries
+conditions in $x$ and $y$ direction. 
+The main program is \texttt{convectionreaction2.f90}. The main change with
+respect to the previous example is the mesh generation:
+
+\begin{listing}{27}
+! mesh generation
+                                                                                
+  meshgen_options%regionshape = 1
+  meshgen_options%lx = 2.0_dp
+  meshgen_options%ly = 2.0_dp
+  meshgen_options%ox = 0.3_dp
+  meshgen_options%oy = 0.3_dp
+                                                                                
+  nx = 20
+  ny = 20
+                                                                                
+  meshgen_options%elshape = 6
+  meshgen_options%nx = nx
+  meshgen_options%ny = ny
+                                                                                
+  call quadrilateral2d ( mesh, meshgen_options )
+                                                                                
+  call add_to_mesh ( mesh, curve=[-3] )  ! curve 5
+  call add_to_mesh ( mesh, curve=[-4] )  ! curve 6
+                                                                                
+  call glue_mesh ( mesh, curve1=1, curve2=5 )
+  call glue_mesh ( mesh, curve1=2, curve2=6 )
+                                                                                
+  call fill_mesh_parts ( mesh )
+
+\end{listing}
+
+\begin{description}
+   \item[lines 29--42] generation of the square mesh
+   \item[lines 44--45] two new curves (C5 and C6) are added here, which are
+      defined in opposite direction to curves C3 and C4 (see
+      Fig.~\ref{fig:unitsquare}), respectively.
+   \item[line 47] curves C1 and C5 are glued together. This means that for
+     \dgfem\ these curves are the same: an element having a side on C1 is
+     assumed to have the corresponding element on C5 as its neighbor and vice
+     verse. So if there is inflow on curve C1 it comes from the outflow of C5
+     as if the periodic regions are all stacked to fill the infinite domain.
+    The two curves that are connected\footnote{Note that 'connected' has
+    a different meaning here than the connection using \texttt{meshconnect} in
+    \sep. In \sep\ the nodes are connected such that they have the same 
+    degrees of freedom. Here the routine \texttt{glue\_mesh} will only change
+    the `neighbors' of the elements, i.e.\ it changes the structure
+\texttt{mesh\%sidelem}, which contains information on the adjacent elements on
+the sides of each element.
+    Therefore the term 'glue' has been chosen to
+    emphasize the distinction.} should be in the same direction.
+   \item[line 48] curves C2 and C6 are glued together 
+   \item[line 50] the routine \texttt{fill\_mesh\_parts} must be called last.
+\end{description}
+
+Run the problem by typing
+\begin{quote}
+   \texttt{convectionreaction2}
+\end{quote}
+and you will get something like
+\begin{quote}
+   \texttt{6.052686362307824E-04}
+\end{quote}
+on your screen. Typing the command
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+will show something like Fig.~\ref{fig:vec2}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{vec2}
+   \end{center}
+   \caption{Plot of $u$ for the convection-reaction equation with periodical
+            boundary conditions.}
+    \label{fig:vec2}
+\end{figure}
+

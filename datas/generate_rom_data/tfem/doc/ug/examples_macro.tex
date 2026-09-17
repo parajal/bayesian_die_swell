@@ -1,0 +1,58 @@
+% !TEX root = userguide.tex
+
+\def\headdate{12th November 2021}
+
+\section{Macro elements and subdomain integration}
+\label{sec:macroelements}
+
+In this section some examples will be discussed
+using the $P_1\text{-iso-}P_2$ and $Q_1\text{-iso-}Q_2$ shape functions and higher-order variants.
+These shape functions are used together
+with the element shapes \texttt{elshape=33,34,35,36} and \texttt{elshape=105,106,107}, as shown in Figure~\ref{fig:elements3} and Figure~\ref{fig:elements5}, respectively.
+These 
+shape functions have the same nodal layout as the regular higher-order elements. However, the interpolation for the elements is divided into linear, bilinear or trilinear subelements\footnote{Note, that the additional element diagonal (in red in
+Figure~\ref{fig:elements3}) has been chosen to connect node 2 and 9. Since there are two other possible choices, the element will not be rotational invariant.}. On each subelement there is a linear ($P_1$) or bi-/trilinear ($Q_1$) interpolation.
+
+As such, a mesh consisting of macro elements is only a mesh consisting of 
+linear, bilinear and/or trilinear elements and therefore not particularly
+interesting. However, the shape functions  $P_1\text{-iso-}P_2$ and
+$Q_1\text{-iso-}Q_2$, for example, can replace the quadratic interpolation of the velocity
+in the Taylor-Hood $P_2/P_1$ triangles and $Q_2/Q_1$ quads, respectively.
+The resulting elements ($P_1\text{-iso-}P_2/P_1$ triangles, 
+$Q_1\text{-iso-}Q_2/Q_1$ quadrilaterals) have been introduced in
+\cite{Bercovier79} and fulfill
+the LBB criterion. For some applications linear shape functions might be preferred
+over higher-order ones, but this is beyond the scope of the present text.
+
+In order to use the macro elements, the following must be taken into account:
+\begin{itemize}
+  \item Generate a mesh using the higher-order shape functions and change the
+        element shape in the mesh manually in the main program to the
+        macro element shape. For that, you can use \texttt{mesh\_change} (see Sec.~\ref{sec:meshgenextra}).
+  \item Use the macro shape functions
+        in the element subroutines instead of the usual higher-order ones.
+  \item Change the volume and boundary integration to a subdomain integration\footnote{The
+splitting into subdomains has been implemented in a general way and 
+subdivision into $m^2$ triangles, quads and $m^3$ hexahedrons for
+$m=1,2,\ldots$ is available. For tetrahedron only the split into eight subtetrahedrons is currently available.}
+\end{itemize}
+
+The following existing examples have been modified to show the use of
+the macro elements:
+\begin{center}
+\begin{tabular}{lll}
+  Main problem & shape function & Section of original problem \\\hline
+  \texttt{poisson1a} & $Q_1\text{-iso-}Q_2$ & \ref{sec:poisson1} \\ 
+  \texttt{poisson1b} & $P_1\text{-iso-}P_2$ & \ref{sec:poisson1} \\ 
+  \texttt{stokes1a} & $Q_1\text{-iso-}Q_2$ & \ref{sec:driven_cavity2D} \\ 
+  \texttt{stokes9a} & $Q_1\text{-iso-}Q_2$ & \ref{sec:samplingobjects} \\ 
+  \texttt{stokes50} & $P_1\text{-iso-}P_2$ & \ref{sec:stokes3Ddrivencavity} \\ 
+  \texttt{couette1a} & $Q_1\text{-iso-}Q_2$ & \ref{sec:couette} \\ 
+  \texttt{couette1b} & $P_1\text{-iso-}P_2$ & \ref{sec:couette} \\ 
+  \texttt{sphere9a} & $P_1\text{-iso-}P_2$ & \ref{sec:sphere2} \\
+ \texttt{mixed\_stokes2} & $Q_1\text{-iso-}Q_p$ & \ref{sec:mixedcontraction} \\
+\end{tabular}
+\end{center}
+More examples are available in the \texttt{drop}, \texttt{moving\_boundary} and \texttt{fountain\_flow} examples.
+
+

@@ -1,0 +1,35 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+stress_work1
+
+ Steady Stokes flow and temperature problem with viscous dissipation.
+ Periodic pipe flow. Constant coefficients.
+ Error compared to analytical solution for velocity and temperature.
+
+stress_work2
+
+ Steady Stokes flow and temperature problem with viscous dissipation.
+ Periodic pipe flow with circumferential velocity included (swirl).
+ Constant coefficients.
+ Error compared to analytical solution for velocity and temperature (swirl
+ only).
+
+stress_work3
+
+ Start-up of an Oldroyd-B fluid flow and temperature problem with stress work
+ for the steady state.
+ Periodic pipe flow. Constant coefficients.
+ Error compared to analytical solution for velocity, conformation and
+ temperature.
+
+stress_work4
+
+ Start-up of an Oldroyd-B fluid flow and temperature problem with stress work
+ for the steady state.
+ Periodic pipe flow with circumferential velocity included (swirl).
+ Constant coefficients.
+ Error compared to analytical solution for velocity, conformation and
+ temperature (swirl only).

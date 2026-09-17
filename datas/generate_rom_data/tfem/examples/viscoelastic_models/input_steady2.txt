@@ -1,0 +1,23 @@
+&comppar
+  flowtype = 3           ! flow type:
+                         ! 1: shear
+                         ! 2: planar elongation
+                         ! 3: uniaxial elongation
+  includesolvent = F     ! solvent included only if .true. (T)
+  eta_s = 1.0            ! solvent viscosity
+  model   = 3            ! 2: Oldroyd model 3: Giesekus
+  alam_model = 2         ! adapted lambda model SRM1
+  G      = 10            ! modulus G
+  lambda = 0.1           ! relaxation time
+  mobility = 0.1         ! Mobility parameter for Giesekus
+  tau_y  = 0.3           ! tau_y
+  numdatapoints = 1000   ! number of steady data points for functions of
+                         !    shear rate (for flowtype=1)
+                         !    extension rate (for flowtype=2,3)
+  eps = 1.e-10           ! Newton-Raphson accuracy
+  maxnumiterations = 100 ! maximum number of iterations
+  start_rate = 0.001     ! start data point
+  end_rate = 1000        ! end data point
+  factor = 10000         ! data point distance: last=factor * first 
+  eigen = F              ! compute eigenvalues/vectors of Jacobian of rhs
+/

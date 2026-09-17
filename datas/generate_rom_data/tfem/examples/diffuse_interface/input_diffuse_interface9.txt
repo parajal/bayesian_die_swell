@@ -1,0 +1,17 @@
+&comppar
+  nx = 200   		! number of elements in x-direction
+  numtimesteps = 40000  ! number of time steps
+  outputstep = 100 	! interval for output file
+  rho = 1  		! density
+  eta = 1.0  		! viscosity
+  deltat= 5e-4  	! time step
+  alpha = 1.0  		! alpha parameter in di model
+  beta = 1.0  		! beta parameter in di model
+  gamm = 0.0  		! gamm parameter in di model
+  Mcoef = 1.0    	! M parameter in di model
+  kappa = 25e-6  	! kappa parameter in di model
+  epsdi = 1e-12 	! accuracy in Picard iteration
+  itermax = 150 	! maximum number of iterations in Picard iteration
+  rs_di = 1.0 		! real_storage for the conformation LU (HSL)
+  is_di = 1.0 		! integer_storage for conformation LU (HSL)
+/

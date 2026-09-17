@@ -1,0 +1,35 @@
+Real coefficients for the element routines in this add-on.
+
+-----------------------------------
+1   A: the constant cross sectional area of the truss or beam.
+
+2   Emod: the elastic modulus
+
+3   Iz: the constant second moment of area with respect to the neutral (local)
+    z-axis, commonly denoted by just I in 1D and 2D problems. Also Izz for 3D
+    beam problems.
+    NOTE: the (local) x-axis is along the beam.
+
+4   Constant scalar distributed load q. Available for 1D beams only.
+
+5-7 (qx,qy,qz): constant distributed load q. For a truss element the total
+    force on an elements is equally transferred to the nodes.
+
+8-10 (Zx,Zy,Zz): vector pointing in the local z-axis direction. Only relevant
+    for 3D beam elements. Defining the unit vector nz = Z/|Z|, the unit vector
+    in the direction of the local y-axis is ny = nz x e. Here, e is the unit
+    vector in the local x-axis direction. The positive direction of the x-as 
+    is given by local beam coordinate s, which starts from the first end node
+    (s=0) and ends at the final end nod (s=L).
+
+11  Iyy: the constant second moment of area with respect to the neutral (local)
+    y-axis. Only needed for 3D beams.
+
+12  Izy: the constant product moment of area with respect to the neutral (local)
+    z and y-axis. Only needed for 3D beams.
+
+13  J: the constant polar second moment of area. Only needed for 3D beams.
+
+14  Gmod: the shear modulus
+
+15-50 reserved for future use

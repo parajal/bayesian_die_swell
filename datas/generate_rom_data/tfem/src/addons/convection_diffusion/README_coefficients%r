@@ -1,0 +1,43 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+1   alpha: the constant diffusion coefficient
+
+2   sigma: the constant coefficient in the Robin boundary condition:
+
+     - alpha * du/dn = sigma u + h_R
+
+3   deltat: timestep
+
+4,5,6 (u,v,w): the constant velocity coefficient
+
+7   beta: the constant coefficient for the reaction term
+
+8   gamma: the constant coefficient for the time derivative terms ("rho c_p")
+
+9-17 alpha: the constant diffusion tensor coefficient. The tensor alpha is 
+    given by
+       reshape ( coefficient%r(9:8+ndim**2), (/ndim,ndim/) )
+    where ndim is the dimension of space. This means the tensor is stored/read
+    "column wise":
+     ndim=2  axx,ayx,axy,ayy
+     ndim=3  axx,ayx,azx,axy,ayy,azy,axz,ayz,azz
+
+18  the constant prescribed scalar for the embedded Dirichlet boundary condition
+
+19  kappa: diffusion coefficient parameter for embedded Dirichlet boundary 
+    and interface conditions
+
+20  factor for the Nitsche term in embedded Dirichlet boundary conditions.
+    NOTE: at this moment the scaling with the element size has not yet been
+    taken into account and this parameter is actually K/h.
+
+21  the constant prescribed scalar ibar for the embedded interface condition
+
+22  the constant prescribed scalar jbar for the embedded interface condition
+
+23  the constant value the normal flux h_N (Neumann boundary) of h_R
+    (Robin boundary).
+
+24-50 reserved for future use
+

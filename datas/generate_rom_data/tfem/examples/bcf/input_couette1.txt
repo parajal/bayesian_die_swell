@@ -1,0 +1,16 @@
+&comppar
+    nx=14                  ! number of elements in x
+    ny=14                  ! number of elements in y
+    timeint = 1            ! (first-order) time integration
+    eqnumtimesteps = 2000  ! number of equilibrium time steps
+    numtimesteps = 2000    ! number of time steps
+    printtimesteps = 10    ! print every .. timesteps
+    nfield=1000            ! number of fields
+    logq = 0               ! standard scheme or log transformation
+    eta_s = 0.1            ! solvent viscosity
+    modulus = 0.9          ! modulus
+    lambda = 1.0           ! relaxation time
+    deltat = 5.e-3         ! time step
+    rs_gup = 1.5           ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0           ! integer_storage gradient-velocity-pressure LU (HSL)
+/

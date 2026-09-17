@@ -1,0 +1,30 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+
+  1-100 all relevant real parameters from the stokes & viscoelastic add-on
+101-150 reserve for diffuse_interface add-on
+151-200 reserve for inertia add-on
+201-250 reserve for generalized Stokes add-on
+
+
+
+251 deltat: timestep in the compressible fluid model
+
+252 Compression modulus K in the CE for the pressure:
+      .
+      p/K + div u = 0
+
+253 Reference pressure p0, where the relative change in volume J=1.
+    NOTE: The value of p0 is not needed in the elements for compressible flow.
+          It is only used in post processing or for imposing a pressure
+          constraint for setting the pressure level for steady flow.
+    NOTE: The value of p0 should be equal to the initial value of the pressure
+          field p in case of time-dependent computions.
+
+254 The initial volume V0 for use in the pressure constraint.
+
+255 The value of p_level in the linear integral pressure constraint, i.e.
+    coefficients%i(308)=5.
+
+256-300 reserved for future use

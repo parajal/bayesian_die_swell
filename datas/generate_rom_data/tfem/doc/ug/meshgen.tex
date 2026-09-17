@@ -1,0 +1,1439 @@
+% !TEX root = userguide.tex
+
+\chapter{Mesh generation}
+\pgst{tfemch}
+
+\def\chaptertitle{Mesh generation}
+\def\headdate{3rd May 2022}
+
+In the examples of Chapter~\ref{ch:examples} we learned how to use the mesh
+generator on a simple geometry, such as a (curved) quadrilateral.
+In this chapter we will describe some further possibilities of the mesh
+generator and other information related to the mesh.
+
+\section{Other geometries: line in 1D, hexahedron in 3D}
+
+Other geometries available: \texttt{line1D} for meshes in 1D and
+\texttt{hexahedron} in 3D. For \texttt{hexahedron} also
+points, curves and surfaces are generated according to
+Fig.~\ref{fig:curves_hexa}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{curves_hexa}
+   \end{center}
+   \caption{Points, curves and surfaces generated in \texttt{hexahedron}.
+    Indicated are the positive direction of the curves and the four
+    corner points of the surfaces. The four points of a surface also indicate
+    the topology (like a 2D mesh) and the direction of the
+    normal vector on the surface (like a right-handed system).
+    }
+   \label{fig:curves_hexa}
+\end{figure}
+
+\section{Available elements}
+
+\subsection{Standard elements}
+
+In Figures~\ref{fig:elements1}, \ref{fig:elements2}, \ref{fig:elements3}, \ref{fig:elements4}, \ref{fig:elements5}
+ and \ref{fig:elements6}
+the available element shapes in \tfem\ are
+listed\footnote{The element shape numbers
+and nodal point numbering in Figures~\ref{fig:elements1} and
+\ref{fig:elements2} are compatible with \sep\ \cite{Segal93}.}.
+The elements in Figs.~\ref{fig:elements5}--\ref{fig:elements6} define the \emph{structured nodal numbering} 
+for high-order elements as used in \tfem.
+\begin{figure}[p]
+\begin{center}
+\includegraphics{elements1}
+\caption{Element shapes in \tfem\ (part 1).}
+\label{fig:elements1}
+\end{center}
+\end{figure}
+
+\begin{figure}[p]
+\begin{center}
+\includegraphics{elements2}
+\caption{Element shapes in \tfem\ (part 2).}
+\label{fig:elements2}
+\end{center}
+\end{figure}
+
+\begin{figure}[p]
+\begin{center}
+\includegraphics{elements3}
+\caption{Element shapes in \tfem\ (part 3).}
+\label{fig:elements3}
+\end{center}
+\end{figure}
+
+\begin{figure}[p]
+\begin{center}
+\includegraphics{elements4}
+\caption{Element shapes in \tfem\ (part 4).}
+\label{fig:elements4}
+\end{center}
+\end{figure}
+
+\begin{figure}[p]
+\begin{center}
+\includegraphics{elements5}
+\caption{Element shapes in \tfem\ (part 5). High-order elements with structured nodal numbering. The polynomial
+order in each direction $p$, $q$ and $r$ can be different. For the 3D hexahedron
+only the vertex nodes are shown. The first \texttt{elshape} number is the
+regular high-order element, whereas the second \texttt{elshape} number is the
+iso (macro) variant with linear (line), bilinear (quadrilateral) or trilinear (hexhedron) subelements.}
+\label{fig:elements5}
+\end{center}
+\end{figure}
+
+\begin{figure}[p]
+\begin{center}
+\includegraphics{elements6}
+\caption{Element shapes in \tfem\ (part 6). High-order triangle with structured nodal numbering.}
+\label{fig:elements6}
+\end{center}
+\end{figure}
+\clearpage
+%The mesh structure (\texttt{mesh\_t}) has been fully implemented for
+%all listed elements.
+%However, not all shape functions have been implemented at
+%this point. 
+%Also, not all elements are available in the
+%meshgenerator of \tfem. 
+
+All elements are isoparametric, i.e.\ the geometrical shape of an element is 
+determined by interpolation of 
+the position of the nodes:
+\begin{equation}
+    \vek x=\tsum_k \phi_k(\col \xi) \vek x_k
+\end{equation}
+using the same shape function as for an unknown quantity
+defined in all nodes:
+\begin{equation}
+    u=\tsum_k \phi_k(\col\xi )u_k
+\end{equation}
+where $\col\phi(\col \xi)$ is the element shape function as a function of the
+reference coordinates $\col\xi$.
+
+\subsection{Blended elements}
+\label{sec:blendedmeshes}
+
+Blended meshes are constructed by combining two or more meshes containing
+standard elements into a single mesh. For example combining a mesh containing
+quadratic triangles with a mesh containing linear triangles will give a mesh
+with a composite (blended) element having nine nodes, each having its own set of degrees of freedom (see Figure~\ref{fig:elements7})! 
+\begin{figure}[hbtp!]
+\begin{center}
+\includegraphics[scale=0.9]{elements7}
+\caption{Blended element shape, combining a quadratic and linear triangle.}
+\label{fig:elements7}
+\end{center}
+\end{figure}
+In this way, it becomes quite easy to create mixed elements with a different interpolation for coupled/mixed variables. Especially for higher-order elements this would otherwise be very difficult to achieve using a standard element, because of the different number and position of the nodes on edges/faces of the element (see Figure~\ref{fig:elements8}).
+\begin{figure}[hbtp!]
+\begin{center}
+\includegraphics[scale=0.9]{elements8}
+\caption{Blended element shape, combining a third-order and quadratic triangle.}
+\label{fig:elements8}
+\end{center}
+\end{figure}
+
+\noindent Some notes:
+\begin{itemize}
+ \item Nodes from the individual elements that occupy the same position remain
+separate nodes. Therefore, removing double nodes is not allowed for blended
+meshes.
+ \item Blended meshes are created using the routine \texttt{mesh\_convert} (see Sec.~\ref{sec:meshconvert}).
+ \item Meshes that are combined into a blended mesh need to be similar, such as having the same number of groups, number of elements per group and global shape (like triangle), same number of curves, surfaces. However, any standard element can be combined with any other standard element.
+ \item There is no limit to the number of meshes that can be combined.
+ \item The first mesh is called the main mesh (\texttt{blend=0}) and the other
+mesh(es) are numbered  \texttt{blend=1,\dots,nblend}. Hence, the number of
+meshes combined is \texttt{nblend+1}.
+ \item Plotting mixed quantities on their own mesh, instead of interpolating to the highest-order nodes, is easy.
+\end{itemize}
+
+\section{Setting mesh generator options}
+
+Directly setting mesh generator options in the structure
+\texttt{meshgen\_options} of type \texttt{meshgen\_options\_t} usually requires
+a lot of lines of code. Also if the mesh generator is called more than once
+(like in merging meshes) it is more easy to restart from the default values.
+For these reasons a helper routine (\texttt{set\_mesh\_options}) has been
+written which sets the structure to default value and the structure values can
+be set by heading parameters. For example
+\begin{listing}{1}
+   
+  call set_mesh_options ( mesh_options, elshape=9, nx=40, ny=40, &
+    lx=2._dp, ly=3._dp, ratio=[5,6,6,5] )
+
+\end{listing}
+Note, that \texttt{mesh\_options} is set to default values first, before setting
+the new values in the heading. Use \texttt{keep=.true.} in the heading to skip
+the setting to default values.
+
+\section{Mesh refinement}
+
+Similar to the mesh refinement in \sep, it is possible to refine the mesh along
+an interval in 1D or a side of a quadrilateral using the parameters
+\texttt{ratio} and \texttt{factor}. See the type \texttt{meshgen\_options\_t}
+for further information. 
+
+For coupling two domains using mortars that have been generated using
+\texttt{ratio} and \texttt{factor} you should be careful. For example in
+Fig.~\ref{fig:mesh1} two domains ($4\times4$ and $8\times8$ elements)
+are generated using a refinement towards the bottom. For both domains the same
+\texttt{ratio} and \texttt{factor} is used such that the bottom elements are
+four times smaller than the top elements. There is not a nice transition, like
+a split of each element into two elements. The integration of the mortar needs
+to be done with a very large number of integration points in order to get a
+smooth matching of the two solutions on both sides of the mortar. A better
+matching is achieved if the refined mesh is generated with the same four
+element distribution in vertical direction,
+but refined by a factor of two in an equidistant manner. In
+Fig.~\ref{fig:mesh2} is shown the result where the second domain is generated
+with four elements \texttt{ny=4} and the refinement option \texttt{ry=2} in
+vertical direction.
+\begin{figure}[!ht]
+   \begin{center}
+      \includegraphics[scale=0.5]{mesh1}
+   \end{center}
+    \caption{Mesh created using \texttt{ny=4}, \texttt{factor=4} in the first
+                  and   \texttt{ny=8}, \texttt{factor=4} in the second domain }
+    \label{fig:mesh1}
+\end{figure}
+\begin{figure}[!ht]
+   \begin{center}
+      \includegraphics[scale=0.5]{mesh2}
+   \end{center}
+    \caption{Mesh created using \texttt{ny=4}, \texttt{factor=4} in the first
+                  and   \texttt{ny=4}, \texttt{ry=2}, \texttt{factor=4},
+             in the second domain }
+    \label{fig:mesh2}
+\end{figure}
+
+\section{Adding new geometric entities to an existing mesh}
+\label{sec:addtomesh}
+
+Sometimes the default entities created by the mesh generator (such as four
+points and four curves) are insufficient. The routine \texttt{add\_to\_mesh}
+can add new entities to an existing mesh.
+
+\subsection{Points}
+
+It is possible to add a new point to the mesh.
+For example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, point=[1.5_dp,2._dp,0._dp] )
+   
+\end{listing}
+will add a point to the mesh. The corresponding nodal point
+will be the one that has the smallest distance to the coordinates
+$(1.5,2,0)$. A similar parameter (\texttt{points}) is available to add multiple
+points in one call.
+
+\subsection{Curves, surfaces and volumes}
+\label{sec:addcurves}
+
+It is possible to add new curves by combining existing curves.
+For example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, curve=[8,-12,-11] )
+   
+\end{listing}
+This will add a new curve consisting of curve 8, 12 and 11 where the latter two
+are traversed in reverse direction. 
+The reason for the latter possibility is twofold:
+\begin{enumerate}
+     \item the nodal points may need to be in the same order as another curve to
+       use the curve in periodical boundary conditions or in merging meshes.
+     \item the curve may be used in boundary conditions where the normal vector
+       needs to be consistently defined in the same direction on the whole
+       curve.
+\end{enumerate}
+The nodal points of the composite curve are all the unique nodal points
+in the set of given curves and the connectivity of all the elements
+in the given curves with the mesh nodal points is preserved. Thus if the
+individual curves are connected, so will be the composite curve. If the
+individual curves are disjunct, the composite curve will consist of
+disjunct parts.
+
+Another possibility to add curves is by renumbering an existing curve such that
+the numbering and topology is the same as another existing curve. For example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, matchingcurve=[4,2] )
+   
+\end{listing}
+which add a curve that has the same nodes as curve 4 but has the same numbering
+and topology as curve 2. In order for this to work the nodes of curve 2 and 4
+must coincide. If the curves are only translated with respect to each other,
+the optional argument \texttt{displacement} can be given
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, matchingcurve=[4,2], &
+                                   displacement=[-1._dp,0._dp] )
+   
+\end{listing}
+In the above example curve 4 is translated virtually over a
+vector (-1,0) to obtain identical coordinates\footnote{An optional argument \texttt{rotation\_angle}
+is available to perform a rotation before the displacement.}. The second curve (curve
+2 in the example) can be part of another mesh. In that case, the optional
+argument \texttt{matchingmesh} must be used:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, matchingcurve=[4,2], matchingmesh=mesh2 )
+   
+\end{listing}
+The coordinates of the nodes of both curves need to really match\footnote{Up to an accuracy given by the value of \textsc{\scriptsize EPSNODEOVERLAP}, which is part of the \texttt{limits\_m} module.}. Sometimes, the coordinates do not overlap and only in the neighbourhood. In that case, the argument \texttt{mindistance=.true.} finds nodes based on the minimum distance:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, matchingcurve=[4,2], matchingmesh=mesh2, mindistance=.true. )
+   
+\end{listing}
+This can sometimes be useful after remeshing if the coordinates of the nodes are changed only slightly.
+Finally, the added curve can replace an existing one by giving the argument
+\texttt{replace}:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, matchingcurve=[4,2], replace=1 )
+   
+\end{listing}
+where curve nr 1 will be replaced by the new curve. Note, that in the example 
+\texttt{replace=4} is allowed.
+
+It is possible to create a new curve from existing element groups. For
+example,
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, curvefromgroups=[1,3] )
+   
+\end{listing}
+will create a curve comprising of the nodes/elements in element groups
+1 and 3. Since curves consist of elements of the same shape the groups in the
+list must have the same element shape. Also the shape must be a line.
+
+New surfaces can be added by combining existing surfaces:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, surface=[8,9] )
+   
+\end{listing}
+Contrary to curves, it is not possible to use negative surface numbers to
+change the orientation of the surface. The orientation of surfaces can be
+changed using the routine \texttt{mesh\_convert} from the
+add-on Meshgen\_extra (see Sec.~\ref{sec:meshconvert}), but also by using the
+\texttt{matchingsurface} argument similar to curves:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, matchingsurface=[3,5], &
+                                   displacement=[-1._dp,0._dp, 0._dp] )
+   
+\end{listing}
+which add a surface that has the same nodes as surface 3
+but has the same numbering and topology as surface 5. The optional arguments
+\texttt{displacement}, \texttt{matchingmesh} and \texttt{replace} can be used
+here also.
+
+It is possible to create a new surface from existing element groups. For
+example,
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, surfacefromgroups=[1,3] )
+   
+\end{listing}
+will create a surface comprising of the nodes/elements in element groups
+1 and 3. Since surfaces consist of elements of the same shape the groups in the
+list must have the same element shape. Also the shape must be either triangular 
+or quadrilateral.
+
+A volume is similar to curves and surfaces, but now consisting of 3D elements.
+All elements in a volume are of the same shape.
+It is possible to create a new volume from existing element groups. For
+example,
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, volumefromgroups=[1,4] )
+   
+\end{listing}
+will create a volume comprising of the nodes/elements in element groups
+1 and 4. The groups in the
+list must have the same element shape. Also the shape must be either 
+hexahedral or tetrahedral.
+
+\subsection{Nodesets}
+\label{sec:nodesets}
+
+A nodeset is just a set of nodes and, unlike a curve, surface or volume, does
+not contain elements and corresponding topology. Examples for use of nodesets:
+\begin{itemize}
+   \item Setting essential boundary conditions for nodes not on a simple
+         geometry, like for example all nodes inside some object or all nodes 
+         having $x>0$.
+   \item Adding extended degrees of freedom in some nodes (XFEM).
+   \item Defining a vector subscript for the degrees of freedom in a
+         restricted set of nodes (see Sec.~\ref{sec:vectorsubscript}).
+\end{itemize}
+It is possible to add nodesets to a mesh by specifying the node numbers:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, nodeset='nodes', nodes=[5,8,11] )
+   
+\end{listing}
+or by combining previously defined nodesets:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, nodeset='merge', mergenodesets=[1,2] )
+   
+\end{listing}
+Other possibilities will be available at a later stage.
+It is also possible to replace existing nodesets:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, nodeset='nodes', nodes=[5,8,11], replace=3 )
+   
+\end{listing}
+where the third nodeset in the mesh will be replaced.
+
+\subsection{Elementsets}
+\label{sec:elementsets}
+
+An elementset is just a set of elements of an existing mesh.
+Examples for use of elementsets:
+\begin{itemize}
+   \item Defining and building constraints on only a part of the mesh. 
+   \item Building the system only on a part of the mesh.
+   \item Defining vector subscripts for the degrees of freedom on a restricted set of elements.
+\end{itemize}
+It is possible to add elementsets to a mesh by specifying the element numbers:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, elementset='elements', elements=[5,8,11] )
+   
+\end{listing}
+or by combining previously defined elementsets:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, elementset='merge', mergeelementsets=[1,2] )
+   
+\end{listing}
+Other possibilities will be available at a later stage.
+It is also possible to replace existing elementsets:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, elementset='elements', elements=[5,8,11], &
+    replace=3 )
+   
+\end{listing}
+where the third elementset in the mesh will be replaced.
+
+In the above examples the element numbers refer to the first group if multiple
+groups are defined. In the following example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, elementset='elements', group=2, &
+    elements=[5,8,11] )
+
+\end{listing}
+the element numbers refer to element group 2. It is only possible to add
+element numbers of a single group in one call. The \texttt{replace} command
+will completely erase an existing elementset. If only a single group needs to be
+replaced, use the \texttt{replacegroup} command together with the
+\texttt{group} command:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, elementset='elements', group=2, &
+    elements=[5,8,11], replacegroup=3 )
+   
+\end{listing}
+where the elements of group 2 in the third elementset in the mesh will
+be replaced.
+
+It is possible to add the nodes connected to an elementset:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, elementset='nodes', elemensetnr=3 )
+   
+\end{listing}
+For some applications the nodes in elementsets are required.
+
+\subsection{Objects}
+\label{sec:objects}
+
+An object is defined by a set of points with specified coordinates. Note, that
+this is different from curves, surfaces etc., which are a set of nodal points,
+i.e.\ points belonging to the mesh. Points in an object can intersect the
+elements in a mesh at any position. The main purpose of introducing objects is
+the possibility of defining constraints not necessarily connected to nodal
+points (see Chapter~\ref{ch:constraints}). Also the possibility to build the
+system of equations only on parts of the domain occupied by objects gives all
+kind of exiting possibilities.
+
+Objects can be defined by specifying the points by a user subroutine:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='coordinates', nnodes=16, objectsub=compcoor, &
+    objectcoornr=1 )
+
+\end{listing}
+Here, \texttt{nnodes} is the number of points in the object, \texttt{objectsub}
+is the user subroutine with the actual value \texttt{compcoor} and
+\texttt{objectcoornr} is the number supplied to the user subroutine. It is
+also possible to specify the points directly:
+\begin{listing}{1}
+  x(1,:) = [1.0_dp,1.5_dp]
+                                                                                
+  call add_to_mesh ( mesh, object='coordinates', nnodes=1, coor=x )
+
+\end{listing}
+where the object will consist of just a single point given by the coordinates
+in \texttt{x(1,:)}.
+
+Objects can also be defined by a mesh:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='mesh', objectmesh=mesh1 )
+
+\end{listing}
+where the nodal points of \texttt{mesh1} are used to define the object. It is
+also possible to import the topology of the mesh into the object:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='mesh', objectmesh=mesh1, topology=.true. )
+
+\end{listing}
+The topology is necessary for weak constraints on objects.
+
+Objects can also be defined by a curve or a surface:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='curve', objectcurve=2 )
+
+\end{listing}
+where the nodal points of curve 2 of the mesh \texttt{mesh}
+are used to define the object. It is
+also possible to import the topology of a curve or surface into the object.
+The curve or surface of another mesh can also be used:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='surface', objectsurface=4, objectmesh=mesh1 )
+
+\end{listing}
+where the nodal points of surface 4 of the mesh \texttt{mesh1} are used to
+define the object.
+
+Objects that have a topology (elements) can be used to define integral global
+and weak distributed constraints. In addition, integration points need to be
+defined on the elements. In the following example integration points are
+defined in the elements of the object made from a mesh:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='mesh', objectmesh=mesh1, topology=.true. &
+    intrule=1, nsubint=4 )
+
+\end{listing}
+Similarly, integration points can be added to objects made from curves or
+surfaces.
+The definition of \texttt{intrule} and \texttt{nsubint} can be found in the
+heading of \texttt{add\_to\_mesh}.
+
+If an object is made from a mesh, curve or surfaces there are possibilities to
+exclude some nodal points to be part of the object by using the heading
+parameters
+\texttt{step}, \texttt{exclude}, \texttt{excludepoints},
+\texttt{excludecurves}, \texttt{excludesurfaces},
+\texttt{xmin} and \texttt{xmax}.
+If nodal points are excluded from the object it
+is not possible to import the topology and objects are just a `bunch of
+points'.
+
+It is also possible to define `two-sided' objects that intersect with the mesh
+two times:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='curve', objectcurve=4, objectmesh=mesh3, &
+    typeofobject=2, excludegroups=[2], excludegroups2=[1] )
+
+\end{listing}
+where the nodal points of curve 4 of the mesh \texttt{mesh3} are used to define
+an object that is two-sided (\texttt{typeofobject=2}). In order to achieve that
+the intersections are different on both `sides' of the object we use
+at least two
+element groups. In the example above we have two element
+groups and exclude the second
+group from the first intersection and exclude the first group from the second
+intersection. In this way we can for example do fluid-solid interactions where
+element group 1 is the fluid mesh and element group 2 is the solid mesh. A
+different possibility for getting the same results is to include groups, for
+example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='curve', objectcurve=4, objectmesh=mesh3, &
+    typeofobject=2, includeonlygroups=[1], excludegroups2=[1] )
+
+\end{listing}
+
+Sometimes the intersecting is not unique, for example if the intersection
+point is at the boundary of an element. To make it unique it is possible to
+request that the intersection is in elements that are fully embedded in a
+nodeset (all nodes of the element must belong to a nodeset):
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='curve', nodeset=1 )
+
+\end{listing}
+and
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='curve', typeofobject=2, &
+    nodeset=1, nodeset2=3 )
+
+\end{listing}
+for two-sided objects.
+
+It is also possible to replace existing objects:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, object='mesh', objectmesh=mesh1, replace=3 )
+   
+\end{listing}
+where the third object in the mesh will be replaced.
+
+The example \texttt{objects\_in\_mesh.f90} (get with \texttt{getexample
+meshes}) will create the mesh shown in Fig.~\ref{fig:objectsinmesh}.
+\begin{figure}[!ht]
+   \begin{center}
+      \includegraphics[width=10cm]{objects_in_mesh}
+   \end{center}
+    \caption{Mesh created by \texttt{objects\_in\_mesh.f90}}
+    \label{fig:objectsinmesh}
+\end{figure}
+
+\red{WARNING}: if the co-ordinates of an object are
+changed directly by the user, the reference coordinates of the object
+points\footnote{
+\texttt{mesh\%objects(:)\%refcoor} and for two-sided objects
+also \texttt{mesh\%objects(:)\%refcoor2}}
+and the element and group information 
+of the object points\footnote{\texttt{mesh\%objects(:)\%grpelm}
+and for two-sided objects also \texttt{mesh\%objects(:)\%grpelm2}}
+are out of sync. This is also true for all data (coordinates and reference
+coordinates) of the integration points, if present.
+In that case,
+the routine \texttt{find\_refcoor\_objects} must be called for each
+affected object to make the data up-to-date. Note, that
+\texttt{find\_refcoor\_objects} is called in the routine
+\texttt{fill\_mesh\_parts}. So that when you make a new mesh and finalize the
+mesh with \texttt{fill\_mesh\_parts} the object data is up-to-date.
+Note that the routine \texttt{find\_refcoor\_objects} has an optional parameter
+to update only the first side of a two-sided object:
+\begin{listing}{1}
+  call find_refcoor_objects ( mesh, object1=1, updaterefcoor2=.false. )
+\end{listing}
+In this way the reference coordinates of the
+intersections with a Lagrangian solid mesh are left unchanged. Also note that 
+the routine \texttt{find\_refcoor\_objects} has additional optional parameters
+to map the coordinates before intersections with the mesh are computed:
+\begin{listing}{1}
+  call find_refcoor_objects ( mesh, object1=1, mapcoor=mapcoor, mapcoornr=1 )
+\end{listing}
+The coordinates of the object are not affected, only the reference coordinates
+of the intersections.
+
+\red{WARNING}: the routine \texttt{find\_refcoor\_objects} uses either
+blocks or sblocks (see Sec.~\ref{sec:blocks}) to find the elements and
+reference co-ordinates.
+This means that if the coordinates of the mesh have been
+changed directly by the user (e.g.\ when an ALE mesh is used),
+the blocks or sblocks need to be updated. In case blocks are used,
+the bounds of the blocks need to be updated before calling
+\texttt{find\_refcoor\_objects}:
+\begin{listing}{1}
+
+  call find_bounds_blocks ( mesh )
+  call find_refcoor_objects ( mesh )
+
+\end{listing}
+It is also possible to fully redefine the blocks (see Sec.~\ref{sec:blocks}),
+but this takes more time.
+In case sblocks are used, they need to be completely redefined
+before calling
+\texttt{find\_refcoor\_objects}:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, sblocks=... )
+  call find_refcoor_objects ( mesh )
+
+\end{listing}
+If only the coordinates of the objects change,
+there is no need to update the blocks/sblocks.
+
+\red{WARNING}: Adding/replacing objects after the finalizing of the mesh
+(with the call of \texttt{fill\_mesh\_parts}) the added/replaced objects still
+need to be finalized. Therefore the routine \texttt{fill\_mesh\_parts\_objects} 
+needs to be called with the added/replaced object numbers as arguments to
+finalize these objects.
+
+\subsection{Blocks and sblocks (structured blocks)}
+\label{sec:blocks}
+
+In order to find the element in which a point (given by its coordinates) is
+positioned, we need to search the elements. Searching all elements one by one
+is a very slow process. Therefore we need to ``pre-order'' the elements to
+quickly find the right element.
+In \tfem\ there are two methods available for ordering the elements:
+\begin{description}
+   \item[blocks] A block is just a subset of the set elements. The collection
+      of all blocks consist of all elements of the mesh.
+      An element can be part
+        of a \emph{single block} only, i.e.\ the blocks are disjoint.
+      The bounds of a block can be easily computed from the bounds of the
+      elements and can be made part of the properties of a block.
+      In searching for an element we need to check first whether the point
+      given falls within the bounds of a block. If not, we can ignore the
+      block. If yes, we need to search all elements within the block.
+      There is an optimum for the size of a block, depending on the mesh (see
+      below). The search time grows for larger meshes.
+   \item[sblocks] A structured block (sblock) is also a subset of the set of
+      elements. The elements in an sblock are found from a ``structured
+      equidistant grid'': they are the elements that are (partly) within a
+      single cell of the grid. Since elements can be part of several cells,
+      elements can be in several sblocks (sblocks are not disjoint).
+      In searching for an element we need to first find the cell of a point,
+      which can be done very quickly. For finding the element 
+      we need to search all elements within the sblock. If the size of a cell 
+      is similar to the size of an element, the search time will be independent
+      of the mesh.
+\end{description}
+The search time when using sblocks is smaller than when using blocks. 
+The search time
+is also larger for larger meshes when using blocks. For sblocks the search time
+is independent from the mesh.
+However,
+sblocks need more memory (minor point) and more CPU time to build the
+structure. The latter can be important if the mesh changes every time step.
+If only the coordinates of the mesh change, we only need to rebuild the bounds
+of a block, which is relatively cheap. 
+
+The default in \tfem\ is the use of a small (non-optimal) number of blocks.
+Therefore, it is up to the user to choose the right method and the optimal
+number of blocks/sblocks.
+
+We now give a more detailed description of the use of blocks and sblocks.
+
+\subsubsection{Blocks}
+
+Blocks can be added to the mesh
+using the routine \texttt{add\_to\_mesh}. For example in 2D:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, blocks=[8,12] )
+
+\end{listing}
+will divide the complete mesh into $8\times12$ regular rectangular blocks and
+add the
+elements that have the first node in a certain rectangle to the corresponding
+block. Elements can belong to a single block only. Hence, invoking the
+routine \texttt{add\_to\_mesh} again, for example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, blocks=[3,3] )
+
+\end{listing}
+will add 9 blocks to the mesh, but they will be empty. Note, that in 
+the routine \texttt{fill\_mesh\_parts} the following command will be issued:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, blocks=[2,2] )
+
+\end{listing}
+if no blocks or sblocks
+have been defined before the call to \texttt{fill\_mesh\_parts}.
+Hence, the default is to divide the mesh into $2\times2$ blocks. If the user
+wants to define his/her own blocks the call to \texttt{add\_to\_mesh}
+should preferably be issued before the call to \texttt{fill\_mesh\_parts}.
+It is also possible to define the blocks after the call to
+\texttt{fill\_mesh\_parts}, but all previous blocks need to be removed first:
+\begin{listing}{1}
+
+  call delete_blocks ( mesh )
+  call add_to_mesh ( mesh, blocks=[8,16] )
+
+\end{listing}
+which divides the mesh into $8\times16$ blocks.
+
+\red{NOTE}: the routines \texttt{write\_mesh}/\texttt{read\_mesh} write/read 
+blocks if previously defined (see Sec.~\ref{sec:iomesh}). This means, that if
+the writing of the mesh is \emph{after} the call \texttt{fill\_mesh\_parts} 
+the mesh in the written file will contain blocks. After reading the mesh in
+a separate program it \emph{will contain blocks even if}
+\texttt{fill\_mesh\_parts} \emph{is not yet called}. Therefore it is a good idea
+to always call \texttt{delete\_blocks} first before defining blocks.
+
+It is also possible to define blocks in a subdomain of the mesh:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, blocks=[4,4], &
+    blocksdomain=reshape( [ -1._dp, 0._dp, 1._dp, 2._dp ], [2,2] )  )
+
+\end{listing}
+will divide the rectangular domain between $(-1,0)$ and $(1,2)$ into $4\times4$
+blocks. The routine \texttt{add\_to\_mesh} can be invoked several times. In
+order to check whether all elements are covered by the blocks, add
+\begin{listing}{1}
+
+  call check_blocks ( mesh )
+
+\end{listing}
+to your program.
+
+Associated with each block is a window which gives maximum and minimum
+coordinates such that all the elements in the block are positioned between
+these coordinates. In addition there are windows for each element in the
+block. This means, that \red{\emph{if the coordinates of the nodal
+points of the mesh are changed by the user,
+these windows will be out of sync}}. It is 
+up to the user to synchronize the bounds by:
+\begin{listing}{1}
+
+  call find_bounds_blocks ( mesh )
+
+\end{listing}
+or to redefine the blocks after such a change, for example by:
+\begin{listing}{1}
+
+  call delete_blocks ( mesh )
+  call add_to_mesh ( mesh, blocks=[8,16] )
+
+\end{listing}
+In the first case, only the bounds will be recomputed using the current
+coordinates of the mesh, leaving the elements in the blocks the same. If the
+blocks are refined, the distribution of the elements over the blocks may also
+change due to the change of the coordinates.
+
+The main application of blocks is currently the search for the elements in which
+the points of objects are positioned. If the number of points is large, the
+searching can become a significant part of the CPU time. For example in mixing
+applications the number of points can grow exponentially. In that case it is
+important to find the optimal number of blocks for the mesh at hand. For
+example for a 1D mesh with $n$ elements, a 2D mesh having $n\times n$ elements
+and a 3D mesh with $n\times n\times n$ elements the optimum value for 
+\texttt{blocks} is roughly $\sqrt{n}$ in each space dimension. Don't expect
+miracles: the time required for the routine \texttt{find\_refcoor\_objects}
+consists of the time for a Newton-Raphson iteration within an element in
+addition to the searching time.
+
+\subsubsection{Sblocks}
+
+Sblocks can be added to the mesh
+using the routine \texttt{add\_to\_mesh}. For example in 2D:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, sblocks=[8,12] )
+
+\end{listing}
+will divide the complete mesh domain into $8\times12$ regular equidistant
+rectangular cells and add the
+elements that are (partly) within a certain rectangle to the corresponding
+sblock. Invoking the routine \texttt{add\_to\_mesh} again, for example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, sblocks=[3,3] )
+
+\end{listing}
+will completely remove the old sblocks and define a new regular 3 by 3 grid
+and corresponding sblocks.
+If sblocks are defined, any blocks that are defined will be ignored.
+Also if sblocks are defined 
+before the call to \texttt{fill\_mesh\_parts} no blocks will be defined at all.
+
+It is also possible to define sblocks in a subdomain of the mesh:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, sblocks=[4,4], &
+    blocksdomain=reshape( [ -1._dp, 0._dp, 1._dp, 2._dp ], [2,2] )  )
+
+\end{listing}
+will divide the rectangular domain between $(-1,0)$ and $(1,2)$ into $4\times4$
+sblocks. If the coordinates of a point are outside this domain, no element will
+be found while searching.
+
+\red{\emph{If the coordinates of the nodal
+points of the mesh are changed by the user the sblocks need to be redefined by 
+issuing a new call to}} \texttt{add\_to\_mesh}.
+
+The main application of sblocks is currently the search for the elements
+in which
+the points of objects are positioned. If the number of points is large, the
+searching can become a significant part of the CPU time. For example in mixing
+applications the number of points can grow exponentially. In that case it is
+important to find the optimal number of sblocks for the mesh at hand.
+It is advised to take the size of the "regular grid" elements to be similar
+to size of the real elements.
+
+\subsection{Nodblocks (nodal blocks)}
+\label{sec:nodblocks}
+
+In order to find the nodes that are close to a point (given by its
+coordinates) we need to search the nodes. Searching all nodes one by one
+is a very slow process. Therefore we need to ``pre-order'' the nodes to
+quickly find the closest nodes.
+In \tfem\ we use the following method for ordering the nodes:
+\begin{description}
+   \item[nodblocks] Each node is surrounded by a small ``box'' that 
+      extends to all coordinate directions in the same
+      way\footnote{The size of the box is an adjustable parameter in the module
+      \texttt{limits\_m}.}.
+      In 3D the box is a small
+      cube with the node at the center.
+      A nodal block (nodblock) is a subset of the set of
+      nodes. The nodes in a block are found from a ``structured
+      equidistant grid'': they are the nodes where the small box
+      is (partly) within a single cell of the grid.
+      Since nodes (i.e.\ the box around it) can be part of several cells,
+      nodes can be in several nodblocks (nodblocks are not disjoint).
+      In searching for an node close to a point,
+      we need to first find the cell of a point,
+      which can be done very quickly. For finding a node close to the point 
+      we need to search all nodes within the nodblock. If the size of a cell 
+      is similar to the size of an element, the search time will be independent
+      of the mesh.
+\end{description}
+
+We now give a more detailed description of the use of nodblocks.
+
+Nodblocks can be added to the mesh
+using the routine \texttt{add\_to\_mesh}. For example in 2D:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, nodblocks=[8,12] )
+
+\end{listing}
+will divide the complete mesh domain into $8\times12$ regular equidistant
+rectangular cells and add the
+nodes that have their ``boxes'' (partly) within a certain rectangle
+to the corresponding
+nodblock. Invoking the routine \texttt{add\_to\_mesh} again, for example:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, nodblocks=[3,3] )
+
+\end{listing}
+will completely remove the old nodblocks and define a new regular 3 by 3 grid
+and corresponding nodblocks.
+
+It is also possible to define nodblocks in a subdomain of the mesh:
+\begin{listing}{1}
+
+  call add_to_mesh ( mesh, nodblocks=[4,4], &
+    blocksdomain=reshape( [ -1._dp, 0._dp, 1._dp, 2._dp ], [2,2] )  )
+
+\end{listing}
+will divide the rectangular domain between $(-1,0)$ and $(1,2)$ into $4\times4$
+nodblocks.
+If the coordinates of a point are outside this domain, no nodes will
+be found while searching.
+
+\red{\emph{If the coordinates of the nodal
+points of the mesh are changed by the user the nodblocks
+need to be redefined by issuing a new call to}} \texttt{add\_to\_mesh}.
+
+The main application of nodblocks is currently the removal of nodes that have
+the same coordinates (within a certain accuracy).
+
+\section{Creating meshes for complex geometries}
+\label{sec:complexmeshes}
+
+The mesh generator in \tfem\ is simple: it generates a regular mesh on a simple
+geometry such as a rectangle or a cuboid.
+It also generates some points, curves and surfaces
+automatically. For example \texttt{quadrilateral2d} will generate a regular
+mesh on quadrilateral and also generate four points and four curves.
+
+The points and curves in the mesh are not an integral part of the mesh
+generation, they are just added afterward. The sole purpose of points and
+curves is to have a symbolic way of denoting a bunch of nodal points for
+applying boundary conditions, for example.
+They are also not really numbered in an
+absolute sense, i.e.\ curve 3 is just the third curve defined in the mesh. If
+by some routine this curve would be removed from the mesh the old curve 4 will
+become curve 3. This is different from \sep, where complicated geometries can
+be created by starting from a number of (numbered) points and
+defining (numbered) curves between points.
+The points and curves form the basis of the mesh generation in \sep\ and very
+complicated geometries and general mesh refinement procedures can be used to
+generate a mesh. A routine
+for reading a \sep-generated mesh is available as an add-on (see
+section~\ref{sec:readsepmesh}).
+
+It is also possible to generate more complex geometries in \tfem\ using the
+existing mesh generator on simple geometries to create separate meshes and 
+merge them together to create a new mesh with a more complicated geometry (see
+section~\ref{sec:meshgenextra}).
+
+Routines for reading 
+meshes generated by Gmsh (see Sec.~\ref{sec:readgmshmesh}), 
+Gambit (see Sec.~\ref{sec:readgbtmesh}),
+or NX-Ideas (universal file format, see Sec.~\ref{sec:readideasmesh})
+are also available.
+
+\section{Additional possibilities for mesh generation in \tfem\
+       (module meshgen\_extra)}
+\label{sec:meshgenextra}
+
+The following additional routines are provided:
+\begin{itemize}
+\item \texttt{mesh\_merge} to generate more complex meshes by merging simple ones.
+\item \texttt{mesh\_convert} to convert a mesh to another (basic) mesh with
+     different properties.
+\item \texttt{mesh\_change} to change a basic mesh (in place). 
+\item \texttt{mesh\_skeleton} to create a mesh that still needs the coordinates
+and topology to be filled.
+\item \texttt{geometry\_skeleton} to create a geometry (curve,surface,volume)
+that still needs the nodes and topology to be filled.
+\end{itemize}
+
+\subsection{Mesh\_merge}
+
+Examples:
+\begin{listing}{1}
+
+  call mesh_merge ( mesh1, mesh2, mesh3 ) 
+
+\end{listing}
+will create \texttt{mesh3} from two existing meshes \texttt{mesh1} and
+\texttt{mesh2}. In this example the new mesh \texttt{mesh3}
+will consist of just the sum of \texttt{mesh1} and \texttt{mesh2}, i.e.\ all
+nodes, elements, curves are still there even if they overlap.
+It should be
+recalled here that there is no absolute numbering of nodes, points and curves.
+For example if both \texttt{mesh1} and \texttt{mesh2}
+are made with \texttt{quadrilateral2d}, \texttt{mesh3} will have eight curves,
+with the first four the curves in \texttt{mesh1} and the last four from
+\texttt{mesh2}.
+\begin{listing}{1}
+
+  call mesh_merge ( mesh1, mesh2, mesh3, curve1=2, curve2=-4 ) 
+
+\end{listing}
+will create \texttt{mesh3} from two existing meshes \texttt{mesh1} and
+\texttt{mesh2}, where curve 2 of \texttt{mesh1} is assumed to be connected to
+curve 4 (in reverse direction) of \texttt{mesh2}.
+In this example the new mesh \texttt{mesh3} will exist of
+\begin{enumerate}
+ \item all nodal points of \texttt{mesh1} and all nodal points of
+        \texttt{mesh2}, except the nodal points on curve 4, which are replaced
+       by the nodal points on curve 2 of \texttt{mesh1}.
+ \item all elements of \texttt{mesh1} and \texttt{mesh2},  
+ \item the points of \texttt{mesh1} and \texttt{mesh2} such that no points
+       overlap (point to the same nodal point in the new mesh).
+ \item all curves of \texttt{mesh1} and all curves \texttt{mesh2}, except curve
+       number 4.
+\end{enumerate}
+If the two input meshes each consist of a single element group, the output mesh
+will be one element group also. If two element groups need to be created in the
+output mesh an extra parameter is needed:
+\begin{listing}{1}
+
+  call mesh_merge ( mesh1, mesh2, mesh3, nogroupmerge=.true. )
+
+\end{listing}
+If at least one of the two input meshes consists of multiple
+element groups, the output mesh will have multiple element groups also. The
+number of groups will be equal to the sum of number of groups of
+the two input meshes.
+It is possible to merge groups also in the merging of the two meshes with
+the extra parameters \texttt{mergegroups, mergegroup1, mergegroup2}, for which
+we refer to the source code of the routine \texttt{mesh\_merge}.
+
+It is advised to make a plot of the points and curves after
+each merge, for example by using
+the routine \texttt{plot\_points\_curves} in the add-on Figplot (see
+Sec.~\ref{sec:figplot}). 
+The reason is that the numbering of the points and curves in the new
+mesh is difficult to track manually. 
+
+We refer to the source file (tag: \texttt{mesh\_merge}) for further
+possibilities (connecting multiple curves and surfaces, deleting additional
+curves in the merge process, creating separate
+groups, connecting points). A full example that generates a mesh for a
+contraction geometry from seven separate meshes can be obtained by
+\begin{quote}
+   \texttt{getexample meshes}
+\end{quote}
+The source code is \texttt{contraction.f90}. Run the problem in the usual way:
+\begin{quote}
+   \texttt{getmdefs >Mdefs.mk}\\
+   \texttt{fmm >Makefile}\\
+   \texttt{make}\\
+   \texttt{contraction}
+\end{quote}
+This will create the mesh shown in Fig.~\ref{fig:mesh}.
+\begin{figure}[!ht]
+   \begin{center}
+      \includegraphics[width=10cm]{mesh}
+   \end{center}
+    \caption{Mesh created by \texttt{contraction.f90}}
+    \label{fig:mesh}
+\end{figure}\\
+Some remarks:
+\begin{itemize}
+   \item the curve numbers in \texttt{curve1=} and \texttt{curve2=} refer to
+         the numbering in the old meshes \texttt{mesh1} and
+         \texttt{mesh2}, respectively.
+   \item after each call of \texttt{mesh\_merge} a call to
+         \texttt{plot\_points\_curves} has been made to visualize the making of
+         the mesh. Use \texttt{viewfig} to view the graphics files.
+   \item three working meshes have been defined \texttt{mesh1}, \texttt{mesh2}
+         and \texttt{mesh3}. After each merge the two old meshes are deleted
+         and reused in the next step of mesh generation and merging.
+   \item the connecting curves \texttt{curve1} and \texttt{curve2} can only be
+         single curves. To connect multiple curves the parameters 
+         \texttt{curves1} and \texttt{curves2} are used instead.
+   \item the mesh generation can be part of the computational main program, but
+         more commonly the mesh will be written to a file (see
+         Sec.~\ref{sec:iomesh}).
+\end{itemize}
+
+A similar example but for 3D is given by the 
+source code in \texttt{contraction3D.f90}.
+This example will create the mesh shown in Fig.~\ref{fig:mesh_contraction_3D}.
+\begin{figure}[!ht]
+   \begin{center}
+      \includegraphics[width=10cm]{mesh_contraction_3D}
+   \end{center}
+    \caption{Mesh created by \texttt{contraction3D.f90}}
+    \label{fig:mesh_contraction_3D}
+\end{figure}
+
+\subsection{Mesh\_convert}
+\label{sec:meshconvert}
+
+Note, that the mesh produced by \texttt{mesh\_convert} is just a basic mesh and 
+\texttt{fill\_mesh\_parts} still needs to be called to use it further.
+
+Examples:
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh ) 
+
+\end{listing}
+copies the basic mesh\footnote{The copied mesh is just a basic mesh. Also
+volumes, objects, blocks and nodesets are not copied. To include these in the
+copy use the \texttt{copy} routine for a mesh,
+which is part of the core of \tfem.}
+in \texttt{mesh1} to a new mesh \texttt{mesh},
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, elementshapes='lagrange' ) 
+
+\end{listing}
+converts serendipity elements (\texttt{elshape=30,31})
+in \texttt{mesh1} to Lagrangian
+interpolated elements (\texttt{elshape=6,14})
+in \texttt{mesh}. All other elements are just copied.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, elementshapes='serendipity' ) 
+
+\end{listing}
+converts Lagrange elements (\texttt{elshape=6,14}) in \texttt{mesh1} to
+serendipity elements (\texttt{elshape=30,31}) in \texttt{mesh}.
+All other elements are just copied.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, elementshapes='extend' ) 
+
+\end{listing}
+converts ``standard'' elements in \texttt{mesh1} to
+extended elements in \texttt{mesh}. 
+All other elements are just copied.
+For example 6-node triangles will be converted to 7-node triangles.
+All element shapes (\texttt{elshape}) that can be generated
+using the various values for the keyword \texttt{elementshapes}
+have been summarized in the following table
+\begin{center}
+\begin{tabular}{c|ccc}
+ & \multicolumn{3}{c}{\texttt{elshape} in \texttt{mesh} with
+\texttt{elementshapes=}}\\\cline{2-4}
+\texttt{elshape} in \texttt{mesh1} &
+ \texttt{'extend'} & \texttt{'extend14'} & \texttt{'reduce'} \\\hline
+3 & 10 & & \\
+4 &  7 & & \\
+5 &  9 & & \\
+7 & & & 4 \\
+9 & & & 5 \\
+10 & & & 3 \\
+11 & 18 & & \\
+12 & 16 & 15  & \\
+13 & 17 & & \\
+15 & & & 12 \\
+16 & & & 12 \\
+17 & & & 13 \\
+18 & & & 11
+\end{tabular}
+\end{center}
+For elements not in the list or if the result in the table is empty, the
+elements are just copied.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, elementshapes='spectraltolinear' ) 
+
+\end{listing}
+converts high-order elements (\texttt{elshape=101,102,103,104})
+in \texttt{mesh1} to linear 
+elements (\texttt{elshape=1,5,13,3}) in \texttt{mesh}. All other elements are
+just copied. An example is giving in \texttt{mesh\_spectral\_quad.f90}.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, elementshapes='quadratictolinear' ) 
+
+\end{listing}
+converts second-order elements in \texttt{mesh1} to linear  elements in \texttt{mesh}. Each quadratic element becomes a single linear element, hence no subdivision like \texttt{elementshapes='spectraltolinear'}. The nodal sequence of the vertices is preserved to easily copy linear data to the linear mesh.
+
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, coordinates=[2,3,1] ) 
+
+\end{listing}
+performs a cyclic rotation of the coordinate axes. Other possibilities
+are available, for example
+\begin{description}
+   \item{\texttt{coordinates=[1,2,-3]}}: mirrors the mesh with respect to 
+the $(x,y)$ plane. In this case, an additional argument \texttt{mirror=.true.} should be given:\\
+\hspace*{1mm}\texttt{ call mesh\_convert ( mesh1, mesh, coordinates=[1,2,-3], mirror=.true.\,)}\\
+to correct the topology of the elements to obey the standard nodal sequence. Otherwise
+Jacobians will become negative.
+   \item{\texttt{coordinates=[1,2,0]}}: a 3D mesh will be projected on the 
+the $(x,y)$ plane; a 2D mesh will be converted to a 3D mesh with $z=0$.
+   \item{\texttt{coordinates=[1,2]}}: a 3D mesh will be projected on the 
+the $(x,y)$ plane and converted to a 2D mesh.
+\end{description}
+Note, that a change of dimension and/or setting coordinates to zero is only
+available for line, triangular or quadrilateral elements.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, orientation=[2,-1,-4], &
+    surfaces=[3,4,6]  ) 
+
+\end{listing}
+will change the orientation (nodal numbering and topology) of the surfaces 3, 4 and 6,
+using \texttt{orientation=2}, \texttt{-1} and
+\texttt{-3}, respectively. The absolute value of \texttt{orientation} (a value between 1 and 4)
+means the number of rotations +1. The sign of \texttt{orientation} denotes the view, with
+1 no change in view and -1 means flipping (viewing from the other side).
+If the example above refers to a mesh made directly with \texttt{hexahedron}
+(see Fig.~\ref{fig:curves_hexa}), then surfaces  3, 4 and 6 get the orientation
+\texttt{P3-P7-P6-P2}, \texttt{P3-P4-P8-P7} and
+\texttt{P7-P6-P5-P8}, respectively.
+Note, that \texttt{orientation=1} does not change the orientation.
+Note, that it only works for meshes made with \tfem\ using \texttt{hexahedron} and descendants
+thereof using routines such as \texttt{mesh\_convert} and \texttt{mesh\_merge}.
+An example is given in the source code \texttt{mesh\_center\_refine3D.f90}.
+This example\footnote{A similar example, 
+\texttt{mesh\_center\_refine3D\_2.f90} is given that uses \texttt{add\_to\_mesh}
+together with the keyword \texttt{matchingsurface} 
+(see Sec.~\ref{sec:addcurves}) to change the orientation
+more easily.}
+ will create the mesh shown in
+Fig.~\ref{fig:mesh_center_refine3D}
+\begin{figure}[!ht]
+   \begin{center}
+      \includegraphics[width=5cm]{mesh_center_refine3D}
+   \end{center}
+    \caption{Mesh created by \texttt{mesh\_center\_refine3D.f90}}
+    \label{fig:mesh_center_refine3D}
+\end{figure}
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, userelmesh=<user_subroutine_name> )
+
+\end{listing}
+will convert \texttt{mesh1} to \texttt{mesh}, where some elements are removed
+or replaced with a submesh supplied by the supplied user subroutine. See the source code
+for the interface description to the user subroutine. The purpose of this option
+is for plotting \xfem\ data.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, remove_double_nodes=.true. )
+
+\end{listing}
+will convert \texttt{mesh1} to \texttt{mesh}, where nodes having the same
+coordinates\footnote{The accuracy for detecting overlap of nodes is given 
+by an adjustable parameter in the module \texttt{limits\_m}.} 
+will be replaced with a single node. This requires \texttt{mesh1}
+to have \texttt{nodblocks} (see Sec.~\ref{sec:nodblocks}) to be defined.
+The purpose of this option is to turn a non-conforming mesh into a conforming
+one (if possible).
+Combined with \texttt{mesh\_merge}, complex meshes can be created without
+having to worry about the orientation of curves or surfaces. Combined with
+\texttt{mesh\_convert(\ldots,userelmesh=\ldots)} any mesh can be easily
+converted to another one, for example:
+\begin{itemize}
+   \item refine a (2D) mesh two times by replacing each quad element with
+         a $2\times2$ quad mesh
+   \item convert a mesh of linear triangles to a mesh having quadratic
+         triangles.
+   \item convert a linear mesh to a spectral mesh.
+   \item \dots
+\end{itemize}
+Double nodes can be removed using the \texttt{remove\_double\_nodes}
+option afterward as a second operation after
+\texttt{mesh\_convert(\ldots,userelmesh=\ldots)}.
+  The user still has to write a \texttt{userelmesh}
+ routine, but it is a quite feasible 
+  to have a standard set of routines made available (not yet implemented).
+  For some very common situations (like linear to quadratic or refine) it is
+  better to develop a special routine that is more efficient than the 
+  \texttt{userelmesh} option (still used together with the
+  \texttt{remove\_double\_nodes} option, though).
+
+The example \texttt{poisson1c} shows how to merge two separate meshes into one
+conforming mesh using the \texttt{remove\_double\_nodes} option.
+The examples \texttt{eltree4} 
+and \texttt{eltree6} (see Sec.~\ref{sec:exampleeltree}) show how to
+use the \texttt{remove\_double\_nodes} option to make the surface mesh obtained
+from an \texttt{eltree} conforming. 
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, remove_isolated_nodes=.true. )
+
+\end{listing}
+will convert \texttt{mesh1} to \texttt{mesh}, where isolated
+nodes have been removed. Isolated nodes are nodes that are not connected
+to the internal mesh.
+Note, that geometries (points, curves, surfaces) that are connected to
+isolated nodes are removes as well.
+Also points connected to nodal point zero (as sometimes generated by sepran)
+are removed.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, only_groups=[1,2] )
+
+\end{listing}
+will convert \texttt{mesh1} to \texttt{mesh}, where only the specified
+element groups (in this example 1 and 2)
+are kept. Points, curves and surface that are fully connected to the specified
+element groups are also kept. This means that element groups can be ``separated''
+(double curves/surfaces) along group boundaries. For example, if a conforming mesh consists of two element
+groups, converting each group into a separate mesh and then merging them
+again, will split the groups along the interface curve/surface between the
+two groups. The interface will have the same nodal coordinates and topology
+on both sides, but different node numbers.
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, blendmesh=mesh2 )
+
+\end{listing}
+will combine \texttt{mesh1} and \texttt{mesh2} into a new blended mesh
+\texttt{mesh}, with an element shape combining the two shapes of the two meshes
+(see Sec.~\ref{sec:blendedmeshes}).
+\begin{listing}{1}
+
+  call mesh_convert ( mesh1, mesh, blend=1 )
+
+\end{listing}
+Will extract the mesh with number \texttt{blend=1} from the blended mesh \texttt{mesh1} into a regular mesh
+\texttt{mesh}. A value of \texttt{blend=0} will give the main mesh (see
+Sec.~\ref{sec:blendedmeshes}).
+
+\subsection{Mesh\_change}
+
+NOTE: \texttt{mesh\_change} generally can only operate on \emph{basic} meshes, except for \texttt{regular\_to\_macro} and \texttt{macro\_to\_regular}.
+
+\begin{listing}{1}
+
+  call mesh_change ( mesh, remove_double_nodes_geometries=.true. )
+
+\end{listing}
+will change the basic \texttt{mesh} to a new one, where the nodes in points and geometries (curves, surfaces, volumes) are unique (no double nodes). Note, that this operation has already been performed if the mesh is created with the \texttt{remove\_double\_nodes} option of \texttt{mesh\_convert} (see Sec.~\ref{sec:meshconvert}).
+\begin{listing}{1}
+
+  call mesh_change ( mesh, regular_to_macro=.true. )
+
+\end{listing}
+will change the elements in groups and geometries to macro elements (see Sec.~\ref{sec:macroelements}, where possible. Restricting the change to specific element groups, blend meshes and geometries is possible. For example
+\begin{listing}{1}
+
+  call mesh_change ( mesh, regular_to_macro=.true, &
+    groups=[1,2], blends=[0], curves[3,4,5] )
+
+\end{listing}
+will perform the change only on the specified groups, blend meshes and curves. Here, \texttt{blends=[0]} means the main mesh only.
+\begin{listing}{1}
+
+  call mesh_change ( mesh, macro_to_regular=.true. )
+
+\end{listing}
+performs the opposite operation, i.e.\ it will change the macro elements in groups and geometries to regular elements.
+Restricting the change to specific element groups, blend meshes and geometries is again possible.
+
+\subsection{Mesh\_skeleton}
+The routine \texttt{mesh\_skeleton} creates a mesh that still needs the coordinates
+and topology to be filled.
+
+Example:
+\begin{listing}{1}
+
+  call mesh_skeleton ( mesh, nnodes=101, nelem=100, elshape=1, ndim=2 )
+
+\end{listing}
+or with optional argument \texttt{callname}:
+\begin{listing}{1}
+
+  call mesh_skeleton ( mesh, nnodes=101, nelem=100, elshape=1, ndim=2, &
+    callname='mysubroutine' )
+
+\end{listing}
+will create \texttt{mesh} of type \texttt{mesh\_t} containing 101 nodes and 100 two-node line elements
+in two space dimensions. The optional argument \texttt{callname} specifies the calling routine. 
+The user stills needs to fill the coordinates and topology, for example:
+\begin{listing}{1}
+
+  do node = 1, mesh%nnodes
+    mesh%coor(node,:) = ( node - 1 ) * [ deltax, deltay ]
+  end do
+
+  do elem = 1, mesh%nelem
+    mesh%topology(1)%a(:,elem) = [ elem, elem + 1 ]
+  end do
+
+\end{listing}
+Note, that the mesh produced is just a basic mesh and 
+\texttt{fill\_mesh\_parts} still needs to be called to use it further.
+
+\subsection{Geometry\_skeleton}
+The routine \texttt{geometry\_skeleton} creates a geometry (curve, surface, volume) that still needs the nodes and topology
+to be filled.
+
+Example:
+\begin{listing}{1}
+
+  call geometry_skeleton ( geometry, nnodes=11, nelem=10, elshape=1, ndim=2 )
+
+\end{listing}
+or with optional argument \texttt{callname}:
+\begin{listing}{1}
+
+  call geometry_skeleton ( geometry, nnodes=11, nelem=10, elshape=1, ndim=2, &
+    callname='mysubroutine' )
+
+\end{listing}
+will create \texttt{geometry} of type \texttt{geometry\_t} containing 11 nodes and 10 two-node line elements
+in two space dimensions. The optional argument \texttt{callname} specifies the calling routine. The user stills needs to fill the nodes and topology, for example:
+\begin{listing}{1}
+
+  geometry%nodes = [ 8, 7, 100, 101, 102, 5, 6, 7, 10, 11 ]
+
+  do elem = 1, geometry%nelem
+    geometry%topology(:,elem,1) = [ elem, elem + 1 ]
+    geometry%topology(:,elem,2) = geometry%nodes( [ elem, elem + 1 ] )
+  end do
+  
+\end{listing}
+Note, that the component \texttt{nodes} refers to the nodes in the corresponding mesh and therefore a geometry cannot exist on its own. The first part of the topology (\texttt{topology(:,:,1)}) refers to the local node numbering, whereas the second part (\texttt{topology(:,:,2)}) refers to the nodal numbering of the mesh.
+Note, that the geometry produced is just a basic geometry and 
+\texttt{fill\_mesh\_parts} still needs to be called for the corresponding mesh to use it further.
+
+

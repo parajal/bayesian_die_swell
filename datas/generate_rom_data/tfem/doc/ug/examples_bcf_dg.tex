@@ -1,0 +1,215 @@
+% !TEX root = userguide.tex
+
+\def\headdate{6th February 2009}
+
+\section{Viscoelastic fluid flow using stochastic models (BCF)}
+\label{sec:bcfdg}
+
+\subsection{Weak form of the equations}
+
+We assume the user is already familiar with Secs.~\ref{sec:weakviscoelastic}
+and \ref{sec:DGweak}.
+
+The equations for the flow of a single-mode viscoelastic fluid
+in a region $\Omega$ are given by Eqs.~\eqref{eq:ve1}--\eqref{eq:ve3}. For the
+BCF computations the viscoelastic fluid model is replaced by the BCF equation
+(derived from Eq.~\eqref{eq:Langevin}) \cite{Hulsen97}:
+\begin{equation}
+  \mathrm{d}\vek{Q}=
+     (-\vek u\cdot\nabla\vek Q+\ten L\cdot\vek Q - \frac{1}{2\lambda_H}\vek F_c)
+    \mathrm{d}t+\frac{1}{\sqrt{\lambda_H}}\mathrm{d}\vek W,
+\end{equation}
+where $\vek Q(\vek x,t)$ is a configuration field and
+$\mathrm{d}\vek W(t)$ is the Wiener increment. The stress tensor
+ $\ten\tau$ is now
+determined by the ensemble $\vek Q_\text{ens}$ using the usual stress expression
+Eq.~\eqref{eq:sttress} extended to the full domain $\Omega$.
+
+For the discontinuous Galerkin \fem\ we first start with a finite element mesh
+before defining the weak form:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+The weak form can be now be stated, element wise for the BCF equation,
+as:
+Find $\vek u$, $p$ and $\ten c$ such that
+\begin{alignat}{2}
+ \big(\vek v,\rho(\pderiv{\vek u}t+\vek u\cdot\nabla\vek u)\big) +
+  \big((\nabla\vek v)^T,2\eta_s\ten D\big)
+    &-(\nabla\cdot\vek v,p)+\big((\nabla\vek v)^T,\ten\tau(\vek
+Q_\text{ens}\big)\notag\\
+    &=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\rho\vek b)
+&&\text{for all }\vek v\\
+  \,(q,\nabla\cdot\vek u)&=0,&&\text{for all }q\\
+ \int_{\Omega_e}\ten R:\big(
+ \mathrm{d}\vek Q +\vek u\cdot\nabla\vek Q-\ten L\cdot\vek Q + \frac{1}{2\lambda_H}\vek F_c)
+    \mathrm{d}t&-\frac{1}{\sqrt{\lambda_H}}\mathrm{d}\vek W,
+\big)\D x\notag\\
+    &+\int_{\Gamma^e_{\text{in}}}(\vek u\cdot\vek n)\vek R:[\vek Q]\D s = 0,
+  &&\text{for all }\vek R,\Omega_e
+   \label{eq:weakQDG}
+\end{alignat}
+using appropriate spaces for $\vek u$, $p$, $\vek Q$, $\vek v$, $q$ and 
+$\vek R$.
+The function space for $\vek Q$ and $\vek R$ is discontinuous on the
+element boundaries.
+In equation~\eqref{eq:weakQDG} $\Gamma^e_{\text{in}}$ is the
+inflow boundary of element $e$ and
+$[\vek Q]=\vek Q^+-\vek Q$ is the ``jump'' across that element boundary.
+Also, $\vek n$ is the outwardly directed unit normal vector on the boundary of
+the element and $\vek Q^+$ is
+the `outside' value of $\vek Q$.
+
+The weak form can be used to obtain an approximate solution
+by interpolating $\vek u$, $p$ and $\vek Q$ 
+(and similarly $\vek v$, $q$ and $\vek R$) by
+polynomials on each element:
+\begin{align}
+    \vek u_h&=\tsum_k \phi_k(\vek x)\vek u_k=\col\phi^T(\vek x)\col{\vek u}\\
+    p_h&=\tsum_k \psi_k(\vek x) p_k=\col\psi^T(\vek x)\col{ p} \\
+  \ten Q_h&=\tsum_k \theta_k(\vek x)\vek Q_k=\col\theta^T(\vek x)\col{\vek Q}
+  \label{eq:thetaQDG}
+\end{align}
+where $\col\phi(\vek x)$, $\col\psi(\vek x)$, $\col\theta(\vek x)$
+are global shape functions. Note, that most terms in the momentum balance and
+the continuity equation can be build using standard (Navier-) Stokes elements.
+
+As explained in Sec.~\ref{sec:timeDG} the `mass' matrix $\mat M$ of the
+discretized weak form of Eq.~\eqref{eq:weakQDG} is block diagonal:
+\begin{equation}
+   \mat M=\begin{pmatrix}
+              \mat M_1 & \mat 0 & \hdotsfor{2} & \mat 0 \\
+              \mat 0 & \mat M_2 & \mat 0 & \ldots & \mat 0 \\
+                              \vdots &  && \ddots  & \vdots \\
+              \mat 0 & \hdotsfor{2} & \mat 0 & \mat M_{N_e}
+      
+          \end{pmatrix}
+\end{equation}
+with $\mat M_e$ the mass matrix of element $e$. We can take this one step
+further to a fully diagonal matrix by
+\begin{itemize}
+   \item using a Gauss rule for integration of the volume integrals having the
+     same number of points as the number of `nodes' or unknowns per element for
+     a single component of $\vek Q$,
+   \item locating the nodes of the element in the Gauss points.
+\end{itemize}
+This procedure is called collocation. For example with $Q_2-P_1^d$
+ velocity-pressure
+elements and $Q_1$ interpolation for the $\vek Q$,
+we have four nodes for $\vek Q$
+in each element. Using a 2$\times$2 Gauss-Legendre integration rule and
+locating the nodes in the Gauss points will lead to collocation. We still have
+to use the 3$\times$3 Gauss integration
+for the momentum balance for accuracy reasons. For the collocation procedure
+we split the volume integral of the weak form of the Langevin equation 
+Eq.~\eqref{eq:weakQDG} into two parts:
+\begin{multline}
+ \int_{\Omega_e}\ten R:\Big(
+ (\mathrm{d}\vek Q -\ten L\cdot\vek Q + \frac{1}{2\lambda_H}\vek F_c)
+    \mathrm{d}t-\frac{1}{\sqrt{\lambda_H}}\mathrm{d}\vek W
+\Big)\D x\\+
+ \int_{\Omega_e}\ten R:\big(
+ \vek u\cdot\nabla\vek Q \big)\D x
+    +\int_{\Gamma^e_{\text{in}}}(\vek u\cdot\vek n)\vek R:[\vek Q]\D s = 0,
+  \label{eq:weakQDG2}
+\end{multline}
+If we apply the collocation procedure the coupling between the nodes/Gauss
+points for $\vek Q$ fully disappears for the first part. Multiplying the
+equation with the inverse of the diagonal mass matrix shows that the first part
+on integration point level is identical to what we have in a traditional
+Brownian dynamics simulation. There is an extra term due to the second
+part (convection of fields $\vek Q$). Note, that we do not fully apply the
+collocation procedure for the volume integral of the convection term
+(the second term): we use the $3\times3$ Gauss integration rule used for the
+momentum balance (for $Q_2-P_1^d$), but the
+shape functions of $\vek Q$ are still based on the nodes in the $2\times2$
+Gauss points (for $Q_1$), of course.
+
+We will be using the DEVSS formulation for the momentum balance
+(see Sec.~\ref{sec:weakviscoelastic}).
+
+\subsection{Time discretization (without inertia)}
+
+Assuming $\vek u^{n}$ and $\vek Q^n_\text{ens}$ is known we can compute
+$\vek Q^{n+1}_\text{ens}$ by
+time advancing Eq.~\eqref{eq:weakQDG2} using methods from Brownian dynamics
+treating the convection term as an explicit force.
+Then we compute $\vek u^{n+1}$, 
+$\vek p^{n+1}$ and $\ten E^{n+1}$ from the momentum balance,
+continuity equation and projection equation at time $t^{n+1}$:
+\begin{align}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +\nabla p^{n+1} 
+  -2\alpha\nabla\cdot\big( \ten D(\vek u^{n+1}) -\ten E^{n+1} \big)
+&=\nabla\cdot\ten \tau(\vek Q^{n+1}_\text{ens})
+        + \rho\vek b \label{eq:mombalQDG}\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\ten D(\vek u^{n+1})+\ten E^{n+1} &= \ten 0
+\end{align}
+We call this scheme the \emph{explicit stress} formulation: the stress tensor
+$\ten \tau(\vek Q^{n+1}_\text{ens})$ in the momentum balance is
+computed in an
+explicit way from $\vek Q^{n+1}_\text{ens}$, which itself has been
+computed first from the Langevin equation.
+
+The time integration procedure described above is only suitable for fluids
+where $\eta_s\neq0$. For fluids with $\eta_s=0$, such as melts described by a
+large number of relaxation times, other procedures are required.
+For small values of
+$\eta_s$ the time step limitation can be very severe and the explicit stress
+formulation cannot be used either. 
+
+\subsection{Planar Couette flow of a Hookean dumbbell}
+\label{sec:bcfcouette}
+
+We consider a Hookean dumbbell fluid for a planar Couette problem on a
+unit square.
+The problem is similar to the problem for an Oldroyd-B fluid in
+Sec.~\ref{sec:couette}, but now using the BCF/DG method.
+The problem is part of the example files in `bcf':
+\begin{quote}
+   \texttt{getexample bcf}
+\end{quote}
+There is one example file: \texttt{couette1.f90}.
+The input file is \texttt{input\_couette1.txt}.
+The reader is advised to study the example in detail.
+For the equation \eqref{eq:weakQDG2} it is not necessary to build a matrix, nor
+is it necessary to build the vector by FEM assembly, because the unknowns on
+element level are are decoupled from other elements. Therefore we use a
+simplified `build-system' called \texttt{loop\_over\_elements} in which the
+system vector is directly written to a vector in the structure
+\texttt{oldvectors\_t}.
+
+\subsection{Flow around a cylinder between two plates for a Hookean dumbbell
+model.}
+
+The problem is part of the example files in `bcf':
+\begin{quote}
+   \texttt{getexample bcf}
+\end{quote}
+There is a mesh-generation file: \texttt{mesh\_confined\_cylinder.f90}.
+There are two main files: \texttt{cylinder1.f90} and \texttt{cylinder2.f90}.
+The input files are \texttt{input\_cylinder1.txt} and
+\texttt{input\_cylinder2.txt}, respectively. The main program
+\texttt{cylinder2.f90} differs only from \texttt{cylinder1.f90} by the addition
+of the output of $\det\ten c$ in various ways.
+The post-processing files are \texttt{post\_cylinder.f90} and 
+\texttt{streamfunction.f90}.
+
+NOTE: there used to be an example called \texttt{bcf\_sepmesh}, where the same
+cylinder problem is given, however using a \sep-generated mesh. 
+This example has been moved to the legacy repository.
+
+\subsection{Flow around a cylinder between two plates for a FENE dumbbell
+model.}
+
+The problem is part of the example files in `bcf':
+\begin{quote}
+   \texttt{getexample bcf}
+\end{quote}
+There is a mesh-generation file: \texttt{mesh\_confined\_cylinder.f90}.
+The main file is: \texttt{cylinder3.f90}.
+The input file is \texttt{input\_cylinder3.txt}.
+The post-processing files are \texttt{post\_cylinder.f90} and 
+\texttt{streamfunction.f90}.
+

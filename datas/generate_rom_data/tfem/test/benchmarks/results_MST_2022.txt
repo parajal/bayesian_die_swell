@@ -1,0 +1,63 @@
+Apple M1 Max (Mac Studio, 2022, 64GB) 
+
+GNU Fortran (Homebrew GCC 11.3.0_1) 11.3.0
+gfortran 11.3.0, -O2 march=native -funroll-loops -fstack-arrays 
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+Apple Framework Accelerate (-framework accelerate)
+Threading with VECLIB_MAXIMUM_THREADS
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1    1.34845 142.01614 2m23.659s 2m22.982s 0m0.512s
+   2    1.34305 133.53754 1m55.876s 2m14.335s 0m0.662s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    1.41076 147.22786 2m28.878s 2m27.824s 0m0.950s
+   2    1.42131 85.36092  0m48.652s 1m24.835s 0m2.123s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.41934 25.70677  0m29.085s 0m28.469s 0m0.429s  1.60659
+   2    1.41294 21.76637  0m17.787s 0m23.956s 0m0.965s  1.60569
+
+Solver: sparskit2, metis5
+threads build   precond   matvec  real      user      sys       renumber
+   1    1.42627 148.63005 8.69699 2m39.982s 2m39.568s 0m0.259s  .93124
+
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+OpenBLAS 0.3.20
+Threading with OMP_NUM_THREADS
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1    1.34034 123.63732 2m5.260s  2m4.682s  0m0.427s
+   2    1.33795 181.37752 1m42.259s 2m58.995s 0m3.837s
+   3    1.33988 321.12750 2m18.464s 5m10.648s 0m11.949s
+   4    1.34307 305.85330 1m44.649s 4m58.313s 0m9.014s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    1.42163 176.47014 2m58.196s 2m57.274s 0m0.769s
+   2    1.41169 192.54718 1m42.008s 3m12.896s 0m1.199s
+   3    1.41639 195.99718 1m15.859s 3m14.916s 0m2.648s
+   4    1.41321 207.28142 1m3.284s  3m25.755s 0m3.078s
+   5    1.42007 213.57280 0m55.066s 3m31.717s 0m3.427s
+   6    1.41379 308.04929 1m5.413s  5m6.001s  0m3.602s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.41567 41.74232  0m45.363s 0m44.605s 0m0.336s  1.60422
+   2    1.41380 44.66696  0m28.665s 0m47.105s 0m0.714s  1.60305
+   3    1.41279 48.06213  0m26.362s 0m49.161s 0m2.055s  1.60438
+   4    1.41226 50.41260  0m24.047s 0m51.186s 0m2.379s  1.60393
+   5    1.41338 53.03056  0m22.654s 0m53.508s 0m2.675s  1.60363
+   6    1.41359 161.96913 0m46.041s 2m42.301s 0m2.827s  1.60958
+   7    1.41313 235.12189 0m52.899s 3m54.978s 0m3.301s  1.60702
+   8    1.41188 287.26413 0m58.935s 4m46.696s 0m3.741s  1.60757

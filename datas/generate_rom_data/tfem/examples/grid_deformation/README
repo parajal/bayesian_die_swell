@@ -1,0 +1,34 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+grid_deformation1
+
+ Grid deformation: elements are "attracted" towards a circle.
+
+grid_deformation2
+
+ Grid deformation for where the elements are "attracted" towards a sphere.
+
+grid_deformation3
+
+ Grid deformation: the elements are "attracted" towards a circle.
+ Periodical boundary conditions in x-direction  
+
+grid_deformation4
+
+ Grid deformation for where the elements are "attracted" towards a sphere.
+ Periodical boundary conditions in x-direction
+
+grid_deformation5
+
+ Grid deformation: elements are "attracted" towards two circles.
+
+grid_deformation6
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+ Grid deformation.
+ This problem is similar to example stokes8, but now with grid deformation.

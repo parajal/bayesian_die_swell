@@ -1,0 +1,92 @@
+% !TEX root = userguide.tex
+
+\def\headdate{14th September 2024}
+
+\section{Steady state viscoelastic fluid flow obtained using Newton-Raphson iteration}
+\label{sec:steadyviscoelastic}
+
+In this section some examples will be given that obtain the steady state solution
+of the equations for viscoelastic fluid flow using Newton-Raphson iteration. For that, we will make use of the
+Jacobian of the nonlinear equations used for Newton-Raphson iteration in implicit time-discretization schemes of
+Sec.~\ref{sec:implicit}.
+
+The steady state solution must fulfill the equations Eqs.~\eqref{eq:impve1}--\eqref{eq:impve3} with the time-derivatives $\plderiv{\vek u}t$ and $\plderiv{\ten c}t$ set to zero.
+When discretizing the steady state equations in space, we obtain a set of nonlinear equations:
+\begin{equation}
+  \col F(\col u) = \col 0
+\end{equation}
+where $\col u$ is the column vector of unknown degrees of freedom. The Jacobian of $\col F(\col u)$ has
+already been determined in the time-discretization schemes of
+Sec.~\ref{sec:implicit} and can be reused here to perform a Newton-Raphson iteration for finding a steady state solution.
+This is indeed possible for the conformation tensor formulation, since $\plderiv{\ten c}t=\col 0$. However for the contravariant deformation or b-tensor formulation (see Sec~\ref{sec:CDTformulation}) we have seen that the $\ten b$ tensor will not be in a steady state even if $\ten c$ is. This means that $\plderiv{\ten b}t\neq\col 0$ and an additional nonlinear term needs to be added (see \cite{JaenssonHulsen2024}) to take that effect into account:
+ \begin{equation}
+  \col T(\col b) + \col F(\col u) = \col 0
+\end{equation}
+where $\col b$ are the b-tensor unknowns.
+Hence the Jacobian consists of the sum of the Jacobion of $\col T(\col b)$ and the Jacobion  of $\col F(\col u)$.
+
+\subsection{Planar Couette flow for a Weissenberg number (Wi) of 10}
+\label{sec:couette_steady_implicit}
+
+A Couette flow example \texttt{couette27.f90} is available that first computes the steady state using Newton-Raphson iteration instead of using time stepping to a steady state (such as example \texttt{couette22a.f90} in Sec.~\ref{sec:couette_implicit}). Then the flow is perturbed and solved using fully-implicit time integration. It uses element level rotation reinitialization like example \texttt{couette22a.f90}.
+
+We refer to Sec.~\ref{sec:couette} for a description of the Couette problem.
+
+The example can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+
+\subsection{Flow around a cylinder between two plates (fully implicit and steady state)}
+\label{sec:confcyl2}
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_b}
+\end{quote}
+
+The examples describe the flow
+around a fixed cylinder positioned between two walls. 
+
+The example \texttt{cylinder7.f90} uses
+fully-implicit time discretization for a few steps and the last step uses Newton-Raphson iteration to
+find the steady state solution. The example is similar to the example \texttt{cylinder6.f90} of Sec.~\ref{sec:cylinderimplicit}, but now with a last step for finding the steady state by iteration.
+The example \texttt{cylinder8.f90} computes a sequence of steady state solution for increasing flow rate (Weissenberg number), where each solution is the starting solution for the next iteration process. Example \texttt{cylinder10.F90} is similar to \texttt{cylinder8.f90}, but reads from an input file:
+\begin{quote}
+   \texttt{cylinder10 < input\_cylinder10.txt}
+\end{quote}
+and there is also the option to restart from a previously saved solution. The example \texttt{cylinder10.F90} is used to create the results in \cite{JaenssonHulsen2024}.
+
+Examples \texttt{cylinder\_c7.f90}, \texttt{cylinder\_c8.f90} and \texttt{cylinder\_c10.F90} are also available
+and similar to \texttt{cylinder7.f90}, \texttt{cylinder8.f90} and \texttt{cylinder10.F90}, respectively, however the problems are solved using the conformation tensor approach. 
+
+\subsection{Flow around a sphere at the center of a tube}
+\label{sec:settsphere}
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample settling\_sphere\_b}
+\end{quote}
+
+The examples describe the steady flow due to a sphere moving at constant velocity inside a cylinder. 
+The problem is solved in the frame of reference of the moving particle, i.e.~the velocity on the
+cylinder wall as well as the left and right boundaries is equal but opposite to the particle 
+velocity, whereas the particle itself is stationary.
+
+The example \texttt{settling1.f90} solves this problem on a 2D mesh (assuming axisymmetry) whereas
+\texttt{settling2.f90} is a full 3D simulation using an angular cutout of the 3D domain. 
+For the latter case, local transformations (see Ch.~\ref{ch:transformations}) are applied such that 
+the normal component of the velocity and the tangential components of the traction are zero on 
+the sides of the domain, which are created by the cutout. Both \texttt{settling1.f90} and \texttt{settling2.f90}
+compute a sequence of steady state solutions for increasing particle velocity 
+(Weissenberg number), where each solution is the starting solution for the next iteration process. 
+
+The \texttt{meshes} folder contains a 2D and 3D mesh, as well as code to 
+generate new meshes using Gmsh (see Sec.~\ref{sec:readgmshmesh}). 
+The relevant files are \texttt{generate\_meshp.f90} and \newline
+\texttt{generate\_meshp\_3d.f90} for 2D and 2D meshes, respectively. Mesh characteristics
+can be changed in these files.
+
+Examples \texttt{settling3.F90} and \texttt{settling4.F90} are similar to \texttt{settling2.f90}, 
+but use Metis (see Sec.~\ref{sec:metis5}) for renumbering and Pardiso (see Sec.~\ref{sec:pardiso}) as solver, respectively.
+The example \texttt{settling4.F90} is used to create the results in \cite{JaenssonHulsen2024}.

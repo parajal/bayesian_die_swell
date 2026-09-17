@@ -1,0 +1,40 @@
+!  
+!  cylinder confined between four walls build from 1 quarter submesh and
+!  rotating once over 90 degrees and merging. Then rotating over 180 degrees
+!  and merging.
+!              
+!              |\ 
+!              |  \
+!              |    \ 
+!              |      \
+!              |        \
+!              |          \ 
+!              |          /
+!              |         / 
+!              |        /    
+!              |        | 
+!           -H |        |R       o
+!              |        | n2
+!              |        |
+!              |        \
+!              |         \
+!              |          \
+!              |          /
+!              |    n1  /
+!              |      /
+!              |   /
+!              |/
+!  
+
+&meshpar
+
+  elshape = 6
+
+  R = 1 
+  H = 1.1
+  n1 = 16
+  n2 = 8 
+  f1 = 6
+
+/
+

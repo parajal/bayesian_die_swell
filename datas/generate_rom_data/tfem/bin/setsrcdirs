@@ -1,0 +1,32 @@
+#!/bin/sh
+
+SRCDIRS="src/core"
+
+tfem=`dirname $0`
+tfem=`dirname $tfem`
+
+if [ "$tfem" = . ]; then
+  exit
+fi
+
+tfa=$tfem/src/addons
+
+for dir in $tfa/*
+do
+  if [ -d $dir -a  -n "`ls $dir/*.f90 $dir/*.F90 2>/dev/null`" ]; then
+    sdir=`basename $dir`
+    SRCDIRS=$SRCDIRS" src/addons/$sdir"
+  fi
+done
+
+for dir in $tfa/*/*
+do
+  if [ -d $dir -a  -n "`ls $dir/*.f90 $dir/*.F90 2>/dev/null`" ]; then
+    sdir=`basename $dir`
+    sdir1=`dirname $dir`
+    sdir1=`basename $sdir1`
+    SRCDIRS=$SRCDIRS" src/addons/$sdir1/$sdir"
+  fi
+done
+
+export SRCDIRS

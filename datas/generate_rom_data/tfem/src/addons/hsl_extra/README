@@ -1,0 +1,76 @@
+This add-on requires the packages from the HSL library as given by the target
+libhsl3 in the root Makefile.
+
+HSL packages can be obtained free of charge by academics for research and
+teaching purposes. See the website: http://hsl.rl.ac.uk
+
+The following modules for interfacing to HSL library routines are available:
+  1) Computing the condition number of a matrix (including the system matrix).
+     (hsl_mc75)
+  2) Iterative solvers using algebraic multigrid preconditioners
+     (hsl_solve_mi20) and diagonal preconditioners (hsl_solve_diag). 
+  3) Special iterative solvers for the Stokes system based on the book of Elman
+     et al. (2005). (hsl_solve1_mi20, hsl_solve2_mi20, hsl_solve3_mi20).
+
+
+-------------------------------------------------------------------------------
+
+NOTE from the manual of hsl_mi20: 
+
+"The matrix A must have positive diagonal entries and (most of) the
+off-diagonal entries must be negative (the diagonal should be large
+compared to the sum of the off-diagonals)".
+
+
+Performance of solve_system_mi20
+================================
+
+Intel(R) Core(TM)2 Duo CPU     T9300  @ 2.50GHz
+
+eps_rel=1e-7, eps_abs=0, move_matrix=.true.
+
+2D Poisson system with biquadratic shape functions (Q2):
+
+mesh   numits  matrix   total_mem  build  setup  solve  total  mem_ma57  build+solve_ma57
+
+200^2    4       41M     153M       .35s   .34s   .67s  1.36s    119M        1.6s
+400^2    4      163M     414M      1.4s   1.4s   2.7s   5.5s     565M        9.7s
+600^2    4      367M     830M      3.2s   3.1s   6.2s  12.5s     1.4G        27s
+1000^2   4      1.0G     2.2G      8.9s   9.0s  18.2s  36.1s     4.1G    
+
+3D Poisson system with biquadratic shape functions (Q2):
+
+mesh   numits  matrix   total_mem  build  setup  solve  total  mem_ma57  build+solve_ma57
+
+10^3    3                          0.14s  0.08s  0.05s  0.27s    27M          0.40s
+15^3    3                          0.48s  0.34s  0.29s  1.11s   199M          5.0s
+20^3    3       85M      134M      1.12s  0.87s  0.64s  2.63s   803M         32.2s
+25^3    3      114M      209M      2.22s  1.85s  1.35s  5.42s   1.6G         91s
+30^3    3      201M      340M      3.83s  3.31s  2.39s  9.53s   3.9G 
+40^3    3      489M      796M      9.0s   8.2s   5.7s  23.9s   15.8G 
+60^3    3      1.7G      2.6G     30.4s  29.4s  21.0s  80.9s      
+
+
+NOTES:
+ - Default parameters for the AMG preconditioner (hsl_mi20) are used.
+   See [1] for a possible increase in performance using other parameters.
+   [1] J. Boyle, M. D. Mihajlovic and J. A. Scott, HSL MI20: an efficient AMG
+       preconditioner, RAL-TR-2007-021, December 2007. Download pdf from
+       http://www.numerical.rl.ac.uk/reports/reports.html
+ - Used the default iterative solver (BiCGSTAB). For this problem the system
+   matrix is symmetric and positive definite. Therefore the CG iterative
+   solver is also applicable, and might be preferable. GMRES can also be used.
+ - Run 'gnuplot gnu.gpi' for a plot of the data.
+ - Pardiso is more efficient for 3D problems than MA57.
+ - A mesh of 60^3 means about 120^3=1.728*10^6 degrees of freedom.
+ - AMG scales linearly with the number of degrees of freedom for CPU and memory.
+ - Scaling ma57 up to 60^3 (see gnuplot gnu.gpi) would need a CPU time of more
+   than 2 hours and memory of around 120G! This means AMG is 100 times more
+   efficient regarding CPU and 50 times regarding memory for this resolution!
+ - Scaling AMG to 100^3 we need around 10G and 400s.
+ - The build/setup/solve phases are of the same order of magnitude for large
+   3D problems. This means that parallelization of all three phases is
+   necessary to get a significant speedup.
+ - If the matrix remains constant in a time-dependent scheme we can achieve
+   a 4x speedup by skipping the build and setup.
+

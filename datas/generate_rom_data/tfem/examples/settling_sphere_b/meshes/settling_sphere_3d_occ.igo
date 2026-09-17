@@ -1,0 +1,23 @@
+
+Mesh.CharacteristicLengthExtendFromBoundary = 0; // set mesh size manually
+
+SetFactory("OpenCASCADE");
+
+Cylinder(1) = {0, 0, -L2, 0, 0, L1+L2, H, angular_opening};
+Sphere(2) = {0, 0, 0, a};
+
+BooleanDifference{ Volume{1}; Delete; }{ Volume{2}; Delete; }
+
+Physical Point(1) = {5}; // point at exit
+
+Physical Surface(1) = {4}; // inflow surface
+Physical Surface(2) = {2}; // outflow surface
+Physical Surface(3) = {6}; // particle surface
+Physical Surface(4) = {5}; // front surface
+Physical Surface(5) = {3}; // back surface
+Physical Surface(6) = {1}; // cylinder wall
+
+Physical Volume(1) = {1};
+
+Mesh.Algorithm = 6; // Frontal
+Mesh.Algorithm3D = 1; // Delauney

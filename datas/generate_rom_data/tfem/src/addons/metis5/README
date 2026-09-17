@@ -1,0 +1,170 @@
+This add-on assumes the METIS-5 package to be available and installed.
+
+The METIS-5 package (metis5.1.0.tar.gz) can be obtained from:
+      http://glaros.dtc.umn.edu/gkhome/metis/metis/download
+However it is often down and we recommend to download metis5.1.0.tar.gz
+from an alternative reliable source, such as
+      https://github.com/mfem/tpls
+
+Note: The GitHub repo 
+      https://github.com/KarypisLab/METIS
+contains a newer version of metis, but the API has been changed and a lot of
+software, including MA57 and MUMPS, doesn't work anymore with this version 
+of metis.
+
+Note: The Fedora Linux distribution and macOS (via Homebrew) have precompiled
+libs of metis5.1.0. See also the file install/INSTALL.fedora in the tfem root.
+
+Note: the default install of METIS-5 generates a version for 32bit integers.
+See the install instructions METIS-5 on how to build a version with 64bit
+integers. 
+
+
+Installation
+============
+
+- Use or install version 5.1.0 of METIS-5.
+
+- build add-on using
+
+     make metis5
+
+- Adjust Mdefs.mk according to the directions given in the comments.
+
+Usage
+=====
+
+Two distinct ways of using METIS are provided:
+
+  1) Renumbering of the nodes of the mesh to minimize sparse matrix fill-in
+  2) Renumbering of the degrees of freedom of the problem to minimize sparse
+     matrix fill-in.
+
+The first is the most easy one, but it does not take Lagrange multipliers,
+additional unknowns, connections ... into account. The second is based on
+the actual matrix structure and therefore is more general. The latter 
+requires the matrix to be fully built, before it can be applied.
+
+Ad 1 (renumbering nodes):
+------------------------
+
+A simple main program that renumbers the nodes using metis is given by:
+
+  program myprog
+
+  ...
+
+  use metis5_m
+
+  ...
+
+  <create or read the mesh>
+
+  call fill_mesh_parts ( mesh )
+
+  call renumber_metis ( mesh )
+
+  ...
+
+  end program myprog
+
+Remarks on renumbering nodes:
+
+- The renumbered nodes are used in the numbering of the degrees of freedom
+  for the system vector/matrix. For all other purposes the original numbering
+  is used.
+
+- The routines write_mesh/read_mesh read/write renumbering info. So it is not
+  necessary to call renumber_metis for the mesh again after reading a mesh
+  that has been renumbered before writing.
+
+- The routine METIS_NodeND is used.
+
+- For big 3D flow problems where the number of reals in the matrix and/or
+  preconditioner exceeds 2^31, the size of mesh%nodnod is likely to be
+  still well below 2^31 (for 3D flow problems the size of mesh%nodnod
+  is usually one order lower than the number of reals in the matrix). For these
+  cases MeTis-5, compiled for 32bit integers, can still be used for mesh
+  renumbering. 
+
+- If TFEM has been compiled with 64bit integers (option -i8 in ifort), the
+  METIS-5 library needs to be compiled with 64bit integers as well. 
+
+- The size of mesh%nodnod, which can be obtained easily as part of printinfo:
+
+    call printinfo ( mesh, printlevel=2 )
+
+  will output, for example
+
+    Size of mesh%nodnod = 89328
+
+  This number should not exceed 2^31=2147483648 (2G) when using 32bit integers.
+  As an example, a cubic box with 160x160x160 27-node hexahedral elements
+  (=33076161 nodes) gives a value of 2068994880=62.5*nnodes. The latter formula
+  may give an estimate for general meshes as well. For tetrahedral meshes the
+  factor is less than half: around 27, giving the formula 27*nnodes for the
+  approximate size of mesh%nodnod.
+
+- For problems that have a larger value than 2^31 for the size of mesh%nodnod
+  METIS-5 needs to be compiled with 64bit integers.
+
+
+Ad 2 (renumbering degrees):
+--------------------------
+
+A simple main program that renumbers the degrees of freedom using metis is
+given by:
+
+  program myprog
+
+  ...
+
+  use metis5_m
+
+  ...
+
+  <create and fully assemble the system matrix>
+
+  call renumber_metis ( sysmatrix )
+
+  ...
+
+  end program myprog
+
+Remarks on renumbering degrees:
+
+- The call renumber_metis ( sysmatrix ) does not affect the internal tfem
+  numbering of the degrees of freedom, since the latter has already been
+  defined in the problem definition. It makes permutation arrays stored
+  in the sysmatrix structure that can optionally be used by the solvers.
+
+- Combining metis renumbering with the direct solver MA41 can lead to
+  substantial speedup. It is sufficient to call renumber_metis ( sysmatrix )
+  and set the solver option
+
+    solver_options%pivot_order=1
+
+  It also works with the version from HSL2002. Note, METIS-5 does not work
+  with MA57 from the HSL library. A modified version is needed.
+
+- The preconditioners for the iterative solvers (sparskit2) cannot
+  use the renumbering directly and require column and row permutation of the
+  matrix. The latter is off by default and needs to be set with the solver
+  options:
+
+    solver_options%use_renumber=.true.
+
+  in order to use metis renumbering.
+
+- Obviously the permutation arrays are lost if the sysmatrix has been deleted.
+
+- The routine METIS_NodeND is used.
+
+- For big 3D flow problems where the number of non-zeros in the matrix and/or
+  preconditioner exceeds 2^31, METIS needs to be compiled with 64bit integers.
+
+- It seems that renumbering degrees doesn't work with setting any of the
+  components of the matrix input_probdef%physqmask to .false.. Metis seems to
+  take forever to finish. It is unclear why this is and needs further
+  investigation. The node numbering with metis is fine with any physqmask set
+  to .false..

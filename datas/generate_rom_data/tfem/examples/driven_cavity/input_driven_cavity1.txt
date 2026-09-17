@@ -1,0 +1,17 @@
+&comppar
+    nx=20                ! number of elements in x
+    ny=20                ! number of elements in y
+    timeint = 1          ! (first-order) time integration
+    numtimesteps = 1500  ! number of time steps
+    logc = 1             ! standard scheme or log transformation
+    eta_s = 0.1          ! solvent viscosity
+    eta_p = 0.9          ! polymer viscosity
+    lambda = 1.0         ! relaxation time
+    mobility = 0.01      ! mobility parameter in the Giesekus model (alpha)
+    deltat = 5.e-3       ! time step
+    beta = 1.0           ! upwinding parameter in the SUPG method
+    rs_gup = 1.0         ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0         ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_c  = 1.0          ! real_storage for the conformation LU (HSL)
+    is_c  = 1.4          ! integer_storage for conformation LU (HSL)
+/

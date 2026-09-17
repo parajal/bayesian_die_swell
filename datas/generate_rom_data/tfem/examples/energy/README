@@ -1,0 +1,39 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+energy1:
+
+ Unsteady energy balance equation (including dissipation)
+
+   gamma ( dT/dt + u . nabla T ) - alpha nabla^2 T = f
+
+ gamma = rho . cp
+ alpha = kappa
+ f = tau : D
+
+ Newtonian fluid with temperature dependent eta
+ Flow computed using a flow constraint 
+ The initial fluid and the fluid flowing in is at temperature t0 
+ Zero-flux boundary conditions are assumed on the boundaries 
+ The fluid will heat up due to the dissipation term
+
+
+energy3:
+
+ Startup of the flow in a cylinder of a viscoelastic fluid with temperature
+ dependent modulus and relaxation time.
+ Viscoelastic model: 2-mode UCM/Oldroyd-B fluid.
+ Flow computed using a flow rate constraint.
+ Temperature distribution computed using the unsteady energy balance equation
+ including the stress work as a source term:
+
+   rho cp ( dT/dt + u.nabla T ) - kappa nabla^2 T = tau:D
+
+ The initial temperature of the fluid and the temperature of the fluid
+ entering the domain is t0.
+ Zero-flux (isolated) boundary conditions are assumed on the other boundaries.
+ The temperature of the fluid will increase due to the stress work term.
+

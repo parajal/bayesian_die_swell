@@ -1,0 +1,163 @@
+Short description
+-----------------
+
+df1:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Flow based on the stokes2 problem
+   Stokes problem on a unit square. Periodical boundary conditions.
+   Poiseuille flow.
+   Collocation of nodes.
+ Problem 2: Deformation fields computed as a function of time (problem 2),
+   assuming the flow starts instantaneously at t=0 and was at rest for t<0.
+ Decoupled fields, explicit DG with P1 interpolation for tau-convection
+   (similar to the 2001 paper).
+ Extrapolated BDF2 time discretization.
+
+df2:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Flow based on the stokes2 problem
+   Stokes problem on a unit square. Periodical boundary conditions.
+   Poiseuille flow.
+   Collocation of nodes.
+ Problem 2: Deformation fields computed as a function of time (problem 2),
+   assuming the flow starts instantaneously at t=0 and was at rest for t<0.
+ Decoupled fields, explicit DG with P2 interpolation for tau-convection
+   (similar to the 2001 paper).
+ Extrapolated BDF3 time discretization.
+
+ Similar to df1, but with the changes
+ explicit DG with P2 interpolation
+ Extrapolated BDF3 time discretization.
+
+df3: 
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Flow based on the stokes2 problem
+   Stokes problem on a unit square. Periodical boundary conditions.
+   Poiseuille flow.
+   Collocation of nodes.
+ Problem 2: Deformation fields computed as a function of time (problem 2),
+   assuming the flow starts instantaneously at t=0 and was at rest for t<0.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+
+df4: 
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Stokes flow around a confined cylinder.
+   Periodical boundary conditions.
+ Problem 2: Deformation fields computed as a function of time, assuming the
+   flow starts instantaneously at t=0 and was at rest for t<0.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+ Some CPU savings for equidistant grids in tau, since matrix is the same for
+ all intervals.
+
+df5:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Flow based on the stokes2 problem
+   Stokes problem on a unit square. Periodical boundary conditions.
+   Poiseuille flow.
+   Collocation of nodes.
+ Problem 2: Deformation fields computed as a function of time (problem 2),
+   assuming the flow starts instantaneously at t=0 and was at rest for t<0.
+ Decoupled fields, explicit DG with P1 interpolation for tau-convection
+   (similar to the 2001 paper).
+ Extrapolated BDF2 time discretization.
+
+ Problem based on df1 with the extension:
+ Compute stress tensor for an integral model (postprocessing only).
+
+df6:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Flow based on the stokes2 problem
+   Stokes problem on a unit square. Periodical boundary conditions.
+   Poiseuille flow.
+   Collocation of nodes.
+ Problem 2: Deformation fields computed as a function of time (problem 2),
+   assuming the flow starts instantaneously at t=0 and was at rest for t<0.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+
+ Problem based on df3 with the extension:
+ Compute stress tensor for an integral model (postprocessing only).
+
+df7:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Stokes flow around a confined cylinder.
+   Periodical boundary conditions.
+ Problem 2: Deformation fields computed as a function of time, assuming the
+   flow starts instantaneously at t=0 and was at rest for t<0.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+ Some CPU savings for equidistant grids in tau, since matrix is the same for
+ all intervals.
+
+ Problem based on df4 with the extension:
+ Compute stress tensor for an integral model (postprocessing only).
+
+df8:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Flow based on the stokes2 problem
+   Stokes problem on a unit square. Periodical boundary conditions.
+   Poiseuille flow.
+   Collocation of nodes.
+ Problem 2: Deformation fields computed as a function of time (problem 2),
+   assuming the flow starts instantaneously at t=0 and was at rest for t<0.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+
+ Problem based on df6 with the extension:
+ Compute stress tensor for an integral model by L2-projection on the finite
+ element approximation space of the deformation gradient tensor
+ (postprocessing only).
+
+df9:
+
+ Deformation fields for a steady Stokes flow.
+ Problem 1: Stokes flow around a confined cylinder.
+   Periodical boundary conditions.
+ Problem 2: Deformation fields computed as a function of time, assuming the
+   flow starts instantaneously at t=0 and was at rest for t<0.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+ Some CPU savings for equidistant grids in tau, since matrix is the same for
+ all intervals.
+
+ Problem based on df7 with the extension:
+ Compute stress tensor for an integral model by L2-projection on the finite
+ element approximation space of the deformation gradient tensor
+ (postprocessing only).
+
+df10:
+
+ Startup of Poiseuille flow for an integral model.
+ Problem 1: 
+   Poiseuille flow on a unit square. Periodical boundary conditions.
+   Collocation of nodes.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: Deformation fields computed as a function of time, assuming the
+   flow starts instantaneously at t=0 and was at rest for t<0.
+ Problem 3: Stress tensor projection on the interpolation space for F.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+
+df11:
+
+ Startup of flow around a cylinder for an integral model.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: Deformation fields computed as a function of time, assuming the
+   flow starts instantaneously at t=0 and was at rest for t<0.
+ Problem 3: Stress tensor projection on the interpolation space for F.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+ Some CPU savings for equidistant grids in tau, since matrix is the same for
+ all intervals.

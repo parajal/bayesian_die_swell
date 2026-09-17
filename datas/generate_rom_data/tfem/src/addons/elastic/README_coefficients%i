@@ -1,0 +1,181 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%func => func
+  coefficients%vfunc => vfunc
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+1   displacement interpolation (base function). Low order choices:
+    for a triangle
+      6: P2 
+      7: P2+
+    for a quadrilateral
+      8: Q2
+     13: Qp spectral
+    for a hexahedron
+      8: Q2
+    for a tetrahedron
+      6: P2 
+    for a prism
+     16: P2Q2
+    NOTE: for high-order or spectral, also the polynomial order p needs to be
+          set with coefficients%i(4).
+
+2   pressure interpolation (base function). Low order choices:
+    for a triangle
+      2: P1
+    for a quadrilateral
+      2: P1
+      4: Q1 
+     14: Pp Legrendre
+    for a hexahedron
+      2: P1
+      4: Q1 
+    for a tetrahedron
+      2: P1
+    for a prism
+     15: P1Q1
+    NOTE: for quadrilateral/hexahedron and interpolation=2 (Q2/P1
+          Crouzeix-Raviart) see also coefficients%i(41).
+    NOTE: for high-order or spectral, also the polynomial order p needs to be
+          set with coefficients%i(5).
+
+3   Elastic model:
+      1: neo-Hookean (special case of Mooney-Rivlin: C1=G/2, C2=0)
+      2: Mooney-Rivlin
+    Note, that this is only used in the elastic elements as an indicator that
+    terms with C2 do not have to be computed.
+
+4   Polynomial order p of the high-order or spectral interpolation for
+    displacement.
+
+5   Polynomial order p of the high-order or spectral interpolation for pressure
+
+6   physqdisp: physical quantity number of the displacement
+
+7   physqpress: physical quantity number of the pressure
+
+8-9 not used. Set to zero for future compatibility.
+
+10  numerical integration rule (intrule) for the internal domain integrals
+    of elements.
+
+11  numerical integration rule (intrule) for boundary integrals for curves,
+    surfaces, volumes. For example with intrule=3 (and coefficients%i(40)=0) a
+    three-point Gauss-Legendre integration is used for curves and a 3x3
+    Gauss-Legendre integration is used for surfaces consisting of quads.
+
+12  funcnr for the fictious body force for the incompressibility
+    <=0: no body force
+     >0: function number in the call to func
+    NOTE: function func must be assigned to coefficients%func
+
+13  component choice parameter in computing a derivative.
+    For example coefficient%i(13)=1 means elastic energy in elastic_deriv.
+    See the sources for the possibilities in various derivative routines.
+
+14  vfuncnr for the body force
+    <=0: no body force
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+15  secondary numerical integration rule (intrule2) for the internal domain
+    integrals of elements. This is only relevant for prisms and pyramids.
+
+16  secondary numerical integration rule (intrule2) for boundary integrals.
+    This is only relevant for volumes consisting of prisms or pyramids.
+
+17-22 unused. Set to zero for future compatibility.
+
+23  coordinate system for 2D elements:
+    0: Cartesian planar
+    1: Axisymmetrical
+    Note that for axisymmetrical coordinates we have (z,r), i.e. the first
+    coordinate is the axial coordinate z and the second coordinate is the
+    radial coordinate r.
+
+24-31 Reserved for future use. Set to zero for future compatibility.
+
+32  nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(10) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(10) to each subdomain.
+
+33  nsubint: number of subdomains for the numerical integration rule for the
+    boundary integrals:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(11) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(11) to each subdomain.
+
+34--37 Reserved for future use. Set to zero for future compatibility.
+
+38  Layer number. Needs to be specified if the elements are going to be used
+    (build,derive etc) for a single layer only.
+     0: default: all degrees
+     >0: layer number.
+
+39  Reserved for future use. Set to zero for future compatibility.
+
+40  Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle, hexahedron->pyramid).
+      3: standard Gauss-Legendre (numerical tables)
+    NOTE: this affects all numerical integration of interior and boundary
+    integrals.
+
+41  Mapped or global interpolation for the pressure:
+    0: mapped interpolation
+    1: global interpolation (scaled shape functions)
+    2: global interpolation (unscaled a+b*x+c*y+d*z)
+    This is only for discontinuous pressure elements on quadrilaterals and
+    hexahedra (such a Q2/P1). Only the global interpolation for the pressure
+    (coefficients%i(41)=1) gives optimal convergence rates for general meshes.
+    However, for meshes containing rectangles, parallelograms (and 3D
+    equivalents) and meshes obtained from regular refinement are fine. See the
+    userguide for refs.
+    NOTE: the global shapefunctions depend on the global original coordinates.
+
+42  Specifies how the integration rules must be set:
+    0: default, i.e. direcly with the value in coefficients.
+    1: by specifying the minimal polynomial order that the rule must be able
+       to integrate exactly.
+    Note, that the value of coefficients%i(42) is overruled by setting
+    SET_GAUSS_BY_ORDER = .true. in the module limits_m.
+
+43--100 Reserved for future use. Set to zero for future compatibility.

@@ -1,0 +1,47 @@
+OpenBLAS
+========
+
+The OpenBLAS library (http://xianyi.github.com/OpenBLAS/) is an excellent
+optimized blas library. It is provided on most versions of Linux as a
+pre-compiled library, and it is recommended to use that one. You can also
+compile your own version, for example if the pre-compiled library is quite 
+old and you want a newer one.
+
+On macOS with Apple Silicon (arm64) it is recommended to use framework
+Accelerate instead of OpenBLAS. See file README.macos_arm64.
+
+Some notes for compiling your own version of OpenBLAS:
+
+ * Edit the Makefile.rule file to set:
+       FC = gfortran
+       NO_SHARED = 1
+       NO_CBLAS = 1
+       NO_LAPACKE = 1
+   to build a library optimized for your architecture.
+   In addition you might set other options for your system. For example
+     USE_THREAD = 0
+   builds a sequential library (no threading) or
+     USE_OPENMP = 1
+   if the library is used with OpenMP.
+       
+ * Copy the resulting .a archives files (one lib and one link) to the lib
+   directory of tfem:
+     cp -d *.a <tfem-root>/lib
+   and edit the Mdefs.mk file to find the blas library:
+
+     LIBBLAS = -lopenblas
+
+   for a sequential (single threaded) build of the library or
+
+     LIBBLAS = -lopenblas -lpthread
+
+   for a multi threaded build of the library.
+
+ * Set the number of threads with
+
+     export OPENBLAS_NUM_THREADS=n
+
+   where n is the max number of threads. Notes:
+     - if OPENBLAS_NUM_THREADS is not set, OMP_NUM_THREADS is used instead. 
+     - if OpenMP is used, the library must be built with USE_OPENMP = 1
+       and OMP_NUM_THREADS must be used to set the maximum number of threads.

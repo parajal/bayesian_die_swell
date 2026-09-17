@@ -1,0 +1,95 @@
+% !TEX root = userguide.tex
+
+\def\headdate{28th March 2023}
+
+\section{Flow of a generalized Newtonian fluid model}
+\label{sec:gennewtonian}
+
+In this section some examples of the flow of a generalized Newtonian fluid model
+will be given. 
+
+\subsection{A generalized Newtonian fluid problem on a unit square with periodic boundary
+         conditions: channel problem with specified flowrate; collocation;
+         Picard and Newton-Raphson iteration}
+\label{sec:gennewtonian1and2}
+                                                                                
+We consider a generalized Newtonian fluid for a channel problem on a unit square
+similar to the problem \texttt{stokes2.f90} in Sec.~\ref{sec:stokes2}. The
+viscosity is given by a viscosity model (power law, Carreau or Carreau-Yasuda).
+                                                                                
+The example files are \texttt{generalized\_newtonian1.f90} and \texttt{generalized\_newtonian2.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample generalized\_newtonian}
+\end{quote}
+In \texttt{generalized\_newtonian1.f90} the problem is solved
+using a Picard iteration scheme. If the weak form is written as:
+Find $\vek u$ and $p$ such that
+\begin{alignat*}{3}
+  &\big(\ten D_v,2\eta(\dot\gamma(\vek u))\ten D(u)\big)
+    -(\nabla\cdot\vek v,p)&&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+&\qquad&\text{for all }\vek v\\
+  &\,(q,\nabla\cdot\vek u)&& =0,&\qquad&\text{for all }q
+\end{alignat*}
+where $\dot\gamma(\vek u)=\sqrt{2\ten D(\vek u):\ten D(\vek u)}$, then the Picard iteration scheme can be written as
+\begin{alignat*}{3}
+  &\big(\ten D_v,2\eta(\dot\gamma(\vek u_{j}))\ten D(u_{j+1})\big)
+    -(\nabla\cdot\vek v,p_{j+1})&&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+&\qquad&\text{for all }\vek v\\
+  &\,(q,\nabla\cdot\vek u_{j+1})&& =0,&\qquad&\text{for all }q
+\end{alignat*}
+with $j=1,2,\ldots$ and initial guess $\vek u_0$.
+The resulting velocity profile for a Carreau model has been plotted in
+Fig.~\ref{fig:vprofile2}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{vprofile2}
+   \end{center}
+   \caption{Velocity profile in the flow of generalized Newtonian fluid problem. Carreau model
+($\eta_0=1$, $\eta_\infty=0$, $n=0.3$, $\lambda=1$). Flow rate is 2.}
+    \label{fig:vprofile2}
+\end{figure}
+
+In \texttt{generalized\_newtonian2.f90} the problem is solved
+using a Newton-Raphson iteration scheme with a possibility to start with a number Picard iterations to
+obtain better convergence. If the weak form is written as:
+Find $\vek u$ and $p$ such that
+\begin{alignat*}{3}
+  &\big(\ten D_v,2\eta(\dot\gamma(\vek u))\ten D(\vek u)\big)
+    -(\nabla\cdot\vek v,p)&&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+&\qquad&\text{for all }\vek v\\
+  &\,(q,\nabla\cdot\vek u)&& =0,&\qquad&\text{for all }q
+\end{alignat*}
+where $\dot\gamma(\vek u)=\sqrt{2\ten D(\vek u):\ten D(\vek u)}$, then the Newton-Raphson iteration scheme can be written as
+\begin{multline}
+  \big(\ten D_v,\frac{4\eta'_j}{\dot\gamma_j}\ten D_j\ten D_j:\ten D(\Delta \vek u_{j+1})+
+  2\eta_{j}\ten D(\Delta \vek u_{j+1})\big)-(\nabla\cdot\vek v,p_{j+1}) \\
+= -(\ten D_v, 2 \eta_j \ten D_j)+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\end{multline}
+\begin{equation}
+  (q,\nabla\cdot\Delta \vek u_{j+1}) =-(q,\nabla\cdot\vek u_{j}),
+\end{equation}
+and
+\begin{equation}
+  \vek u_{j+1} = \vek u_j+\Delta \vek u_{j+1}
+\end{equation}
+with $j=1,2,\ldots$ and initial guess $\vek u_0$. Here, $\eta_j=\eta(\dot\gamma(\vek u_j))$, $\eta'_j=\lderiv{\eta}{\dot\gamma}$ evaluated for $\vek u_j$ and
+ $\ten D_j=\ten D(\vek u_j)$.
+ 
+In \texttt{generalized\_newtonian3.f90} the same problem is solved as in \texttt{generalized\_stokes4.f90} (see Sec.~\ref{sec:genstokes3}), i.e.\
+the viscosity is given by a regularized Bingham model \cite{Papanastasiou87} and solved using Picard iteration. However, now the generalized Newtonian elements are used instead. In \texttt{generalized\_newtonian4.f90} the problem is extended to using Newton-Raphson iteration preceded by a number of Picard iterations. 
+
+\subsection{A generalized Newtonian fluid problem with yield of the flow around a sphere in a cylindrical tube.
+         Picard and Newton-Raphson iteration.}
+\label{sec:gennewtoniansphere}
+The example files are \texttt{sphere34.f90} and \texttt{sphere35.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+The viscosity is given by a regularized yield model \cite{Papanastasiou87} and the problems are solved using 
+Newton-Raphson iteration preceded by a number of Picard iterations. In \texttt{sphere34.f90} the velocity of sphere is imposed whereas in \texttt{sphere35.f90} the external force on the sphere is imposed using a constraint.
+         
+

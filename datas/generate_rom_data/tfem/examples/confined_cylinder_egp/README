@@ -1,0 +1,183 @@
+The examples in this directory are described in the userguide.
+
+NOTES:
+- The cylinder?a and cylinder? examples are in the b-tensor formulation,
+  whereas the cylinder_c? examples are in the c-tensor formulation,
+  (standard c or logc).
+- Examples having a _mm added to the name are extended from the problem
+  without the _mm added. The problems use a multi-mode EGP model
+  with the option to use a global von Mises stress.
+- Examples having a _gammap added to the name are extended from the problem
+  without the _gammap added. The problems use an EGP model with plastic strain 
+  softening. In case of explicit time integration an additional problem for
+  the equivalent plastic strain is introduced:
+    Problem 3: Equivalent plastic strain (gammap)
+- The examples are modified versions of the examples with the same filename
+  in confined_cylinder_b. Hence, by taking a diff, it is easy to find the
+  difference and adapt your own problem to the EGP model.
+- For more creating more refined meshes, see the corresponding subdirectory
+  meshes in the example directory confined_cylinder_b.
+
+Short description
+-----------------
+
+cylinder1a, cylinder1a_mm, cylinder1a_mm_gammap
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the b-tensor formulation. Explicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: b tensor
+
+cylinder3a
+
+ (This problem is similar to cylinder1a, but solved using fully-implicit
+  with Newton-Raphson for the b-tensor equation).
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the b-tensor formulation. Explicit div tau term.
+ Fully-implicit with Newton-Raphson for the b-tensor.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: b tensor
+
+cylinder6a
+
+ Startup of flow around a cylinder for a b-representation of an incompressible
+ EGP model.
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally exclude certain zero blocks from the sparse matrix.
+
+cylinder7
+
+ (This problem is similar to cylinder6a, but now with a final steady state step)
+
+ Startup + steady state of flow around a cylinder for a b-representation of
+ an incompressible EGP model.
+ Fully-implicit with Newton-Raphson.
+ After the final time step do a iteration to steady-state with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder8, cylinder8_mm
+
+ Sequence of steady states of flow around a cylinder for a b-representation of
+ an incompressible EGP model.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder9
+
+ (This problem is similar to cylinder1a_mm, but now with two subprocesses in the
+  multi-moded EGP model. Each subprocess defines its own von-Mises stress.)
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the b-tensor formulation. Explicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: b tensor
+ Multi-mode/multi-process EGP model with two subprocesses. Each subprocess
+ defines its own von-Mises stress.
+
+cylinder10
+
+ (This problem is similar to cylinder8_mm, but now with two subprocesses in the
+  multi-moded EGP model. Each subprocess defines its own von-Mises stress.)
+
+ Sequence of steady states of flow around a cylinder for a b-representation of
+ an incompressible EGP model.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+ Multi-mode/multi-process EGP model with two subprocesses. Each subprocess
+ defines its own von-Mises stress.
+
+
+cylinder_c1, cylinder_c1_mm
+
+ (This problem is similar to cylinder1a, but solved using c/logc)
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the conformation tensor formulation. Explicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+
+cylinder_c3
+
+ (This problem is similar to cylinder3a, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the conformation tensor formulation. Explicit div tau term.
+ Fully-implicit with Newton-Raphson for the conformation tensor.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+
+cylinder_c6
+
+ (This problem is similar to cylinder6a, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the conformation tensor formulation.
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally exclude certain zero blocks from the sparse matrix.
+
+cylinder_c7
+
+ (This problem is similar to cylinder_c6, but now with a final steady state
+  step)
+
+ Startup + steady state of flow around a cylinder for an incompressible EGP
+ model using the conformation tensor formulation.
+ Fully-implicit with Newton-Raphson.
+ After the final time step do a iteration to steady-state with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_c8
+
+ (This problem is similar to cylinder8, but solved using the c-tensor)
+
+ Sequence of steady states of flow around a cylinder for an incompressible EGP
+ model using the conformation tensor formulation.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_c9
+
+ (This problem is similar to cylinder_c1_mm, but now with two subprocesses in
+  the multi-moded EGP model. Each subprocess defines its own von-Mises stress.)
+
+ Startup of flow around a cylinder for an incompressible EGP model using
+ the conformation tensor formulation. Explicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+ Multi-mode/multi-process EGP model with two subprocesses. Each subprocess
+ defines its own von-Mises stress.
+

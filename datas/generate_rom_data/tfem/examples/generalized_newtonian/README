@@ -1,0 +1,39 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+generalized_newtonian1
+
+ Generalized Newtonian problem on a unit square.
+ Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Picard iteration.
+ Similar to the generalized_stokes3 example, but now using the
+ generalized newtonian elements instead of the generalized stokes elements.
+
+generalized_newtonian2
+
+ Generalized Newtonian problem on a unit square.
+ Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Similar to generalized_newtonian1 but now Newton-Raphson iteration 
+ instead of Picard iteration.
+
+generalized_newtonian3
+
+ Generalized Newtonian problem with yield on a unit square.
+ Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Picard iteration.
+ Similar to the generalized_stokes4 example, but now using the
+ generalized newtonian elements instead of the generalized stokes elements.
+
+generalized_newtonian4
+
+ Generalized Newtonian problem with yield on a unit square.
+ Periodical boundary conditions.
+ Poiseuille flow. Collocation of nodes.
+ Similar to generalized_newtonian3 but now using a Newton-Raphson iteration
+ preceeded by a number of Picard iterations.
+

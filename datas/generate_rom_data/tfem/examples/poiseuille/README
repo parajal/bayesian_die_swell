@@ -1,0 +1,75 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+poiseuille1:
+
+ Viscoelastic multi-mode problem on a unit square.
+ Start-up of plane Poiseuille flow having a constant flow rate. 
+ Upper half of the domain using symmetry boundary conditions at the bottom.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance for logc=1, but is recommended to use logc=0 for this
+ problem.
+ second-order time integration
+
+poiseuille2:
+
+ Elastoviscoplastic problem on a unit square.
+ Start-up of plane Poiseuille flow having a constant flow rate. 
+ Upper half of the domain using symmetry boundary conditions at the bottom.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance for logc=1, but is recommended to use logc=0 for this
+ problem.
+ second-order time integration
+
+ Similar to poiseuille1 with an extension to an evp model.
+
+poiseuille3:
+
+ Elastoviscoplastic problem on a unit square.
+ Start-up of plane Poiseuille flow having a constant flow rate. 
+ Upper half of the domain using symmetry boundary conditions at the bottom.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration
+
+ Similar to poiseuille2, but now using the b-formulation.
+
+poiseuille4:
+
+ Elastoviscoplastic problem on a unit square.
+ Saramito model (2021) with Drucker-Prager plasticity.
+ Start-up of plane Poiseuille flow having a constant flow rate. 
+ Upper half of the domain using symmetry boundary conditions at the bottom.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance for logc=1, but is recommended to use logc=0 for this
+ problem.
+ second-order time integration
+
+ Similar to poiseuille2, but now using the Saramito DP plasticity model.
+
+poiseuille5:
+
+ Start-up of plane Poiseuille flow having a constant flow rate.
+ Incompressible EGP model using the conformation tensor formulation.
+ Fully-implicit with Newton-Raphson
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+poiseuille6:
+
+ Sequence of steady states of plane Poiseuille flow having a constant flow
+ rate for an incompressible EGP model using the conformation tensor
+ formulation. 
+ Iteration to steady-state with Newton-Raphson.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+

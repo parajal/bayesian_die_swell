@@ -1,0 +1,21 @@
+Real coefficients for the element routines in this addon.
+--------------------------------------------------------
+
+  1-100: all relevant real parameters from the stokes & viscoelastic add-on
+101-150: reserved for diffuse-interface add-on
+151-200: reserved for inertia add-on
+201-250: reserved for generalized Stokes add-on
+251-300: reserved for compressible fluid add-on
+301-350: reserved for deformation fields add-on
+351-400: reserved for convection-diffusion-reaction using SUPG add-on
+
+401  deltat: timestep in the stochastic model
+
+402-450 reserved for future use
+
+m   Start at index m=coefficient%i(453): the material data for the stochastic
+    model in the following sequence:
+         G, lambda, ( par^j, j=1, npar )
+    where par^j are the npar nonlinear parameters 
+    For example a FENE model:
+       G, lambda, b

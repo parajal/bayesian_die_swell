@@ -1,0 +1,2077 @@
+% !TEX root = userguide.tex
+
+\def\headdate{28th January 2014}
+
+\section{The eXtended Finite Element method (\xfem)}
+\label{sec:xfem}
+
+In this section some examples using the eXtended Finite Element method (\xfem)
+will be described.
+First some theoretical background will be given and then,
+ for historical reasons, fluid flow examples (with
+lots of details) and finally diffusion examples (with less
+detail).
+
+\subsection{Theoretical background}
+\subsubsection{Basic ideas}
+Partition of Unity method (PUM) \cite{Babuska97,Melenk06}\\
+Generalized Finite Element method (GFEM)
+ \cite{Strouboulis00a,Strouboulis00b,Strouboulis01}\\
+The eXtended Finite Element method (\xfem) \cite{Belytschko99,Moes99}.\\
+Fluid-structure interaction with \xfem\ \cite{Gerstenberger08}.\\
+More to come \ldots
+
+Both being based on the PUM, the difference between GFEM and \xfem\ is not very
+clear.
+Since \xfem\ has primarily been designed with discontinuities in mind and
+our main application is discontinuities at material interfaces
+we refer to 
+methods based on the PUM using a finite element partition of unity as \xfem.
+
+\subsubsection{A simple interpretation of \xfem\ for an enrichment
+using Heaviside functions only}
+\label{sec:xfem_interpretation}
+
+Consider a body consisting of a single material with only smoothly varying
+properties.
+The field variables (like velocity, pressure in
+case of a fluid) are not defined outside the domain of the body. Therefore,
+we set all field variables to zero outside of the domain of the body. So,
+considering both the inside and outside op the body,
+the field variables show a jump across the boundary.
+
+Assume we want to describe the motion of this body using a mesh
+that is not boundary-fitted (see Fig.~\ref{fig:mesh_body}).
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{mesh_body}
+   \end{center}
+   \caption{A material body and a regular (not boundary-fitted) mesh.}
+    \label{fig:mesh_body}
+\end{figure}
+This means that the boundary is not aligned with
+element boundaries.
+We can numerically discretize this problem using \xfem\ with an enrichment
+at the elements intersected by the boundary using a Heaviside function
+(+1 on the material side and 0 on the outside). Elements fully outside the body
+domain are ignored and nodes not attached to either
+elements fully inside the body or to elements crossing the boundary are removed
+from the system.
+
+A simple interpretation of the \xfem\ procedure for this case is the following.
+Consider, for example, the Poisson equation Eq.~\eqref{eq:poisson} defined on
+a domain $\Omega$. The weak form is given by \eqref{eq:weakformpoisson}, where
+the integration of the inner product Eq.\eqref{eq:innerproduct} is performed on
+$\Omega$ only. In case of a boundary-fitted mesh the integration can be done
+simply element by element. If we have the situation like in
+Fig.~\ref{fig:mesh_body} elements fully outside $\Omega$ are ignored,
+elements fully inside $\Omega$ are fully integrated as before, but elements
+that are partially inside and outside need only to be integrated on the inside
+part (see Fig.~\ref{fig:xfem_body}).
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{xfem_body}
+   \end{center}
+   \caption{A single material body for \xfem. Integration of the weak form is
+only performed on the domain of the material body.}
+    \label{fig:xfem_body}
+\end{figure}
+The degrees of freedom in the inside nodes have the same meaning as
+before. The degrees of freedom in nodes outside of $\Omega$ but belonging
+to elements intersected by the boundary are \emph{virtual degrees of freedom}.
+They do not define the field variable at that point, but define the spatial
+distribution of the field variable in the part of the element that is inside
+the body. This is similar to virtual or ghost grid points in the finite
+volume method.
+Dirichlet boundary conditions need to be imposed differently
+compared to the standard \fem. One possibility is to use a constraint
+implemented using a Lagrange multiplier. Another possibility is to use
+weak Dirichlet boundary conditions (see below).
+
+If the outside is also filled with a material, nodes of the elements
+intersected by the interface between the two materials will have degrees of
+freedom both from the ``inside'' and ``outside'' (see
+Fig.~\ref{fig:xfem_body2}). Furthermore, the two
+materials need to be coupled. This can be done, for example,
+by using constraints implemented with Lagrange multipliers.
+Another possibility is to use weak coupling conditions.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.6]{xfem_body2}
+   \end{center}
+   \caption{Two material bodies for \xfem}
+    \label{fig:xfem_body2}
+\end{figure}
+
+A crucial ingredient for the robustness and accuracy of the \xfem\ is the
+integration on parts of an element domain.
+
+An important difference with the fictitious domain method is that elements
+or parts of elements not contributing to a body are removed from the system. This
+means that in problems for fluid-solid interaction there is no fluid
+inside the solid
+and therefore also no false mass or viscous material response from a fictitious
+fluid inside the solid.
+
+\subsection{Weak Dirichlet boundary conditions for flow problems}
+\label{sec:weakDflow}
+
+Imposing Dirichlet conditions at the boundary of the material body (as in
+Figure~\ref{fig:xfem_body}) is not straightforward, since the boundary is not
+aligned with the edges/faces of the elements. One possibility is to use a
+constraint implemented by Lagrange multipliers. Disadvantages of that
+approach are:
+\begin{itemize}
+ \item The system has additional unknowns (Lagrange multipliers), which are
+       located in ``nodes'' on the boundary and not in the nodes of the regular
+       mesh.
+ \item The required interpolation of the Lagrange multipliers is unclear and
+       needs to satisfy the LBB condition for stability.
+ \item The matrix structure is not very suited for fast iterative solvers.
+\end{itemize}
+
+An alternative approach is the use of weak Dirichlet boundary conditions
+(see \cite{Choi11} for an overview of the possibilities and the method
+described below).
+The basic formulation is based on the open boundary formulation, where the open
+boundary is applied to $\Gamma_\text{D}$, the Dirichlet boundary. For example, for
+Stokes flow we find from Eq.~\eqref{eq:obcstokes}:
+\begin{equation}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v,2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{D}}}=
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:embcstokes1}
+\end{equation}
+where $\vec n$ is the outwardly directed unit normal vector and 
+the volume integrals evaluated on the material body only. This does not lead us
+anywhere, because the Dirichlet condition:
+\begin{equation}
+    \vec u = \vec u_\text{D}\text{ on }\Gamma_\text{D}
+\end{equation}
+has not been imposed yet. We do that by adding to 
+ Eq.~\eqref{eq:embcstokes1} a symmetric positive term:
+\begin{multline}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v,2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{D}}}\\
+ +\kappa M_{km}^{-1}(\vec v\vec n,\phi_k)_{\Gamma_\text{D}}:(\phi_m,[\vek n(\vec u-\vec
+u_\text{D})+(\vec u-\vec u_\text{D})\vec n])_{\Gamma_\text{D}}\\
+=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:embcstokes2}
+\end{multline}
+where $\phi_k$ is a shape function defined on all elements and
+$M_{km}=(\phi_k,\phi_m)$.
+We have used summation convection for dummy indices $k$ and $m$,
+both running over all nodes.
+ The parameter $\kappa>0$ has a dimension
+identical to a viscosity and can be chosen freely, but a value near the actual
+viscosity gives the best results.
+
+Remarks:
+\begin{enumerate}
+   \item The full weak form is obtained by including the term (continuity eq.)
+\begin{equation}
+   \ldots -(q,\nabla\cdot\vek u) \dots
+\end{equation}
+to the left-hand side of the weak form.
+   \item The method is an extension of the Gerstenberger-Wall scheme
+        \cite{Gerstenberger10} for use with non-Newtonian fluids
+        \cite{Choi11}. The original Gerstenberger-Wall formulation uses
+        an additional field that is numerically eliminated when building the
+        system. In the formulation above, the field has been eliminated from the
+        formulation itself to obtain the so-called primary formulation.
+   \item For Stokes $\kappa=\eta$ is optimal.
+   \item The interpolation order of the shape function $\phi_k$ needs to be at
+least equal to the velocity interpolation and in the implementation we
+ take identical shape functions.
+   \item The inverse of the mass matrix $M_{km}$ needs to be computed. Since we
+will use discontinuous shape functions $\phi_k$, this can be done at element
+level.
+   \item Although $\phi_k$ is defined in all elements, the contribution of the
+additional term is only non-zero for elements that are crossed by the boundary.
+   \item The method is consistent.
+   \item The method is not limited to the Stokes problem and can be applied to
+         other flow problems (Navier-Stokes, viscoelastic, \dots)
+         by adding an identical additional term to the open
+         boundary formulation for the problem at hand.
+   \item The method is non-symmetric even for a symmetric problem, such as the
+         Stokes problem. 
+This can be remedied
+easily by adding the transposed boundary terms to the
+weak momentum balance \cite{Choi11}:
+\begin{multline}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(q,\nabla\cdot\vek u)
+    -(\vek v,2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{D}}}
+-(2\eta \vec n\cdot\ten D_v-q\vec n,\vec u-\vec u_\text{D})_{\Gamma_{\text{D}}}\\
+ +\kappa M_{km}^{-1}(\vec v\vec n,\phi_k)_{\Gamma_\text{D}}:(\phi_m,[\vek n(\vec u-\vec
+u_\text{D})+(\vec u-\vec u_\text{D})\vec n])_{\Gamma_\text{D}}\\
+=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:embcstokes4}
+\end{multline}
+Note, that $\ten D_v=(\nabla\vek v+\nabla\vek v^T)/2$.
+Contrary to what would
+be expected, the non-symmetric method is more stable than the symmetric method
+for lower values of $\kappa$ \cite{Choi11}.
+   \item The positive term stabilizes the method. Another possibility for
+stabilization is the Baumann-Oden approach, which adds a \emph{negative}
+         transposed open
+         boundary term:
+\begin{multline}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v,2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{D}}}
++(2\eta \vec n\cdot\ten D_v-q\vec n,\vec u-\vec u_\text{D})_{\Gamma_{\text{D}}}\\
+=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:embcstokes6}
+\end{multline}
+where the pressure part might be left out, since the method is non-symmetric
+anyway.
+Note the antisymmetry of the boundary terms due to the sign change of the term
+with the velocity ``jump'' compared to Eq.~\eqref{eq:embcstokes4}.
+\item
+It is also possible to use the
+Nitsche method, which instead of the positive term in
+Eq.~\eqref{eq:embcstokes2}
+it uses the following positive term:
+\begin{equation}
+   + \frac\alpha{h}(\vec v, \vec u)_{\Gamma_\text{D}} = \ldots
+\label{eq:embcNitsche}
+\end{equation}
+where $h$ is a length scale representing the size of an element and
+$\alpha$ is a factor that is supposed to be large enough. The Nitsche method is
+easier to use (only a boundary integral, no volume integrals), but the optimal
+factor is problem and mesh dependent ($h$).
+
+\end{enumerate}
+For the implementation we rewrite Eq.~\eqref{eq:embcstokes2} as
+\begin{multline}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v,2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{D}}}%\\
+ +\kappa M_{km}^{-1}(\vec v\vec n,\phi_k)_{\Gamma_\text{D}}:(\phi_m,\vek n\vec u
++\vec u\vec n)_{\Gamma_\text{D}}\\
+ =\kappa M_{km}^{-1}(\vec v\vec n,\phi_k)_{\Gamma_\text{D}}:(\phi_m,\vek n\vec
+u_\text{D}+\vec u_\text{D}\vec n)_{\Gamma_\text{D}}\\
++(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:embcstokes3}
+\end{multline}
+Assuming $\phi$ is also the shape function for velocity, we write
+$\vec v=\vec v_N\phi_N=v_N^i\phi_N\vec e_i$ and $\vec u=\vec
+u_M\phi_M=u_M^j\phi_M\vec e_j$.
+On element level we need to compute the element matrix $K_{NM}^{ij}$ from: 
+\begin{equation}
+   v^i_NK_{NM}^{ij}u^j_M=
+     M^{-1}_{km}(\vec v\vec n,\phi_k)_{\Gamma_\text{D}}:(\phi_m,\vek n\vec u
+        +\vec u\vec n)_{\Gamma_\text{D}}
+\end{equation}
+where $i,j=1,\dots,\texttt{ndim}$ and $N,M=1,\dots,\texttt{nnodes per element}$.
+We find that
+\begin{equation}
+\begin{split}
+   v^i_NK_{NM}^{ij}u^j_M&=
+     \vec v_N\cdot\vec u_M M^{-1}_{km}(\phi_N\vec n,\phi_k)_{\Gamma_\text{D}}\cdot
+(\phi_m,\vek n\phi_M)_{\Gamma_\text{D}}\\
+&\quad+ \vec u_M\cdot(\phi_N\vec n,\phi_k)_{\Gamma_\text{D}}M^{-1}_{km}(\phi_m,\vek
+n\phi_M)_{\Gamma_\text{D}}\cdot\vec v_N
+\end{split}
+\end{equation}
+ Central in evaluating
+$K_{NM}^{ij}$ is the matrix:
+\begin{equation}
+   S_{NM}^{ij} =
+(\phi_Nn_i,\phi_k)_{\Gamma_\text{D}}M^{-1}_{km}(\phi_m,n_j\phi_M)_{\Gamma_\text{D}} 
+\end{equation}
+and thus
+\begin{equation}
+   K_{NM}^{ij}=S_{NM}^{mm}\delta_{ij}+S_{NM}^{ji}
+\end{equation}
+In the actual implementation we first compute:
+\begin{equation}
+   A_{mM}^i=(\phi_mn_i,\phi_M)
+\end{equation}
+and then
+\begin{equation}
+   B_{kM}^i=M^{-1}_{km}A_{mM}^i
+\end{equation}
+using Cholesky decomposition of $M_{km}$. The matrix $B_{kM}^i$ can also be
+used in computing the right-hand side if $\vec u_\text{D}\neq\vec 0$.
+
+\subsection{Weak rigid particle boundary conditions}
+\label{sec:weakparticle}
+
+(It is advised to first read Sec.~\ref{sec:weakDflow} on weak Dirichlet
+boundary conditions for flow problems.
+
+At the boundary $\Gamma_\text{p}$ of a freely floating rigid particle
+the full Dirichlet condition cannot be
+imposed, since the velocity still contains unknowns:
+\begin{equation}
+   \vek u = \vek U + \vek\omega \times (\vek x - \vek x_\text{p})
+   \label{eq:velocitypar}
+\end{equation}
+where $\vek x_\text{p}$ is the center of mass of the particle,
+$\vek U$ is the translational velocity of the center of mass and $\vek\omega$
+the rotational rate of the particle. Both $\vek U$ and
+ $\vek\omega$ are unknown and
+need to be determined from the force and torque free condition.
+
+The basic formulation is, as in Sec.~\ref{sec:weakDflow},
+based on the open boundary formulation, where the open
+boundary is applied to $\Gamma_\text{p}$, the particle boundary.
+For example, for
+Stokes flow we find from Eq.~\eqref{eq:obcstokes}:
+\begin{equation}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v,2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{p}}}=
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v
+\label{eq:parbcstokes1}
+\end{equation}
+where $\vec n$ is the outwardly directed unit normal vector with respect to the
+fluid (so $-\vek n$ is the outwardly directed unit normal vector on the
+particle).
+
+Introducing the variations $\vek V$ and $\vek\chi$ of $\vek U$ and
+$\vek\omega$, respectively, we include the force and torque free conditions as
+follows:
+\begin{multline}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v-\vek V-\vek\chi\times(\vek x - \vek x_\text{p}),
+          2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{p}}}=\\
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }(\vek v, \vek V, \vek\chi)
+\label{eq:parbcstokes2}
+\end{multline}
+For imposing the velocity condition on the particle 
+Eq.~\eqref{eq:velocitypar} we add a positive definite term like in
+Sec.~\ref{sec:weakDflow} with $\vek v$ replaced by $\vec v-\vek
+V-\vek\chi\times(\vek x - \vek x_\text{p})$ and
+$\vek u-\vek u_\text{D}$ by
+$\vec u-\vek U-\vek\omega\times(\vek x - \vek x_\text{p})$:
+\begin{multline}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -(\vek v-\vek V-\vek\chi\times(\vek x - \vek x_\text{p}),
+          2\eta \ten D\cdot\vec n-p\vec n)_{\Gamma_{\text{p}}}\\
+\shoveleft{
+ +\kappa M_{km}^{-1}((\vec v-\vek V-\vek\chi\times(\vek x - \vek x_\text{p}))
+\vec n,\phi_k)_{\Gamma_{\text{p}}}:}\\
+\shoveright{(\phi_m,[\vek n(\vec u-\vek U-\vek\omega\times(\vek x - \vek
+x_\text{p}))+(\vec u-\vek U-\vek\omega\times(\vek x - \vek
+x_\text{p}))\vec n])_{\Gamma_{\text{p}}}}\\
+=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }(\vek v, \vek V, \vek\chi)
+\label{eq:parbcstokes3}
+\end{multline}
+Remarks:
+\begin{enumerate}
+   \item The method is consistent.
+   \item For Stokes $\kappa=\eta$ is expected to be optimal.
+   \item The original formulation \cite{choi_alignment_2012,Choi11b} uses
+        an additional field $\ten E=\ten D(\vek u)$.
+        In the formulation above the field $\ten E$
+        has been eliminated to obtain the
+        so-called primary formulation.
+   \item Contrary to using Lagrange multipliers with additional unknowns
+$(\vek U,\vek\omega)$, the diagonal is filled with positive values, helping
+  iterative solvers.
+   \item The full weak form is obtained by including the term (continuity eq.)
+\begin{equation}
+   \ldots -(q,\nabla\cdot\vek u) \dots
+\end{equation}
+to the left-hand side of the weak form.
+   \item If a force $\vek F$ and $\vek M$ are imposed on the particle, the
+the following terms must be added to the right-hand side
+\begin{equation}
+   \ldots = (\vek V,\vek F)+(\vek\chi,\vek M)\dots
+\end{equation}
+   \item The method is not limited to the Stokes problem and can be applied to
+         other flow problems (Navier-Stokes, viscoelastic, \dots)
+         by adding an identical additional term to the open
+         boundary formulation for the problem at hand.
+   \item The method is non-symmetric even for a symmetric problem, such as the
+         Stokes problem. This can be remedied by adding the transposed open
+         boundary term:
+\begin{equation}
+  \ldots  -(2\eta \ten D_v\cdot\vec n-q\vec n,
+ \vek u-\vek U-\vek\omega\times(\vek x -
+      \vek x_\text{p}))_{\Gamma_{\text{p}}} \dots
+\end{equation}
+to the left-hand side of the weak form.
+   \item The positive (GLS) term is found by minimizing the positive
+functional with respect to $\vek u$, $\vek U$ and $\vek\omega$:
+\begin{multline}
+ \frac14\kappa M_{km}^{-1}(\phi_k,[\vek n(\vec u-\vek U-\vek\omega\times(\vek x
+- \vek
+x_\text{p}))+(\vec u-\vek U-\vek\omega\times(\vek x - \vek
+x_\text{p}))\vec n])_{\Gamma_{\text{p}}}:\\
+(\phi_m,[\vek n(\vec u-\vek U-\vek\omega\times(\vek x - \vek
+x_\text{p}))+(\vec u-\vek U-\vek\omega\times(\vek x - \vek
+x_\text{p}))\vec n])_{\Gamma_{\text{p}}}\\
+\end{multline}
+   \item The positive term stabilizes the method. Another possibility for
+stabilization is the Baumann-Oden approach, which adds a \emph{negative}
+         transposed open
+         boundary term:
+\begin{equation}
+  \ldots  +(2\eta \ten D_v\cdot\vec n-q\vec n,
+ \vek u-\vek U-\vek\omega\times(\vek x -
+      \vek x_\text{p}))_{\Gamma_{\text{p}}} \dots
+\end{equation}
+where the pressure part might be left out, since the method is non-symmetric
+anyway.
+  \item
+It is also possible to use the
+Nitsche method, which instead of the positive term in
+Eq.~\eqref{eq:parbcstokes3}
+it uses the following positive term:
+\begin{equation}
+   + \frac\alpha{h}(\vec v-\vek V-\vek\chi\times(\vek x - \vek x_\text{p}),
+\vec u-\vek U-\vek\omega\times(\vek x - \vek
+x_\text{p}))_{\Gamma_\text{p}} = \ldots
+\label{eq:parbcNitsche}
+\end{equation}
+where $h$ is a length scale representing the size of an element and
+$\alpha$ is a factor that is supposed to be large enough. The Nitsche method is
+easier to use (only a boundary integral, no volume integrals), but the optimal
+factor is problem and mesh dependent ($h$).
+\item
+In the implementation of Eq.~\eqref{eq:parbcstokes2} and
+\eqref{eq:parbcstokes3} we can use that $\vek v$ and $\vek u$ are replaced by
+$\vek v- \vek V-\vek\chi\times(\vek x-\vec x_\text{p})$ and
+$\vek u- \vek U-\vek\chi\times(\vek x-\vec x_\text{p})$, respectively.
+That is, originally we would have terms like
+\begin{equation}
+   (v_i,S_{ij}u_j)_{\Gamma_\text{p}}=v_i^k(\phi_k,S_{ij}\phi_m)_{\Gamma_\text{p}}u_j^m
+\end{equation}
+which now needs to be replaced by
+\begin{equation}
+   (v_i-V_i-N_{il}x_l,S_{ij}(u_j-U_j-L_{jn}x_n))_{\Gamma_\text{p}}=
+ (v_i^k\phi_k-V_i-N_{il}x_l,S_{ij}(u_j^m\phi_m -U_j-L_{jn}x_n))_{\Gamma_\text{p}}
+\label{eq:particlestable}
+\end{equation}
+where $L_{ij}$ is a coefficient matrix depending on the ``additional unknowns''
+and $N_{ij}$ is the variation of $L_{ij}$. For example for a 3D particle we
+have:
+\begin{equation}
+  \mat L=
+  \begin{pmatrix}
+    0 & -\omega_3 & \omega_2 \\ 
+    \omega_3 & 0 & -\omega_1 \\ 
+    -\omega_2 & \omega_1 & 0 
+  \end{pmatrix},\quad
+  \mat N=
+  \begin{pmatrix}
+    0 & -\chi_3 & \chi_2 \\ 
+    \chi_3 & 0 & -\chi_1 \\ 
+    -\chi_2 & \chi_1 & 0 
+  \end{pmatrix}
+\end{equation}
+Once we have computed $(\phi_k,S_{ij}\phi_m)$, we can easily find the other
+matrices
+\[
+\begin{split}
+(1,S_{ij}\phi_m)_{\Gamma_\text{p}},\quad
+(x_l,S_{ij}\phi_m)_{\Gamma_\text{p}}\quad
+(\phi_k,S_{ij})_{\Gamma_\text{p}},\quad
+(1,S_{ij})_{\Gamma_\text{p}},\\%\quad
+(x_l,S_{ij})_{\Gamma_\text{p}},\quad
+(\phi_k,S_{ij}x_n)_{\Gamma_\text{p}},\quad
+(1,S_{ij}x_n)_{\Gamma_\text{p}},\quad
+(x_l,S_{ij}x_n)_{\Gamma_\text{p}}
+\end{split}
+\]
+by using the following properties of the shape functions $\phi_k(\vek x)$:
+\begin{align}
+   \sum_k\phi_k(\vek x)&=1,\quad\forall\vek x\quad\text{(partition of unity)}\\
+   \sum_k\vek x^k\phi_k(\vek x)&=\vek x,\quad\forall\vek x\quad\text{(iso-parametric
+element)}
+\end{align}
+For example,
+\begin{align}
+  (1,S_{ij}\phi_m)_{\Gamma_\text{p}}&=\sum_k(\phi_k,S_{ij}\phi_m)\\ 
+  (x_l,S_{ij}\phi_m)_{\Gamma_\text{p}}&=\sum_k x_l^k(\phi_k,S_{ij}\phi_m)\\
+  (1,S_{ij})_{\Gamma_\text{p}}&=\sum_m(1,S_{ij}\phi_m)\\ 
+  (x_l,S_{ij}x_n)_{\Gamma_\text{p}}&=\sum_m (x_l,S_{ij}\phi_m)x^m_n
+\end{align}
+The contribution of the matrices with $\vek x$
+the system matrix is determined by the
+multiplication with $\mat L$ and $\mat N$, according to
+Eq.~\eqref{eq:particlestable}.
+\end{enumerate}
+
+\subsection{Weak interface conditions for the Stokes equation}
+\label{sec:weakinterfacestokes}
+
+We consider the Stokes equation
+in a region $\Omega=\Omega_1\cup\Omega_2$ with an internal interface
+$\Gamma$ (see Figure~\ref{fig:interfaceregion1}):
+\begin{alignat}{3}
+ -&\nabla\cdot(2\eta \ten D)+\nabla p & &=\vek f,&&\qquad\text{in }\Omega\\
+   &\nabla\cdot\vek u& &=0&&\qquad\text{in }\Omega
+\end{alignat}
+The boundary and interface conditions are
+\begin{gather}
+    \vec u = \vec u_D\text{ on }\Gamma_D\\
+    -p\vec n+2\eta\ten D\cdot\vec n=\vec t_{\text{N}}
+\text{ on }\Gamma_{\text{N}}\\
+    \lj\vek u\rj = \vek 0\text{ on }\Gamma\label{eq:ucont}\\
+    \lj-p\vec n+2\eta\ten D\cdot\vec n\rj=\vec
+0\label{eq:fcont}
+\end{gather}
+where the boundary $\partial\Omega=\Gamma_D\cup\Gamma_{\text{N}}$ has
+been split into a
+Dirichlet and a Neumann part and
+ $\lj\vek u\rj=\vek u_2-\vek u_1$, with $\vek u_i$ the value of $\vek u$ on the
+side of $\Omega_i$.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{interface_diffusion}
+   \end{center}
+   \caption{Domain $\Omega=\Omega_1\cup\Omega_2$ with an interface $\Gamma$.
+The unit normal $\vek n$ has been defined on both the outside boundary
+$\partial\Omega$ (where $\vek n$ is the outwardly directed unit normal) and
+on the internal interface $\Gamma$ (where the direction of $\vek n$ is from
+domain $\Omega_1$ towards $\Omega_2$).}
+    \label{fig:interfaceregion1}
+\end{figure}
+
+Remarks:
+\begin{enumerate}
+   \item The interface conditions Eqs.~\eqref{eq:ucont} and \eqref{eq:fcont}
+         specify continuity of
+         the velocity $\vek u$ and traction vector across the
+         interface $\Gamma$.
+   \item The continuity of the normal velocity $\vek n\cdot\lj\vek u\rj=0$ 
+         is related to the incompressibility of the fluid and the assumption
+         that there is no storage of mass on the interface.
+   \item It is possible to include non-zero jumps in the
+         traction vector vector across $\Gamma$ (surface tension,
+         Marangoni stresses), but this has not been done here
+         for simplicity.
+   \item It is possible to include non-zero jumps in the
+         tangential velocity vector $\vek u-(\vek n\cdot\vek u)\vek n$
+         vector across $\Gamma$ (slip layer), but this has not been done here
+         for simplicity.
+\end{enumerate}
+
+The weak formulation is based on the open boundary formulation, where the open
+boundary is applied to interface $\Gamma$, on both domains $\Omega_1$ and
+$\Omega_2$:
+\begin{align}
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    -\big(\vek v_1,(2\eta \ten D\cdot\vec n-p\vec n)_1\big)_{\Gamma}&=
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}_1}}+(\vek v,\vek f)
+\text{ on }\Omega_1
+\label{eq:emicstokes1}\\
+  \big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)
+    +\big(\vek v_2,(2\eta \ten D\cdot\vec n-p\vec n)_2\big)_{\Gamma}&=
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}_2}}+(\vek v,\vek f)
+\text{ on }\Omega_2
+\label{eq:emicstokes2}
+\end{align}
+where 
+the volume integrals are evaluated on $\Omega_1$ and 
+$\Omega_2$, respectively. For stabilization of these equations
+we use the approach as
+described in \cite{Choi11} for non-Newtonian fluids. For this, we define the
+(symmetric)
+auxiliary tensor $\ten E=(\nabla\vek u+(\nabla\vek u)^T)/2$
+on both sides of the interface:
+\begin{align}
+   (\ten H,\ten E)-(\ten H,\nabla\vek u) 
+         + (\ten H\cdot\vek n,\vek u-\hat{\vek u}_1)_\Gamma =
+       0\quad\text{on }\Omega_1 \label{eq:stabstokes1}\\
+   (\ten H,\ten E)-(\ten H,\nabla\vek u) 
+         - (\ten H\cdot\vek n,\vek u-\hat{\vek u}_2)_\Gamma =
+       0\quad\text{on }\Omega_2 \label{eq:stabstokes2}
+\end{align}
+where $\hat{\vek u}_i$ are the values of $\vek u$
+at the interface.
+We also add additional flux terms to
+ Eqs.~\eqref{eq:emicstokes1}-\eqref{eq:emicstokes2}:
+\begin{align}
+  \ldots -\kappa_1\big(\vek v_1,
+       (2\ten E -\nabla \vek u-\nabla\vek u^T)_1\cdot\vek n\big)_{\Gamma}
+              &=(v,f)\text{ on }\Omega_1
+   \label{eq:stabstokes3}\\
+  \ldots +\kappa_2\big(\vek v_2,
+       (2\ten E -\nabla \vek u-\nabla\vek u^T)_2\cdot\vek n\big)_{\Gamma}
+              &=(v,f)\text{ on }\Omega_2
+   \label{eq:stabstokes4}
+\end{align}
+with two arbitrary constants $\kappa_1$ and $\kappa_2$.
+
+In order to impose the interface conditions
+Eqs.~\eqref{eq:ucont}-\eqref{eq:fcont} we introduce the following notation:
+\begin{align}
+   \{v\}_\omega=(1-\omega)v_1+\omega v_2,\quad \omega\in[0,1]
+\end{align}
+where $\omega$ is a weighting factor for the two sides of the interface.
+Note, that $\{v\}_0=v_1$, $\{v\}_1=v_2$ and
+$\{v\}_\frac12=\frac12(v_1+v_2)\equiv\{v\}$. The symmetric weighting $\{v\}$ is
+commonly used in DG-methods for diffusion problems \cite{Arnold02}.
+
+The method is defined by the specification of the numerical fluxes
+$\hat{\vek u}_i$ and $(2\eta \ten D\cdot\vec n-p\vec n)_i\cdot\vek n$
+at the interface.
+According to the interface conditions Eqs.~\eqref{eq:ucont}-\eqref{eq:fcont} the
+numerical fluxes need to be the same on both sides of the interface (flux
+continuity). In
+addition we assume the stabilizing fluxes 
+$\kappa_i(2\ten E -\nabla \vek u-\nabla\vek u^T)_i\cdot\vek n$
+to be continuous across the
+interface as well. We define the following numerical fluxes on the interface:
+\begin{align}
+   \hat{\vek u}_1=\hat{\vek u}_2 &= \{\vek u\}_{1-\omega}\\
+(2\eta \ten D\cdot\vec n-p\vec n)_i&\Rightarrow
+   \{2\eta \ten D\cdot\vec n-p\vec n\}_\omega \\    
+   \kappa_i(2\ten E -\nabla \vek u-\nabla\vek u^T)_i\cdot\vek n&\Rightarrow
+            \{\kappa(2\ten E -\nabla \vek u-\nabla\vek u^T)\}_\omega\cdot\vek n
+\end{align}
+where $\Rightarrow$ means ``replace with''.\\
+Remarks:
+\begin{enumerate}
+   \item For the symmetric case $\omega=\frac12$ we get:
+\begin{align}
+   \hat{\vek u}_1=\hat{\vek u}_2 &= \{\vek u\}\\
+(2\eta \ten D\cdot\vec n-p\vec n)_i&\Rightarrow
+   \{2\eta \ten D\cdot\vec n-p\vec n\}\\    
+   \kappa_i(2\ten E -\nabla \vek u-\nabla\vek u^T)_i\cdot\vek n&\Rightarrow
+            \{\kappa(2\ten E -\nabla \vek u-\nabla\vek u^T)\}\cdot\vek n
+\end{align}
+The fluxes at the interface are defined as the averaged fluxes
+on both sides of the the interface.
+   \item For the one-sided case $\omega=0$ (bias towards side 1), we get:
+\begin{align}
+   \hat{\vek u}_1=\hat{\vek u}_2 &= \vek u_2\\
+(2\eta \ten D\cdot\vec n-p\vec n)_i&\Rightarrow
+   (2\eta \ten D\cdot\vec n-p\vec n)_1\\    
+   \kappa_i(2\ten E -\nabla \vek u-\nabla\vek u^T)_i\cdot\vek n&\Rightarrow
+            (\kappa_1(2\ten E -\nabla \vek u-\nabla\vek u^T)_1\cdot\vek n
+\end{align}
+The value of $\vek u$ at the interface is now determined by the value at side 2,
+whereas the traction is determined by the value at side 1.
+\end{enumerate}
+
+After substituting the numerical fluxes and eliminating the auxiliary variable
+$\ten E$ (see \cite{Choi11}), we get the following weak form:
+\begin{multline}
+  \big(\nabla\vek v^T,\eta(\nabla\vek u+\nabla\vek u^T)\big)
+    -(\nabla\cdot\vek v,p)
+    -(q,\nabla\cdot\vek u)
+    +\big(\lj\vek v\rj,\{\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n-p\vec n\}_\omega\big)_{\Gamma}=\\
+ +\kappa_1(1-\omega)^2 M_{km}^{(1)-1}\big(\lj\vec v\rj\vec
+n,\phi^{(1)}_k\big)_{\Gamma}:\big(\phi^{(1)}_m,(\vek n\lj\vec u\rj
++\lj\vec u\rj\vec n)\big)_{\Gamma}\\
+ +\kappa_2\omega^2 M_{km}^{(2)-1}\big(\lj\vec v\rj\vec
+n,\phi^{(2)}_k\big)_{\Gamma}:\big(\phi^{(2)}_m,(\vek n\lj\vec u\rj
++\lj\vec u\rj\vec n)\big)_{\Gamma}\\
+=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+   \label{eq:weakstokesinterface}
+\end{multline}
+where $\phi^{(i)}_k$ is a shape function defined on all elements that have
+contribution to $\Omega_i$ and
+$M^{(i)}_{km}=(\phi^{(i)}_k,\phi^{(i)}_m)$.
+We have used summation convection for dummy indices $k$ and $m$,
+both running over all nodes.
+The stabilization parameters $\kappa_1\geq0$ and $\kappa_2\geq0$
+have a dimension
+identical to a viscosity and can be chosen freely (at least one
+must be non-zero), but a value
+near the actual
+viscosity is expected to gives the best results.
+
+Remarks:
+\begin{enumerate}
+   \item The interpolation order of the shape function $\phi^{(i)}_k$
+ needs to be at
+least equal to the scalar interpolation and in the implementation we
+ take identical shape functions.
+   \item The inverse of the mass matrix $M^{(i)}_{km}$ needs to be computed.
+ Since we
+will use discontinuous shape functions $\phi^{(i)}_k$, this can be done at
+element level.
+   \item Although $\phi^{(i)}_k$ is defined in all elements,
+ the contribution of the
+additional term is only non-zero for elements that are crossed by the boundary.
+   \item The method is consistent.
+   \item For one-sided weighting $\omega=0$ or $\omega=1$, one of the
+         stabilization terms is zero.
+   \item At the time of writing it is unclear what is the best value for
+         $\omega$. Some first results using fluids with different viscosity 
+         show that the pressure is most sensitive
+         and that best results are obtained if stabilization
+         is biased towards the least viscous fluid:
+         \[ \omega=
+             \begin{cases}
+                0 & \text{if }\eta_1<\eta_2 \\
+                1 & \text{if }\eta_1>\eta_2
+             \end{cases}
+         \]
+\item
+The method is non-symmetric even for a symmetric problem.
+This can be remedied
+easily by adding the transposed boundary terms to the
+weak momentum balance:
+\begin{multline}
+  \ldots
+    +\big(\lj\vek v\rj,\{\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n-p\vec n\}_\omega\big)_{\Gamma}
+    +\big(\{\eta(\nabla\vek v+\nabla\vek v^T)
+         \cdot\vec n-q\vec n,\lj\vek u\rj\}_\omega\big)_{\Gamma}\\
+    \ldots=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+   \label{eq:interfacestokestransposed}
+\end{multline}
+   \item The positive term stabilizes the method. Another possibility for
+stabilization is the Baumann-Oden approach, which adds a \emph{negative}
+         transposed open boundary term:
+\begin{multline}
+  \ldots
+    +\big(\lj\vek v\rj,\{\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n-p\vec n\}_\omega\big)_{\Gamma}
+    -\big(\{\eta(\nabla\vek v+\nabla\vek v^T)
+         \cdot\vec n-q\vec n,\lj\vek u\rj\}_\omega\big)_{\Gamma}\\
+    \ldots=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+   \label{eq:interfacestokesBaumann}
+\end{multline}
+The negative sign for the transposed pressure term is optional.
+  \item
+Stabilization can also be achieved by 
+Nitsche's method \cite{Nitsche71}, which instead of the positive term
+in \eqref{eq:embcdiffusion2} uses the following positive term:
+\begin{equation}
+   + \frac{K}{h}(\lj \vek v\rj,\lj \vek u\rj)_\Gamma = \ldots
+   \label{eq:Nitschestokesinterface}
+\end{equation}
+where $h$ is a length scale representing the size of an element and
+$K$ is a factor that is supposed to be large enough. Nitsche's method also
+uses the symmetric variant in Eq.~\eqref{eq:interfacestokestransposed}.
+\end{enumerate}
+
+Some remarks on the implementation and use of the elements:
+\begin{enumerate}
+   \item The two sides of the interface are modelled using \xfem\ with the
+     degrees of freedom on both sides defined as two layers (see
+     Sec.~\ref{sec:layers}).
+   \item The boundary flux term 
+    $\big(\lj\vek v\rj,\{\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n-p\vec n\}_\omega\big)_{\Gamma}$
+in Eq.~\eqref{eq:weakstokesinterface} and
+   the transposed of this term in Eqs.~\eqref{eq:interfacestokestransposed}
+and \eqref{eq:interfacestokesBaumann}, are build in two steps to avoid
+specifying the material properties on both sides of the interface at once.
+For this, we write the flux term as:
+\begin{multline}
+    \big(\lj\vek v\rj,\{\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n-p\vec n\}_\omega\big)_{\Gamma}=\\
+    (1-\omega)\big(\vek v_2-\vek v_1,\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n_1-p\vec n_1\big)_{\Gamma}\\
+    +\omega\big(\vek v_1-\vek v_2,\eta(\nabla\vek u+\nabla\vek u^T)
+         \cdot\vec n_2-p\vec n_2\big)_{\Gamma}
+\end{multline}
+where $\vek n_1=\vek n$, $\vek n_2=-\vek n$ (outside normal of $\Omega_1$,
+$\Omega_2$, respectively). These terms can be build separately using the same
+element, by defining the normal as the outside normal with respect to the
+contributing side. Also, we need to specify which side (=layer) is being build.
+The weighting factors $1-\omega$ and $\omega$ can be applied at the main
+program level.
+   \item The full element matrix of a positive stabilization term 
+         (there are two in
+         Eq.~\eqref{eq:weakstokesinterface} and only one in
+          Eq.~\eqref{eq:Nitschestokesinterface}) are build in one call of
+         \texttt{build\_system}.
+\end{enumerate}
+
+\subsection{Weak Dirichlet boundary conditions for convection-diffusion
+            problems}
+\label{sec:weakDdiffusion}
+
+(It is advised to first read Sec.~\ref{sec:weakDflow} on weak Dirichlet
+boundary conditions for flow problems.)
+
+The basic formulation is based on the open boundary formulation, where the open
+boundary is applied to $\Gamma_\text{D}$, the Dirichlet boundary. For example, for
+the convection-diffusion-reaction equation we find from
+Eq.~\eqref{eq:weakformdiffusion}:
+\begin{equation}
+   (v,\gamma\pderiv{c}t)+(v,\gamma \vek u\cdot\nabla c)
+   +(\nabla v,\alpha\nabla c) + (v,\beta c)
+             + (v,h_{\text{N}})_{\Gamma_{\text{N}}}
+            -(v,\vek n\cdot[\alpha\nabla c])_{\Gamma_{\text{D}}}
+              =(v,f)
+   \label{eq:embcdiffusion1}
+\end{equation}
+where $\vec n$ is the outwardly directed unit normal vector and 
+the volume integrals evaluated on the material body only. This does not lead us
+anywhere, because the Dirichlet condition:
+\begin{equation}
+    c = \vec c_\text{D}\text{ on }\Gamma_\text{D}
+\end{equation}
+has not been imposed yet. We do that by adding to 
+Eq.~\eqref{eq:embcdiffusion1} a symmetric positive term:
+\begin{multline}
+   (v,\gamma\pderiv{c}t)+(v,\gamma \vek u\cdot\nabla c)
+   +(\nabla v,\alpha\nabla c) + (v,\beta c) +
+             (v,h_{\text{N}})_{\Gamma_{\text{N}}}
+            -(v,\vek n\cdot[\alpha\nabla c])_{\Gamma_{\text{D}}}\\
+ +\kappa M_{km}^{-1}(v,\vec n\phi_k)_{\Gamma_\text{D}}\cdot(\phi_m\vek n, [c-
+         c_\text{D}])_{\Gamma_\text{D}} =(v,f)
+\label{eq:embcdiffusion2}
+\end{multline}
+where $\phi_k$ is a shape function defined on all elements and
+$M_{km}=(\phi_k,\phi_m)$. 
+We have used summation convection for dummy indices $k$ and $m$,
+both running over all nodes.
+The parameter $\kappa>0$ has a dimension
+identical to a diffusion coefficient and can be chosen freely, but a value
+near the actual
+diffusion coefficient gives the best results.
+
+Remarks:
+\begin{enumerate}
+   \item The interpolation order of the shape function $\phi_k$ needs to be at
+least equal to the scalar interpolation and in the implementation we
+ take identical shape functions.
+   \item The inverse of the mass matrix $M_{km}$ needs to be computed. Since we
+will use discontinuous shape functions $\phi_k$, this can be done at element
+level.
+   \item Although $\phi_k$ is defined in all elements, the contribution of the
+additional term is only non-zero for elements that are crossed by the boundary.
+   \item The method is consistent.
+\item
+The method is non-symmetric even for a symmetric problem.
+This can be remedied
+easily by adding the transposed boundary terms to the
+weak momentum balance:
+\begin{equation}
+\ldots
+            -(v,\vek n\cdot[\alpha\nabla c])_{\Gamma_{\text{D}}}
+            -(\vek n\cdot[\alpha\nabla v],c- c_\text{D})_{\Gamma_{\text{D}}}
+         \ldots =(v,f)
+\label{eq:embcdiffusion3}
+\end{equation}
+which is only valid if $\alpha$ does not depend of $c$.
+   \item The positive term stabilizes the method. Another possibility for
+stabilization is the Baumann-Oden approach, which adds a \emph{negative}
+         transposed open boundary term:
+\begin{equation}
+  \ldots
+            -(v,\vek n\cdot[\alpha\nabla c])_{\Gamma_{\text{D}}}
+            +(\vek n\cdot[\alpha\nabla v],c- c_\text{D})_{\Gamma_{\text{D}}}
+  \ldots
+         =(v,f)
+\label{eq:embcdiffusion_bau}
+\end{equation}
+  \item
+Stabilization can also be achieved by 
+Nitsche's method \cite{Nitsche71}, which instead of the positive term
+in \eqref{eq:embcdiffusion2} uses the following positive term:
+\begin{equation}
+   + \frac{K}{h}(v, c-c_\text{D})_{\Gamma_\text{D}} = \ldots
+\end{equation}
+where $h$ is a length scale representing the size of an element and
+$K$ is a factor that is supposed to be large enough. Nitsche's method also
+uses the symmetric variant in Eq.~\eqref{eq:embcdiffusion3}.
+
+\end{enumerate}
+
+\subsection{Weak interface conditions for diffusion problems}
+\label{sec:weakinterfacediffusion}
+
+We consider the diffusion-reaction\footnote{Convection is not yet
+considered here. See Sec.~\ref{sec:weakinterfaceconvection}.}
+equation in a region $\Omega=\Omega_1\cup\Omega_2$ with an internal interface
+$\Gamma$ (see Figure~\ref{fig:interfaceregion}):
+\begin{equation}
+%    \gamma(\pderiv{c}t + \vek u\cdot\nabla c) -\nabla \cdot( \alpha \nabla c)
+    \gamma\pderiv{c}t -\nabla \cdot( \alpha \nabla c)
++ \beta c = f\text{ on }\Omega
+ \label{eq:interface_diffusion}
+\end{equation}
+where the coefficient $\alpha$ is either a scalar or a tensor. All the
+coefficients ($\alpha$, $\beta$, $\gamma$ and $f$) may vary in
+%coefficients ($\alpha$, $\beta$, $\gamma$, $\vek u$ and $f$) may vary in
+space and time and may also depend on other quantities.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{interface_diffusion}
+   \end{center}
+   \caption{Domain $\Omega=\Omega_1\cup\Omega_2$ with an interface $\Gamma$.
+The unit normal $\vek n$ has been defined on both the outside boundary
+$\partial\Omega$ (where $\vek n$ is the outwardly directed unit normal) and
+on the internal interface $\Gamma$ (where the direction of $\vek n$ is from
+domain $\Omega_1$ towards $\Omega_2$).}
+    \label{fig:interfaceregion}
+\end{figure}
+The boundary and interface conditions\footnote{Initial conditions
+need to be specified as well.} are
+\begin{align}
+    c &= c_D\text{ on }\Gamma_D\\
+    -\vec n\cdot(\alpha\nabla c)&=h_{\text{N}}\text{ on }\Gamma_{\text{N}}\\
+     \lj c \rj &= \bar i \text{ on }\Gamma\label{eq:ibar}\\
+    -\vec n\cdot\lj\alpha\nabla c\rj&=\bar j\text{ on }\Gamma\label{eq:jbar}
+\end{align}
+where the boundary $\partial\Omega=\Gamma_D\cup\Gamma_{\text{N}}$ has
+been split into a Dirichlet and a Neumann part and $\lj c\rj=c_2-c_1$ is the
+jump of $c$ across the interface, with $c_i$ the value of $c$ on the side of
+$\Omega_i$.
+
+Remarks:
+\begin{enumerate}
+   \item The standard case is $\bar i=\bar j=0$. This specifies continuity of
+         the primary variable $c$ and continuity of the fluxes across the
+         interface $\Gamma$.
+   \item The case $\bar j\neq0$ can be interpreted by writing
+         Eq.~\eqref{eq:jbar} as follows:      
+\[
+    -\vec n_1\cdot(\alpha\nabla c)_1
+    -\vec n_2\cdot(\alpha\nabla c)_2+\bar j=0\text{ on }\Gamma
+\]
+where $\vek n_1=\vek n$, $\vek n_2=-\vek n$ (outside normal of $\Omega_1$,
+$\Omega_2$, respectively). This is the flux balance at the interface (sum of
+fluxes towards the interface is zero).
+ This means that $\bar j$ is a local flux
+\emph{supplying} the component $c$ to the system at the
+ interface $\Gamma$.
+    \item The case $\bar i\neq0$ is more difficult to interpret. It represents
+a high local gradient that is modeled as a jump. For example the mass or heat
+ transfer across a thin membrane, although the jump should be coupled to the
+flux.
+    \item For a similar approach to embedded interfaces in 
+          diffusion problems using \xfem\ combined with Nitsche's method, see
+          \cite{dolbow2009,dolbow2010}.
+\end{enumerate}
+
+The weak formulation is based on the open boundary formulation, where the open
+boundary is applied to interface $\Gamma$, on both domains $\Omega_1$ and
+$\Omega_2$:
+\begin{align}
+   %(v,\gamma\pderiv{c}t)+(v,\gamma \vek u\cdot\nabla c)
+   (v,\gamma\pderiv{c}t)
+   +(\nabla v,\alpha\nabla c) + (v,\beta c)
+             + (v,h_{\text{N}})_{\Gamma_{\text{N1}}}
+            -\big(v_1,\vek n\cdot(\alpha\nabla c)_1\big)_{\Gamma}
+              &=(v,f)\text{ on }\Omega_1
+   \label{eq:opendiffusion1}\\
+   %(v,\gamma\pderiv{c}t)+(v,\gamma \vek u\cdot\nabla c)
+   (v,\gamma\pderiv{c}t)
+   +(\nabla v,\alpha\nabla c) + (v,\beta c)
+             + (v,h_{\text{N}})_{\Gamma_{\text{N2}}}
+            +\big(v_2,\vek n\cdot(\alpha\nabla c)_2\big)_{\Gamma}
+              &=(v,f)\text{ on }\Omega_2
+   \label{eq:opendiffusion2}
+\end{align}
+where 
+the volume integrals are evaluated on $\Omega_1$ and 
+$\Omega_2$, respectively. For stabilization these equations
+we use the approach as
+described in \cite{Choi11} for non-Newtonian fluids. For this, we define the
+auxiliary variable $\vek e=\nabla c$ on both sides of the interface:
+\begin{align}
+   (\vek h,\vek e-\nabla c) + (\vek n\cdot\vek h,c-\hat c_1)_\Gamma =
+       0\quad\text{on }\Omega_1 \label{eq:stabdiffusion1}\\
+   (\vek h,\vek e-\nabla c) - (\vek n\cdot\vek h,c-\hat c_2)_\Gamma =
+       0\quad\text{on }\Omega_2 \label{eq:stabdiffusion2}
+\end{align}
+where $\hat c_1$ and $\hat c_2$ are the values of $c$ at the interface.
+We also add additional flux terms to
+ Eqs.~\eqref{eq:opendiffusion1}-\eqref{eq:opendiffusion2}:
+\begin{align}
+  \ldots -\kappa_1\big(v_1,\vek n\cdot(\vek e -\nabla c)_1\big)_{\Gamma}
+              &=(v,f)\text{ on }\Omega_1
+   \label{eq:stabdiffusion3}\\
+   \dots +\kappa_2\big(v_2,\vek n\cdot(\vek e- \nabla c)_2\big)_{\Gamma}
+              &=(v,f)\text{ on }\Omega_2
+   \label{eq:stabdiffusion4}
+\end{align}
+with two arbitrary constants $\kappa_1$ and $\kappa_2$.
+
+In order to impose the interface conditions
+Eqs.~\eqref{eq:ibar}-\eqref{eq:jbar} we introduce the following notation:
+\begin{align}
+   \{v\}_\omega=(1-\omega)v_1+\omega v_2,\quad \omega\in[0,1]
+\end{align}
+where $\omega$ is a weighting factor for the two sides of the interface.
+Note, that $\{v\}_0=v_1$, $\{v\}_1=v_2$ and
+$\{v\}_\frac12=\frac12(v_1+v_2)\equiv\{v\}$. The symmetric weighting $\{v\}$ is
+commonly used in DG-methods for diffusion problems \cite{Arnold02}.
+
+The method is defined by the specification of the numerical fluxes\footnote{In
+the DG literature the numerical fluxes are $\hat c_1$, $\hat c_2$, 
+$(\alpha\nabla c)_1$ and $(\alpha\nabla c)_2$. However only continuity for
+the normal component (if a vector or tensor) is required.}.
+$\hat c_1$, $\hat c_2$, $\vek n\cdot(\alpha\nabla c)_1$,
+$\vek n\cdot(\alpha\nabla c)_2$. 
+According to the interface conditions Eqs.~\eqref{eq:ibar}-\eqref{eq:jbar} the
+numerical fluxes need to be the same on both sides of the interface (flux
+continuity), except for possible additional jumps $\bar i$ and $\bar j$. In
+addition we assume the stabilizing fluxes 
+$\kappa_1\vek n\cdot(\vek e- \nabla c)_1$
+and $\kappa_2\vek n\cdot(\vek e- \nabla c)_2$ to be continuous across the
+interface as well. We define the following numerical fluxes on the interface:
+\begin{align}
+   \hat c_1 &= \{c\}_{1-\omega}-(1-\omega)\bar i\\
+   \hat c_2 &= \{c\}_{1-\omega}+\omega\bar i\\
+   -\vek n\cdot(\alpha\nabla c)_1&\Rightarrow
+            -\{\vek n\cdot(\alpha\nabla c)\}_\omega - \omega \bar j \\
+   -\vek n\cdot(\alpha\nabla c)_2&\Rightarrow
+            -\{\vek n\cdot(\alpha\nabla c)\}_\omega + (1-\omega)\bar j \\
+   \kappa_1\vek n\cdot(\vek e- \nabla c)_1&\Rightarrow
+            \{\kappa\vek n\cdot(\vek e- \nabla c)\}_\omega\\
+   \kappa_2\vek n\cdot(\vek e- \nabla c)_2&\Rightarrow
+            \{\kappa\vek n\cdot(\vek e- \nabla c)\}_\omega
+\end{align}
+where $\Rightarrow$ means ``replace with''.\\
+Remarks:
+\begin{enumerate}
+   \item For the symmetric case $\omega=\frac12$ we get:
+\begin{align}
+   \hat c_1 &= \{c\}-\tfrac12\bar i\\
+   \hat c_2 &= \{c\}+\tfrac12\bar i\\
+   -\vek n\cdot(\alpha\nabla c)_1&\Rightarrow
+            -\{\vek n\cdot(\alpha\nabla c)\} - \tfrac12 \bar j \\
+   -\vek n\cdot(\alpha\nabla c)_2&\Rightarrow
+            -\{\vek n\cdot(\alpha\nabla c)\} + \tfrac12\bar j \\
+   \kappa_1\vek n\cdot(\vek e- \nabla c)_1&\Rightarrow
+            \{\kappa\vek n\cdot(\vek e- \nabla c)\}\\
+   \kappa_2\vek n\cdot(\vek e- \nabla c)_2&\Rightarrow
+            \{\kappa\vek n\cdot(\vek e- \nabla c)\}
+\end{align}
+The fluxes are averaged across the interface and the ``jumps'' are equally
+distributed on both sides of the interface.
+   \item For the one-sided case $\omega=0$ (bias towards side 1), we get:
+\begin{align}
+   \hat c_1 &= c_2-\bar i\\
+   \hat c_2 &= c_2\\
+   -\vek n\cdot(\alpha\nabla c)_1&\Rightarrow
+            -\vek n\cdot(\alpha\nabla c)_1 \\
+   -\vek n\cdot(\alpha\nabla c)_2&\Rightarrow
+            -\vek n\cdot(\alpha\nabla c)_1 + \bar j \\
+   \kappa_1\vek n\cdot(\vek e- \nabla c)_1&\Rightarrow
+            \kappa_1\vek n\cdot(\vek e- \nabla c)_1\\
+   \kappa_2\vek n\cdot(\vek e- \nabla c)_2&\Rightarrow
+            \kappa_1\vek n\cdot(\vek e- \nabla c)_1
+\end{align}
+The value of $c$ on the interface is now determined by the value at side 2,
+whereas the flux is determined by the value at side 1.
+\end{enumerate}
+
+After substituting the numerical fluxes and eliminating the auxiliary variable
+$\vek e$ (see \cite{Choi11}), we get the following weak form:
+\begin{multline}
+   (v,\gamma\pderiv{c}t)
+   +(\nabla v,\alpha\nabla c) + (v,\beta c)
+            +\big(\lj v\rj,\vek n\cdot\{\alpha\nabla c\}_\omega\big)_{\Gamma}\\
+ +\kappa_1(1-\omega)^2 M_{km}^{(1)-1}(\lj v\rj,\vec
+n\phi^{(1)}_k)_\Gamma\cdot(\phi^{(1)}_m\vek n,\lj c\rj-
+         \bar i)_\Gamma \\
+ +\kappa_2\omega^2 M_{km}^{(2)-1}(\lj v\rj,\vec
+n\phi^{(2)}_k)_\Gamma\cdot(\phi^{(2)}_m\vek n,\lj c\rj-
+         \bar i)_\Gamma\\
+ =(v,f) - (v,h_{\text{N}})_{\Gamma_{\text{N}}}
+                               +(\{v\}_{1-\omega},\bar j)_\Gamma
+   \label{eq:weakdiffusioninterface}
+\end{multline}
+where $\phi^{(i)}_k$ is a shape function defined on all elements that have
+contribution to $\Omega_i$ and
+$M^{(i)}_{km}=(\phi^{(i)}_k,\phi^{(i)}_m)$.
+We have used summation convection for dummy indices $k$ and $m$,
+both running over all nodes.
+The stabilization parameters $\kappa_1\geq0$ and $\kappa_2\geq0$
+have a dimension
+identical to a diffusion coefficient and can be chosen freely (at least one
+must be non-zero), but a value
+near the actual
+diffusion coefficient is expected to gives the best results.
+
+Remarks:
+\begin{enumerate}
+   \item The interpolation order of the shape function $\phi^{(i)}_k$
+ needs to be at
+least equal to the scalar interpolation and in the implementation we
+ take identical shape functions.
+   \item The inverse of the mass matrix $M^{(i)}_{km}$ needs to be computed.
+ Since we
+will use discontinuous shape functions $\phi^{(i)}_k$, this can be done at
+element level.
+   \item Although $\phi^{(i)}_k$ is defined in all elements,
+ the contribution of the
+additional term is only non-zero for elements that are crossed by the boundary.
+   \item The method is consistent.
+   \item For one-sided weighting $\omega=0$ or $\omega=1$, one of the
+         stabilization terms is zero.
+   \item At the time of writing it is unknown what influence
+         non-symmetric weighting ($\omega\neq\frac12$) 
+         and/or one of $\kappa_1$, $\kappa_2$ set to zero has on 
+         accuracy and stability.
+\item
+The method is non-symmetric even for a symmetric problem.
+This can be remedied
+easily by adding the transposed boundary terms to the
+weak momentum balance:
+\begin{equation}
+\ldots
+        +\big(\lj v\rj,\vek n\cdot\{\alpha\nabla c\}_\omega\big)_{\Gamma}\\
+    +\big(\vek n\cdot\{\alpha\nabla v\}_\omega,\lj u\rj-\bar i\big)_{\Gamma}\\
+         \ldots =(v,f)
+   \label{eq:interfacediffusiontranposed}
+\end{equation}
+which is only valid if $\alpha$ does not depend of $c$.
+   \item The positive term stabilizes the method. Another possibility for
+stabilization is the Baumann-Oden approach, which adds a \emph{negative}
+         transposed open boundary term:
+\begin{equation}
+  \ldots
+        +\big(\lj v\rj,\vek n\cdot\{\alpha\nabla c\}_\omega\big)_{\Gamma}\\
+    -\big(\vek n\cdot\{\alpha\nabla v\}_\omega,\lj u\rj-\bar i\big)_{\Gamma}\\
+  \ldots
+         =(v,f)
+   \label{eq:interfacediffusionBaumann}
+\end{equation}
+  \item
+Stabilization can also be achieved by 
+Nitsche's method \cite{Nitsche71}, which instead of the positive term
+in \eqref{eq:embcdiffusion2} uses the following positive term:
+\begin{equation}
+   + \frac{K}{h}(\lj v\rj,\lj c\rj-\bar i)_\Gamma = \ldots
+   \label{eq:Nitscheinterface}
+\end{equation}
+where $h$ is a length scale representing the size of an element and
+$K$ is a factor that is supposed to be large enough. Nitsche's method also
+uses the symmetric variant in Eq.~\eqref{eq:interfacediffusiontranposed}.
+The method proposed in \cite{dolbow2009,dolbow2010} is $\omega=\tfrac12$
+(symmetric weighting) and Nitsche's method\footnote{In
+\cite{dolbow2009,dolbow2010} the sign of the boundary terms is opposite to
+ours. Therefore, we think the weak form in \cite{dolbow2009,dolbow2010} is
+in error.}.
+\end{enumerate}
+
+Some remarks on the implementation and use of the elements:
+\begin{enumerate}
+   \item The two sides of the interface are modelled using \xfem\ with the
+     degrees of freedom on both sides defined as two layers (see
+     Sec.~\ref{sec:layers}).
+   \item The boundary flux term $\big(\lj v\rj,\vek n\cdot\{\alpha\nabla
+c\}_\omega\big)_{\Gamma}$ in Eq.~\eqref{eq:weakdiffusioninterface} and
+   the transposed of this term in Eqs.~\eqref{eq:interfacediffusiontranposed}
+and \eqref{eq:interfacediffusionBaumann}, are build in two steps to avoid
+specifying the material properties on both sides of the interface at once.
+For this, we write the flux term as:
+\begin{equation}
+   \big(\lj v\rj,\vek n\cdot\{\alpha\nabla c\}_\omega\big)_{\Gamma}=
+   (1-\omega)\big(v_2-v_1,\vek n_1\cdot(\alpha\nabla c)_1\big)_{\Gamma}
+   +\omega\big(v_1-v_2,\vek n_2\cdot(\alpha\nabla c)_2\big)_{\Gamma}
+\end{equation}
+where $\vek n_1=\vek n$, $\vek n_2=-\vek n$ (outside normal of $\Omega_1$,
+$\Omega_2$, respectively). These terms can be build separately using the same
+element, by defining the normal as the outside normal with respect to the
+contributing side. Also, we need to specify which side (=layer) is being build.
+The weighting factors $1-\omega$ and $\omega$ can be applied at the main
+program level.
+   \item The full element matrix of a positive stabilization term 
+         (there are two in
+         Eq.~\eqref{eq:weakdiffusioninterface} and only one in
+          Eq.~\eqref{eq:Nitscheinterface}) are build in one call of
+         \texttt{build\_system}.
+  \item In the implementation $\bar i$ is defined as the value of $c$ in
+        layer 2 minus the value in layer 1. This means that if the transposed
+flux term is used (symmetric version 
+Eq.~\eqref{eq:interfacediffusiontranposed}
+or Baumann-Oden Eq.~\eqref{eq:interfacediffusionBaumann}) the coefficient
+representing $\bar i$ needs to be reversed when building the contribution to
+the second side:
+\begin{multline}
+   \big(\vek n\cdot\{\alpha\nabla v\}_\omega,\lj u\rj-\bar i\big)_{\Gamma}=\\
+  (1-\omega)\big(\vek n_1\cdot(\alpha\nabla v)_1, u_2-u_1-\bar i\big)_{\Gamma}
+  +\omega\big(\vek n_2\cdot(\alpha\nabla v)_2,u_1-u_2+\bar i\big)_{\Gamma}
+\end{multline}
+An alternative is to use a negative sign for \texttt{factorvec} in the build.
+For the positive stabilization terms in Eq.~\eqref{eq:weakdiffusioninterface}
+and Eq.~\eqref{eq:Nitscheinterface} there is not a problem, since these are
+build in ``one go''.
+\end{enumerate}
+
+
+\subsection{Weak interface boundary conditions for convection-diffusion
+            problems}
+\label{sec:weakinterfaceconvection}
+
+We consider the convection-diffusion-reaction
+equation in a region $\Omega=\Omega_1\cup\Omega_2$ with an internal interface
+$\Gamma$ (see Figure~\ref{fig:interfaceregion}):
+\begin{equation}
+    \gamma(\pderiv{c}t + \vek u\cdot\nabla c) -\nabla \cdot( \alpha \nabla c)
++ \beta c = f\text{ on }\Omega
+ \label{eq:interface_convection}
+\end{equation}
+where the coefficient $\alpha$ is either a scalar or a tensor. All the
+coefficients ($\alpha$, $\beta$, $\gamma$, $\vek u$ and $f$) may vary in
+space and time and may also depend on other quantities.
+The boundary and interface conditions\footnote{Initial conditions
+need to be specified as well.} are
+\begin{align}
+    c &= c_D\text{ on }\Gamma_D\\
+    -\vec n\cdot(\alpha\nabla c)&=h_{\text{N}}\text{ on }\Gamma_{\text{N}}\\
+     \lj c \rj &= 0 \text{ on }\Gamma\\
+    -\vec n\cdot\lj\alpha\nabla c\rj&=\bar j\text{ on }\Gamma\label{eq:jbarc}
+\end{align}
+where the boundary $\partial\Omega=\Gamma_D\cup\Gamma_{\text{N}}$ has
+been split into a Dirichlet and a Neumann part and $\lj c\rj=c_2-c_1$ is the
+jump of $c$ across the interface, with $c_i$ the value of $c$ on the side of
+$\Omega_i$.
+
+Remarks:
+\begin{enumerate}
+   \item The difference with Sec.~\ref{sec:weakinterfacediffusion} is the
+inclusion of a convection term $\gamma\vek u\cdot\nabla c$
+and it is assumed that $c$ is continuous across the interface $\lj c\rj=0$.
+Including $\lj c\rj\neq 0$ is possible, but this is more complicated, since
+both jumps in molecular and convective fluxes are coupled at the interface.
+   \item In this section we only consider the instationary and convection term
+and refer to Sec.~\ref{sec:weakinterfacediffusion} for the other terms.
+\end{enumerate}
+
+We assume that $\gamma$ obeys a conservation equation:
+\begin{equation}
+    \pderiv{\gamma}t + \nabla \cdot(\vek u \gamma) = 0 \quad\text{in }\Omega
+   \label{eq:gammaconvervation}
+\end{equation}
+For example, if $\gamma$ is the density (or proportionally to it), this
+equation is fulfilled. Assuming the interface does not store or release
+``mass'', this means that the normal component of $\gamma\vek u$ is continuous
+ across the interface:
+\begin{equation}
+  \vek n\cdot \lj \gamma\vek u\rj = 0
+  \label{eq:massfluxcontinuity}
+\end{equation}
+Remarks:
+\begin{enumerate}
+  \item If $\gamma$ is a constant, we have $\nabla\cdot\vek u=0$ in $\Omega$
+ and $\vek n\cdot \lj\vek u\rj = 0$ on $\Gamma$. 
+  \item If $\gamma$ is a continuous function across the interface, we have
+$\vek n\cdot \lj\vek u\rj = 0$ on $\Gamma$.
+\end{enumerate}
+
+Using \eqref{eq:gammaconvervation} 
+we can now write:
+\begin{equation}
+    \gamma(\pderiv{c}t + \vek u\cdot\nabla c) =
+    \pderiv{(\gamma c)}t + \nabla \cdot(\gamma \vek u c)
+   \label{eq:cconverservation}
+\end{equation}
+where $\gamma \vek u c$ is the \emph{convective flux}. Since 
+$\vek n\cdot \lj \gamma\vek u\rj = 0$ and $\lj c\rj=0$, which is imposed by the
+methods for diffusion in the Sec.~\ref{sec:weakinterfacediffusion}, the
+convective flux is also continuous across the interface. Therefore, it doesn't
+need to be imposed separately. However, we might choose to do it anyway using,
+for example, the Lesaint-Raviart upwind techniques. For this, we partially
+integrate the convective flux in the weak form:
+\begin{align}
+   (v,\pderiv{(\gamma c)}t)-(\nabla v,\gamma\vek u c)+
+              (v,\gamma \vek n\cdot\vek u c)_\Gamma+\ldots
+              &=(v,f)\text{ on }\Omega_1
+   \label{eq:openconvection1}\\
+   (v,\pderiv{(\gamma c)}t)-(\nabla v,\gamma\vek u c)-
+              (v,\gamma \vek n\cdot\vek u c)_\Gamma+\ldots
+              &=(v,f)\text{ on }\Omega_2
+   \label{eq:openconvection2}
+\end{align}
+and demand (normal) convective flux continuity by
+\begin{equation}
+   \gamma\vek u c\Rightarrow \widehat{\gamma\vek u c}=
+\begin{cases}
+(\gamma \vek u c)_1&\text{ if }\vek u\cdot\vek n>0\\
+(\gamma \vek u c)_2&\text{ if }\vek u\cdot\vek n<0
+\end{cases}
+\label{eq:upwinding}
+\end{equation}
+i.e.\ the convective flux is replaced by the ``upstream value''.
+
+Remark:
+\begin{itemize}
+   \item We have assumed here that $\gamma>0$ and thus that
+         due to Eq.~\eqref{eq:massfluxcontinuity}
+         the sign of $\vek n\cdot\vek u$ has the same value on both sides of
+         the interface.
+\end{itemize}
+Now we substitute $\widehat{\gamma\vek u c}$ for the boundary convective flux, 
+use Eq.~\eqref{eq:cconverservation} again and find
+\begin{align}
+   (v,\gamma\pderiv{c}t + \gamma\vek u\cdot\nabla c)+
+              (v_1,\widehat{\gamma \vek n\cdot\vek u c}
+              -(\gamma \vek n\cdot\vek u c)_1)_\Gamma+\ldots
+              &=(v,f)\text{ on }\Omega_1\\
+   (v,\gamma\pderiv{c}t + \gamma\vek u\cdot\nabla c)-
+              (v_2,\widehat{\gamma \vek n\cdot\vek u c}
+              -(\gamma\vek n\cdot \vek u c)_2)_\Gamma+\ldots
+              &=(v,f)\text{ on }\Omega_2
+\end{align}
+Now finally, we substitute the value for $\widehat{\gamma\vek u c}$ in
+Eq.~\eqref{eq:upwinding} and find the weak form:
+\begin{equation}
+   (v,\gamma\pderiv{c}t + \gamma\vek u\cdot\nabla c)+
+              (\hat v,\lj\gamma \vek n\cdot\vek u c\rj)_\Gamma
+              +\ldots
+              =(v,f)\text{ on }\Omega
+   \label{eq:weakconvectionupwinding}
+\end{equation}
+where
+\begin{equation}
+   \hat v=
+\begin{cases}
+v_2&\text{ if }\vek u\cdot\vek n>0\\
+v_1&\text{ if }\vek u\cdot\vek n<0
+\end{cases}
+\label{eq:testfunctionupwinding}
+\end{equation}
+i.e.\ the test function has been taken ``upstream'', or in other words, the
+jump term contributes to the upstream interface side.
+
+Remarks:
+\begin{enumerate}
+\item Since $\gamma\vek n\cdot\vek u$ is continuous, the jump term can be
+simplified by $\lj\gamma \vek n\cdot\vek u c\rj=\gamma \vek n\cdot\vek u\lj
+c\rj$.
+\item In practice the inclusion of Lesaint-Raviart upwinding at the interface
+doesn't seem to make much of a difference for diffusion-dominated problems,
+although I did not do a convergence analysis yet.
+The same is
+true for convection-dominated problems and sufficiently refined meshes (mesh
+P\'eclet $<1$). If not (mesh P\'eclet $>1$), Lesaint-Raviart upwinding might
+make a difference, but boundary layers will not be resolved and stabilizing in
+the domain is also necessary in order to get stable solutions away from the
+interface. In the limit of no diffusion ($\alpha=0$), Lesaint-Raviart upwinding
+is needed to couple the domains.
+\end{enumerate}
+
+
+\subsection{Flow around a periodic array of cylinders in a channel 
+for the Stokes equation}
+\label{sec:xfem_cylinder}
+
+In this example we consider the flow around a periodic array of cylinders in a
+channel (see Fig.~\ref{fig:periodic_array}). The height of the channel is 8 and
+the length of the spatial periodic is also 8. The radius of the cylinder is 1.
+The imposed flow rate is 10.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{periodic_array}
+   \end{center}
+   \caption{Periodic array of cylinders confined between two walls}
+    \label{fig:periodic_array}
+\end{figure}
+We solve the problem using four different methods:
+\begin{enumerate}
+  \item 
+ The standard \fem\ method using a boundary-fitted mesh.
+  \item
+ A fictitious domain method using a regular mesh and a
+weak constraint for the imposed zero velocity on the cylinder.
+  \item
+ The \xfem\ method also using a regular mesh and a
+weak constraint for the imposed zero velocity on the cylinder.
+  \item
+ The \xfem\ method also using a regular mesh and a
+weak Dirichlet boundary condition
+for the imposed zero velocity on the cylinder.
+\end{enumerate}
+
+The example files are \texttt{body\_fitted1.f90}, \texttt{fic\_dom1.f90},
+\texttt{xfem3.f90}
+and \texttt{xfem8.f90}, respectively.
+The example \texttt{xfem3.f90} 
+uses the concept of a layer (see Sec.~\ref{sec:layers})
+to define the degrees of freedom in the fluid.
+The examples \texttt{xfem1.f90} and \texttt{xfem2.f90} are similar
+to \texttt{xfem3.f90} but use Dirichlet conditions to remove the internal
+degrees of freedom in the cylinder domain.
+The difference between the examples \texttt{xfem1.f90} and \texttt{xfem2.f90}
+is that the latter uses a more advanced integration scheme (see below).
+It is recommended to use the concept of layers for implementation of \xfem\
+(like example \texttt{xfem3.f90}) because of additional error checking and
+the efficiency and ease of use for fluid interfaces.
+The files can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample xfem}
+\end{quote}
+The examples can be run by
+\begin{verbatim}
+     mesh_cylinder_in_box1 < meshinput1.txt
+     body_fitted1
+     fic_dom1
+     xfem3
+\end{verbatim}
+The generated meshes are depicted in Fig.~\ref{fig:mesh_bf}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{mesh_bf}\hspace{1cm}
+   \includegraphics[scale=0.4]{mesh_fd}
+   \end{center}
+   \caption{Boundary-fitted mesh (left) and regular mesh (80$\times$80) with an
+object used for the boundary condition on the cylinder.}
+    \label{fig:mesh_bf}
+\end{figure}
+In Figs~\ref{fig:pressureall} and \ref{fig:vorticityall} the results for the
+pressure and vorticity are given. It is clear that the results for \xfem\ are
+similar to the boundary-fitted \fem.
+As expected the local solution results of the
+fictitious domain method are very bad near the cylinder wall, since the standard
+\fem\ approximation cannot describe local jumps in the field. 
+The command 
+\begin{quote}
+   \texttt{gnuplot gnu1.gpi}
+\end{quote}
+will show plots of the velocity profile half way between the cylinders,
+the values of the pressure and
+vorticity on the cylinder wall for the three methods and the velocity on the
+cylinder wall for the fictitious domain method and for $\xfem$.
+It should be noted that the fictitious
+domain method performs much better for more global quantities, such as the
+drag computed using the Lagrange multipliers or the global motion of freely
+floating particles. However, if accurate local field quantities near the jump
+are important the fictitious domain cannot be used.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{pressure_bf}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{pressure_fd}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{pressure_xf}
+   \end{center}
+   \caption{Pressure contours for the boundary-fitted, fictitious domain and
+      \xfem\ approach}
+    \label{fig:pressureall}
+\end{figure}
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{vorticity_bf}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{vorticity_fd}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{vorticity_xf}
+   \end{center}
+   \caption{Vorticity contours for the boundary-fitted, fictitious domain and
+      \xfem\ approach}
+    \label{fig:vorticityall}
+\end{figure}
+
+Some general remarks:
+\begin{itemize}
+   \item A levelset function $\phi(\vec x)$ \cite{Osher03}
+ has been used to determine whether points are
+inside ($\phi<0$), outside ($\phi>0$) or on the
+cylinder ($\phi=0$).
+   \item
+ A crucial part of \xfem\ is an accurate method for computing a function on a
+part of the domain. We use a level set function to determine the integration
+region together with the module eltree (see Sec.~\ref{sec:subdivide}),
+which is used to divide the element into small quads.
+The smallest quads near the
+interface are less than 1\% of the size of element in the example.
+\texttt{xfem1.f90}. Even so, this does not seem to
+be an optimal and robust method to perform the integration:
+\begin{enumerate}
+   \item It is relatively expensive to generate the subdivision and a lot of
+integration points are generated. Especially in 3D this does not seem to be
+attractive.
+   \item It is not very robust if only a small part of the element needs to be
+integrated and very small quads are required. In the example \texttt{xfem1.f90} the regular mesh is slightly deformed to have a more optimal configuration.
+\end{enumerate}
+A better approach is to combine the eltree subdivision (quadtrees in 2D,
+octrees in 3D) with a
+division of the smallest quads into triangles (2D) and tetrahedrons (3D)
+aligned with the integration boundary (\cite{Min07}). This has been implemented
+in the module \texttt{submesh}.
+The advantages of the eltree approach are that we do not have to
+assume that the interface is straight within an element and we only need the
+sign of the levelset function. For a further subdivision into
+triangles/tetrahedron that do not
+intersect the interface we need to have the
+value of the levelset function also
+to find the intersection of the interface with the boundary of an element.
+The examples \texttt{xfem2.f90} and \texttt{xfem3.f90}
+use the more advanced integration scheme using the combination of
+quadtree approach (eltree) and the division into triangles (submesh).
+
+\end{itemize}
+
+Some remarks on the source code
+\texttt{xfem1.f90}, \texttt{xfem2.f90} and \texttt{xfem3.f90}:
+\begin{itemize}
+   \item The levelset function is first set in all nodes of the mesh.
+   \item Elements intersected by the interface are subdivided into small quads
+and triangles using the add-on \texttt{subdivision}. 
+\item The
+decision of whether nodes and elements are included or excluded is based on the
+value of the levelset function in the nodes.
+This can lead to undetected interfaces in some elements.
+An example is given in Figure~\ref{fig:wrong_interface}. 
+Here the red part of
+the interface is undetected based on the levelset value in the vertices of the
+elements only. In the left element the levelset function value
+has different signs and the left element is subdivided and the interface is
+detected on subdivision level.
+In the right element all levelset function values have the same sign
+and the element is not subdivided and consequently the red part of the
+interface is undetected. The interface is not closed (contains a hole) and the
+interior and/or exterior region has a local flat face\footnote{Note, that if
+no subdivision into quadtrees is used and only into triangles the problem does
+not exist. It only appears if neighboring elements have a different level of
+subdivision.}
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{wrong_interface}
+   \caption{Undetected interface. Left element subdivided into 2$\times$2
+subelements. Right element not subdivided.}
+    \label{fig:wrong_interface}
+   \end{center}
+\end{figure}
+
+This problem can be resolved by subdividing all elements within a short range of
+the interface (given by the parameter \texttt{split\_threshold} in the code)
+and the decision whether an element is crossed by an interface is postponed
+until after the subdivision (see Figure~\ref{fig:correct_interface}.
+Since this affects the structure of the matrix,
+the subdivision must be done before the assembling takes place. 
+The examples
+\texttt{xfem5.f90} and \texttt{xfem6.f90} follow this approach and are
+basically the same problems as \texttt{xfem2.f90} and \texttt{xfem3.f90},
+respectively. Also the example \texttt{xfem8.f90} (weak Dirichlet) uses
+this approach.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{correct_interface}
+   \caption{Detected interface. Left and right element subdivided into 2$\times$2
+subelements.}
+    \label{fig:correct_interface}
+   \end{center}
+\end{figure}
+\item Subdivision using eltree is done on element level
+while building the system using the user supplied routines
+\texttt{set\_ninti\_user} and \texttt{set\_Gauss\_integration\_user} in
+the module \texttt{stokes\_usergauss\_m}. An alternative could be
+to build the eltrees for all elements before the build. The advantage would be
+that it is possible to exclude elements and degrees of freedom
+from the build and solve if, for example,
+the integration area becomes too small.
+Also for time-dependent problems, where the interface does not move, it is
+faster to do the subdivision only once at the start of the simulation.
+The examples
+\texttt{xfem5.f90} and \texttt{xfem6.f90} follow this approach and are
+basically the same problems as \texttt{xfem2.f90} and \texttt{xfem3.f90},
+respectively. Also the example \texttt{xfem8.f90} (weak Dirichlet) uses
+this approach.
+   \item For plotting the \xfem\ data we first convert the computational mesh
+    to a plotting mesh using \texttt{mesh\_convert} with a user subroutine
+   \texttt{userelmesh} (see Sec.~\ref{sec:meshconvert}). The subdivision of
+elements is again defined by the eltree subdivision, but the level of
+subdivision is can be different from than in the building of the system to
+avoid big meshes
+for plotting. For interpolating the computational results onto the plotting
+mesh we simply define an object that includes all plotting nodes and sample the
+solution. Since this can be time consuming, we define an optimal number of
+`blocks' (see Sec.~\ref{sec:blocks}) in the mesh to reduce the search time.
+
+\end{itemize}
+
+Some specific remarks on the source code \texttt{xfem3.f90}:
+\begin{itemize}
+   \item A layer is used to define the degrees of freedom of the fluid.
+The layer is defined by a
+\texttt{nodeset} including all nodes outside the cylinder and all nodes
+of the elements crossed by the cylinder boundary.
+   \item The system matrix is build by applying \texttt{build\_system} to
+the layer only:
+\begin{listing}{1}
+  call build_system ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=stokes_elem, oldvectors=oldvectors, &
+    coefficients=coefficients, buildvector=.false., layer=1 )
+\end{listing}
+\item
+An additional build 
+with zero valued element matrices is performed for elements not
+fully within a layer (because of the additional connections generated there) to
+completely fill the system matrix:
+\begin{listing}{1}
+  call build_system ( mesh, problem, sysmatrix, rhsd, &
+    coefficients=coefficients, zeromatvec=.true., &
+    addmatvec=.true., exclude_single_layer =.true. )
+\end{listing}
+
+\end{itemize}
+
+Some specific remarks on the source code \texttt{xfem1.f90} and \texttt{xfem2.f90}:
+\begin{itemize}
+   \item Elements inside the cylinder that are excluded from assembling into
+the system are simply build with zero integration points leading to a zero
+element matrix and vector.
+   \item For deleting nodes internal to the cylinder we define a
+\texttt{nodeset} and a zero Dirichlet condition for these nodes (see
+Sec.~\ref{sec:essnodeset}). This is allowed since these nodes are only
+connected to elements that are not assembled in the system.
+\end{itemize}
+The approach used is \texttt{xfem1.f90} and \texttt{xfem2.f90} is not
+recommended anymore and the approach using layers as in \texttt{xfem3.f90} is
+preferred.
+
+Some specific remarks on the source code \texttt{xfem8.f90}, which uses weakly
+imposed Dirichlet boundary conditions: 
+\begin{itemize}
+   \item The eltree structures for all the elements near the interface are
+supplied to the element routine using \texttt{oldvectors} (see
+Sec.~\ref{sec:oldvectors}).
+   \item For building the weak boundary conditions an
+\texttt{elementset} (see Sec.~\ref{sec:elementsets}) is used.
+\item
+A small integration
+area can be a problem and is related to numerical errors,
+both from numerical integration and rounding errors.
+Remarks:
+         \begin{itemize}
+            \item Degrees of freedom coupled to nodes of elements with small
+                  integration area have a small stiffness and mass
+                  and may lead to an ill-conditioned system matrix.
+                  Also the mass matrix $M_{km}$ can become numerically
+                  non-positive definite due to rounding errors. Using
+                  integration rules having an order as high as
+                  possible (preferably exact)
+                  seems to help in shifting the problem to smaller critical
+                  areas.
+            \item The subdivision on small areas consists of triangles only and
+                  requires a large number of points to be accurate.
+                  For the computation of the stiffness matrix ($Q_2$
+                  quadrilateral elements), terms like $\xi^2\eta^4$,
+                  $\xi^3\eta^3$ and $\xi^4\eta^2$ need to be integrated.
+                  This requires a sixth-order accurate scheme on a triangle
+                  (12-point scheme) in order to be exact.
+                  For the mass matrix $M_{km}$ even terms of $\xi^4\eta^4$
+                  need to be integrated, requiring an eighth-order accurate
+                  scheme (16-point scheme) to integrate this
+                  exactly\footnote{For 3D problems there are terms like
+                  $\xi^4\eta^4\zeta^4$,
+                  requiring a twelfth-order accurate scheme (140-point
+                  scheme).}.
+                  Using triangular/tetrahedral elements instead of
+                  quadrilateral/hexahedral elements would reduce the number of
+                  points significantly, but this is not yet possible in \tfem.
+                  Luckily, it is only necessary to use the high-order
+                  integration if the actual integration area/volume is small.
+                  For larger integration area/volume low-order rules can be
+                  used.
+         \end{itemize}
+One possibility to circumvent small integration areas
+is to fully discard
+elements (and interface within that element)
+from the system if the integration area is smaller than some
+value (see Fig.~\ref{fig:remove_element}). This method is being employed in the
+\texttt{xfem8} example.
+Another more advanced, but also more involved,
+method is a mesh-deformation technique as
+described in \cite{Choi10} to maximize the integration areas.
+A ``poor man's'' deformation method can be employed in the example.
+\end{itemize}
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{remove_element}
+   \end{center}
+   \caption{If the integration area becomes small, the stiffness and mass
+matrix contributions to the virtual degrees in the red node can become very
+small compared to the other nodes. This leads to pronounces
+rounding errors in solving
+the system and failure of the inversion of the mass matrix $M_{km}$ due to
+becoming non-positive. Using exact integration rules helps to shift the problem
+to smaller areas. A method for solving the problem for very small areas is
+discarding 
+the virtual/extended
+degrees of freedom of the element (in the red node) and the contribution to the
+system matrix of the element. Also the interface contribution to
+the weak Dirichlet boundary condition of the element (red interface part)
+is discarded.}
+    \label{fig:remove_element}
+\end{figure}
+
+Examples \texttt{xfem9.f90} and \texttt{xfem10.f90} are derived from
+\texttt{xfem8.f90} with the following differences:
+\begin{itemize}
+   \item \texttt{xfem9.f90} uses the symmetric variant given by 
+Eq.~\eqref{eq:embcstokes4}. 
+Optionally it is possible to use the
+Nitsche method Eq.~\eqref{eq:embcNitsche}.
+\item \texttt{xfem10.f90} uses the Baumann-Oden approach
+Eq.~\eqref{eq:embcstokes6}.
+\end{itemize}
+
+Example \texttt{xfem12.f90} is an extension to 3D of
+a combination of \texttt{xfem8.f90} and \texttt{xfem9.f90}.
+
+\subsection{Flow around a freely floating particle in a channel 
+for the Stokes equation}
+\label{sec:xfem_particle}
+
+This is example is similar to the flow around cylinder in
+Sec.~\ref{sec:xfem_cylinder}, but now the fixed cylinder is replaced with a
+freely floating cylinder. It is implemented using a weak embedded particle
+condition as explained in Sec.~\ref{sec:weakparticle}. 
+
+Examples \texttt{xfem13.f90} (2D circular particle) and \texttt{xfem14.f90} (3D
+spherical particle) are derived from
+\texttt{xfem8.f90+xfem9.f90} and \texttt{xfem12.f90}, respectively.
+Example is like \texttt{xfem13.f90}, but now with an elliptical particle.
+Note, that
+only the solutions at start-up are computed,
+since the particles are not tracked in time.
+
+\subsection{Flow around a periodic array of cylindrical/spherical shaped drops
+in a channel for the Stokes equation. Interface constraint.}
+\label{sec:drop1}
+
+This example is derived from the example in Sec.~\ref{sec:xfem_cylinder}.
+However, now the cylinder is replaced by a fluid with a different viscosity
+(10$\times$ as high as the surrounding fluid) and is put off-center.
+So we consider the flow around a periodic array of drops in a
+channel. The height of the channel is 8 and
+the length of the spatial periodic is also 8. The radius of the drop is 1.
+The imposed flow rate is 10. This is basically a time-dependent problem, since the interface
+between the two fluids will evolve in time. 
+We will not follow the interface here and thus basically solve only the 
+initial velocity/pressure field at the start of this process.
+
+We use the \xfem\ method as described in Sec.~\ref{sec:xfem_interpretation}.
+The inside and outside fluid is put into separate layers of degrees of freedom.
+The velocity degrees of freedom in the two layers are coupled at the
+interface:
+\begin{equation}
+   \vek u_\text{inside} = \vek u_\text{outside} 
+   \label{eq:velocitycont}
+\end{equation}
+The tractions on the interface are also the same on both sides of the
+interface (except for a change in sign if the normal vectors taken been taken
+opposite).
+The pressures are not coupled and are allowed to jump at the interface.
+
+The example uses a Lagrange multiplier to impose the continuity of
+velocity Eq.~\eqref{eq:velocitycont} as a weak constraint. The Lagrange
+multiplier is the traction at the interface.
+The example file is \texttt{xfem4.f90}.
+Like the
+\texttt{xfem5.f90} and \texttt{xfem6.f90} examples 
+an example \texttt{xfem7.f90} exists that
+follows the approach of building the eltree for elements near the interface
+before the definition and actual build of the system.
+
+Some remarks on the source code (most of remarks in Sec.~\ref{sec:xfem_cylinder}
+also apply here):
+\begin{itemize}
+   \item Two layers are defined.
+A layer is defined by a
+\texttt{nodeset} including all nodes
+of the elements crossed by the cylinder boundary and either
+ all nodes outside the cylinder (outside fluid) or 
+all nodes inside the cylinder (inside fluid).
+A global variable (\texttt{intregion}) is used to signal the
+integration routines whether the integration region is inside or outside.
+   \item The system matrix is build by applying \texttt{build\_system} separately
+to the two layers.
+\item
+An additional build 
+with zero valued element matrices is performed for elements not
+fully within a single layer only
+(because of the additional connections generated there) to
+completely fill the system matrix. This includes all
+elements at the interface and the `buffer' elements
+between the interface elements and the single layer elements.
+\item 
+It is very tricky to find a suitable mesh and some optimization is necessary
+(see \cite{Choi10}). In the example a suitable mesh is found by trial and error (by moving the center
+of the cylinder and deforming the mesh).
+Note, that starting with the example \texttt{xfem8.f90} mesh optimization
+is not necessary anymore, since small integration area are discarded.
+\item
+The definition of the constraint for coupling the velocities couples two
+objects, but both objects refer to the same object. The layers are different however:
+\begin{listing}{1}
+! define constraint on the object for coupling velocities between the layers
+
+  call define_constraint ( mesh, input_probdef, object=1, layer1=1, object2=1,&
+    layer2=2, physq=1, discretization='weak', elementdof=[2,0,2] )
+\end{listing}
+
+\end{itemize}
+
+After running the code the results in Figure~\ref{fig:xfem4} can be obtained.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{pressure_xf4}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{velocity_y_xf4}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{vorticity_xf4}
+   \end{center}
+   \caption{Pressure, vertical velocity and vorticity contours
+      for a cylindrical drop using the \xfem\ approach.}
+    \label{fig:xfem4}
+\end{figure}
+Notice the continuity of the velocity and the discontinuity of
+the pressure and vorticity at the interface between the two fluids.
+There is also a slight asymmetry in the contour lines of the pressure, which is
+related to the slight off-center position of the drop in $x$-direction.
+Notice also that the drop is rotating (look at the sign of the
+velocity in vertical direction).
+
+\subsection{Flow around a periodic array of cylindrical/spherical shaped drops
+in a channel for the Stokes equation. Weak (embedded) interface condition.}
+\label{sec:drop2}
+
+The same problem as in Sec.~\ref{sec:drop1}
+has been solved in example \texttt{xfem16.f90} using a weak interface
+condition (see Sec.~\ref{sec:weakinterfacestokes}).
+The problem has also been extended to 3D in example
+\texttt{xfem17.f90}.
+
+Remarks:
+\begin{itemize}
+   \item Both the unsymmetric version Eq.~\eqref{eq:weakstokesinterface}
+ and symmetric version Eq.~\eqref{eq:interfacestokestransposed} can be used.
+\item
+Optionally it is also possible to use the
+Baumann-Oden method Eq.~\eqref{eq:interfacestokesBaumann}.
+\item
+Optionally it is also possible to use the
+Nitsche method Eq.~\eqref{eq:Nitschestokesinterface}.
+\end{itemize}
+
+\subsection{Flow around a periodic array of cylinders in a channel 
+for a generalized Newtonian fluid}
+\label{sec:xfem_cylinder_GN}
+ 
+(This example has been developed by Arash Sarhangi Fard of the TU/e.)
+
+The problem is in source file \texttt{xfem11.f90} and
+is similar to the \texttt{xfem2.f90} problem
+(see Sec.~\ref{sec:xfem_cylinder}), but now the fluid is replaced by a
+generalized Newtonian fluid (Carreau fluid).
+
+\subsection{A steady diffusion problem on a unit square/cube
+            with a circular/spherical hole
+            with Dirichlet
+            and Neumann boundary conditions. Constant or varying diffusion
+            coefficient. Weak Dirichlet boundary conditions.}
+
+\label{sec:diffusion5}
+
+We consider the steady
+diffusion problem
+on a unit square with a circular hole. The example is derived from
+the \texttt{diffusion1} problem in Sec.~\ref{sec:diffusion1}.
+The unit domain is cut by a circle and on the circle the scalar is imposed
+using a weak Dirichlet boundary condition. The scalar is solved using \xfem\
+with a weak embedded Dirichlet condition (see Sec.~\ref{sec:weakDdiffusion})
+
+The source 
+in the file \texttt{diffusion5.f90}
+ and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample diffusion}
+\end{quote}
+
+The xfem method resembles the method in the flow problems
+\texttt{xfem8.f90} and \texttt{xfem9.f90} in
+Sec.~\ref{sec:xfem_cylinder}. 
+
+An extension of the problem to 3D (unit cube, spherical hole)
+is in the file \texttt{diffusion6.f90}.
+
+Remarks:
+\begin{itemize}
+   \item Both the unsymmetric version Eq.~\eqref{eq:embcdiffusion2}
+ and symmetric version Eq.~\eqref{eq:embcdiffusion2} can be used.
+\item
+Optionally it is also possible to use the
+Nitsche method \cite{Nitsche71}.
+\end{itemize}
+
+\subsection{A steady diffusion problem on a unit square/cube
+            with a circular/spherical region with a different diffusion
+            constant. Weak interface conditions.}
+
+\label{sec:diffusion7}
+
+We consider the steady
+diffusion problem
+on a unit square with a circular region having different properties.
+The interface conditions are imposed weakly.
+The scalar is solved using \xfem\ with a weak embedded interface condition
+(see Sec.~\ref{sec:weakinterfacediffusion}).
+
+The source 
+in the file \texttt{diffusion7.f90}
+ and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample diffusion}
+\end{quote}
+
+Some results are shown in Figure~\ref{fig:diffusion7}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{scalar_df7}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{gradc_x}\vspace{0.5cm}
+   \includegraphics[scale=0.4]{gradc_y}
+   \end{center}
+   \caption{Scalar $c$, $\plderiv{c}{x}$ and $\plderiv{c}{y}$ 
+      contours for the \texttt{diffusion7} problem. Value of $\alpha=1$ in the
+      outer region and $\alpha=0.05$ in the inner (circular) region. Mesh is
+        $50\times50$ $Q_2$ elements.}
+    \label{fig:diffusion7}
+\end{figure}
+
+An extension of the problem to 3D (unit cube, spherical region)
+is in the file \texttt{diffusion8.f90}.
+
+Remarks:
+\begin{itemize}
+   \item Both the unsymmetric version Eq.~\eqref{eq:weakdiffusioninterface}
+ and symmetric version Eq.~\eqref{eq:interfacediffusiontranposed} can be used.
+\item
+Optionally it is also possible to use
+Nitsche's method \cite{Nitsche71} and the Baumann-Oden approach.
+\end{itemize}
+
+\subsection{A steady convection-diffusion problem on a unit square
+            with a circular region. At the interface ``heat'' is supplied.
+            Weak interface conditions.}
+
+\label{sec:convectiondiffusion8}
+
+We consider the steady
+convection-diffusion problem
+on a unit square with a circular region. ``Heat'' is supplied at the circular
+interface between the regions.
+The interface conditions are imposed weakly 
+(see Sec.~\ref{sec:weakinterfaceconvection}).
+The scalar is solved using \xfem.
+
+The source 
+in the file \texttt{convection\_diffusion8.f90}
+ and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample convection\_diffusion}
+\end{quote}
+
+Some results are shown in Figure~\ref{fig:convection_diffusion8}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{scalar_cd8}\vspace{0.5cm}
+   \end{center}
+   \caption{Scalar $c$ 
+      contours for the \texttt{convection\_diffusion8} problem. The velocity
+vector $\vek u=(10,5)$ is constant throughout the domain. At the circular
+      interface $\bar{j}=100$.
+      Mesh is $50\times50$ $Q_2$ elements.}
+    \label{fig:convection_diffusion8}
+\end{figure}
+
+Remarks:
+\begin{itemize}
+   \item Lesaint-Raviart upwinding is optional.
+   \item Both the unsymmetric version Eq.~\eqref{eq:weakdiffusioninterface}
+ and symmetric version Eq.~\eqref{eq:interfacediffusiontranposed} can be used.
+\item
+Optionally it is also possible to use
+Nitsche's method \cite{Nitsche71} and the Baumann-Oden approach.
+\end{itemize}
+
+\subsection{Extrudate swell of a Newtonian fluid}
+\label{sec:swellNewtonian_xfem}
+
+(This example has been developed by Young Joon Choi of the TU/e.)
+
+The example is derived from a similar example using an ALE approach in
+Sec.~\ref{sec:swellNewtonian}.
+The fluid is Newtonian.
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}).
+See \cite{Choi11c,Choi11b} and the references therein for the details on
+solving the surface advection equation.
+
+The example file is \texttt{extrudate\_swell4.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample extrudate\_swell}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary.
+We assume zero normal traction and zero vertical velocity at the exit.
+The free surface is traction free.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+The flow can be chosen to be planar of axisymmetric.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_extrudate\_swell\_xfem < meshinput\_xfem.txt}\\
+   \texttt{extrudate\_swell4 < input\_extrudate\_swell4.txt}\\
+   \texttt{post\_swell4}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+Results of the final free surface for a planar flow are shown in
+Fig.~\ref{fig:swell_newtonian_xfem}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{mesh_swell_0300}
+   \end{center}
+   \caption{Final surface 
+    of the extrudate swell problem using a Newtonian fluid.}
+    \label{fig:swell_newtonian_xfem}
+\end{figure}
+
+In the example there is an option to add surface tension. The implementation is
+based on a membrane with an isotropic surface stress $\gamma$. This means,
+we add to the right-hand side of the weak form:
+\begin{equation}
+  -\int_S(\nabla\vek v)^T:\gamma(\ten I-\vek n\vek n)\D S+
+\int_{\partial S}\vek v\cdot\gamma\vek n_\text{c}\D s
+\end{equation}
+where $\vek n$ is the unit normal vector on the surface $S$, $\partial S$ the
+boundary of the surface (a point in 2D and a curve in 3D) and
+$\vek n_\text{c}$ the
+unit vector that is tangential to $S$ and normal to $\partial S$ and pointing
+``outwards''.
+
+
+\subsection{Flow around a cylinder confined between two walls}
+\label{sec:cylinderve_xfem}
+
+(This example has been developed by Young Joon Choi of the TU/e.)
+
+This problem is the 
+flow of a viscoelastic fluid (Oldroyd-B) around a cylinder confined between
+two walls.
+The entry and exit sides are connected by periodical boundary conditions
+and a constant flow rate is imposed.
+The cylinder is modelled using \xfem\ and weak boundary conditions.
+The problem is similar to the one described in \cite{Choi11}.
+
+The example file is \texttt{cylinder1.f90} and
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_xfem}
+\end{quote}
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_channel\_three\_parts < meshinput.txt}\\
+   \texttt{cylinder1 < input\_extrudate\_swell1.txt}\\
+   \texttt{post\_cylinder1}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.

@@ -1,0 +1,99 @@
+Integer coefficients for the element routines in this addon.
+
+
+Shape functions/interpolations
+------------------------------
+
+See file addons/README_basefunctions
+
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+List of the coefficients
+------------------------
+
+1   interpolation of the velocity at the interface
+    NOTE: for high-order or spectral interpolation also the polynomial order p
+          needs to be set with coefficients%i(2).
+
+2   Polynomial order p of the spectral/high-order interpolation for the
+    velocity
+
+3   Numerical integration rule for the internal domain integrals of elements.
+
+4   nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(3) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate
+        direction) and apply the numerical integration rule given by
+        coefficients%i(3) to each subdomain.
+
+5   Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle).
+      3: standard Gauss-Legendre (numerical tables)
+
+6   secondary numerical integration rule (intrule2) for the internal domain
+    integrals of elements. This is only relevant for prisms and pyramids
+
+7   Specifies how the integration rules must be set:
+    0: default, i.e. direcly with the value in coefficients.
+    1: by specifying the minimal polynomial order that the rule must be able
+       to integrate exactly.
+    Note, that the value of coefficients%i(77) is overruled by setting
+    SET_GAUSS_BY_ORDER = .true. in the module limits_m.
+
+8   coordinate system for 2D elements:
+    0: Cartesian planar (x,y)
+    1: Cylindrical (z,r), axisymmetrical
+    Note that for cylindrical/axisymmetrical coordinates we have (z,r),
+    i.e. the first coordinate is the axial coordinate z and the second
+    coordinate is the radial coordinate r. The third coordinate is theta,
+    but is not needed explicitly in an axisymmetrical flow.
+
+9   Use a 3D velocity vector in a 2D space:
+      0: no
+      1: yes
+    NOTE: the definition of the third velocity component depends on the
+          coordinate system used (coefficients%i(23)):
+     * velocity component u_z in the 2D Cartesian system (coefficients%i(23)=0).
+     * circumferential velocity component u_theta in the axisymmetrical case,
+       i.e. add "swirl". (coefficients%i(23)=1).
+    NOTE: Not all elements have been modified to take this into account.
+          An error message is given if incompatible elements are called.
+    NOTE: Not all add-ons have implemented the third component. Hence, check
+          the elements before using coefficients%i(67)=1.
+
+10  vfuncnr for the vector u (=velocity)
+
+11  interfacial rheological model number:
+    0: surface tension only
+    1: Boussinesq-Scriven (viscous)
+    2: Verwijlen (elastic)
+    3: Kelvin-Voigt 1 (model 1+2)
+    4: Huetter-Tervoort (elastic)
+    5: Kelvin-Voigt 2 (model 1+4)
+
+12  surface tension semi-implicit or explicit in momentum balance
+    0: explicit
+    1: semi-implicit
+
+13  pchoice for plotting quantities on the interface
+                            __
+    1: surface divergence = \/ . u
+                              s
+    2: surface rate of strain = sqrt ( 2Ds:Ds )
+                            __
+    3: surface vorticity = (\/ x u) . n
+
+    4: surface determinant of Fs
+
+14--100 Reserved for future use. Set to zero for future compatibility.
+

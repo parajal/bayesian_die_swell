@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# settfemroot: set tfem root
+
+tp=`dirname $0`
+tp=`dirname $tp`

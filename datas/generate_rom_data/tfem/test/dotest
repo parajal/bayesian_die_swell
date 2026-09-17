@@ -1,0 +1,166 @@
+#!/bin/bash
+                                                                                
+# dotest : Perform all testprograms and report to file testresult.
+# dotest test : Perform a single testprogram and report to file testresult.
+
+# uncomment the following line if intel libraries on macOS cannot be found
+#export DYLD_LIBRARY_PATH=$LIBRARY_PATH
+
+function helptext ()
+{
+  echo "Usage: dotest [OPTIONS] [program(s)]"
+  echo "Run given or all test programs"
+  echo
+  echo "Options:   (Description)"
+  echo "   -c compiler  compare output to the results of the given compiler"
+  echo "   -d results_compiler  compare output to the results of the given compiler"
+  echo "                        specified by the directory of results"
+  echo "      Compilers available:"
+  ls | grep results_ | cut -c9- | sed "s/^/          /" \
+     | sed "/nagfor_macos/s/$/ (default)/"
+  echo "   -h      this text is shown "
+}
+
+# get options
+
+dir=results_nagfor_macos_arm64
+
+while getopts c:d:h optvar; do
+  case "$optvar"
+  in
+     c) dir="results_"$OPTARG ;;
+     d) dir=$OPTARG ;;
+     h) helptext ; exit ;;
+     "?") helptext ; exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ ! -d $dir ]; then
+  echo $dir: compiler directory unknown
+  exit 1
+fi
+
+if [ -f testresult ]; then
+   rm testresult
+fi
+
+if [ `basename $0` = dotest -a ! -f ../modfiles/io_utils_m.mod ] ; then
+  echo "Error: tests depend on addon io_utils to be compiled."
+  echo
+  exit
+fi
+
+if [ $# -ge 1 ]
+then
+   src="$*"
+elif [ `basename $0` != dotest ]
+then
+   src="*.f90"
+else
+   src="core_*.f90 meshgen_*.f90"
+   if [ -f ../modfiles/inertia_elements_m.mod ] ; then
+     src="$src inertia_*.f90"
+   fi
+   if [ -f ../modfiles/poisson_elements_m.mod ] ; then
+     src="$src poisson_*.f90"
+   fi
+   if [ -f ../modfiles/convection_diffusion_elements_m.mod ] ; then
+     src="$src convection_diffusion_*.f90"
+   fi
+   if [ -f ../modfiles/bcf_elements_m.mod ] ; then
+     src="$src bcf_*.f90"
+   fi
+   if [ -f ../modfiles/diffuse_interface_elements_m.mod ] ; then
+     src="$src diffuse_interface_*.f90"
+   fi
+   if [ -f ../modfiles/elastic_elements_m.mod ] ; then
+     if [ ! -f ../modfiles/viscoelastic_elements_m.mod ] ; then
+       echo "Error: elastic tests depend on addon viscoelastic to be compiled."
+       echo
+       exit
+     fi
+     src="$src elastic_*.f90"
+   fi
+   if [ -f ../modfiles/stokes_elements_m.mod ] ; then
+     if [ ! -f ../modfiles/eltree_m.mod ] ; then
+       echo "Error: stokes tests depend on addon"
+       echo "       subdivide to be compiled."
+       echo
+       exit
+     fi
+     src="$src stokes_*.f90"
+   fi
+   if [ -f ../modfiles/viscoelastic_elements_m.mod ] ; then
+     src="$src viscoelastic_*.f90"
+   fi
+   if [ -f ../modfiles/generalized_stokes_elements_m.mod ] ; then
+     if [ ! -f ../modfiles/eltree_m.mod ] ; then
+       echo "Error: generalized stokes tests depend on addon"
+       echo "       subdivide to be compiled."
+       echo
+       exit
+     fi
+     src="$src generalized_stokes_*.f90 generalized_newtonian_*.f90"
+   fi
+   if [ -f ../modfiles/surface_advection_elements_m.mod ] ; then
+     src="$src surface_advection_*.f90"
+   fi
+   if [ -f ../modfiles/structures_elements_m.mod ] ; then
+     src="$src structures_*.f90"
+   fi
+   if [ -f ../modfiles/interface_tracking_elements_m.mod ] ; then
+     src="$src interface_tracking_*.f90"
+   fi
+   if [ -f ../modfiles/convection_diffusion_supg_elements_m.mod ] ; then
+     src="$src conv_diff_supg*.f90"
+   fi
+   if [ -f ../modfiles/dfm_elements_m.mod ] ; then
+     src="$src dfm_*.f90"
+   fi
+   if [ -f ../modfiles/linear_elastic_elements_m.mod ] ; then
+     src="$src linear_elastic_*.f90"
+   fi
+   if [ -f ../modfiles/compressible_fluid_elements_m.mod ] ; then
+     src="$src compressible_fluid_*.f90"
+   fi
+fi
+
+make clean
+
+programs=
+
+for file in $src
+do
+   base=`basename $file .f90`
+   grep "end program" $file >/dev/null
+   if [ $? == 0 ]; then
+     programs=$programs" $base"
+   fi
+done
+
+make $programs
+
+for prog in $programs
+do
+   if [ -x $prog ]; then
+      echo $prog
+      if [ -f $prog.inp ]; then
+         ./$prog <$prog.inp >$prog.res
+      else
+         ./$prog >$prog.res
+      fi
+      diff $dir/$prog.res $prog.res >$prog.dif
+      if [ -s $prog.dif ]
+      then
+         echo "$prog different" >> testresult
+      else
+         echo "$prog OK" >> testresult
+      fi
+   fi
+done
+
+make clean
+
+echo "finished testing"

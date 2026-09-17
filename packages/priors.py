@@ -1,79 +1,29 @@
 """Prior distributions."""
 
 import numpy as np
-
-
 class PriorMixin:
 
     def log_prior(self, phi):
-        """Evaluate log-prior density."""
+        """Uniform priors on physical parameters, exponential priors on sigmas."""
+        theta = np.asarray(self._to_physical(phi), float)
+        lo, hi = np.asarray(self._get_parameter_bounds(), float).T
+        rates = np.array([self.sigma_noise_prior]
+                         + [self.sigma_bias_prior] * self._infer_sigma_bias())
+        params, sigmas = theta[:len(lo)], theta[len(lo):len(lo) + len(rates)]
 
-        theta = self._to_physical(phi)
-        if not np.all(np.isfinite(theta)):
+        if (not np.isfinite(theta).all() or np.any((params < lo) | (params > hi))
+                or np.any(sigmas <= 0)):
             return -np.inf
-
-        bounds = np.asarray(self._get_parameter_bounds())
-        n_params = len(bounds)
-
-        params = theta[:n_params]
-        lower = bounds[:, 0]
-        upper = bounds[:, 1]
-
-        # Uniform priors
-        if np.any((params < lower) | (params > upper)):
-            return -np.inf
-
-        logp = -np.sum(np.log(upper - lower))
-
-        # Noise standard deviation prior
-        sigma_noise = theta[n_params]
-        if sigma_noise <= 0:
-            return -np.inf
-
-        logp += (
-            np.log(self.sigma_noise_prior)
-            - self.sigma_noise_prior * sigma_noise
-        )
-
-        # Bias standard deviation prior
-        if self._infer_sigma_bias():
-            sigma_bias = theta[n_params + 1]
-
-            if sigma_bias <= 0:
-                return -np.inf
-
-            logp += (
-                np.log(self.sigma_bias_prior)
-                - self.sigma_bias_prior * sigma_bias
-            )
-
-        return float(logp)
+        return float(-np.log(hi - lo).sum() + np.sum(np.log(rates) - rates * sigmas))
 
     def _log_prior(self, rng, n_samples):
-        """Draw samples from the prior."""
+        """Draw n_samples from the prior."""
+        lo, hi = np.asarray(self._get_parameter_bounds(), float).T
+        rates = np.array([self.sigma_noise_prior]
+                         + [self.sigma_bias_prior] * self._infer_sigma_bias())
+        n, k = len(lo), len(rates)
 
-        bounds = self._get_parameter_bounds()
-        ndim = self._get_ndim()
-
-        samples = np.zeros((n_samples, ndim))
-
-        # Uniform parameters
-        for j, (low, high) in enumerate(bounds):
-            samples[:, j] = rng.uniform(low, high, size=n_samples)
-
-        idx = len(bounds)
-
-        # Exponential prior for noise
-        samples[:, idx] = rng.exponential(
-            scale=1.0 / self.sigma_noise_prior,
-            size=n_samples,
-        )
-
-        # Optional bias parameter
-        if self._infer_sigma_bias():
-            samples[:, idx + 1] = rng.exponential(
-                scale=1.0 / self.sigma_bias_prior,
-                size=n_samples,
-            )
-
+        samples = np.zeros((n_samples, self._get_ndim()))
+        samples[:, :n] = rng.uniform(lo, hi, size=(n_samples, n))
+        samples[:, n:n + k] = rng.exponential(1 / rates, size=(n_samples, k))
         return samples

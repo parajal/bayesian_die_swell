@@ -1,0 +1,87 @@
+Preprocessing source files (conditional compilation).
+====================================================
+
+Some Fortran source files in tfem have the extention .F90 instead of .f90.
+These files are first scanned by the Fortran preprocessor (fpp) before being
+compiled. Instructions in the .F90 file like,
+
+#if MACRO
+    statements1
+#else
+    statements2
+#endif
+
+will generate a different source depending on whether MACRO has been set
+by the compiler option -DMACRO (statements1) or not (statements2). The compiler
+options for the preprocessor need to be added to FPPFLAGS in the Mdefs.mk file.
+
+
+The following macros can be set with the meaning in the second column:
+
+Compile tfem:
+------------
+
+ NO_LIBHSL  Do not have a compiled HSL library with MA57, MA41 and EA23.
+            Currently, this only affects how eigenvalues/vectors of
+            3x3 matrices are computed.
+
+ I8         TFEM is compiled with default integer being int64.
+            Currently, this only affects UMFPACK.
+
+Compile and run examples:
+------------------------
+
+ SKIT2      Sparskit2 is available and add-on sk_solve has been compiled.
+            This only affects examples using sparskit.
+
+ METIS5     Add-on metis5 has been compiled and the metis5 library has been
+            added for linking. This only affects examples using metis5.
+
+ PARDISO    Add-on pardiso has been compiled and the mkl library has been
+            added for linking. This only affects examples using pardiso.
+
+ MKL_GMRES  Add-on mkl_gmres has been compiled and the mkl library has been
+            added for linking. This only affects examples using mkl_gmres.
+
+ HSL_EXTRA  Add-on hsl_extra has been compiled and the libhsl3 library has been
+            added for linking. This only affects examples using hsl_extra.
+
+ PARTRACK   Add-on particle_tracking has been compiled and the nr library
+            has been added for linking. This only affects examples using
+            particle_tracking.
+
+ UMFPACK    Add-on umfpack has been compiled and the umfpack library has been
+            added for linking. This only affects examples using umfpack.
+
+ FEAST      Add-on feast has been compiled and the feast library has been
+            added for linking. This only affects examples using feast.
+
+
+IMPORTANT notes:
+
+- Nagfor requires the -fpp option to invoke the preprocessor for .F90 files.
+  If you create an Mdefs.mk file from a recent Mdefs_distr.mk file, this is
+  already set. Gfortran and Intel Fortran are triggered by the .F90 extension
+  and no additional option is required to invoke the preprocessor.
+
+- In macOS file names are case insensitive by default. Although name.f90 and
+  name.F90 refer to the same file, compilers do pick up the different
+  extension. Also "git mv name.f90 name.F90" works as expected. So, most things
+  on application level work, but be careful:
+
+     macbook:~ cp name.f90 name.F90
+     cp: name.F90 and name.f90 are identical (not copied).
+     macbook:~ ls name.*
+     name.f90
+     macbook:~ mv name.f90 name.F90
+     macbook:~ ls name.*
+     name.F90
+     macbook:~ rm -i name.F90
+     remove name.F90? n
+     macbook:~ rm -i name.f90
+     remove name.f90? y
+     macbook:~ ls name.*
+     ls: name.*: No such file or directory
+
+  So a folder cannot contain two files name.f90 and name.F90 at the same time,
+  since they refer to the same file.

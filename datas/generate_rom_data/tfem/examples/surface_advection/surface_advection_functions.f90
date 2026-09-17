@@ -1,0 +1,48 @@
+module surface_advection_functions_m
+
+  use kind_defs_m
+
+  implicit none
+
+  real(dp), save :: t
+
+contains
+
+  function func ( nr, x )
+    integer, intent(in) :: nr
+    real(dp), intent(in), dimension(:) :: x
+    real(dp) :: func
+
+    select case(nr)
+      case(1)
+        func = sin ( 2*x(1) + x(2) - t )
+      case default
+        write(*,'(/a,i0/)') 'Error func: wrong function number: ', nr
+        stop
+    end select
+
+  end function func
+
+  function vfunc ( n, nr, x )
+
+    integer, intent(in) :: n, nr
+    real(dp), intent(in), dimension(:) :: x
+    real(dp), dimension(n) :: vfunc
+
+    real(dp) :: a
+
+    select case(nr)
+      case(1)
+        a = 2*x(1) + x(2) - t
+        vfunc = [ sin(a) + 2, 1._dp, sin(2*a)+4*cos(a) ]
+      case default
+        write(*,'(/a,i0/)') 'Error vfunc: wrong function number: ', nr
+        stop
+    end select
+
+  end function vfunc
+
+end module surface_advection_functions_m
+
+
+

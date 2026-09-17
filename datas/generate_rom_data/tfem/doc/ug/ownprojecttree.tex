@@ -1,0 +1,117 @@
+% !TEX root = userguide.tex
+
+\chapter{How to make a project tree with multiple directories?}
+\pgst{tfemchA}
+\label{chap:projecttree}
+
+\def\chaptertitle{How to make a project tree with multiple directories?}
+\def\headdate{21st November 2023}
+
+The utilities \texttt{getmdefs}, \texttt{fmm} and \texttt{fmme} generate a
+macro definition file \texttt{Mdefs.mk} and a \texttt{Makefile} in the current
+directory for the files existing in the current directory. Except for small
+projects, source files are usually distributed over multiple directories. At
+least a separation is usually made between the source files of the modules
+and the main program(s). In this section it is shown how to deal with this
+situation using \texttt{getmdefs}, \texttt{fmm} (or \texttt{fmme}) and the
+additional command \texttt{fmmroot}.
+
+Assume we have the following layout of our project tree (output is from
+\texttt{ls -F}):
+\begin{quote}
+  \texttt{lib/  main/  modfiles/  src/}
+\end{quote}
+where the directories \texttt{lib} and \texttt{modfiles} are used to store the
+project archive and module information files (extension \texttt{.mod}).
+The names
+of these two directories (\texttt{lib}, \texttt{modfiles}) should be exactly
+as specified, whereas other directories can be chosen freely. In this example
+the module source files (or other subroutine files) are in \texttt{src} and the
+main programs are in \texttt{main}.
+
+The first thing to do after creating the project tree is to generate the
+\texttt{Mdefs.mk} in the root project directory by
+\begin{quote}
+   \texttt{getmdefs -p >Mdefs.mk}
+\end{quote}
+The option \texttt{-p} will set a macro \texttt{PROJECTDIR} to the project root
+directory and a macro \texttt{PROJECTNAME} for the name of the project. The
+default name is just \texttt{project}. If you want to use another name, you can
+by given the command
+\begin{quote}
+   \texttt{getmdefs -d >Mdefs.mk}
+\end{quote}
+instead, which sets \texttt{PROJECTNAME} to the current directory or
+\begin{quote}
+   \texttt{getmdefs -n \textit{name} >Mdefs.mk}
+\end{quote}
+which sets \texttt{PROJECTNAME} to the specified name.
+
+Next, create makefiles in all subdirectories containing sources:
+\begin{verbatim}
+     cd src
+     fmm -ls >Makefile
+     cd ../main
+     fmm -s >Makefile
+     cd ..
+\end{verbatim}
+The option \texttt{-l} will instruct
+\texttt{fmm} to create a \texttt{Makefile} that produces an archive library
+of the compiled sources and put the \texttt{*.mod} files at a central place.
+The option \texttt{-s} will instruct \texttt{fmm} to search for an existing
+\texttt{Mdefs.mk} in the tree.
+
+Then, create a `master' \texttt{Makefile} in the project root directory
+\begin{quote}
+   \texttt{fmmroot >Makefile}
+\end{quote}
+If there are dependencies between the source directories (there usually are),
+you need to edit the master \texttt{Makefile} by hand. In this example the
+main programs in \texttt{main} depend on the source files in \texttt{src}.
+In order to express that, change the following line 
+\begin{quote}
+  \texttt{maindir:}
+\end{quote}
+to
+\begin{quote}
+   \texttt{maindir: srcdir}
+\end{quote}
+Now you are all set to build the project by typing
+\begin{quote}
+   \texttt{make}
+\end{quote}
+or cleaning the project by
+\begin{quote}
+   \texttt{make clean}
+\end{quote}
+
+Notes:
+\begin{itemize}
+   \item It is possible to include only a specified set of 
+         subdirectories in the master \texttt{Makefile}. See the output of
+         \texttt{fmmroot -h}.
+   \item In the subdirectories a \texttt{tags} file will be made. By default
+only the source files in that directory are included. If you want to include
+additional source files, you can add these to the definition of
+the \texttt{EXTRATAGSSRC} macro of the \texttt{Mdefs.mk} file in the project 
+root directory.
+   \item If you type
+\begin{quote}
+   \texttt{make clean}
+\end{quote}
+in a subdirectory, all \texttt{.mod} files in \texttt{modfiles} and the
+complete library (\texttt{.a}) in \texttt{lib} will be removed. If you don't
+like this default, use the \texttt{-n} option:
+\begin{verbatim}
+     cd src
+     fmm -lsn >Makefile
+\end{verbatim}
+in the source directories. Note, that the \texttt{.mod} files and the library
+can now only be cleaned by using the master \texttt{Makefile}.
+   \item If the directory containing the main files is somewhere outside of the
+         project tree, just copy the \texttt{Mdefs.mk} file to the directory
+         (or even better: make a symbolic link) and run \texttt{fmm} in that
+         directory.
+\end{itemize}
+
+

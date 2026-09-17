@@ -1,0 +1,74 @@
+% !TEX root = userguide.tex
+
+\def\headdate{19th February 2015}
+
+\section{Viscoelastic fluid flow using SUPG and omitting DEVSS}
+\label{sec:nodevss}
+
+In this section some examples using the equations for viscoelastic fluid flow
+will be given after the theory in the next section.
+All examples use streamline-upwind Petrov-Galerkin (SUPG), but DEVSS has been
+omitted.
+
+\subsection{Basic formulation for G/SUPG}
+
+Recall the explicit stress formulation for the momentum and mass balance of Sec.~\ref{sec:explicitstress}:
+\begin{align}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +\nabla p^{n+1} 
+  \blue{-\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)}
+&=\nabla\cdot\ten \tau(\ten c^{n+1})
+        + \rho\vek b \\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0
+\end{align}
+where $\ten c^{n+1}$ has already been computed from a time step update of
+the constitutive equation,
+and the implicit stress formulation of Sec.~\ref{sec:implicitstress}:
+\begin{align}
+    -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +  \nabla p^{n+1} 
+  \blue{-\alpha\nabla\cdot\big(\nabla}&\blue{\vek u^{n+1} -\ten G^T{}^{n+1} \big)} \notag\\
+  -\nabla\cdot\big(G\Delta t(-\vek u^{n+1}&\cdot\nabla\ten c^n+
+        (\nabla\vek u)^T{}^{n+1}\cdot\ten c^n+
+      \ten c^n\cdot\nabla\vek u^{n+1})\big)\notag\\
+&=\nabla\cdot( G\ten h(\ten c^n,\Delta t) -G\ten 1)
+        + \rho\vek b\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0
+\end{align}
+which both are (generalized) Stokes problems for $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$. 
+The DEVSS terms, highlighted in \blue{blue}, stabilize the velocity/pressure/stress space of the
+mixed Stokes system  (LBB stable) \cite{Guenette95}. 
+
+The DEVSS stabilization is required for a pure mixed problem,
+i.e.\ $\eta_s=0$ and no implicit stress terms (as in the implicit stress formulation above). However, if $\eta_s\neq0$
+and/or the stress implicit terms are present, the velocity/pressure/stress space is regularized and the LBB-stabilization by DEVSS is, strictly speaking, not required. In \cite{Baltussen2010} the implicit stress formulation has been used with the DEVSS terms omitted and it seems to work just fine. Note, that in this way the momentum  and mass balance become a $(\vek u^{n+1},p^{n+1})$ Stokes type system. Since, $\ten G^{n+1}$ is still required in updating the constitutive model (G-method), it can be obtained easily after the $(\vek u^{n+1},p^{n+1})$-solve by 
+a weak formulation (projection) of 
+\[
+   \ten G^{n+1} = (\nabla\vek u^{n+1})^T
+\]
+Remarks:
+\begin{enumerate}
+   \item The removal of $\ten G^{n+1}$ from the Stokes system can lead to substantial savings in CPU time, especially in 3D.
+   \item The Stokes system becomes better conditioned and convergence for iterative methods is probably more easily achieved.
+   \item Experience so far, with the omission of DEVSS is limited. For the simple Couette flow (see Sec.~\ref{sec:couette_nodevss})  the stability for 
+   the implicit stress formulation
+   with $\eta_s=0$ is reduced, i.e.\ the required time step for stability is smaller and also reduces with mesh refinement. For explicit stress and non-zero solvent $\eta_s\neq0$, however, the stability is less affected and the behavior of the perturbation even seems to be improved. 
+   \item It is advised to test your problem both with and without DEVSS to decide which works best for you.
+\end{enumerate}
+
+\subsection{Planar Couette flow for a Weissenberg number (Wi) of 10: no DEVSS}
+\label{sec:couette_nodevss}
+
+(These examples are based on an example developed by Gaetano d'Avino of 
+the University of Naples)
+
+We consider an Oldroyd-B (\texttt{couette10.f90}, \texttt{couette12.f90}) and a UCM fluid (\texttt{couette11.f90},
+\texttt{couette13.f90})
+for a planar Couette problem on a unit square.
+The problem is similar to the problem for an Oldroyd-B fluid in
+Sec.~\ref{sec:couette} (explicit stress formulation) and a UCM model in Sec.~\ref{sec:couette_IS} (implicit stress formulation) but now omitting DEVSS. Time integration is first-order accurate (\texttt{couette12.f90},
+\texttt{couette13.f90}) and second-order accurate (\texttt{couette10.f90},
+\texttt{couette11.f90}).
+
+
+

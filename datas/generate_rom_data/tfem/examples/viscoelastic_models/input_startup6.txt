@@ -1,0 +1,14 @@
+&comppar
+  flow = 1  ! type of flow:
+                ! 1: shear
+                ! 2: planar elongation
+                ! 3: uniaxial elongation
+  modulus  = 2.0 1.0 ! modulus 
+  lambda   = 3.0 0.3 ! relaxation time
+  lambda_s = 1.0 0.1 ! lambda_s 
+  nu       = 0.2 0.2 ! nu
+  shearrate = 1.0  ! shear rate 
+  epsilondot = 2.5 ! elongational rate 
+  numtimesteps  = 1000  ! number of time steps
+  timestep = 2.5e-2    ! time step
+/

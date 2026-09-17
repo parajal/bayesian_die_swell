@@ -1,0 +1,356 @@
+% !TEX root = userguide.tex
+
+\def\headdate{17th February 2025}
+
+\section{Compressible fluids}
+\label{sec:compressible}
+
+In this section examples using a compressible fluid will be
+given, but first the theory must be explained.
+
+\subsection{A simple constitutive equation for a compressible fluid}
+
+The assumption of constant volume can sometimes lead to
+substantial errors in the flow prediction. Either because high pressures can
+give volume changes that cannot be neglected or due to the time needed to build
+up the pressure in the system.
+In this section we propose a simple constitutive equation
+that can take compressibility into account. 
+
+The proposed equation is like an ``elastic solid'' in volume only:
+\begin{equation}
+   p = p_0 - K\ln J\quad\text{or}\quad J=\exp(-\frac{p-p_0}{K})
+   \label{eq:compress1}
+\end{equation}
+where $p_0$ is the initial pressure, $K$ is the compression modulus and
+Jacobian $J=\det\ten F$ with $\ten F$ the deformation gradient tensor
+between the initial (reference) configuration
+$\Omega_0$ and the current configuration $\Omega$ (see
+Sec.~\ref{sec:elasticsolid}). The Jacobian $J$ is a measure for the relative
+change in volume (ratio of new/old volume).
+Note, that
+\begin{enumerate}
+   \item The continuity equation is replaced by the relation
+         between the pressure $p$ and the change in volume.
+         The constitutive equations for the extra-stress remain unaffected and
+         a possible effect of the change in volume here needs to be taken into
+         account separately, like in the compressible EGP model (see Sec.~\ref{sec:EGPcompress}).
+   \item The equation is expected to be only valid for small volume changes.
+For large changes more accurate ones need to be implemented. However, the PDE for the pressure will become nonlinear and iteration within a time step will be needed.
+   \item The density changes if the volume changes:
+\[
+        \rho = \rho_0 / J = \rho_0 \exp(\frac{p-p_0}{K})
+\]
+which is important if inertia must be taken into account.
+   \item If inertia is taken into account, compression waves are introduced as
+well. The wave speed is $c=\sqrt{K/\rho}$. Although not very likely to occur
+in highly viscous fluids, avoid high `Mach numbers', i.e.\ $Ma=U/c>1$, with $U$ 
+the maximum value of the velocity in the flow. For $Ma>1$ shock waves
+might occur.
+\end{enumerate}
+
+The actual equation that is implemented is the differential version of Eq.~\eqref{eq:compress1} (note, that
+$\dot J=J\nabla\cdot\vek u$):
+\[
+   \frac{\dot p}K+\nabla\cdot\vek u = 0
+\]
+or
+\begin{equation}
+   \frac1K(\pderiv{p}t+\vek u\cdot\nabla p)+\nabla\cdot\vek u = 0
+   \label{eq:compress2}
+\end{equation}
+in an Eulerian frame-of-reference. Note, that the PDE is \emph{linear} in the pressure $p$. As mentioned above, adopting a different CE for pressure will lead to nonlinearity and a need for iteration in every time step.
+As an initial condition, we universally start at $t=t_0$ from the reference state throughout the initial domain, i.e.\ a pressure field $p_0$ and thus also $J=1$. The initial volume of the domain is denoted by $V_0$. No additional pressure boundary conditions are needed, except for inflow boundaries ($\vek u\cdot\vek n<0$) and for traction boundaries affecting the pressure indirectly. Even if inflow and traction boundaries are absent, no additional pressure boundary conditions are needed, in theory. The (level of the) current pressure field is fully determined by the initial pressure field $p_0$. However, in practice we see the following problems:
+\begin{enumerate}
+ \item For \emph{transient} flows, we see a slight drift in time of the solution due to the addition of time discretization errors and the lack of relaxation in the pressure equation. So, even if we expect a steady state after large times, the solution keeps on drifting and never reaches a real steady state.
+ \item Solving for a \emph{steady state} by setting $\plderiv{p}{t}=0$ in Eq.~\eqref{eq:compress2} crashes the Newton-Raphson iteration. This is to be expected, since by setting $\plderiv{p}{t}=0$ the initial condition $p=p_0$ is completely forgotten and no unique steady state can be found.
+\end{enumerate}
+In order to solve these problems we need to reintroduce the initial pressure value $p_0$ by setting a constraint on the pressure field. This is the topic of the next subsection.
+
+\subsection{A conserved quantity}
+Assume we follow a certain material blob that started with reference volume $V_0$ to occupy the current volume $V(t)$. Hence, no material flows through the boundary of the domain in the time interval $[t_0,t]$. For later use as a pressure constraint, we need a conserved quantity that can be expressed in the pressure $p$. For that, we will use the reference volume $V_0$, which obviously is conserved for a material blob. We can write $V_0$ in terms of the current pressure field $p$ as follows:
+\[
+   V_0=\int_{V_0}1\,dV_0=\int_{V_0}J^{-1}J\,dV_0=\int_{V}J^{-1}\,dV=\int_{V}\exp(\frac{p-p_0}{K})\,dV
+\]
+or
+\begin{equation}
+  F_1(p)=\int_{V}\exp(\frac{p-p_0}{K})\,dV-V_0=0
+  \label{eq:compress3}
+\end{equation}
+Hence, the scalar $F_1(p)$ is a conserved quantity and remains equal to zero. We can use Eq.~\eqref{eq:compress3} as a constraint on the pressure field $p$, if needed.
+Some notes:
+\begin{enumerate}
+\item The constraint Eq.~\eqref{eq:compress3} can only be imposed if the reference volume $V_0$ is known before hand. For example, if we are dealing with a closed container, where no material flows through the boundary. The container can have moving boundaries, as long as it remains closed, i.e.\ containing the same material.
+\item In the limit of $K\rightarrow\infty$, the pressure dependence of the constraint Eq.~\eqref{eq:compress3} disappears and might lead to loss of accuracy in solving the system matrix for large $K$ values. In that case, the alternative constraint might be better (untested at the time of writing):
+\begin{equation}
+  F_2(p)=KF_1(p)=K\int_{V}\exp(\frac{p-p_0}{K})\,dV-KV_0=0
+  \label{eq:compress4}
+\end{equation}
+\item For the \emph{special} case that the total volume remains the same, i.e.\ $V=V_0$, the constraints can be reduced to
+\begin{equation}
+  \bar F_1(p)=\int_{V}[\exp(\frac{p-p_0}{K})-1]\,dV=0
+  \label{eq:compress5}
+\end{equation}
+and
+\begin{equation}
+  \bar F_2(p)=K \bar F_3(p)=K\int_{V}[\exp(\frac{p-p_0}{K})-1]\,dV=0
+  \label{eq:compress6}
+\end{equation}
+respectively. These constraints do not require a separate value for $V_0$ as input.
+\item
+For small values of the pressure, i.e.\ $|p-p_0|/K\ll 1$, we can expand $F_2(p)$ and truncate up to first order as follows
+\begin{align}
+   F_2(p)&=K\int_{V}(1+\frac{p-p_0}{K}+\ldots)\,dV-KV_0\notag\\
+         &\approx\int_V(p-p_0)\,dV+K(V-V_0)=0
+\label{eq:compress7}
+\end{align}
+For the case that the total volume remains the same, i.e.\ $V=V_0$, this reduces to
+\begin{equation}
+ \bar F_2(p)\approx\int_V(p-p_0)\,dV=0
+\label{eq:compress8}
+\end{equation}
+which shows that for small values of the pressure the constraint is related to the integral of the pressure\footnote{One can argue that Eq.~\eqref{eq:compress8} must hold in the limit $K\rightarrow\infty$ (incompressible fluid) as well. However, one should be careful here in how the limit is taken. You only get 
+Eq.~\eqref{eq:compress8} if $V=V_0$ is in the path to the limit. However, if you relax the volume deformation, any
+additional pressure level can be created with the term $K(V-V_0)$ in Eq,~\eqref{eq:compress7}, where you also end up with $V=V_0$ in the limit $K\rightarrow\infty$, but not during the path to the limit.}.
+\end{enumerate}
+
+
+\subsection{Numerical discretization}
+The PDE given by Eq.~\eqref{eq:compress2} is discretized in time using a semi-implicit or fully implicit scheme and replaces the continuity equation. 
+For example a first-order scheme is created using semi-implicit Euler:
+\[
+   \frac1K(\frac{p^{n+1}-p^n}{\Delta t})+\hat{\vek u}^{n+1}\cdot\nabla p^{n+1})+
+     \nabla\cdot\vek u^{n+1} = 0
+\]
+with $\hat{\vek u}^{n+1}=\vek u^n$. A second-order scheme is created using extrapolated BDF2:
+\[
+   \frac1K(\frac{\frac32p^{n+1}-2p^n+\frac12p^{n-1}}{\Delta t})+\hat{\vek u}^{n+1}\cdot\nabla p^{n+1})+
+     \nabla\cdot\vek u^{n+1} = 0
+\]
+with $\hat{\vek u}^{n+1}=2\vek u^n-\vek u^{n-1}$. 
+
+Fully implicit schemes are created by replacing $\hat{\vek u}^{n+1}$ with $\vek u^{n+1}$. First order BDF1:
+\[
+   \frac1K(\frac{p^{n+1}-p^n}{\Delta t})+\vek u^{n+1}\cdot\nabla p^{n+1})+
+     \nabla\cdot\vek u^{n+1} = 0
+\]
+and second-order BDF2:
+\[
+   \frac1K(\frac{\frac32p^{n+1}-2p^n+\frac12p^{n-1}}{\Delta t})+\vek u^{n+1}\cdot\nabla p^{n+1})+
+     \nabla\cdot\vek u^{n+1} = 0
+\]
+Note, this requires iteration to solve the nonlinear problem. For that, we use Newton-Raphson iteration, where in each iteration the difference in the solution vector is computed.
+
+The pressure constraint introduced in the previous subsection is a nonlinear constraint (see Sec.~\ref{sec:nonlinearconstraint}). For that, we need to add the following system matrix and vector to the system for Newton-Raphson iteration (affects the $(\utilde p,\lambda)$ partition only):
+\begin{equation*}
+   \begin{pmatrix}
+      \pderivxy{^2F}{p_i}{p_j}\lambda &
+   \pderiv{F}{p_i} \\[3ex]
+   \pderiv{F}{p_j} & 0
+   \end{pmatrix}
+     \begin{pmatrix}
+            \Delta \utilde p\\[1ex]
+            \lambda
+     \end{pmatrix}
+   = 
+     \begin{pmatrix}
+            \utilde 0 \\[1ex]
+            -F(\utilde p)
+     \end{pmatrix}
+\end{equation*}
+where the constraint equation is $F(\utilde p)=0$ and $\lambda$ the Lagrange multiplier. Note, that we solve for the $\lambda$ and not $\Delta\lambda$ during the iteration steps. Expressions for the matrices for $F_1$ and $F_2$:
+\begin{align*}
+   \pderiv{F_1}{p_i}&=\frac1K\int_V \exp(\frac{p-p_0}{K})\psi_i\,dV\\
+   \pderivxy{^2F_1}{p_i}{p_j}&=\frac1{K^2}\int_V \exp(\frac{p-p_0}{K})\psi_i\psi_j\,dV\\
+   \pderiv{F_2}{p_i}&=\int_V \exp(\frac{p-p_0}{K})\psi_i\,dV\\
+   \pderivxy{^2F_2}{p_i}{p_j}&=\frac1{K}\int_V \exp(\frac{p-p_0}{K})\psi_i\psi_j\,dV
+\end{align*}
+where $\psi_i$ are the pressure shape functions.
+
+\subsection{Flow in a channel or pipe of a compressible viscous fluid.
+Newtonian model. Semi-implicit and fully-implicit schemes.}
+
+We consider a flow in a channel or a pipe of a compressible fluid.
+The example files can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample compressible\_fluid}
+\end{quote}
+
+The first
+example (\texttt{compressible\_fluid1.f90} is a fixed domain with specified
+inflow and outflow boundary conditions: 
+\begin{itemize}
+   \item At the entry the velocity profile is given (parabolic) and the
+entry pressure is either left unspecified (open boundary condition) or fully imposed.
+   \item At the exit the vertical velocity is set to zero and in the horizontal
+direction the traction is set to zero.
+\end{itemize}
+The constitutive equation for the extra stress is a Newtonian fluid.
+Initially the pressure $p_0=0$ and
+after a long start-up, due to the pressure build-up,
+a steady flow is obtained. In Fig.~\ref{fig:compressible1} contour values are
+shown of the horizontal velocity $u$ that increases in downstream direction
+due to the decrease in pressure.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{u_contour}
+   \end{center}
+   \caption{Compressible flow in a channel (only upper half is shown).
+           Flow from left to right. 
+           Contours of horizontal velocity $u$. There is an
+           increase in downstream direction
+           due to decrease in pressure (expanding fluid).}
+    \label{fig:compressible1}
+\end{figure}
+
+Example \texttt{compressible\_fluids3.f90}
+is similar to \texttt{compressible\_fluids1.f90}, but now with a
+second-order time integration scheme instead of first-order.
+
+Example \texttt{compressible\_fluids6.f90}
+is similar to \texttt{compressible\_fluids3.f90}, but now with a fully-implicit
+second-order time integration scheme (BDF2) with Newton-Raphson iteration.
+ 
+The
+example (\texttt{compressible\_fluid2.f90} is a fluid moving between two
+pistons that have the same constant velocity $U$. We use an ALE description
+(see Sec.~\ref{sec:ale}) where the mesh moves with the same velocity $U$.
+Therefore the left and right boundary of mesh moves with the fluid and no fluid
+is flowing in or out of the mesh domain and no additional pressure boundary
+condition are necessary.
+The specified inflow and outflow boundary conditions are: 
+\begin{itemize}
+   \item At the left and right boundary a constant velocity $\vek u=(U,0)$ is
+specified.
+   \item Since the velocity is zero on the wall and to avoid a pressure
+singularity due to the velocity jump, we assume a certain slip length over
+which the velocity changes from $U$ to $0$, quadratically with
+$\plderiv{u}{x}=0$ at the transition point from slip to stick.
+\end{itemize}
+The constitutive equation for the extra stress is a Newtonian fluid.
+Initially the pressure $p_0=0$ and
+after a long start-up, due to the pressure build-up,
+a steady flow is obtained. Except for the regions near the pistons, the
+flow is close to the usual developed profile (if $K$ is high enough). However,
+it takes a long time to reach steady state.
+In Fig.~\ref{fig:compressible2} we
+show the horizontal velocity $u$ in the center of the domain as a function
+of time for the specified set of problem parameters.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{ustart}
+   \end{center}
+   \caption{Compressible flow between two moving pistons in  a channel.
+           Horizontal velocity $u$ in the center of the domain as a
+           function of time $t$. 
+           Problem values: $U=1$, $L=40$, $H=1$, $\eta=1$, $K=200$. }
+    \label{fig:compressible2}
+\end{figure}
+Early testing gives that 
+the start-up time\footnote{99\% of steady state value obtained.} in a
+channel of length $L$ 
+seems to scale roughly as
+\[
+ t_\text{ch}\approx1.5\frac{\eta}{K}(\frac{L}{H})^2
+\]
+for a channel with half-height $H$. 
+This equation is preliminary and needs to be more thoroughly tested. Also the
+corresponding one for a pipe needs to be tested also.
+The scaling is consistent with the
+following simple model:
+\begin{itemize}
+   \item In the final developed steady state the pressure gradient is given by
+\[
+    \pderiv{p}{x}=\frac{\tau_\text{w}}{H}
+\]
+where $\tau_\text{w}$ is the wall shear stress. For a Newtonian fluid
+$\tau_\text{w}$ is given by
+\[
+    \tau_\text{w}=3\frac{\eta U}{H}
+\]
+where $U$ is the average velocity. The pressure difference over a length $L$ is
+therefore given by
+\[
+    \Delta p_1= \pderiv{p}{x}L=\frac{\tau_\text{w}}{H}L=3\frac{\eta U L}{H^2}
+\]
+    \item In a compressible fluid the pressure difference needs to be
+ ``generated'' by compressing the fluid upstream and/or expanding the fluid
+downstream. 
+The change in volume (positive and/or negative) during the start-up
+time $t$ will scale
+with the (total) displacement of the
+pistons $2Ut$ during that time. The relative change in volume scales like
+\[
+  \frac{\Delta V}{V}\sim 2\frac{UtA}{LA}=2\frac{Ut}{L}
+\]
+with $t$ the transient time and $A$ the cross-sectional area.
+The pressure difference will scale like
+\[
+   \Delta p_2 \sim K \frac{\Delta V}{V}\sim 2K\frac{Ut}{L}
+\]
+\end{itemize}
+Balancing 
+$\Delta p_1=\Delta p_2$ leads to the following scaling for the transient
+time:
+\[
+   t\sim1.5\frac{\eta}{K}(\frac{L}{H})^2
+\]
+This scaling is confirmed by the numerical model.
+The actual front factor is the same, but this is coincidental. Apart from the
+rather arbitrary value of 99\% of the steady state value,
+the actual transient is much more complicated:
+\begin{enumerate}
+   \item At the start only a small region near the pistons is
+compressed/expanded and the center of the domain is not yet flowing. At the end
+of the transient the center has become full up to speed and the
+compression/expansion has stopped.
+   \item The pressure profile depends on time and position (the latter 
+         also in the steady state) and therefore also the
+         amount of compression/expansion depends on time and position.
+   \item The relative
+         volume changes are not really small (between 0.5 and 1.0) and
+         the nonlinear relation between
+         $p$ and $J$ becomes important.
+\end{enumerate}
+
+Example
+\texttt{compressible\_fluids4.f90} is similar to 
+\texttt{compressible\_fluids2.f90}, but now with a
+second-order time integration scheme instead of first-order. 
+
+Example \texttt{compressible\_fluids5.f90} is also similar \texttt{compressible\_fluids2.f90}, but it uses element level computation of the predicted convection velocity $\hat{\vek u}^{n+1}$.
+%Assuming that the left piston compresses the left half of the fluid
+%and the right piston expands the right half of the fluid, the contribution from
+%both pistons will be roughly the same.
+%Also the compression/expansion
+%will be most effective at the start of the transient (the center of the
+%domain will have zero velocity) and will come to a halt after the transient.
+%Assuming a linear pressure profile leading to a
+%linear distribution of change in volume, the pressure difference will be
+%where a factor two is introduced due to the contribution from two pistons and a
+%factor of two due to the linear pressure profile.
+
+\subsection{Compressible flow of a Newtonian fluid around a rotating cylinder inside a square box. Fully-implicit scheme with Newton-Raphson iteration}
+\label{sec:cylinderrotating}
+The example \texttt{compressible\_fluids7.f90} can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample compressible\_fluid}
+\end{quote}
+and computes the transient compressible flow
+between a rotating cylinder and a stationary square box using a fully-implicit scheme with Newton-Raphson iteration.
+There is an option to include an iteration to steady state in the final step. In Fig.~\ref{fig:curves_cylinder_in_box} the points and curves defined in the creation of the mesh are shown. In this flow the total volume of fluid is constant. There are no inflow and outflow sections and therefore the application of the integral pressure constraint to set the pressure level is recommended (transients) or required (steady state). To run the example it is needed to first make the mesh by
+\begin{quote}
+   \texttt{mesh\_cylinder\_in\_box < meshinput1.txt}
+\end{quote}
+\begin{figure}[htbp!]
+  \begin{center}
+   \includegraphics[scale=0.4]{curves_cylinder_in_box}
+  \end{center}
+   \caption{Points and curves of the domain for the rotating cylinder in a box. The cylinder wall is given by the curve \texttt{C13}. The cylinder is rotating with rate of $\omega$, counter clockwise. The walls of the square box (curves \texttt{C4}, \texttt{C7}, \texttt{C10} and \texttt{C12}) are stationary. The fluid is in between the cylinder wall and the walls of the box.}
+    \label{fig:curves_cylinder_in_box}
+\end{figure}
+
+Addtional examples using this geometry and fully implicit compressible flows with integral pressure constraints and solved with Newton-Raphson iteration are the examples using the EGP model in Sec.~\ref{sec:cylinderegp}.
+
+

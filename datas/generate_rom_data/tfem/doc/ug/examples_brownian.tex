@@ -1,0 +1,570 @@
+% !TEX root = userguide.tex
+
+\def\headdate{11th May 2016}
+
+\section{Fluctuating hydrodynamics}
+\label{sec:brownian}
+
+In this section some examples using the Stokes equation with stochastic
+right-hand side according to the theory of fluctuating hydrodynamics of Landau
+\& Lifshitz \cite{Landau59} will be given. A predictor-corrector time integration scheme 
+for moving particles is used to account for the divergence
+of the mobility. 
+A more detailed description is given in \cite{DeCorato2016}.
+
+\subsection{Weak formulation. Galerkin}
+
+We consider the Stokes equation (see Sec.~\ref{sec:stokesweak})
+in a region $\Omega$ with an additional stochastic right-hand side according to
+\cite{Landau59}:
+\begin{alignat}{3}
+ -&\nabla\cdot(2\eta \ten D)+\nabla p & &=f+\nabla\cdot\ten s,
+                              &&\qquad\text{in }\Omega
+     \label{eq:stokes1s}\\
+   &\nabla\cdot\vec u& &=0&&\qquad\text{in }\Omega
+     \label{eq:stokes2s}
+\end{alignat}
+where $\ten D=(\nabla\vec u+\nabla\vec u^T)/2$.
+For an incompressible Newtonian fluid 
+the ``stochastic stress tensor $\ten s$'' has a Gaussian distribution with the
+following properties \cite{Landau59,Sengers06}:
+\begin{align}
+   \langle \ten s \rangle &= \ten 0 \\
+    \langle s_{ij}(\vec x,t)s_{kl}(\vec x',t')\rangle &=
+     2k_\text{B}T\eta(\delta_{ik}\delta_{jl}    +
+                      \delta_{il}\delta_{jk})
+         \delta(\vec x-\vec x')\delta(t-t')    
+\end{align}
+where $k_\text{B}$ is Bolzmann's constant and $T$ is the absolute temperature.
+
+The boundary conditions are similar to Sec.~\ref{sec:stokesweak}:
+\begin{gather}
+    \vec u = \vec u_D\text{ on }\Gamma_D\\
+    -p\vec n+2\eta \ten D\cdot\vec n+\ten s\cdot\vec n
+          =\vec t_{\text{N}}\text{ on }\Gamma_{\text{N}}
+\end{gather}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part. The Neumann condition is equivalent
+to an imposed traction of $\vec t_{\text{N}}$. 
+
+Remarks:
+\begin{enumerate}[1.]
+  \item Interpretation of the equations for fluctuating hydrodynamics can only
+be interpreted in an `integrated' or distributional sense. The stochastic
+stresses $\ten s$ are delta-correlated in space and time and strictly speaking
+do not exist: the variance of $\ten s$ is infinite \cite{Gardiner85}. If we
+integrate $\ten s$ (for example the $s_{12}$ component)
+over a small space-time domain
+ $\Delta x\times\Delta y\times\Delta z\times\Delta t$ we get 
+\begin{equation}
+   \int_{\Delta x\times\Delta y\times\Delta z\times\Delta t} 
+s_{12}(\vec x,t)\,dxdydzdt=2k_\text{B}T\eta\Delta W
+\end{equation}
+with
+\begin{equation}
+   \langle\Delta W^2\rangle=\Delta x \Delta y\Delta z\Delta t
+\end{equation}
+Hence $\Delta W$ can be seen as a multi-dimensional Wiener increment, which has
+a clear interpretation. A `not so
+rigorous' expression for $s_{12}$ could then be,
+\begin{equation}
+  s_{12} = 2k_\text{B}T\eta\pderiv{^4 W}{x\partial y\partial z\partial t}
+\end{equation}
+with $W(\vec x,t)$ a multi-dimensional Wiener process,
+but remember that derivatives of a Wiener process do not exist.
+\label{item:s}
+ 
+\item In the same spirit as item \ref{item:s}, pressures are delta-correlated
+and can only be interpreted in an integrated sense. So don't expect
+finite-element solutions of $p$ or even $\langle p^2\rangle$ to have much of 
+a meaning and will also be highly dependent on the mesh. Only integrations over
+time \emph{and} over a surface (2D) or a volume (3D) will have a meaning and
+mesh converging properties (like the variance) can be expected.
+
+\item As for the velocity field $\vec u$, it is found by `integrating twice' in
+space, so it is `less singular' than $\ten s$ or $p$, but only by integrating
+in time \emph{and}
+over a curve (2D) or surface (3D) it will have mesh-converging properties
+ (such as the variance). 
+
+\item In the original equations in \cite{Landau59,Sengers06}, inertia is
+included and the delta-correlation in time is removed by the time-integration
+of the inertia term.
+
+\end{enumerate}
+                                                                                
+The weak form can be obtained by multiplying
+Eqs.~\eqref{eq:stokes1s}--\eqref{eq:stokes2s}
+with test functions $\vec v$ and $q$:
+\begin{align*}
+ (\vek v,-\nabla\cdot\ten\sigma -\vek f)&=0,\qquad\text{for all }\vek v\\
+  (q,\nabla\cdot\vek u)& =0,\qquad\text{for all }q
+\end{align*}
+where
+\begin{align*}
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\\
+   (a,b)&=\int_\Omega a b\D x
+\end{align*}
+and $\ten\sigma = -p\ten I+2\eta\ten D+\ten s$.
+
+Using partial integration and Gauss'
+theorem we obtain the following weak form: 
+Find $\vek u$ and $p$ such that
+\begin{alignat*}{3}
+  &\big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)&&=
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+   -\big((\nabla\vek v)^T:\ten s\big)
+&\qquad&\text{for all }\vek v\\
+  &\,(q,\nabla\cdot\vek u)&& =0,&\qquad&\text{for all }q
+\end{alignat*}
+using appropriate spaces for $\vek u$, $p$, $\vek v$ and $q$. In this equation
+$\ten D_v$ is defined by
+\[
+\ten D_v=(\nabla\vek v+\nabla\vek v^T)/2
+\]
+and the bilinear operator $(\,,\,)$ for tensors is given by
+\[
+   (\ten A, \ten B)=\int_\Omega\ten A:\vek B\D x
+\]
+Remarks
+\begin{enumerate}[1.]
+  \item The minus sign in front of the stochastic term has no significance.
+  \item Except for the delta-correlation in time, the integration over the
+volume gives the stochastic term a meaning. For example, the contribution of
+the $s_{12}$ component is 
+\begin{equation}
+  I_{12}(t)=
+    -(\pderiv{v_1}{x_2},s_{12})=-\int_\Omega\pderiv{v_1}{x_2}s_{12}\D x
+\end{equation}
+The stochastic properties of this term are:
+\begin{equation}
+  \langle I_{12}(t)I_{12}(t')\rangle=
+   2k_\text{B}T\eta\Big(\int_\Omega[\pderiv{v_1}{x_2}]^2\D x\Big)
+\delta(t-t')
+\end{equation}
+which has a clear meaning, although it is still delta-correlated in time.
+\end{enumerate}
+
+The weak form can be used to obtain an `approximate' solution using the Galerkin \fem\
+technique. For this we divide the region $\Omega$ into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $\vek u$ and $p$ (and similarly $\vek v$ and $q$) by
+polynomials on each element:
+\[
+ \begin{split}
+    \vek u_h&=\tsum_k \phi_k(\vek x)\vek u_k=\col\phi^T(\vek x)\col{\vek u}\\
+    p_h&=\tsum_k \psi_k(\vek x) p_k=\col\psi^T(\vek x)\col{ p}
+ \end{split}
+\]
+where $\col\phi(\vek x)$ and $\col\psi(\vek x)$
+are global shape functions. Before we define the numerical solution we need a
+procedure to compute the stochastic term:
+\begin{equation}
+  I(t)=-\int_\Omega(\nabla\vek v)^T:\ten s\D x
+\end{equation}
+For this, we use the numerical
+integration scheme for the evaluation of the integrals in the usual finite
+element implementations:
+\begin{equation}
+   \int_\Omega f(\vec x)\D x\approx\sum_{m=1}^{N_\text{g}}w_mf(\vec x_m)
+\end{equation}
+where $N_\text{g}$ is the number of integration points (for example using a
+Gauss integration scheme for each element), $w_m$ is
+the weight in integration point $\vec x_m$ and
+$f(\vec x_m)$ the value of the function in the integration point. Note, that
+  The weight factor $w_m$ contains both the weight factor of the
+        integration rule and the Jacobian of
+        mapping of the reference element to the real
+        element in the integration point $m$.
+We assume $w_m\geq0$, which is valid for all popular integration rules.
+Now we propose to compute the stochastic term in the following way. Introduce
+tensorial stochastic processes $\ten r^m(t)$ (statistically independent
+between each integration point $m$) having the following properties:
+\begin{align}
+   \langle \ten r^m \rangle &= \ten 0 \\
+    \langle r^m_{ij}(t)r^m_{kl}(t')\rangle &=
+     2k_\text{B}T\eta(\delta_{ik}\delta_{jl}    +
+                      \delta_{il}\delta_{jk})\delta(t-t')    
+\end{align}
+Now we compute an approximation of $I(t)$ by
+\begin{equation}
+   \hat I(t)=-\sum_{m=1}^{N_\text{g}}\sqrt{w_m}(\nabla\vek v)^T:\ten r^m(t)
+\end{equation}
+The stochastic properties of $\hat I(t)$ are now the same as $I(t)$
+up to the numerical error of the integration rule.
+
+Remarks:
+\begin{enumerate}[1.]
+  \item The weight factor $w_m$ contains both the contributions of the
+        integration rule and the mapping of the reference element to the real
+        element in the integration point $m$.
+  \item The stochastic properties of $\hat I(t)$ do not depend on the number of
+integration points or the integration rule used as long as the integration is
+performed accurately.
+  \item The tensors $\ten r^m(t)$ still are delta-correlated in time and still
+    need to be integrated in time by Brownian dynamics schemes
+    to be used in a meaningful way.
+  \item We take $\ten r^m(t)$ to be a symmetric tensor and thus need three
+(2D) or six (3D) random numbers in each integration point at each time step
+if standard Euler forward integration is being used.
+We use random numbers taken from a Gaussian distribution.
+\end{enumerate}
+
+We can now substitute the interpolations into the weak form which leads to
+\begin{alignat*}{3}
+   &\col{\vek v}^T\cdot(\mat{\ten S}\cdot\col{\vek u}-\mat{\vek L}^T\col p)&&=
+    \col{\vek v}^T\cdot\col{\vek f}
++\col{\vek v}^T\cdot\hat{\col{\vek I}}(t)\qquad&&\text{for all }\col{\vek v}\\
+   &\quad\col q^T\mat{\vek L}\cdot\col{\vek u}&&=0\qquad&&\text{for all}\col{q}
+\end{alignat*}
+or
+\[
+ \begin{bmatrix}
+   \mat{\ten S} &-\mat{\vek L}^T \\[1ex]
+  \mat{\vek L} & \mat 0
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{\vek u}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+\col{\vek f} +\hat{\col{\vek I}}(t) \\[1ex]
+    \col 0
+ \end{bmatrix}
+\]\medskip\\
+with (in index notation, using summation convention for indices over
+coordinate directions and components of vectors and tensors):
+\begin{align*}
+       S_{ij}^{km}&= (\phi_{k,l},\eta\phi_{m,l})\delta_{ij}+
+          (\phi_{m,i},\eta\phi_{k,j})\\
+    L_i^{km}&=(\psi_k,\phi_{m,i})\\
+     f^k_i&=(\phi_k,t_{iN})_{\Gamma_{\text{N}}}+(\phi_k,f_i)\\
+\hat I^k_i(t)&=-\sum_{m=1}^{N_\text{g}}\sqrt{w_m}\phi_{k,l} r^m_{li}(t)
+\end{align*}
+Here $k$ and $m$ denote nodal points and $i$ and $j$ component directions of
+vectors. In practice we multiply the continuity equation by -1 in order to
+obtain a symmetric system matrix:
+\[
+ \begin{bmatrix}
+   \mat{\ten S} &-\mat{\vek L}^T \\[1ex]
+  -\mat{\vek L} & \mat 0
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{\vek u}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+\col{\vek f} +\hat{\col{\vek I}}(t) \\[1ex]
+    \col 0
+ \end{bmatrix}
+\]
+
+All the standard shape functions for velocity and pressure can be used:
+\begin{itemize}
+\item
+The linear macro elements:
+$P_1\text{-iso-}P_2/P_1$ on triangles, tetrahedra and 
+$Q_1\text{-iso-}Q_2/Q_1$ on quadrilaterals and hexahedra (\cite{Bercovier79}).
+ \item from the Taylor-Hood
+family (continuous pressures): $Q_2Q_1$ on quadrilaterals and hexahedra and
+$P_2P_1$ on triangles and tetrahedra.
+ \item from the Crouzeix-Raviart
+family (discontinuous pressures): $Q_2P_1^{(\text{d})}$ on quadrilaterals
+and hexahedra and $P_2^+P_1^{(\text{d})}$ on triangles and tetrahedra.
+\end{itemize}
+Also higher-order elements (spectral or $hp$) can be used.
+Note, that with quadratic elements the variance of the fluctuating
+velocity field is significantly less in the `mid-side' nodes compared with the
+vertex nodes (\cite{DeCorato2016}). In the linear elements the variance is more
+equally distributed. This is related to the Stokes-Einstein-Sutherland relation
+that identifies variance (diffusion coefficient) with the inverse resistance
+matrix. If higher-order shape functions are used the mid-side node has a higher
+resistance (`stiffness') than the vertex nodes, leading to lower variances in
+the middle nodes. This is not a problem if forces are distributed in a
+`consistent' manner.
+
+\subsection{A cylindrical particle in a cavity. Boundary fitted mesh}
+
+\label{sec:brown1}
+
+Consider the two-dimensional problem of
+a square cavity of size $2H$ with a cylindrical particle,
+having a diameter $2a$,
+at the center (see Fig.~\ref{fig:brownian_cavity1}). The ratio $a/H=4$. Denote
+the length of of the cylinder (in $z$-direction) by $L$.
+\begin{figure}
+ \begin{center}
+  \includegraphics{brownian_cavity1}
+ \end{center}
+  \caption{Cylindrical particle in a square cavity.} 
+   \label{fig:brownian_cavity1}
+\end{figure}
+The velocity components and the rotation rate of the cylinder will be denoted
+by $U_x$, $U_y$ and $\Omega_z$ and
+the force components and the torque on the cylinder by $F_x$, $F_y$ and $M_z$,
+respectively. Now we can write the relation between the forces/torques and
+velocities/rotation rate:
+\begin{equation}
+  \col F = \mat\zeta \col U
+\end{equation}
+where the vectors are defined as
+\begin{equation}
+  \col F= \begin{pmatrix}
+              F_x \\ F_y \\ M_z
+          \end{pmatrix}, \quad
+  \col U= \begin{pmatrix}
+              U_x \\ U_y \\ \Omega_z
+          \end{pmatrix},
+\end{equation}
+and the resistance matrix (`drag coefficient') $\mat\zeta$ can be written as
+\begin{equation}
+   \mat\zeta = \eta L
+       \begin{pmatrix}
+         K_x & 0 & 0 \\
+         0 & K_y & 0 \\
+         0 & 0 & R_za^2
+       \end{pmatrix}
+   \label{eq:dragcoef1}
+\end{equation}
+where $K_x$, $K_y$ and $R_z$ are dimensionless resistance coefficients. Note,
+that due to the symmetry of the problem $K_x=K_y$ and the resistance matrix
+$\mat\zeta$ is diagonal.
+
+The example files
+can be obtained by \texttt{getexample fluctuating\_hydrodynamics}.
+The mesh can be created by
+\begin{quote}
+   \texttt{mesh\_cylinder\_in\_box1 < meshinput1}
+\end{quote}
+and will look like Fig.~\ref{fig:bfm1}.
+\begin{figure}
+ \begin{center}
+  \includegraphics[scale=0.5]{bfm1}
+ \end{center}
+  \caption{Boundary fitted mesh for a cylindrical particle in a square cavity.} 
+  \label{fig:bfm1}
+\end{figure}
+The resistance coefficients can be obtained by the
+program \texttt{drag1}, which gives for the mesh shown in Fig.~\ref{fig:bfm1}
+and using $Q2/Q1$ elements:
+\begin{equation}
+   K_x^{-1}=K_y^{-1}=4.4202\cdot10^{-2}, \quad
+   R_z^{-1}=7.5103\cdot10^{-2}
+   \label{eq:dragcoef2}
+\end{equation}
+
+Under the influence of Brownian forces the particle will start to move about.
+The position/rotation of the particle in time will be governed by a
+diffusion process (`a random walk'). The diffusion coefficient matrix $\mat D$
+of this process is governed by the famous Stokes-Einstein-Sutherland (SES)
+relation:
+\begin{equation}
+   \mat D= k_BT \mat\zeta^{-1}
+\end{equation}
+If we define the stochastic process
+\begin{equation}
+   \col X(t)=\int_0^t \col U(t')\,dt'
+   \label{eq:intU}
+\end{equation}
+we will find that for a constant value of $\mat D$:
+\begin{equation}
+   \langle \col X(t) \col X(t)^T \rangle = 2\mat D t
+   \label{eq:rdiff}
+\end{equation}
+Note, that in the
+equations for the fluctuating velocities and pressure there is still a
+delta-correlation in time. This means that for the integration in
+Eq.~\eqref{eq:intU} the numerical solution (using first-order Brownian
+dynamics) is 
+\begin{equation}
+\col X(t^{n+1})=\col X(t^{n}) + \col{\hat U}(t)\sqrt{\Delta t}\label{eq:Bpath}
+\end{equation}
+with $\col{\hat U}(t)$ the numerical
+solution from the fluctuating hydrodynamics elements
+and $\Delta t$ the time step. Note, that Eq.~\eqref{eq:Bpath} leads to a correct
+realization of a particle path if the diffusion coefficient matrix $\mat D$ is position independent.
+For a position dependent $\mat D$ an additional $\mathcal{O}(\Delta t)$ drift term needs to be added\cite{DeCorato2016}.
+
+For the current probem, the diffusion coefficient matrix $\mat D$ is position dependent. Therefore, we
+will check the SES relation only at the start of the
+process by creating a large number of realizations. For the first time step,
+which can be arbitrarily small, we get
+\begin{equation}
+\col X(\Delta t)=\col{\hat U}(0)\sqrt{\Delta t} + \mathcal{O}(\Delta t)
+\end{equation}
+where the second term on the right-hand side represents the drift term.
+We find that
+\begin{equation}
+   \langle \col X(\Delta t) \col X(\Delta t)^T \rangle = 
+       \langle \col{\hat U}(0) \col{\hat U}(0)^T\rangle\Delta t + \mathcal{O}(\Delta t^2)
+\end{equation}
+where we have assumed that the drift term is uncorrelated with the random term.
+Comparing this to Eq.~\eqref{eq:rdiff} and neglecting $\mathcal{O}(\Delta t^2)$ terms, we get
+\begin{equation}
+   \mat D(0) = \langle \col{\hat U}(0) \col{\hat U}(0)^T \rangle / 2
+\end{equation}
+which we can use to estimate $\mat D(0)$ using enough realizations. Note, that
+the diagonal terms of $\mat D(0)$ are variances and the standard deviation of
+the estimator of the variance for a normal distribution is 
+$s^2\sqrt{2(N-1)}/N$, with $N$ the number of realizations and $s^2$ the
+variance \cite{Weisstein1}.
+This means that in order to get an accuracy of, for example,
+1\% $\pm$ one standard deviation, we need $N=20000$.
+
+The program can be run by
+\begin{quote}
+  \texttt{fh1}\\
+  \texttt{analyze1}
+\end{quote}
+which gives:
+\begin{verbatim}
+ estimated diffusion coefficients:
+  4.416715456280428E-002  3.410616933234774E-004  3.370229737209369E-004
+  3.410616933234774E-004  4.421793785804608E-002 -4.492106095604258E-004
+  3.370229737209369E-004 -4.492106095604258E-004  7.607827229139297E-002
+\end{verbatim}
+Note, that in the example we take $k_BT=1$, $\eta=1$, $L=1$, $a=1$, $N=20000$.
+Comparing
+the result with
+Eqs.~\eqref{eq:dragcoef1} and \eqref{eq:dragcoef2}, we see that the
+SES relation is indeed fulfilled within statistical
+errors\footnote{In fact,
+the actual error in the SES
+relation is zero, i.e.\ the relation is exact for the numerical
+discretization: the \emph{numerical value} of $\mat D(0)$ is equal to the
+\emph{numerical value} of $k_BT\mat \zeta^{-1}$.
+ See \cite{DeCorato2016} for a proof.}.
+
+It should be noted that the individual realization are highly irregular. In
+Fig.~\ref{fig:velbr1} we show a single realization of the velocity field.
+\begin{figure}
+ \begin{center}
+  \includegraphics[scale=0.5]{velocity_brownian1}
+ \end{center}
+  \caption{A single velocity realization.} 
+  \label{fig:velbr1}
+\end{figure}
+It is only averaged quantities, like $\mat D(0)$ above, that have a physical meaning
+and can be expected to show mesh convergence.
+
+\subsection{A cylindrical particle in a cavity. Fictitious domain method}
+
+\label{sec:brown2}
+
+We consider the same problem as in Sec.~\ref{sec:brown2}, i.e.\
+the two-dimensional problem of
+a square cavity of size $2H$ with a cylindrical particle,
+having a diameter $2a$,
+at the center (see Fig.~\ref{fig:brownian_cavity1}). The ratio $a/H=4$. Denote
+the length of of the cylinder (in $z$-direction) by $L$.
+
+The problem is now solved with a fictitious domain method using a rigid-ring
+description for the particle. The constraints using a Lagrange multiplier are
+implemented in a weak way. There is fluid both inside and outside the rigid
+ring. The fluctuating forces are applied both inside and outside the ring.
+
+The resistance coefficients can be obtained by the
+program \texttt{drag2}, which gives for a mesh shown in Fig.~\ref{fig:rrd2}
+and using $Q2/Q1$ elements:
+\begin{equation}
+   K_x^{-1}=K_y^{-1}=4.3938\cdot10^{-2}, \quad
+   R_z^{-1}=7.3329\cdot10^{-2}
+   \label{eq:dragcoef3}
+\end{equation}
+\begin{figure}
+ \begin{center}
+  \includegraphics[scale=0.5]{rrd2}
+ \end{center}
+\caption{Fictitious domain mesh for a cylindrical particle in a square cavity.
+The red dots are nodes of the boundary elements using quadratic interpolation
+for the geometry.
+The Lagrange multipliers are linear continuous on each element.}
+ \label{fig:rrd2}
+\end{figure}
+The program can be run by
+\begin{quote}
+  \texttt{fh2}\\
+  \texttt{analyze2}
+\end{quote}
+which gives:
+\begin{verbatim}
+ estimated diffusion coefficients:
+  4.385127602848855E-002  2.590133672411353E-004  3.226010448329293E-006
+  2.590133672411353E-004  4.382150055103292E-002 -3.371740154469554E-004
+  3.226010448329293E-006 -3.371740154469554E-004  7.371811819337275E-002
+\end{verbatim}
+Note, that in the example we take $k_BT=1$, $\eta=1$, $L=1$, $a=1$, $N=100000$.
+Comparing the result with
+Eqs.~\eqref{eq:dragcoef1} and \eqref{eq:dragcoef3}, we see that the
+SES relation is again fulfilled within statistical
+errors (standard deviation is 0.45\% for $N=100000$).
+
+
+\subsection{Circle in an harmonic potential}
+
+(This example has been developed by Marco de Corato of the University of
+Naples)
+
+In this example (\texttt{fh3.f90}) the fluctuating hydrodynamics approach is applied to study the trajectories of a Brownian moving circle of diameter $d$ inside a rectangular channel of length $L=20d$ and width $H=2d$, under the influence of an external harmonic potential $\Phi(x)=\frac{1}{2} K x^{2}$. A schematic representation of the problem is shown in Figure \ref{fig:Circle_scheme}, where with $\boldsymbol{r}(t)$ the particle center position vector is denoted. A no-slip boundary condition is considered on all the walls of the domain.
+Indeed, in the present example the diffusion matrix of the particle is a function of its position, due to the presence of the walls; hence the non-local drift term is non-zero. See \cite{DeCorato2016} for a discussion of the drift term and the implementation using a predictor-corrector scheme.
+\begin{figure}[bhtp!]
+\centering
+\includegraphics[width=1.0\textwidth]{Circle_scheme}
+\caption{Schematic representation of a circular particle in a rectangular channel.}
+\label{fig:Circle_scheme}
+\end{figure}
+
+In this example a triangular boundary fitted mesh is used. In order to move the particle inside the fluid domain a moving mesh algorithm is used (solving a Poisson equation). Remeshing is applied whenever an element is more deformed than the threshold considered. A meshing algorithm that generates at least five elements between the particle and the wall is used.
+
+It is well known that the equilibrium particle distribution is given by the Boltzmann distribution:
+\begin{equation}\label{eqdistr}
+P(x,y) = \frac{1}{F}\exp\left(-\frac{ \Phi(x) }{k_{B}T} \right)
+\end{equation}
+Where $F$ is just a normalization constant given by:
+\begin{equation}
+F=\int_{-\frac{H}{2}}^{\frac{H}{2}}\int_{-\frac{L}{2}}^{\frac{L}{2}} \exp\left(-\frac{ \Phi(x) }{k_{B}T} \right) dx dy = H\sqrt{\frac{2 \pi {k_{B}T}}{K}} \erf{\left(  \sqrt{ \frac{ K }{2 k_{B}T} } \frac{L}{2} \right)}
+\end{equation}
+
+\begin{figure}[bhtp!]
+\centering
+\includegraphics[width=0.8\textwidth]{Circle_ext_pot1}
+\caption{Equilibrium particle distribution, the histogram represent the results obtained from our numerical simulations, the surface is the analytical solution $P(x,y)$ given by Eq.~\eqref{eqdistr}.}
+\label{fig:Circle_ext_pot}
+\end{figure}
+
+To ensure that the equilibrium is reached, every simulation is run to $t=200 \tau$, where $\tau = d^{2}/D_{0}$ is the characteristic diffusion time using the diffusion coefficient $D_{0}$ of the particle in the center of the channel. We choose a time step of $\Delta t = 5\cdot10^{-4} \tau$. Such a small time step is required to accurately capture the stochastic drift term in our time integration algorithm, especially when the particle is close to the walls, where the particle mobility varies strongly.
+Please note that different geometries (e.g.\ more confined ones) might required an even smaller time step to correctly capture the divergence of the mobility matrix.
+
+\begin{figure}[bhtp!]
+\centering
+\includegraphics[width=1.0\textwidth]{Circle_ext_pot_cross_section1}
+\caption{Cross section of the equilibrium particle distribution at two different values of $y$: a) $y=0$, and b) $y=\frac{2}{5}H$. The histogram is obtained from our numerical simulations, the solid line is the cross section of the analytical result $P(x,y)$ given by Eq.~\eqref{eqdistr}.}
+\label{fig:Circle_ext_pot_cross_sec}
+\end{figure}
+
+In order to avoid that a particle overlaps with the walls, we adopt a special adaptive time step integration algorithm. During the predictor step, if the particle moves outside the domain, we reduce the $\Delta t$ so that the distance traveled by the particle in the step is $0.95$ of the particle wall-separation; the resulting $\Delta t$ is kept fixed during the subsequent corrector step. Hence, by tuning the $\Delta t$ we can completely avoid particle-wall overlap events.
+
+In Figure \ref{fig:Circle_ext_pot} the equilibrium distribution histogram obtained from our numerical simulations and the analytical solution $P(x,y)$ are reported, where we have chosen the dimensionless parameter $K d^{2}/({k_{B}T})=1$. To make a further comparison with the analytical solution we also report in Figure \ref{fig:Circle_ext_pot_cross_sec} two cross sections of the equilibrium distribution histogram at two different values of $y$. The agreement is perfect, confirming that the time integration algorithm correctly reproduces the drift term required to obtain the Boltzmann distribution at equilibrium.
+
+
+%In the example file \texttt{brownian\_motion3.f90} the particle position is not
+%fixed and determined using Brownian dynamics. The box size $2H=8$ and the
+%particle radius $a=1$. The center of the box has coordinates $(0,0)$ and a
+%particle is released having its center at $(2.5,0)$.
+%Note, that in the example we take $k_BT=1$, $\eta=1$, $L=1$. We have
+%implemented a simple rejection algorithm: if the particle crosses the boundary
+%($|x_c|\geq3$ or $|x_c|\geq3$) we reject that step.
+%\begin{figure}
+% \begin{center}
+%  \includegraphics[scale=0.8]{bd}
+% \end{center}
+%  \caption{Four realizations of the path of a particle that starts at
+%$(2.5,0)$. Shown are the positions of the center of the particle. Note, that
+%$x=3$ means the particle touches the wall.} 
+%  \label{fig:bd}
+%\end{figure}
+%In Fig.~\ref{fig:bd} we show four realizations.

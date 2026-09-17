@@ -1,0 +1,21 @@
+&comppar
+    numtimesteps = 1400  ! number of time steps
+    plot_mesh_every = 50 ! plot mesh every .. steps
+    restart = 0          ! restart=1: restart, 
+                         ! restart=2: restart+Euler first time step
+    ctime = T            ! continue time in output after restart
+    file_append = T      ! append radius output to existing file after restart
+    htype = 2            ! upwind parameter
+    Uscaling = 3         ! upwind parameter
+    logc = 1             ! standard scheme or log transformation
+    eta_s = 0.0          ! solvent viscosity
+    eta_p = 1.0          ! polymer viscosity
+    lambda = 0.2         ! relaxation time
+    mobility = 0.01      ! mobility parameter in the Giesekus model (alpha)
+    deltat = 5.e-3       ! time step
+    rs_gup = 1.5         ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.5         ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_c  = 1.5          ! real_storage for the conformation LU (HSL)
+    is_c  = 1.5          ! integer_storage for conformation LU (HSL)
+    U_avg = 0.3          ! average velocity at the entry
+/

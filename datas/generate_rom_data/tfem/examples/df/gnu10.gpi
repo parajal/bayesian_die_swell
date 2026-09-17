@@ -1,0 +1,11 @@
+#set log y
+plot "out" us 2:3 w l, "out" us 2:4 w l
+pause -1
+plot "out" us 2:5 w l, "out" us 2:6 w l
+pause -1
+plot "out" us 2:7 w l, "out" us 2:8 w l
+pause -1
+plot "out" us 2:9 w l, "out" us 2:10 w l
+pause -1
+plot "out" us 2:11 w l, "out" us 2:12 w l
+pause -1

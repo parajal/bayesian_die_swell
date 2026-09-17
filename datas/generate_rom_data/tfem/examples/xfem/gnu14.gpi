@@ -1,0 +1,20 @@
+set xlabel "theta"
+set ylabel "pressure"
+#set nokey
+set xrange [-pi:pi]
+plot "sample_p_xf14.out" us (atan2($2,$1)):4 w l 
+pause -1
+set xlabel "theta"
+set ylabel "dudy"
+#set nokey
+set xrange [-pi:pi]
+plot "sample_dudy_xf14.out" us (atan2($2,$1)):4 w l 
+pause -1
+set xlabel "theta"
+set ylabel "vx, vy and vz on cylinder"
+#set key
+set xrange [-pi:pi]
+plot "sample_v_xf14.out" us (atan2($2,$1)):4 w l 
+replot "sample_v_xf14.out" us (atan2($2,$1)):5 w l 
+replot "sample_v_xf14.out" us (atan2($2,$1)):6 w l 
+pause -1

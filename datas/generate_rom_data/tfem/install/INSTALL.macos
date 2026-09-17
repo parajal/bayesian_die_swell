@@ -1,0 +1,111 @@
+This file describes how to install tfem on macOS.
+------------------------------------------------
+
+(See also file README.macos_arm64 for running tfem on arm64 macs)
+
+Add the following packages/programs to macOS:
+
+- Xcode (from Apple).
+- Command line tools (from Apple).
+- universal-ctags. The default ctags on macOS is not sufficient for tfem.
+- fig2dev
+- ghostscript
+- gfortran (part of gcc)
+
+For installing the non-Apple programs: use Homebrew
+
+See INSTALL.linux for further instructions common to Linux.
+
+Additional system settings:
+
+- Use the build-in open command for viewing pdf and png files. Define the
+  following environment variables in your environment files (e.g.
+  $HOME/.bash_profile or $HOME/.profile):
+
+  export PDFVIEWER='open'
+  export IMAGEVIEWER='open'
+
+  To exit the viewer use CMD-Q when viewing with viewfig or viewfigpdf.
+
+- On my Macbook Pro I need to set:
+
+  export SLEEP=2
+
+  to create a delay between module building with make. I also modified the
+  RANLIB macro in the file Mdefs.mk:
+
+  RANLIB = ranlib -c
+
+  Both modifications avoid missing symbols in libraries (at least on my Macbook
+  Pro).
+
+- I installed MacVim as editor and set VIEW as:
+
+  export VIEW=mview
+
+  To use tfvimdiff with MacVim add the option -m:
+
+  tfvimdiff -m file(s)
+
+  MacVim is available from https://github.com/macvim-dev/macvim/releases
+  or via Macports.
+
+- Running gmsh from within a shell (command line), needed for remeshing within
+  a running program, requires the command gmsh to be available. One
+  possibilility is to add the directory containing the executable to your PATH
+  environment variable (in your .profile/.bash_profile):
+
+  # gmsh location
+  gm=/Applications/Gmsh.app/Contents
+  # extend path
+  export PATH=$gm/MacOS:$PATH
+
+- OpenBlas is available via Homebrew.
+
+- The accelerate framework provides optimized BLAS in macOS. To use this with
+  gfortran modify LIBBLAS in your Mdefs.mk as follows:
+
+    LIBBLAS = -framework accelerate
+
+  To not load the CPUs to the max for Intel processors you might consider
+  setting the number of threads with
+
+    export VECLIB_MAXIMUM_THREADS=n
+
+  where n is the max number of threads. On Apple Silicon (arm64) it is
+  recommended to not set VECLIB_MAXIMUM_THREADS to make optimal use of the AMX
+  modules on the processor (see file README.macos_arm64).
+
+- Starting with macOS Ventura 13.3 the Accelerate framework supports 64bit
+  integers. Just compile tfem with the option -fdefault-integer-8 in
+  gfortran and you are done. Although the documentation of Apple mentions
+  the setting of the environment variables ACCELERATE_NEW_LAPACK=1 and
+  ACCELERATE_LAPACK_ILP64=1, this only affects the vecLib headers.
+  It doesn't do anything in tfem and the linking in the framework seems
+  to be fully automatic. Tested on Apple Silicon with macOS Sonoma 14.2.1.
+
+- To get proper 'git log' output with colors, set the environment variable:
+
+  export LESS="MR"   # set prompt style (M) and use color in less
+
+- To get the proper vi editor for committing, set the environment variable:
+
+   export GIT_EDITOR='vim -c "set wrapmargin=8"'
+
+- For nagfor I add the following lines to the Mdefs.mk script:
+
+  FCW = -Wc,-Wno-tautological-compare -Wc,-Wno-logical-op-parentheses \
+        -Wc,-Wno-incompatible-pointer-types -Wc,-Wno-parentheses
+
+  FFLAGS = $(FCHECK) $(FOPT) $(FDEBUG) $(FMISC) $(FCW)
+
+  to remove many annoying messages from the clang compiler.
+
+- For gfortran I add the following line to the Mdefs.mk script:
+
+  RANLIB = ranlib -no_warning_for_no_symbols
+
+  to get rid of annoying messages about no symbols.
+
+- The metis library is available in Homebrew. However it is int32 only. If you
+  need the int64 library, you should compile the library yourself.

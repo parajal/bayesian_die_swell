@@ -1,0 +1,38 @@
+MKL libary
+==========
+
+See README.oneAPI on how to obtain the MKL library.
+
+See also the website
+  https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html
+for further advise on compile options.
+
+
+In the following MKLPATH is the directory for the libraries. For Linux this
+should usually be set to
+   MKLPATH = $(MKLROOT)/lib/intel64
+but for some systems it might not be needed at all (mac).
+
+
+By default tfem is set to 4-byte integers with multi-threading:
+
+# 4-byte integer, multi-threading for MKL
+LIBBLAS = -L$(MKLPATH) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 \
+          -lpthread
+
+Note, that you can also set the environment variable OMP_NUM_THREADS to the
+number of threads you need. If not, the number of threads is taken equal to
+the number of cores. Note also, that in order to use the pardiso solver in
+MKL multi-threading is required.
+
+
+If the size of real(dp) arrays become larger than 16GB, 8-byte integers are
+needed. Change the lp64 library to ilp64 library:
+
+# 64bit CPU, 8-byte integer, multi-threading for MKL
+LIBBLAS = -L$(MKLPATH) -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -liomp5 \
+          -lpthread
+
+Note, that the compiler option for 8-byte integers needs to be set as well, 
+for example -i8 for the ifx compiler and -fdefault-integer-8 for the
+gfortran compiler.

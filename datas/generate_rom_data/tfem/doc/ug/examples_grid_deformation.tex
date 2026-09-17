@@ -1,0 +1,42 @@
+% !TEX root = userguide.tex
+
+\def\headdate{31st January 2012}
+
+\section{Grid deformation}
+\label{sec:grid_deformation}
+
+Starting from a base mesh elements can be moved/changed in size according to
+a monitor function $f$. The value of $f$ gives the relative size of elements
+at that position relative to the size of the other elements. Hence the absolute
+value of $f$ is not important. A possibility for generating
+the function $f$ is using a levelset function.
+The method is described in \cite{Wan07,Grajewski09} and requires solving a
+Poisson problem and a pseudo time stepping procedure. Is is used extensively in
+the PhD thesis of Choi \cite{Choi11b}.
+
+The example files are \texttt{grid\_deformation1.f90} \dots
+\texttt{grid\_deformation6.f90},
+and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample grid\_deformation}
+\end{quote}
+The examples \texttt{grid\_deformation1.f90}  \dots
+\texttt{grid\_deformation5.f90} describe the use of grid deformation for a
+circle and sphere with fixed domain boundaries,
+circle and sphere with periodical
+boundaries in one direction and two circles with fixed domain boundaries. The
+result of the latter example is shown in Figure~\ref{fig:griddefcircles}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{mesh_initial}
+   \includegraphics[scale=0.4]{mesh_deformed}
+   \end{center}
+   \caption{Mesh before and after grid deformation.}
+    \label{fig:griddefcircles}
+\end{figure}
+
+The example \texttt{grid\_deformation6.f90} is similar to the
+\texttt{stokes8.f90} example (see Sec.~\ref{sec:drivenparticle}),
+ but now with grid deformation.

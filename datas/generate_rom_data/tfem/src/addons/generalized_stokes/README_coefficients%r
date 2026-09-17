@@ -1,0 +1,36 @@
+Real coefficients for the element routines in this add-on.
+
+-----------------------------------
+
+  1-100: all relevant real parameters for the stokes & viscoelastic add-on
+101-150: reserved for diffuse_interface add-on
+151-200: reserved for inertia add-on
+
+201:  factor m of the Power-law model (for gnmodel=1)
+
+202:  Exponent n (for gnmodel=1, 2 and 3)
+
+203:  eta_0 (for gnmodel=2, 3)
+
+204:  eta_inf (for gnmodel=2, 3)
+
+205:  lambda (for gnmodel=2, 3)
+
+206:  parameter a for the Yasuda model (gnmodel=3)
+
+207:  eta_const (for gnmodel=0)
+
+208:  k_B * T, the product of the Boltzmann constant, k_B, and the (absolute)
+      temperature T.
+
+209:  tau_y (for yieldmodel=1,2)
+
+210:  regularizing parameter r in yieldmodel=2
+
+211:  eta_max1, value of viscosity for gammadot=0 to avoid dividing by zero.
+      (for gnmodel=1)
+
+212:  eta_max2, value of yield viscosity for gammadot=0 to avoid dividing
+      by zero. (for yieldmodel=1)
+
+213-250 reserved for future use

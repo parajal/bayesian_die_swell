@@ -1,0 +1,28 @@
+ numsteps =  2
+ Uspec =    1.0000000000000000E-02   2.0000000000000000E-02
+
+Warning in read_mesh_gmsh: 
+  Nodes not connected to the internal elements:
+ 3
+
+
+Warning in mesh_convert_remove_isolated_nodes: 
+ The following point numbers have been removed: 
+3
+Mesh info:
+
+ Space dimension (ndim)                = 2
+ Number of nodes (nnodes)              = 218
+ Number of elements (nelem)            = 93
+ Number of element groups (nelgrp)     = 1
+ Number of blend meshes (nblend)       = 0
+
+ nnz =  112198
+ step =  1  U =    1.0000000000000000E-02
+ 1   1.2897700004975370   2.9323453090994253E-02   1.2897700004975370   7.4826038639297987E-02
+ 2   1.4087891425970687E-02   2.5157648480315202E-05   1.0935358434957807E-02   1.4087891425970687E-02
+ 3   6.9240226954814840E-05   5.5117804381696030E-07   6.6866014123036677E-05   6.9240226952036206E-05
+ step =  2  U =    2.0000000000000000E-02
+ 1   1.2882990003486079   2.9323779453755746E-02   1.2882990003486079   7.2772606415614061E-02
+ 2   1.2790332058236422E-02   2.5622273731865394E-05   1.1124416040569214E-02   1.2790332058235394E-02
+ 3   6.3573649408639273E-05   5.4135158180675699E-07   6.3573649408639273E-05   5.7050143472145159E-05

@@ -1,0 +1,864 @@
+! 2D Stokes problem on a square domain with a freely floating elliptical
+! particle
+! (force=0,torque=0).
+! eXtended FEM approach with embedded particle condition.
+! Quadtree+triangle subdivision for integration.
+! Prebuild eltree for all elements crossing the interface.
+! Removal of elements from eltree if integration area is too small.
+! High-order exact integration for small integration areas.
+! Similar to xfem13 but now with freely floating elliptical particle.
+
+
+! functions module for xfem15
+
+module functions_xf15
+
+  use tfem_elem_m
+  use eltree_m
+
+  implicit none
+
+  save
+
+! mesh used for mapping of reference element
+  type(mesh_t), pointer :: lmesh => null()
+
+  integer :: lelem, lelgrp
+! radii and center of the ellipse
+  real(dp) :: rpl(2) = [ 1._dp, 1._dp ], cpl(2) = [0._dp,0._dp]
+
+contains
+
+
+! levelset for the ellipse
+
+  function levelset ( x )
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,1)) :: levelset
+
+    real(dp), dimension(size(x,1),size(x,2)) :: c, r
+
+    c(:,1) = cpl(1)
+    c(:,2) = cpl(2)
+    r(:,1) = rpl(1)
+    r(:,2) = rpl(2)
+
+!   ellipse with center at cpl and radii rpl
+    levelset = sqrt(sum(((x-c)/r)**2,dim=2)) - 1
+
+  end function levelset
+
+
+! function for mapping reference coordinates to the real coordinates
+! in building the eltree within an element.
+
+  function mapcoor ( x )
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,1),size(x,2)) :: mapcoor
+
+    real(dp) :: phi(size(x,1),9), xnod(9,2)
+
+    call shape_quad_Q2 ( x, phi )
+
+    call get_coordinates ( lmesh, lelgrp, lelem, xnod )
+
+    mapcoor = matmul ( phi, xnod ) ! isoparametric
+
+  end function mapcoor
+
+end module functions_xf15
+
+
+! module for the user gauss routines
+
+module stokes_usergauss_m
+
+  use tfem_elem_m
+  use functions_xf15
+  use eltree_m
+
+  implicit none
+
+  save
+
+! the levelset function in all the nodes (it is a signed distance function
+! in this case of a simple ellipse).
+  real(dp), dimension(:), allocatable :: d
+
+! integration area near interface elements
+  real(dp), dimension(:), allocatable :: vol
+
+! the standard integration scheme:
+!   ninti_s: number of integration points
+!   xs, ws: points and weights
+! the integration scheme on subelements in the eltree:
+!   intrule_e: the integration rule
+!   ninti_e: number of integration points
+!   xe, we: points and weights
+! the integration scheme on subelements in the submesh (triangles):
+!   intrule_sub: the integration rule
+!   intrule_sub_small: the integration rule for small integration areas
+!   ninti_sub: number of integration points
+!   ninti_sub_small: number of integration points for small integration areas
+!   xsub, wsub: points and weights
+!   xsub_small, wsub_small: points and weights for small integration areas
+
+  integer :: ninti_s, intrule_e, ninti_e, intrule_sub, intrule_sub_small, &
+             ninti_sub, ninti_sub_small
+
+  real(dp), allocatable :: ws(:), xs(:,:), we(:), xe(:,:), wsub(:), xsub(:,:), &
+                           wsub_small(:), xsub_small(:,:)
+
+! integration options for setting the composite Gauss integration on the eltree
+  type(integration_options_t) :: intopt
+
+! some logicals
+  logical :: printnumel = .false., printint = .false.
+
+! array of pointers to an eltree (for userelmesh only)
+
+  type(eltree_p), dimension(:,:), pointer :: ea
+
+! treshold for small volumes
+
+  real(dp) :: vol_small = 1e-2_dp
+
+contains
+
+
+! user routine for setting the number of integration points
+
+  subroutine set_ninti_user ( mesh, problem, elgrp, elem, first, last, &
+    coefficients, oldvectors )
+
+    use stokes_globals_m
+
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: elgrp, elem
+    logical, intent(in) :: first, last
+    type(coefficients_t), intent(in) :: coefficients
+    type(oldvectors_t), intent(in) :: oldvectors
+
+    integer :: nod(nodalp)
+    type(gauss_t) :: gausse, gausssub, gausssub_small
+
+    if ( first ) then
+
+!     first element in this group
+
+!     Gauss rule for the standard case
+
+      ninti_s = ninti
+
+      allocate ( ws(ninti_s), xs(ninti_s,2) )
+
+      call set_Gauss_integration ( gauss, xs, ws )
+
+!     Gauss rule for the subdivided elements in the eltree
+
+      gausse = gauss
+      gausse%intrule = intrule_e
+
+      call set_ninti ( gausse, ninti_e )
+
+      allocate ( we(ninti_e), xe(ninti_e,2) )
+
+      call set_Gauss_integration ( gausse, xe, we )
+
+!     Gauss rule for the subdivided elements in the submesh
+
+      gausssub%globalshape = 'triangle'
+      gausssub%intrule = intrule_sub
+      gausssub%inttype = 3  ! use numerical Gauss values
+
+      call set_ninti ( gausssub, ninti_sub )
+
+      allocate ( wsub(ninti_sub), xsub(ninti_sub,2) )
+
+      call set_Gauss_integration ( gausssub, xsub, wsub )
+
+!     Gauss rule for the subdivided elements in the submesh (small volumes)
+
+      gausssub_small%globalshape = 'triangle'
+      gausssub_small%intrule = intrule_sub_small
+      gausssub_small%inttype = 3  ! use numerical Gauss values
+
+      call set_ninti ( gausssub_small, ninti_sub_small )
+
+      allocate ( wsub_small(ninti_sub_small), xsub_small(ninti_sub_small,2) )
+
+      call set_Gauss_integration ( gausssub_small, xsub_small, wsub_small )
+
+    end if
+
+!   set eltree pointer (alias)
+
+    eltree1 => oldvectors%ea(1)%p(elgrp,elem)%p
+
+!   Set ninti
+
+    nod = mesh%topology(elgrp)%a(:,elem)
+
+    if ( associated(eltree1) ) then
+
+!     element crosses the interface
+
+      if ( printnumel ) then
+        print *, 'number of subelements outside = ', &
+          number_of_subelements ( eltree1, lsign=[1] )
+      end if
+
+!     composite integration scheme for levelset >= 0
+
+      if ( vol(elem) > vol_small ) then
+        ninti = number_of_integration_points ( eltree1, lsign=[1],&
+          ninti=ninti_e, nintis=ninti_sub, integration_options=intopt )
+      else
+        ninti = number_of_integration_points ( eltree1, lsign=[1],&
+          ninti=ninti_e, nintis=ninti_sub_small, integration_options=intopt )
+      end if
+
+      if ( printint ) then
+        print *, 'number of integration points = ', ninti
+      end if
+
+    else if ( all ( d(nod) >= 0._dp ) ) then
+
+!     fully out
+
+      ninti = ninti_s
+
+    else
+
+!     fully in or removed element due to small integration area
+
+      ninti = 0
+
+    end if
+
+  end subroutine set_ninti_user
+
+
+! set the composite gauss integration rule with a user subroutine
+
+  subroutine set_Gauss_integration_user ( mesh, problem, elgrp, elem, first, &
+    last, coefficients, oldvectors )
+
+    use stokes_globals_m
+
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: elgrp, elem
+    logical, intent(in) :: first, last
+    type(coefficients_t), intent(in) :: coefficients
+    type(oldvectors_t), intent(in) :: oldvectors
+
+    integer :: nod(nodalp)
+
+!   set eltree pointer
+
+    eltree1 => oldvectors%ea(1)%p(elgrp,elem)%p
+
+    nod = mesh%topology(elgrp)%a(:,elem)
+
+    if ( associated(eltree1) ) then
+
+!     element crosses the interface
+
+!     composite integration scheme for levelset >= 0
+
+      if ( vol(elem) > vol_small ) then
+        call integration_points ( eltree1, xig, wg, lsign=[1], &
+          ninti=ninti_e, xe=xe, we=we, nintis=ninti_sub, xs=xsub, ws=wsub, &
+          integration_options=intopt )
+      else
+        call integration_points ( eltree1, xig, wg, lsign=[1], &
+          ninti=ninti_e, xe=xe, we=we, nintis=ninti_sub_small, &
+          xs=xsub_small, ws=wsub_small, integration_options=intopt )
+      end if
+
+    else if ( all ( d(nod) >= 0._dp ) ) then
+
+!     fully out: standard integration
+
+      call set_Gauss_integration ( gauss, xig, wg )
+
+    else
+
+!     fully in or removed element due to small integration area
+!     generate fully zero elemmat and elemvec
+
+      xig = 0; wg = 0
+
+    end if
+
+!   delete some allocated memory
+
+    if ( last ) then
+
+      deallocate ( we, xe, ws, xs, wsub, xsub, wsub_small, xsub_small )
+
+    end if
+
+  end subroutine set_Gauss_integration_user
+
+
+! define the mesh for each element
+
+  subroutine userelmesh ( mesh, elgrp, elem, indicator, elmesh )
+
+    type(mesh_t), intent(in) :: mesh
+    integer, intent(in) :: elgrp, elem
+    integer, intent(out) :: indicator
+    type(mesh_t), intent(inout) :: elmesh
+
+    integer :: nod(mesh%element(elgrp)%numnod)
+    type(eltree_t), pointer :: eltree
+
+
+!   set eltree pointer for convenience
+
+    eltree => ea(elgrp,elem)%p
+
+    nod = mesh%topology(elgrp)%a(:,elem)
+
+    if ( associated(eltree) ) then
+
+!     element crosses the interface
+
+      lelgrp = elgrp
+      lelem = elem
+
+!     add only elements in the outside region
+
+      call eltree_to_mesh ( eltree, elmesh, lsign=[1], mapcoor=mapcoor )
+
+      indicator = 2 ! replace element with submesh
+
+    else if ( all ( d(nod) >= 0._dp ) ) then
+
+!     fully out: leave element as it is.
+
+      indicator = 0
+
+    else
+
+!     fully in or removed element due to small integration area
+
+      indicator = 1
+
+    end if
+
+  end subroutine userelmesh
+
+end module stokes_usergauss_m
+
+
+! the actual program
+
+program xfem15
+
+  use tfem_m
+  use stokes_elements_m
+  use hsl_ma41_m
+  use hsl_ma57_m
+  !use io_utils_m
+  use functions_xf15
+  use stokes_usergauss_m
+  use timer_m
+
+  implicit none
+
+! constants
+
+  integer, parameter :: &
+    uintpl = 8,         & ! Q2 velocities
+    pintpl = 4,         & ! Q1 pressures
+    physqvel = 1,       & ! physical quantity nr of the velocities
+    physqpress = 2,     & ! physical quantity nr of the pressures
+    nx=10,              & ! number of elements in x
+    ny=10,              & ! number of elements in y
+    numsplit = 3,       & ! relative size of smallest elements near interface
+                          ! is 1/2^numsplit
+    numsplitmin = 1,    & ! relative size of all subelements will be at least
+                          ! as small as 1/2^numsplitmin
+    gausse = 3,         & ! Gauss integration for the eltree subelements
+    gausssub_small = 8, & ! Gauss integration for the submesh subelements for
+                          ! small integration volumes
+    gausssub = 4,       & ! Gauss integration for the submesh subelements
+    gauss_ie = 3,       & ! Gauss integration for the interface elements
+    gauss = 3             ! 3x3 Gauss integration
+
+  real(dp), parameter :: &
+    lx = 8._dp,        & ! width of domain
+    ly = 8._dp,        & ! height of domain
+    radius(2) = [ lx/8, lx/4 ], & ! radii of the ellipse
+    center(2) = [ 0._dp, lx/8], & ! center position of ellipse
+    eta = 1._dp,       & ! viscosity
+    kappa = 1.0_dp,    & ! embedded Dirichlet viscosity parameter
+    KN = 25._dp,       & ! Nitsche's factor
+    flowrate = 8._dp, & ! flowrate
+    split_threshold = 1.e-2_dp, & ! levelset value for being "close" enough
+                                  ! to the interface for tree splitting
+    epsvol = 1e-6_dp, & ! elements with integration area smaller are removed
+                        ! from the eltree_array. This means that:
+                        ! 1) these elements are "fully inside" and no
+                        !    "virtual/extended degrees" are generated.
+                        ! 2) the interface integration is ignored and therefore
+                        !    the interface has a small "hole".
+                        ! Note, that epsvol is relative to the area of an
+                        ! element, so epsvol=1 is a full element.
+    epsvol_small = 1e-2_dp, & ! elements with integration area smaller
+                              ! are integrated with integration rule
+                              ! gausssub_small, otherwise with gaussub
+    epsdef = 0.0_dp    ! deformation of the mesh
+
+! definitions
+
+  type(meshgen_options_t) :: meshgen_options
+  type(mesh_t), target :: mesh
+  type(input_probdef_t) :: input_probdef
+  type(problem_t) :: problem
+  type(sysmatrix_t) :: sysmatrix
+  type(sysvector_t), target :: sol
+  type(sysvector_t) :: rhsd
+  type(oldvectors_t) :: oldvectors
+  type(coefficients_t) :: coefficients
+  type(solver_options_ma41_t) :: solver_options_ma41
+  type(solver_options_ma57_t) :: solver_options_ma57
+
+  integer :: nnodes, nbx, nby
+  real(dp) :: up(3)
+
+  integer, dimension(:), allocatable :: nodes
+
+! array of pointers to an eltree
+
+  type(eltree_p), target, dimension(:,:), allocatable :: eltree_array
+
+  logical, parameter :: Nitsche = .false., symmetric = .false.
+
+! set some parameters in modules
+
+! module timer_m
+
+  timer = .false. ! set to .true. to show cpu time output
+
+! module functions1_m
+
+  rpl = radius ! radii of the elliptical object
+  cpl = center ! initial position of the center of the object
+
+! module stokes_usergauss_m
+
+  intrule_e = gausse  ! Gauss integration for the eltree subelements
+  intrule_sub = gausssub  ! Gauss integration for the eltree subelements
+  intrule_sub_small = gausssub_small  ! Gauss integration for the eltree
+                                      ! subelements (small integration areas)
+  vol_small = epsvol_small  ! elements with integration areas smaller
+                            ! are integrated with integration rule
+                            ! gausssub_small, otherwise with gaussub
+
+! fill coefficients
+
+  call create_coefficients ( coefficients, ncoefi=150, ncoefr=100 )
+
+  coefficients%i(1:11) = &
+    [ uintpl,   pintpl,     0,     0,         0,  &
+       physqvel, physqpress, 0,     0,     gauss,  &
+       gauss ]
+  coefficients%i(12:) = 0
+  coefficients%i(36) = -1 ! normal to fluid points inwards to the object
+  coefficients%i(37) = 2 ! Gauss points defined by user subroutines
+  coefficients%i(41) = gauss_ie ! Gauss points for interface elements
+  coefficients%i(46) = 0  ! transposed open boundary term:
+                          ! 0: absent, -1: Baumann-Oden, 1: Nitsche (symmetric)
+
+  coefficients%r(1) = eta
+  coefficients%r(2:) = 0
+  coefficients%r(6) = flowrate
+  coefficients%r(11) = kappa
+  coefficients%r(15) = eta*KN*nx/lx ! Nitsche's factor
+  coefficients%r(16:17) = center
+
+  coefficients%set_ninti_user => set_ninti_user
+  coefficients%set_Gauss_integration_user => set_Gauss_integration_user
+
+! create mesh
+
+  meshgen_options%elshape = 6
+  meshgen_options%nx = nx
+  meshgen_options%ny = ny
+  meshgen_options%lx = lx
+  meshgen_options%ly = ly
+  meshgen_options%ox = -lx/2
+  meshgen_options%oy = -ly/2
+
+  call quadrilateral2d ( mesh, meshgen_options )
+
+! deform the mesh a little bit to avoid zero or very small integration areas
+
+  mesh%coor(:,1) = mesh%coor(:,1) * ( 1 - epsdef*(1-2*abs(mesh%coor(:,1))/lx) )
+  mesh%coor(:,2) = mesh%coor(:,2) * ( 1 - epsdef*(1-2*abs(mesh%coor(:,2))/ly) )
+
+  call add_to_mesh ( mesh, curve=[-4] ) ! curve 5
+
+  lmesh => mesh  ! supply mesh to mapcoor for mapping coordinates
+
+! allocate array of pointers to an eltree (eltree for all elements, one group)
+
+  allocate ( eltree_array(1,mesh%grpnumel(1)), vol(mesh%grpnumel(1)) )
+
+! nodeset for Dirichlet on internal nodes
+
+  allocate ( nodes(mesh%nnodes), d(mesh%nnodes) )
+
+  d = levelset ( mesh%coor ) ! set levelset for all nodes
+
+! eltree for elements crossing the interface
+
+  call create_eltree_in_elements ( numsplit )
+
+! elementset for elements crossing the interface
+
+  call create_elementset_from_eltree
+
+  call add_to_mesh ( mesh, elementset='nodes', elementsetnr=1 )
+
+  call find_internal_zero_nodes
+
+  call add_to_mesh ( mesh, nodeset='nodes', nodes=nodes(1:nnodes) )
+
+  nbx = nint(sqrt(real(nx)))
+  nby = nint(sqrt(real(ny)))
+
+  call add_to_mesh ( mesh, blocks=[nbx,nby] )
+
+  call fill_mesh_parts ( mesh )
+
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=3, nphysq=2 )
+
+  input_probdef%vec_elementdof(1)%a =   &
+      reshape ( [2,2,2,2,2,2,2,2,2,    &  ! velocity
+                  1,0,1,0,1,0,1,0,0,    &  ! pressure
+                  1,1,1,1,1,1,1,1,1 ], &  ! scalar, such as vorticity
+                   [9,3] )
+
+  input_probdef%physq = [1,2]
+
+  call define_essential ( mesh, input_probdef, curve1=1, physq=1 )
+  call define_essential ( mesh, input_probdef, curve1=3, physq=1 )
+  call define_essential ( mesh, input_probdef, point=1, physq=2 )
+  call define_essential ( mesh, input_probdef, nodeset1=1 )
+
+! define constraints on curve
+
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, curve1=2, nglobalc=1 )
+
+  call define_constraint ( mesh, input_probdef, &
+    physq=1, curve1=2, curve2=5, discretization='collocation', exclude=3 )
+
+! define particle using a global constraint on elementset
+
+  call define_constraint ( mesh, input_probdef, elementset1=1, nglobalc=3, &
+    diagonal_block=.true. )
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+! create system vectors (solution and right-hand side)
+
+  call create_sysvector ( problem, sol )
+  call create_sysvector ( problem, rhsd )
+
+  sol%u = 0
+
+! create the structure oldvectors
+
+  call create ( oldvectors, nsysvec=1, nelta=1 )
+
+  oldvectors%ea(1)%p => eltree_array
+  ea => eltree_array ! userelmesh does not have oldvectors as an argument
+
+! create system matrix (non-symmetric due to embedded Dirichlet)
+
+  if ( symmetric ) then
+    call create_sysmatrix_structure_base ( sysmatrix, mesh, problem, &
+      symmetric=.true. )
+  else
+    call create_sysmatrix_structure_base ( sysmatrix, mesh, problem )
+  end if
+
+  call create_sysmatrix_structure_constraint ( sysmatrix, mesh, problem )
+  call finalize_sysmatrix_structure ( sysmatrix )
+
+  call create_sysmatrix_data ( sysmatrix )
+
+  call tic
+
+! build (assemble) matrix and vector from elements
+
+  call build_system ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=stokes_elem, oldvectors=oldvectors, &
+    coefficients=coefficients, buildvector=.false. )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=1, elemsub=stokes_constr_flowr, addmat=.true., &
+    coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=2, elemsub=stokes_constr_node_conn, addmatvec=.true., &
+    coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    constraint1=3, elemsub5=stokes_open_boundary_particle_eltree, &
+    oldvectors=oldvectors, coefficients=coefficients, &
+    addmatvec=.true. )
+
+  if ( Nitsche ) then
+
+    call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+      constraint1=3, elemsub4=stokes_Nitsche_particle_eltree, &
+      oldvectors=oldvectors, coefficients=coefficients, &
+      addmatvec=.true. )
+
+  else
+
+    call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+      constraint1=3, elemsub4=stokes_embedded_particle_eltree, &
+      oldvectors=oldvectors, coefficients=coefficients, &
+      addmatvec=.true. )
+
+  end if
+
+  call check ( sysmatrix )
+
+  call add_effect_of_essential_to_rhs ( problem, sysmatrix, sol, rhsd )
+
+  call toc ( 'build' )
+
+  if ( symmetric ) then
+
+    call solve_system_ma57 ( sysmatrix, rhsd, sol, &
+      solver_options=solver_options_ma57 )
+
+  else
+
+    call solve_system_ma41 ( sysmatrix, rhsd, sol, &
+      solver_options=solver_options_ma41 )
+
+  end if
+
+  call toc ( 'solve' )
+
+  call get_sysvector_constraint ( mesh, problem, sol, constraint=3, u=up )
+
+  print *, 'up = ', up
+
+  call delete_eltree_in_elements ! remove eltree for all elements
+
+! delete all data including all allocated memory
+
+  call delete_eltree_in_elements
+
+  call delete ( problem )
+  call delete ( input_probdef )
+  call delete ( mesh )
+  call delete ( sol, rhsd )
+  call delete ( sysmatrix )
+  call delete ( coefficients )
+  call delete ( oldvectors )
+
+  deallocate ( nodes, d, eltree_array, vol )
+
+contains
+
+
+! create eltree in the elements which are crossed by the interface
+
+  subroutine create_eltree_in_elements ( numsplit )
+
+    integer, intent(in) :: numsplit
+
+    integer :: nod(mesh%element(1)%numnod), elem
+    real(dp) :: coor(2,2)
+    real(dp) :: minvalvol
+
+
+!   loop all elements
+
+    minvalvol = 1
+
+    do elem = 1, mesh%grpnumel(1)
+
+!     nodal points
+
+      nod = mesh%topology(1)%a(:,elem)
+
+      if ( all ( d(nod) > split_threshold ) .or. &
+                        all ( d(nod) < -split_threshold ) ) then
+
+!       all nodes far from the interface
+
+        cycle
+
+      else
+
+!       element possibly contains an interface, start subdivide
+
+        allocate ( eltree_array(1,elem)%p )
+
+!       fill root node of the eltree
+
+        coor(1,:) = -1._dp  ! lower corner of the reference region (-1,-1,-1)
+        coor(2,:) =  1._dp  ! upper corner of the reference region (1,1,1)
+
+        call fill_node_eltree ( eltree_array(1,elem)%p, coor )
+
+!       divide root reference domain into subdomains
+
+        lelgrp = 1
+        lelem = elem
+
+        call subdivide ( eltree_array(1,elem)%p, levelset=levelset, &
+          numsplit=numsplit, split_threshold=split_threshold, &
+          numsplitmin=numsplitmin, mapcoor=mapcoor, submesh=.true., &
+          intmesh=.true. )
+
+!       check whether interface is in element
+
+        if ( any( number_of_subelements_vector(eltree_array(1,elem)%p,&
+                         &lsign=[-1,1]) == 0 ) ) then
+
+!         no interface, remove eltree
+
+          call delete(eltree_array(1,elem)%p)  ! delete actual eltree
+          deallocate( eltree_array(1,elem)%p ) ! delete pointer target
+                                               ! (pointer becomes disassociated)
+
+        end if
+
+      end if
+
+      if ( associated(eltree_array(1,elem)%p) ) then
+
+!       element crosses the interface
+
+        vol(elem) = volume ( eltree_array(1,elem)%p, lsign=[1] ) / 4
+
+        if ( vol(elem) <= epsvol ) then
+!         remove eltree
+          call delete(eltree_array(1,elem)%p)  ! delete actual eltree
+          deallocate( eltree_array(1,elem)%p ) ! delete pointer target
+                                               ! (pointer becomes disassociated)
+          print *, 'element at interface removed, elem = ', elem
+        end if
+
+        minvalvol = min ( vol(elem), minvalvol )
+
+      end if
+
+    end do
+
+    print *, 'minvalvol = ', minvalvol
+
+  end subroutine create_eltree_in_elements
+
+
+! create elementset of elements which are crossed by the interface
+
+  subroutine create_elementset_from_eltree ( replace )
+
+    integer, intent(in), optional :: replace
+
+    integer :: elements(mesh%grpnumel(1)), numelem, elem
+
+
+!   loop all elements
+
+    numelem = 0
+
+    do elem = 1, mesh%grpnumel(1)
+
+      if ( associated(eltree_array(1,elem)%p) ) then
+
+!       element crosses the interface
+
+        numelem = numelem + 1
+
+        elements(numelem) = elem
+
+      end if
+
+    end do
+
+!   add elementset
+
+    call add_to_mesh ( mesh, elementset='elements', &
+                        elements=elements(1:numelem), replace=replace )
+
+  end subroutine create_elementset_from_eltree
+
+
+! delete eltree in the elements
+
+  subroutine delete_eltree_in_elements
+
+    integer :: elem
+
+!   loop all elements
+
+    do elem = 1, size(eltree_array,2)
+
+      if ( associated(eltree_array(1,elem)%p) ) then
+
+        call delete(eltree_array(1,elem)%p) ! delete actual eltree
+        deallocate(eltree_array(1,elem)%p) ! delete pointer target
+                                           !(pointer becomes disassociated)
+
+      end if
+
+    end do
+
+  end subroutine delete_eltree_in_elements
+
+
+! find internal nodes that are not connected to elements at the interface
+
+  subroutine find_internal_zero_nodes
+
+    integer :: elem, i
+
+!   set internal nodes
+
+    where ( d <= 0._dp )
+      nodes = 1
+    else where
+      nodes = 0
+    end where
+
+!   remove nodes connected to elements at the interface
+
+    do elem = 1, mesh%grpnumel(1)
+      if ( associated(eltree_array(1,elem)%p) ) then
+         nodes(mesh%topology(1)%a(:,elem)) = 0
+       end if
+    end do
+
+!   count and collect the nodes (overwrite array nodes along the way)
+
+    nnodes = 0
+    do i = 1, mesh%nnodes
+      if ( nodes(i) == 0 ) cycle
+      nnodes = nnodes + 1
+      nodes(nnodes) = i
+    end do
+
+  end subroutine find_internal_zero_nodes
+
+end program xfem15

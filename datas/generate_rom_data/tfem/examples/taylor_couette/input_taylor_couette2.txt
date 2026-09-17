@@ -1,0 +1,5 @@
+&comppar
+  eta = 1.	! viscosity
+  Uo  = 1.	! angular velocity of outer cylinder
+  Ui  = -1.	! angular velocity of inner cyliner
+/

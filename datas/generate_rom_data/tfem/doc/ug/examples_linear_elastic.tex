@@ -1,0 +1,248 @@
+% !TEX root = userguide.tex
+
+\def\headdate{2nd February 2020}
+
+\section{Linear elastic solids at small displacements.}
+\label{sec:linear_elastic}
+In this section examples solving linear elastic solid problems will be given. It is assumed that displacements are small (geometrically linear).
+
+\subsection{Equations for linear elastic solids}
+\label{sec:linear_elastic_eq}
+
+Consider the momentum balance in a region $\Omega$:
+\begin{equation}
+ -\nabla\cdot\ten\sigma=\vek f\qquad\text{in }\Omega
+ \label{eq:mombal1}
+\end{equation}
+where $\ten\sigma$ is the Cauchy stress tensor. For linear elastic solids the constitutive equation is given by
+\begin{equation}
+   \ten\sigma = \mathcal{C}:\ten\varepsilon
+\end{equation}
+where $\mathcal{C}$ is a fourth-order tensor and $\ten\epsilon$ is the linear strain tensor, defined by
+\begin{equation}
+ 2\ten\varepsilon=\nabla\vek u+(\nabla\vek u)^T
+\end{equation}
+with $\vek u$ the displacement vector. For \emph{isotropic} materials the constitutive model can be reduced to
+\begin{equation}
+   \ten\sigma = \lambda(\tr\ten\varepsilon)\ten I+2\mu\ten\varepsilon
+\end{equation}
+or
+\begin{equation}
+ \ten\sigma = \lambda(\nabla\cdot\vek u)\ten I+\mu\big(\nabla\vek u+(\nabla\vek u)^T\big)
+\label{eq:Hooke1}
+\end{equation}
+Here, the two material constants $\lambda$ and $\mu$ are called the Lam\'e constants\footnote{In practise we will use the Young's modulus $E$ and the Poisson's ratio $\nu$ as input for the model. The Lam\'e constants can be expressed in $E$ and $\nu$:
+\[ \lambda=\frac{\nu E}{(1+\nu)(1-2\nu)}, \quad \mu=\frac{E}{2(1+\nu)}\]
+For \emph{plane stress} conditions, we use a 2D constitutive model where $\lambda$ is replaced by
+$\bar\lambda$ given by
+\[\bar\lambda=\frac{\nu E}{1-\nu^2}\].}
+
+We use the following (generic) boundary conditions for linear elastic problems:
+\begin{alignat}{2}
+    \vec u &= \vec u_\text{D}\qquad&&\text{ on }\Gamma_\text{D}\\
+    \ten\sigma\cdot\vec n&=\vec t_{\text{N}} &&\text{ on }\Gamma_{\text{N}}
+\end{alignat}
+where the boundary $\Gamma=\Gamma_\text{D}\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part. The Neumann condition is equivalent
+to an imposed traction of $\vec t_{\text{N}}$.
+
+\subsection{Weak form for linear elastic solids}
+\label{sec:linear_elastic_weak}
+\subsubsection{Generic weak form of the momentum balance}
+The generic weak form of the momentum balance can be obtained by multiplying
+Eq.~\eqref{eq:mombal1} with a test function $\vec v$ and integrating over the domain:
+\begin{equation}
+  (\vek v,-\nabla\cdot\ten\sigma -\vek f)=0,\qquad\text{for all }\vek v
+\end{equation}
+where we have introduced the short-hand notation $(.,.)$ for an inner product, defined for scalars, vectors and tensors:
+\begin{align*}
+   (a,b)&=\int_\Omega a b\D x\\
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\\
+   (\ten A, \ten B)&=\int_\Omega\ten A:\vek B\D x
+\end{align*}
+Using partial integration and Gauss'
+theorem we obtain the following generic weak form of the momentum balance: 
+Find $\vek u$ such that
+\begin{equation}
+  \big((\nabla\vek v)^T,\ten\sigma\big)=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v\label{eq:weakle1}
+\end{equation}
+using appropriate spaces for $\vek u$ and $\vek v$.
+
+\subsubsection{Displacement method}
+Substitution of the constitutive model Eq.~\eqref{eq:Hooke1} into Eq.~\eqref{eq:weakle1} leads to the weak form for the \emph{displacement method}: Find $\vek u$ such that
+\begin{equation}
+  (\nabla\cdot\vek v,\lambda\nabla\cdot\vek u)+\big((\nabla\vek v)^T,\mu(\nabla\vek u+(\nabla\vek u)^T)\big)=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v\label{eq:weakle2}
+\end{equation}
+using appropriate spaces for $\vek u$ and $\vek v$.
+
+The weak form can be used to obtain an approximate solution using the Galerkin \fem\
+technique. For this we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $\vek u$ and  $\vek v$ by the same
+polynomials on each element:
+\[
+    \vek u_h=\tsum_k \phi_k(\vek x)\vek u_k, \qquad
+    \vek v_h=\tsum_k \phi_k(\vek x)\vek v_k, \qquad
+\]
+where $\phi_k(\vek x)$ is the global shape function for node $k$ and the 
+coefficients $\vek u_k$ and $\vek v_k$ can be interpreted
+as the values in node $k$.  Substituting into the
+weak form leads to
+\begin{equation}
+ \col{v}^T\mat{A}\col{u}=
+    \col{v}^T\col{f}\qquad\text{for all }\col{v}
+\end{equation}
+or
+\begin{equation}
+ \mat{A}\col{u}=\col{f}
+\end{equation}
+where $\col u$ is the vector of displacement unknowns.
+In a Cartesian coordinate system the matrix $\mat A$ and vector $\col f$ can be assembled from:
+\begin{align}
+  \ten A_{km} &= \int_\Omega\Big[\lambda \nabla\phi_k\nabla\phi_m+\mu [(\nabla\phi_k\cdot\nabla\phi_m)\ten I+\nabla\phi_m\nabla\phi_k]\Big]\,d\Omega, \qquad
+  k,m=1,\dots N_{u}\label{eq:le_Atensor}\\
+  \vek f_k&=\int_{\Gamma_\text{N}}\phi_k\vek t_\text{N}\,d\Gamma
++\int_\Omega \phi_k\vek f\,d\Omega, \qquad k=1,\dots N_{u}\label{eq:le_fvector}
+\end{align}
+where $N_u$ is the number of nodes.
+
+All common continuous shape functions on triangles/tetrahedra ($P_1$, $P_2$, \ldots) and quadrilaterals/hexahedra ($Q_1$, $Q_2$, \ldots) can be used.
+
+\subsubsection{Mixed displacement-pressure method}
+
+The displacement method is not suited for incompressible ($\lambda\rightarrow\infty$) or nearly incompressible ($\lambda\gg\mu$) materials\footnote{This only applies to plane strain conditions in 2D and to 3D. For plane stress conditions in 2D the mixed method is not needed.}. In these cases we use the mixed displacement-pressure method, which is the common method for incompressible fluids.
+For that, we introduce the pressure $p$ and can rewrite the constitutive model for isotropic materials as follows
+\begin{align}
+  \ten\sigma &= -p\ten I+\mu\big(\nabla\vek u+(\nabla\vek u)^T\big)\\
+  p&=-\lambda\nabla\cdot\vek u
+\end{align}
+In order to avoid the singularities, we divide the latter equation by $\lambda$:
+\begin{equation}
+   p/\lambda=-\nabla\cdot\vek u
+\end{equation}
+The weak form of the momentum balance Eq.~\eqref{eq:weakle1} is still valid, but for the pressure equation we need a separate weak form by taking the inner product with a test function $q$ for the pressure. We now obtain the weak form: Find $\vek u$ and $p$ such that
+\begin{alignat}{2}
+ \big((\nabla\vek v)^T,\mu(\nabla\vek u+(\nabla\vek u)^T)\big)-(\nabla\cdot\vek v,p)&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f),\qquad&\text{for all }\vek v\label{eq:weakle3}\\
+    -(q,\nabla\cdot\vek u)-(q,p/\lambda) &=0,\qquad&\text{for all }q\label{eq:weakle4}
+\end{alignat}
+using appropriate spaces for $\vek u$, $p$, $\vek v$ and $q$. The rest of the Galerkin procedure is similar to the Stokes equation in Sec.~\ref{sec:stokesweak} and the following matrix system is obtained:
+\[
+ \begin{bmatrix}
+   \mat{S} &-\mat{L}^T \\[1ex]
+   -\mat{L} &-\mat C
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{u}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+    \col{f}\\[1ex]
+    \col 0
+ \end{bmatrix}
+\]
+where the matrix $\mat C$ can be assembled from
+\[
+C_{km} = \int_\Omega \psi_k\psi_m/\lambda \,d\Omega,\quad k,m=1,\ldots,N_p
+\]
+with $\psi_k$, $k=1,\ldots,N_p$ the pressure shape functions.
+
+The standard shape functions appropriate for velocity and pressure in fluids can be used here
+also for the displacement and pressure, such as
+\begin{itemize}
+ \item from the Taylor-Hood
+family (continuous pressures): $Q_2Q_1$ on quadrilaterals and hexahedra and
+$P_2P_1$ on triangles and tetrahedra.
+ \item from the Crouzeix-Raviart
+family (discontinuous pressures): $Q_2P_1^{(\text{d})}$ on quadrilaterals
+and hexahedra and $P_2^+P_1^{(\text{d})}$ on triangles and tetrahedra.
+\item spectral elements (discontinuous pressures): $Q_pP_{p-1}^{(\text{d})}$ on
+quadrilaterals.
+\item stabilized equal-order elements (see Sec.~\ref{sec:stabilizedstokes}): $P_1P_1$ on triangles and tetrahedra and $Q_1Q_1$ on quadrilaterals and hexahedra.
+\end{itemize}
+
+\subsection{Equations for linear elastic solids with thermal expansion}
+\label{sec:linear_elastic_eq_thermal}
+
+For \emph{isotropic} materials the constitutive model with thermal expansion becomes\footnote{The equation can be derived from the inverse Hooke's law:
+\[
+   \ten\epsilon = \frac1{2\mu}\ten\sigma-\nu(\tr\ten\sigma)\ten I+\alpha\Delta T\ten I
+\]
+where the strain is assumed to be a superposition of the effects of stress and thermal expansion.}
+\begin{equation}
+   \ten\sigma = \lambda(\tr\ten\varepsilon)\ten I+2\mu\ten\varepsilon-3K\alpha\Delta T\ten I
+\end{equation}
+or
+\begin{equation}
+ \ten\sigma = \lambda(\nabla\cdot\vek u)\ten I+\mu\big(\nabla\vek u+(\nabla\vek u)^T\big) -3K\alpha\Delta T\ten I
+\label{eq:Hooke2}
+\end{equation}
+Here, in addition to the Lam\'e constants $\lambda$ and $\mu$, we have the bulk modulus\footnote{The bulk modulus $K$ can be expressed in 
+ $E$ and $\nu$ (or in $\lambda$ and $\mu$):
+\[ K=\frac{E}{3(1-2\nu)}=\lambda+\frac23\mu\]
+For \emph{plane stress} conditions the factor $3K$ is replaced by
+$2\bar K$, where $\bar K$ is given by
+\[\bar K=\frac{E}{2(1-\nu)}\].} $K$, the coefficient of linear thermal expansion $\alpha$ and the change in temperature $\Delta T$.
+
+\subsection{Weak form for linear elastic solids with thermal expansion}
+\subsubsection{Displacement method}
+Substitution of the constitutive model Eq.~\eqref{eq:Hooke2} into Eq.~\eqref{eq:weakle1} leads to the weak form for the \emph{displacement method}: Find $\vek u$ such that
+\begin{multline}
+  (\nabla\cdot\vek v,\lambda\nabla\cdot\vek u)+\big((\nabla\vek v)^T,\mu(\nabla\vek u+(\nabla\vek u)^T)\big)=\\(\nabla\cdot\vek v,3K\alpha\Delta T)+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\qquad\text{for all }\vek v\label{eq:weakle5}
+\end{multline}
+using appropriate spaces for $\vek u$ and $\vek v$.
+
+\subsubsection{Mixed displacement-pressure method}
+
+The displacement method is not suited for incompressible ($\lambda\rightarrow\infty$ and 
+$K\rightarrow\infty$) or nearly incompressible ($\lambda\gg\mu$ and $K\gg\mu$) materials\footnote{This again only applies to plane strain conditions in 2D and to 3D. For plane stress conditions in 2D the mixed method is not needed.}. In these cases we use the mixed displacement-pressure method.
+For that, we introduce the pressure $p$ and can rewrite the constitutive model for isotropic materials as follows
+\begin{align}
+  \ten\sigma &= -p\ten I+\mu\big(\nabla\vek u+(\nabla\vek u)^T\big)\\
+  p&=-\lambda\nabla\cdot\vek u+3K\alpha\Delta T
+\end{align}
+In order to avoid the singularities, we divide the latter equation by $\lambda$ and get:
+\begin{equation}
+   p/\lambda=-\nabla\cdot\vek u+\frac{1+\nu}{\nu}\alpha\Delta T
+\end{equation}
+where $\nu$ is Poisson's ratio\footnote{The factor $(1+\nu)/\nu$ is equally valid for plane stress conditions, assuming $\lambda$ has been replaced by $\bar\lambda$.}.
+The weak form of the momentum balance Eq.~\eqref{eq:weakle1} is still valid, but for the pressure equation we need a separate weak form by taking the inner product with a test function $q$ for the pressure. We now obtain the weak form: Find $\vek u$ and $p$ such that
+\begin{alignat}{2}
+ \big((\nabla\vek v)^T,\mu(\nabla\vek u+(\nabla\vek u)^T)\big)-(\nabla\cdot\vek v,p)&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f),\qquad&\text{for all }\vek v\label{eq:weakle6}\\
+    -(q,\nabla\cdot\vek u)-(q,p/\lambda) &=-(q,\frac{1+\nu}{\nu}\alpha\Delta T),\qquad&\text{for all }q\label{eq:weakle7}
+\end{alignat}
+using appropriate spaces for $\vek u$, $p$, $\vek v$ and $q$. 
+
+
+\subsection{Examples}
+
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample linear\_elastic}
+\end{quote}
+Examples \texttt{linear\_elastic1--10.f90} involve stretching a tensile bar: 2D, axisymmetric, 3D or axisymmetric with a torsional component (3D displacements on a 2D domain, similar to adding a swirl velocity component as discussed in Sec.~\ref{sec:stokes2D3Dswirl}). See the file \texttt{README} of the example.
+
+Example \texttt{linear\_elastic11.f90} involves a torsion bar with a jump in radius. In Figure~\ref{fig:torsionjump} the equivalent stress is plotted with a local stress concentration due to the jump in radius. 
+\begin{figure}[htbp!]
+   \includegraphics[scale=0.5]{torsionjump}
+   \caption{Von Mises equivalent stress in a torsion bar with a jump in radius. The torsion is around the $x$-axis.}
+    \label{fig:torsionjump}
+\end{figure}
+
+Examples \texttt{linear\_elastic12--19.f90} involve testing the implementation with manufactured solutions on a simple domain: 2D, axisymmetric, 3D or axisymmetric with a torsional component.
+
+Example \texttt{linear\_elastic20.f90} involves a 2D problem on a square domain with a circular void, which is being stretched in $x$-direction. In Figure~\ref{fig:circularvoid} the equivalent stress is plotted with a local stress concentration around the circular void. 
+\begin{figure}[htbp!]
+   \includegraphics[scale=0.5]{circularvoid}
+   \caption{Von Mises equivalent stress in a square domain with a void. The stretching is in $x$-direction.}
+    \label{fig:circularvoid}
+\end{figure}
+
+Examples \texttt{linear\_elastic21--27.f90} involve stretching a tensile bar and include thermal expansion: 2D, axisymmetric and 3D. See the file \texttt{README} of the example. 
+
+

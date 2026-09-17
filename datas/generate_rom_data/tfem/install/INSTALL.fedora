@@ -1,0 +1,148 @@
+This file describes some hints for using tfem with Fedora Linux.
+It might also apply to similar systems like RedHat and CentOS.
+---------------------------------------------------------------
+
+- Install Fedora and create a user that has administrator rights.
+
+- Install additional packages (using openblas-threads libary):
+
+sudo dnf -y install dkms kernel-devel gcc
+sudo dnf -y install gcc-gfortran ctags xfig evince paraview geany \
+    gedit vim-enhanced vim-X11 midori gnuplot git-all openblas-threads
+sudo dnf -y install texlive 'tex(lineno.sty)' \
+    'tex(multirow.sty)' 'tex(appendix.sty)' 'tex(moreverb.sty)'
+sudo dnf -y remove bash-completion
+
+- Download gmsh from http://gmsh.info and unpack the .tgz file in your HOME
+  directory.
+
+- Add the following to the $HOME/.bash_profile file (adapt: <version> of gmsh).
+
+# limit
+
+ulimit -c 0          # coredumpsize
+ulimit -s unlimited  # stack size
+
+# path
+
+gm=gmsh-<version>-Linux
+tf=$HOME/tfem/bin
+
+export PATH=$HOME/$gm/bin:$HOME/$tf/bin:$PATH
+
+# modules to build for tfem
+
+export TFEMADDONS="viscoelastic bcf diffuse_interface elastic inertia\
+ generalized_stokes viscoelastic_fh surface_advection grid_deformation\
+ compressible_fluid projection structures interface_tracking\
+ convection_diffusion_supg dfm surface_convection_diffusion linear_elastic"
+
+# set delay in Makefile for tfem
+
+export SLEEP=0
+
+# viewfig viewer
+
+export PSVIEWER=evince
+export PDFVIEWER=evince
+
+- Install tfem (see also INSTALL.linux) in $HOME/tfem
+
+- Install MKL or use OpenBLAS for optimized BLAS library. MKL is usually a
+  little bit faster on Intel processors and also provides the pardiso parallel
+  solver. OpenBLAS is available on Fedora as a package.
+
+- See README.oneAPI for obtaining MKL (and also Intel Fortran).
+
+- See file README.MKL for instructions on using MKL.
+
+- OpenBLAS is available as a shared library in Fedora. To use this
+  library do (for the threaded version openblas-threads):
+
+    ln -s /usr/lib64/libopenblasp.so.0 $HOME/tfem/lib/libopenblasp.so
+
+  set
+
+     LIBBLAS = -lopenblasp
+
+  Note, that in Fedora different versions of the library exist:
+
+    /usr/lib64/libopenblas.so.0   for sequential
+    /usr/lib64/libopenblasp.so.0  for threads
+    /usr/lib64/libopenblaso.so.0  for openmp
+
+  In addition the libraries can have 64 or 64_ appended to the name to denote
+  64-bit integers and 64-bit integers with a symbol name suffix. This requires
+  an additional install, for example
+
+    sudo dnf install openblas-threads64
+
+  and add the suffix 64 to the library names.
+
+- Metis5 is available as a shared library in Fedora:
+
+    sudo dnf install metis
+
+  To use this library do
+
+    ln -s /usr/lib64/libmetis.so.0 $HOME/tfem/lib/libmetis.so
+
+  and set
+
+     LIBMETIS = -lmetis
+
+  in the Mdefs.mk file.
+
+  In addition the libraries can have 64 or 64_ appended to the name to denote
+  64-bit integers and 64-bit integers with a symbol name suffix. This requires
+  an additional install, for example
+
+    sudo dnf install metis64
+
+  and add the suffix 64 to the library names.
+
+- UMFPACK is available as a shared library in Fedora:
+
+    sudo dnf install suitesparse
+
+  To use this library do
+
+    ln -s /usr/lib64/libumfpack.so.5 $HOME/tfem/lib/libumfpack.so
+
+  and set
+
+     LIBUMFPACK = -lumfpack
+
+  in the Mdefs.mk file.
+
+  In addition the libraries can have 64 or 64_ appended to the name to denote
+  64-bit integers and 64-bit integers with a symbol name suffix. This requires
+  an additional install, for example
+
+    sudo dnf install suitesparce64
+
+  and add the suffix 64 to the library names.
+
+- Set a proper name and email for using git:
+
+    git config --global user.name "John Doe"
+    git config --global user.email johndoe@example.com
+
+- To get proper 'git log' output with colors, set the environment variable:
+
+    export LESS="MR"   # set prompt style (M) and use color in less
+
+- To get the proper vi editor for committing, set the environment variable:
+
+    export GIT_EDITOR='vim -c "set wrapmargin=8"'
+
+- To get rid of annoying pop-up windows for typeing your username/password when
+  using git:
+
+    git config --global core.askPass ""
+
+- To set your username for gitlab once and for all:
+
+    git config --global credential.https://gitlab.tue.nl.username <username>
+
+  where <username> is your username for the gitlab server.

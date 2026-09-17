@@ -1,0 +1,24 @@
+&comppar
+    nx=14                ! number of elements in x
+    ny=14                ! number of elements in y
+    eta_s = 0.0          ! solvent viscosity
+    eta_p = 1.0          ! polymer viscosity
+    lambda = 10          ! relaxation time
+    beta = 1.0           ! upwinding parameter in the SUPG method
+
+! FEAST variables 
+
+  M0 = 100      ! Search subspace dimension (initial guess)
+  Emid = (0,0)  ! centroid of the contour ellipse
+  r = 0.1       ! horizontal radius of the contour ellipse
+
+! FEAST options
+
+  printlevel = 1     ! 0=no printing, 1=print runtime data to standard output
+  stop_conv = 8      ! convergence criterium, epsilon = 10^{-stop_conv}.
+  max_loop = 50      ! Maximum number of FEAST refinement loops allowed.
+  only_right_eigv = 1   ! 0 right/left eigenvectors, 1: only right eigv
+  ratio = 1.0       ! stretch circle in y-direction (ellipse)
+  mixed_precision= 0 ! 0: double precision linear solvers, 1: single prec.
+
+/

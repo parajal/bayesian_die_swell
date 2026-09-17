@@ -1,0 +1,46 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+stick_slip1:
+
+ Axisymmetrical viscoelastic "stick-slip" problem:
+ 1) An entry problem with a parabolic velocity profile and zero stress.
+ 2) At some point on the upper boundary the fixed wall changes into
+    a perfectly slipping wall (no friction).
+ 3) At the outflow zero stress is assumed.
+ DEVSS-G/SUPG
+ first-order time integration
+
+stick_slip2:
+
+ Axisymmetrical viscoelastic "stick-slip" problem:
+ 1) An internal periodic boundary at the entry of the domain on the left.
+ 2) At some point on the upper boundary the fixed wall changes into
+    a perfectly slipping wall (no friction).
+ 3) At the outflow zero stress is assumed.
+ DEVSS-G/SUPG
+ first-order time integration
+
+stick_slip3:
+
+ Axisymmetrical viscoelastic "stick-slip" problem:
+ 1) An open boundary at the entry of the domain on the left.
+ 2) At some point on the upper boundary the fixed wall changes into
+    a perfectly slipping wall (no friction).
+ 3) At the outflow zero stress is assumed.
+ DEVSS-G/SUPG
+ first-order time integration
+
+stick_slip4:
+
+ Axisymmetrical viscoelastic "stick-slip" problem:
+ 1) An open boundary at the entry of the domain on the left.
+ 2) At some point on the upper boundary the fixed wall changes into
+    a perfectly slipping wall (no friction).
+ 3) At the outflow zero stress is assumed.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration/conformation prediction

@@ -1,0 +1,342 @@
+#if SKIT2
+
+! Stokes problem on a unit square with Dirichlet boundary conditions.
+! Lid-driven cavity flow.
+! One freely translating and rotating object.
+! sparskit solver
+! Metis renumbering (commented out)
+
+module subs_m
+
+  use tfem_elem_m
+  use math_defs_m
+
+  implicit none
+
+  integer :: ndf = 9
+  real(dp) :: rp = 1, xp(2) = 0
+
+contains
+
+! objectscoor defines the coordinates of the objects
+
+  subroutine objectscoor ( objectnr, coor )
+    integer, intent(in) :: objectnr
+    real(dp), dimension(:,:), intent(inout) :: coor
+
+    integer :: np, i
+    real(dp) :: p(size(coor,1))
+
+    np = size(coor,1)
+    p = [(2*pi/np*(i-1),i=1,np)]
+
+    coor(:,1) = rp * sin(p) + xp(1)
+    coor(:,2) = rp * cos(p) + xp(2)
+
+  end subroutine objectscoor
+
+! elementc is the element subroutine for the constraints on the objects
+
+  subroutine elementc ( mesh, problem, constr, elem, node, matrix, vector, &
+    first, last, coefficients, oldvectors, elemmat, elemmat2, elemmatadd, &
+    elemvec, elemvecadd )
+
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: constr, elem, node
+    logical, intent(in) :: matrix, vector, first, last
+    type(coefficients_t), intent(in) :: coefficients
+    type(oldvectors_t), intent(in) :: oldvectors
+    real(dp), intent(out), dimension(:,:) :: elemmat, elemmat2, elemmatadd
+    real(dp), intent(out), dimension(:) :: elemvec, elemvecadd
+
+    integer :: object
+    real(dp) :: phi(1,ndf), xr(1,2), r(2)
+
+    object = problem%constraints(constr)%object
+
+!   reference coordinates of the collocation point (node)
+
+    xr(1,:) = mesh%objects(object)%refcoor(node,:)
+    r = mesh%objects(object)%coor(node,:) - xp
+
+!   shape function of the velocity in the collocation point
+
+    call shape_quad_Q2 ( xr, phi )
+
+    if ( vector ) then
+
+      elemvec = 0
+      elemvecadd = 0
+
+    end if
+
+!   two constraints (vectorial)
+!
+!      u - up - omega x r = 0
+!      -   -      -     -   -
+!
+!   or in components
+!
+!      u - up + omega x ry = 0
+!      v - vp - omega x rx = 0
+!
+!   the matrix A therefore becomes
+!
+!     A =  [ phi    0 ]
+!          [   0  phi ]
+!
+!   and the matrix A_add of the additional unknowns (up,vp,omega)
+!
+!     A_add =  [ -1  0  ry ]
+!              [  0 -1 -rx ]
+!
+
+    if ( matrix ) then
+
+      elemmat(1,1:ndf) = phi(1,:)
+      elemmat(1,ndf+1:) = 0
+      elemmat(2,1:ndf) = 0
+      elemmat(2,ndf+1:) = phi(1,:)
+      elemmatadd(1,:) = [ -1._dp,  0._dp,  r(2) ]
+      elemmatadd(2,:) = [  0._dp, -1._dp, -r(1) ]
+
+    end if
+
+  end subroutine elementc
+
+end module subs_m
+
+program stokes12
+
+  use tfem_m
+  use sk_solve_m
+  use stokes_elements_m
+  use io_utils_m
+  use figplot_m
+  use subs_m
+!  use metis5_m
+
+  implicit none
+
+! constants
+
+  integer, parameter :: &
+    uintpl = 8,         & ! Q2 velocities
+    pintpl = 4,         & ! Q1 pressures
+    physqvel = 1,       & ! physical quantity nr of the velocities
+    physqpress = 2,     & ! physical quantity nr of the pressures
+    gauss = 3,          & ! 3x3 integration of quads
+    nx=20,              & ! number of elements in x
+    ny=20                 ! number of elements in y
+
+  real(dp), parameter :: &
+    eta = 1._dp     ! viscosity
+
+! definitions
+
+  type(meshgen_options_t) :: meshgen_options
+  type(mesh_t) :: mesh
+  type(input_probdef_t) :: input_probdef
+  type(problem_t) :: problem
+  type(sysmatrix_t) :: sysmatrix
+  type(sysvector_t), target :: sol
+  type(sysvector_t) :: rhsd
+  type(vector_t) :: velocity, pressure, vorticity
+  type(plot_options_t) :: plot_options
+  type(oldvectors_t) :: oldvectors
+  type(coefficients_t) :: coefficients
+  type(solver_options_sk_t) :: solver_options
+
+  integer :: i, j, k, nod, ip
+  real(dp) :: up, vp, omega
+
+
+! fill coefficients
+
+  call create_coefficients ( coefficients, ncoefi=150, ncoefr=100 )
+
+  coefficients%i(1:11) = &
+    [ uintpl,   pintpl,     0,     0,         0,  &
+      physqvel, physqpress, 0,     0,     gauss,  &
+      gauss ]
+  coefficients%i(12:) = 0
+
+  coefficients%r(1) = eta
+  coefficients%r(2:) = 0
+
+  call write_coefficients ( coefficients, filename='coefficients.out' )
+
+! create mesh
+
+  meshgen_options%elshape = 6
+  meshgen_options%nx = nx
+  meshgen_options%ny = ny
+
+  call quadrilateral2d ( mesh, meshgen_options )
+
+! one object
+
+  rp = 0.1_dp ! radius of the circular object
+  xp = [0.5_dp,0.85_dp] ! center of the object
+
+  call add_to_mesh ( mesh, object='coordinates', nnodes=20, &
+    objectsub=objectscoor, objectcoornr=1 )
+
+! write mesh (read by streamfunction computation)
+
+  call write_mesh ( mesh, filename='mesh.out' )
+
+  call fill_mesh_parts ( mesh )
+
+!  call renumber_metis ( mesh )
+
+! plot mesh and objects
+
+  call plot_points_curves ( plot_options, mesh, 'curves.fig' )
+  call plot_mesh ( plot_options, mesh, 'mesh.fig' )
+  plot_options%objectpointcolor=4
+  plot_options%objectpointsize=0.4
+  call plot_objects ( plot_options, mesh, 'mesh.fig', append=.true. )
+
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=3, nphysq=2, &
+    nphysqshifted=1 )
+
+  input_probdef%vec_elementdof(1)%a =   &
+      reshape ( [2,2,2,2,2,2,2,2,2,    &  ! velocity
+                 1,0,1,0,1,0,1,0,0,    &  ! pressure
+                 1,1,1,1,1,1,1,1,1 ], &  ! scalar, such as vorticity
+                 [9,3] )
+
+  input_probdef%physq = [1,2]
+  input_probdef%physqshifted = [2]
+
+  call define_essential ( mesh, input_probdef, curve1=1, curve2=4, physq=1 )
+  call define_essential ( mesh, input_probdef, point=1, physq=2 )
+
+! define constraints on the object
+
+  call define_constraint ( mesh, input_probdef, object=1, physq=1, &
+    discretization='collocation', nodedof=2, naddunknowns=3 )
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+! create system vectors (solution and right-hand side)
+
+  call create_sysvector ( problem, sol )
+  call create_sysvector ( problem, rhsd )
+
+! fill solution vector with essential boundary conditions
+
+  call fill_sysvector ( mesh, problem, sol, &
+    curve1=1, curve2=4, physq=1, value=0._dp )
+  call fill_sysvector ( mesh, problem, sol, &
+    curve1=3, physq=1, degfd=1, value=1._dp )
+  call fill_sysvector ( mesh, problem, sol, &
+    point=1, physq=2, value=0._dp )
+
+! create system matrix
+
+  call create_sysmatrix_structure_base ( sysmatrix, mesh, problem )
+  call create_sysmatrix_structure_constraint ( sysmatrix, mesh, problem )
+  call finalize_sysmatrix_structure ( sysmatrix )
+
+  call create_sysmatrix_data ( sysmatrix )
+
+! build (assemble) matrix and vector from elements
+
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+    coefficients=coefficients )
+
+  call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=elementc, addmatvec=.true. )
+
+  call check_filled_sysmatrix ( sysmatrix )
+
+  call add_effect_of_essential_to_rhs ( problem, sysmatrix, sol, rhsd )
+
+! set parameters for iterative solver
+
+  call set_solver_options ( solver_options, printlevel=1, type_prec=2, &
+    maxmvm=300, itsolver=8, mgmres=30, prec_store=2._dp, preconditioner=5, &
+    droptol=1e-4_dp, fillin=1._dp, eps_rel=1e-7_dp, eps_abs=1.e-3_dp )
+
+  call solve_system_sk ( sysmatrix, rhsd, sol, solver_options=solver_options )
+
+! post-processing of the velocity and rotation rate of the particle
+
+  ip = problem%constraints(1)%addnumdegfd(1)
+
+  up = sol%u( problem%degfdperm(ip+1,2) )
+  vp = sol%u( problem%degfdperm(ip+2,2) )
+  omega = sol%u( problem%degfdperm(ip+3,2) )
+
+  print *, 'up = ', up, ' vp = ', vp, ' omega = ', omega
+
+  call create_vector ( problem, velocity, physq=1 )
+  call create_vector ( problem, pressure, vec=3 )
+  call create_vector ( problem, vorticity, vec=3 )
+
+  call extract_physvector ( mesh, problem, sol, velocity )
+
+! create the structure oldvectors
+
+  call create_oldvectors ( oldvectors, nsysvec=1 )
+
+  oldvectors%s(1)%p => sol
+
+  call derive_vector ( mesh, problem, pressure, elemsub=stokes_pressure, &
+    coefficients=coefficients, oldvectors=oldvectors )
+
+  coefficients%i(13)=5
+
+  call derive_vector ( mesh, problem, vorticity, elemsub=stokes_deriv, &
+    coefficients=coefficients, oldvectors=oldvectors )
+
+! write to a fig file for plotting
+
+  plot_options%objectpointcolor=0
+  call plot_vector ( plot_options, mesh, problem, 'velocity.fig', &
+    vector=velocity )
+  call plot_objects ( plot_options, mesh, 'velocity.fig', append=.true. )
+
+  call plot_color_fill ( plot_options, mesh, problem, 'velocity_color.fig', &
+    vector=velocity, degfd=1 )
+  call plot_objects ( plot_options, mesh, 'velocity_color.fig', append=.true. )
+
+  call plot_color_fill ( plot_options, mesh, problem, 'vorticity_color.fig', &
+    vector=vorticity )
+  call plot_objects ( plot_options, mesh, 'vorticity_color.fig', append=.true. )
+
+! write binary file for reading by streamfunction
+
+  open(unit=10,form='unformatted',file='velocity_bin.out')
+
+  write(10) velocity%u
+
+  close(unit=10)
+
+! delete all data including all allocated memory
+
+  call delete ( problem )
+  call delete ( input_probdef )
+  call delete ( mesh )
+  call delete ( sol, rhsd )
+  call delete ( velocity, pressure, vorticity )
+  call delete ( sysmatrix )
+  call delete ( coefficients )
+  call delete ( oldvectors )
+
+end program stokes12
+
+#else
+  print '(3(a/),a)', &
+    'To run this example:', &
+    ' - compile add-on sk_solve', &
+    ' - install and compile sparskit2', &
+    ' - set preprocessing macro SKIT2 in Mdefs.mk'
+end
+#endif
+

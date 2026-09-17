@@ -1,0 +1,51 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]
+then
+     figfiles=*.fig
+else
+     figfiles=$*
+fi
+
+for file in $figfiles
+do
+    if [ ! -f $file ] ; then continue ; fi
+    base=`basename $file .fig`
+    fig2dev -L pdf $file $base.pdf
+    pdffiles=$pdffiles" $base.pdf"
+done
+
+if [ -n "$pdffiles" ]; then
+
+  if [ `uname -s | cut -c 1-7` = MINGW32 ] ; then
+
+    # define gs
+    gs=${GS:-gswin32c}
+
+    type $gs >/dev/null 2>&1
+    if [ $? -eq 1 ]; then
+      echo
+      echo $gs: not found
+      echo
+      echo Set environment variable GS to a valid ghostscript executable
+      echo
+      exit
+    fi
+
+  else
+    gs=gs
+  fi
+
+  $gs -sDEVICE=pdfwrite -sOutputFile=merge.pdf -dNOPAUSE -dBATCH -q $pdffiles
+
+  if [ $? -eq 0 ] ; then
+    echo Created file merge.pdf
+    echo View file with your favorite pdf viewer.
+  fi
+
+  rm $pdffiles
+
+else
+  echo mergefig2pdf: No files processed.
+  exit 1
+fi

@@ -1,0 +1,9 @@
+#set log y
+plot "outs1" us 1:2 w l, "outs2" us 1:2 w l, "outs3" us 1:2 w l
+pause -1
+plot "outs1" us 1:3 w l, "outs2" us 1:3 w l, "outs3" us 1:3 w l
+pause -1
+plot "outs1" us 1:4 w l, "outs2" us 1:4 w l, "outs3" us 1:4 w l
+pause -1
+plot "outs1" us 1:5 w l, "outs2" us 1:5 w l, "outs3" us 1:5 w l
+pause -1

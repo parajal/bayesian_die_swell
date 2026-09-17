@@ -1,0 +1,7 @@
+Wi=10
+set format y '10^{%L}'
+set log y
+plot "out" us 2:3 w l, 1e-3*exp(-x/(2*Wi)), 1e-4*x**2*exp(-x/Wi)
+pause -1
+plot "out" us 2:4 w l
+pause -1

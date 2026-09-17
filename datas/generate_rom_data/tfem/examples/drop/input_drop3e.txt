@@ -1,0 +1,57 @@
+&comppar
+    solid = T           ! Internal fluid is a solid (lambda=infty).
+    periodic = T        ! Use periodical boundaries in x direction
+                        ! Only makes sense for vfuncnr=0 (zero velocity)
+                        ! or vfuncnr=2 (shear flow).
+    flowrate = F        ! Impose flowrate in x-direction (for
+                        ! periodic=.true. only)
+    move_mesh_x = F     ! Move the mesh in x-direction to keep the center
+                        ! of volume of the drop at the same position wrt
+                        ! to the mesh
+    mesh_plot = F       ! write mesh plot files/info (curves, mesh etc.)
+    compute_error = F   ! Compute error. Only makes sense if:
+                        ! vfuncnr= 0 (no flow) or 3 (rotation).
+    compute_volume = T  ! Compute volume and center of volume. 
+    n=4                 ! number of elements in x and y direction of box
+    nc=30               ! number of elements on the circle
+    model = 2           ! viscoelastic model: UCM
+    gauss  = 4          ! order of integration for triangular elements
+    gaussb = 4          ! number of integration points of line elements
+    vfuncnr=2           ! function number for the velocity field u
+    choice_um = 2       ! choice for um in the motion of the interface:
+                        !  0: um = 0
+                        !  1: um = average velocity of all interface nodes
+                        !  2: um = velocity of the center of volume 
+    vtkevery = 5        ! vtk file every vtkevery steps. -1: means none
+    logc = 1            ! log representation of c?
+    ctime = T           ! continue time in output after restart
+    restart = 0         ! restart=0: no restart
+                        ! restart=1: normal restart
+                        ! restart=2: restart, but start with Euler step
+    restart_every = 100 ! write restart file every restart_every steps.
+                        ! -1: means none
+    timeint1 = 1        ! (first-order) time integration for viscoelastic
+    timeint2 = 7        ! (second-order) time integration for viscoelastic
+    timeint=4           ! time integration scheme for the interface
+    numtimesteps=300    ! number of time steps
+    ox = -0.5           ! x-coordinate left lower corner
+    oy = -0.5           ! y-coordinate left lower corner
+    lx = 1.0            ! length of the domain
+    ly = 1.0            ! height of the domain
+    xc = 0.0 0.0        ! center of the initial circle
+    rc = 0.1            ! initial radius of the circle
+    eta_e = 1.0         ! external fluid viscosity
+    eta_i = 0.0         ! internal fluid viscosity (solvent)
+    eta_p = 1.0         ! internal fluid viscosity (polymer)
+    lambda_p = 1.0e-1   ! internal fluid relaxation time
+    G_s = 2.5            ! elastic solid modulus
+    lambda_s = 1.0e12   ! "solid" relaxation time
+    gammac = 0.0        ! surface tension coefficient
+    factor = 100.0      ! factor for the interface grid deformation
+    U_avg  = 0.25       ! imposed average velocity for flowrate=.true.
+    rs_gup = 1.4        ! real_storage gradient-velocity-pressure LU HSL
+    is_gup = 1.5        ! integer_storage gradient-velocity-pressure LU HSL
+    rs_c  = 1.4         ! real_storage conformation LU (HSL)
+    is_c  = 1.6         ! integer_storage conformation LU (HSL)
+    deltat = 5e-3       ! time step
+/

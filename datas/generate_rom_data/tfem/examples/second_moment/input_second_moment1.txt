@@ -1,0 +1,7 @@
+&comppar
+!  uintpl = 2, gaussb = 4, meshfile = 'rectangular_tube.msh'
+!  uintpl = 6, gaussb = 4, meshfile = 'circle.msh'
+  uintpl = 2, gaussb = 4, meshfile = 'example1.msh'
+!  uintpl = 6, gaussb = 4, meshfile = 'semi-circle.msh'
+!  uintpl = 6, gaussb = 4, meshfile = 'quarter-circle.msh'
+/

@@ -1,0 +1,209 @@
+% !TEX root = userguide.tex
+
+\def\headdate{11th May 2025}
+
+\section{Viscoelastic fluid flow using implicit time discretization schemes}
+\label{sec:implicit}
+
+In this section some examples will be given that solve the equations 
+for viscoelastic fluid flow using implicit time discretization schemes.
+
+We start with the fully coupled case where
+all variables (velocity, pressure, conformation) are implicit.
+Then we show the stress-explicit and stress-implicit decoupled schemes, where
+the constitutive equation is discretized in time using fully implicit schemes
+with respect to the conformation variables only.
+
+Advantages of implicit time discretization schemes in \tfem, as compared to explicit ones, include
+\begin{itemize}
+  \item Larger time steps are usually permitted before numerical instabilities set in.
+  \item The Jacobian matrix is available and can be used to perform
+      an eigenvalue analysis and obtain linear stability information.
+  \item Both the standard conformation formulation and the CDT formulation (see Sec.~\ref{sec:CDTformulation}) are available. 
+\end{itemize}
+Disadvantages and/or limitations of implicit time discretization schemes in \tfem\ are:
+\begin{itemize}
+  \item Each time step is more expensive, because we need iteration (Newton-Raphson) to solve the
+nonlinear equations and the matrices to solve are (sometimes much) larger.
+  \item The CDT formulation (see Sec.~\ref{sec:CDTformulation}) is inherently time dependent, except fur pure extensional flows. This means, that both time and space discretization errors are present. Even if you are mainly interested in a steady state solution, increasing the time step will also increase the error in the steady state.
+  \item Implicit time discretization for the LCR (log-conformation representation) is not yet available in \tfem.
+\end{itemize}
+
+\subsection{Implicit time discretization schemes}
+\label{sec:implicitschemes}
+
+Let's recall the equations for the flow of a single-mode incompressible viscoelastic fluid
+in a region $\Omega$ (see Eqs.~\eqref{eq:ve1}--\eqref{eq:ve3}):
+\begin{alignat}{2}
+  \rho(\pderiv{\vek u}t+\vek u\cdot\nabla\vek u)
+      -\nabla\cdot(2\eta_\text{s}\ten D(\vek u))+\nabla p-\nabla\cdot\ten \tau(\ten c)
+        &=\rho\vek b,\qquad&&\text{in }\Omega\label{eq:impve1}\\
+\nabla\cdot\vek u&=0,\qquad&&\text{in }\Omega\\
+        \pderiv{\ten c}{t}
++\vek u\cdot\nabla\ten c-\ten L\cdot\ten c-\ten c\cdot\ten L^T
+ +\ten f(\ten c)&=\ten 0,\qquad&&\text{in }\Omega\label{eq:impve3}
+\end{alignat}
+ In these equations $\vek u$ is the velocity, $p$ is the
+pressure and $\ten c$ is the conformation tensor, which are the unknowns to be
+solved as a function of position $\vek x$ and time $t$. Furthermore $\rho$ is
+the density of the fluid, $\eta_\text{s}$ is the solvent viscosity and
+ $\ten D=(\nabla\vek u+\nabla\vek u^T)/2$, with $\ten L=(\nabla\vek u)^T$ and
+$\vek b$ is a body force per unit mass (e.g.\ gravity).
+The polymer stress tensor $\ten\tau(\ten c)$ and the tensor function 
+$\ten f(\ten c)$ are 
+functions of the conformation tensor and depend on the model (see
+Appendix~\ref{chap:viscoelasticmodels}).
+
+We ignore the inertia terms for now. Applying an implicit Euler (BDF1) time discretization to Eq.~\eqref{eq:impve3} and evaluating the momentum balance and continuity equation at the new time $t_{n+1}$, we obtain the \emph{fully coupled scheme}:
+\begin{alignat*}{2}
+        -\nabla\cdot(2\eta_\text{s}\ten D(\vek u_{n+1}))+\nabla p_{n+1}-\nabla\cdot\ten \tau(\ten c_{n+1})
+        &=\rho\vek b,\qquad&&\text{in }\Omega\\
+\nabla\cdot\vek u_{n+1}&=0,\qquad&&\text{in }\Omega\\
+        \frac{\ten c_{n+1}-\ten c_n}{\Delta t}
++\vek u_{n+1}\cdot\nabla\ten c_{n+1}-\ten L(\vek u_{n+1})\cdot\ten c_{n+1}-\ten c_{n+1}\cdot\ten L^T(\vek u_{n+1})
+ +\ten f(\ten c_{n+1})&=\ten 0,\qquad&&\text{in }\Omega\label{eq:dimpve3}
+\end{alignat*}
+where $\Delta t=t_{n+1}-t_n$.
+\newpage
+Remarks:
+\begin{enumerate}
+\item The system is nonlinear and iteration, like Newton-Raphson, is needed to solve it.
+\item It is a fully coupled system between the variables $(\vek u_{n+1},p_{n+1},\ten c_{n+1})$ with a Jacobian of the form
+\[
+   \begin{pmatrix}
+     S & L & B_1 \\
+     L^T & 0 & 0 \\
+     C_1 & 0 & D_1
+    \end{pmatrix}
+\]
+which extends to
+\[
+   \begin{pmatrix}
+     S & L & B_1 & B_2 & \cdots & B_m \\
+     L^T & 0 & 0 & 0 & \cdots & 0 \\
+     C_1 & 0 & D_1 & 0 & \cdots & 0 \\
+     C_2 & 0 & 0 & D_2 & \cdots & 0 \\
+      \vdots  & \vdots & \vdots & \vdots & \ddots & \vdots \\
+     C_ m& 0 & 0 & 0& \cdots & D_m \\
+    \end{pmatrix}
+\]
+assuming $m$ modes are used in the constitutive equation.
+The matrix is sparse, even on element level, and \tfem\ can take that into account to avoid unnecessary filling of the system matrix (see Sec.~\ref{sec:excludezeroblocks}).
+\item If the viscoelastic modes are coupled, like in the EGP model with a global von-Mises stress (see Sec.~\ref{sec:egp_flow}), the `\textit{D}' matrix becomes a full matrix:
+\begin{equation}
+    \begin{pmatrix}
+     S & L & B_1 & B_2 & \cdots & B_m \\
+     L^T & 0 & 0 & 0 & \cdots & 0 \\
+     C_1 & 0 & D_{11} & D_{12} & \cdots & D_{1m} \\
+     C_2 & 0 & D_{21} & D_{22} & \cdots & D_{2m} \\
+      \vdots  & \vdots & \vdots & \vdots & \ddots & \vdots \\
+     C_ m& 0 & D_{m1} & D_{m2}& \cdots & D_{mm} \\
+    \end{pmatrix}\label{eq:fullDmatrix}
+\end{equation}
+\item When applying the DEVSS-G scheme, an additional variable $\ten G$ is introduced and in the CE the $\ten L$ is replaced with $\ten G$. The Jacobian matrix with variables $(\ten G_{n+1},\vek u_{n+1},p_{n+1},\ten c_{n+1})$ now becomes of the form
+\[
+   \begin{pmatrix}
+     E & F & 0 & 0 \\
+    F^T & S & L & B_1 \\
+    0 & L^T & 0 & 0 \\
+    G_1 & C_1 & 0 & D_1
+    \end{pmatrix}
+\]
+which extends to
+\[
+   \begin{pmatrix}
+     E & F & 0 & 0 & 0 & \cdots & 0 \\
+     F^T & S & L & B_1 & B_2 & \cdots & B_m \\
+     0 & L^T & 0 & 0 & 0 & \cdots & 0 \\
+     G_1 & C_1 & 0 & D_1 & 0 & \cdots & 0 \\
+     G_2 & C_2 & 0 & 0 & D_2 & \cdots & 0 \\
+      \vdots &\vdots  & \vdots & \vdots & \vdots & \ddots & \vdots \\
+     G_m & C_m& 0 & 0 & 0& \cdots & D_m \\
+    \end{pmatrix}
+\]
+assuming $m$ modes are used in the constitutive equation and that these are not coupled.
+\item For the fully coupled scheme no special techniques are needed for zero solvent fluids ($\eta_\text{s}=0$). Hence the stress-implicit scheme of Sec.~\ref{sec:implicitstress} is not applicable here.
+\item Other time discretization methods (Crank-Nicolson, BDF2, $\theta$-method)
+ can be easily applied.
+ \item Since all unknowns are solved `in one go', the main program is shorter and easier to read than decoupled methods.
+\item The Jacobian can be used to perform a linear stability analysis. See Sec.~\ref{sec:linearstability}.
+\item The Jacobian can be used to perform a Newton-Raphson iteration to find a steady state solution. See Sec.~\ref{sec:steadyviscoelastic}.
+\end{enumerate}
+
+The fully coupled scheme can be very expensive, in particular with multiple mode models. Therefore, a decoupled scheme can be more attractive in that case.
+Again applying an implicit Euler (BDF1) time discretization to Eq.~\eqref{eq:impve3}, evaluating the momentum balance and continuity equation at the new time $t_{n+1}$, however introducing a (known) velocity $\hat{\vek u}_{n+1}$,
+we get the \emph{decoupled scheme}:
+\begin{alignat*}{2}
+        -\nabla\cdot(2\eta_\text{s}\ten D(\vek u_{n+1}))+\nabla p_{n+1}-\nabla\cdot\ten \tau(\ten c_{n+1})
+        &=\rho\vek b,\qquad&&\text{in }\Omega\\
+\nabla\cdot\vek u_{n+1}&=0,\qquad&&\text{in }\Omega\\
+        \frac{\ten c_{n+1}-\ten c_n}{\Delta t}
++\hat{\vek u}_{n+1}\cdot\nabla\ten c_{n+1}-\ten L(\hat{\vek u}_{n+1})\cdot\ten c_{n+1}-\ten c_{n+1}\cdot\ten L^T(\hat{\vek u}_{n+1})
+ +\ten f(\ten c_{n+1})&=\ten 0\qquad&&\text{in }\Omega\label{eq:ddimpve3}
+\end{alignat*}
+Remarks:
+\begin{enumerate}
+\item If we apply the \emph{explicit stress} formulation (see Sec.~\ref{sec:explicitstress}), the velocity vector 
+$\hat{\vek u}_{n+1}$ is obtained from prediction using previous time steps. The conformation $\ten c_{n+1}$ can be 
+obtained by solving the constitutive equation for known velocity vector 
+$\hat{\vek u}_{n+1}$.
+The momentum balance and continuity equation are subsequently solved for obtaining $(\vek u_{n+1},p_{n+1})$ by substitution of $\ten c_{n+1}$. This only works for $\eta_\text{s}\neq0$.
+\item If we apply the \emph{implicit stress} formulation (see Sec~\ref{sec:implicitstress}), we first solve for 
+$(\vek u_{n+1},p_{n+1})$ and obtain the conformation $\ten c_{n+1}$ by substituting $\hat{\vek u}_{n+1}=\vek u_{n+1}$ in the constitutive equation. This also works for $\eta_\text{s}=0$.
+\item The constitutive equation is a nonlinear equation in terms of $\ten c_{n+1}$ and needs to be solved by iteration, for which we apply the Newton-Raphson method.
+\item For multi-mode models, each mode is solved separately (decoupled).
+\item Other time discretization methods (Crank-Nicolson, BDF2, $\theta$-method) are available.
+\end{enumerate}
+
+\subsection{Planar Couette flow for a Weissenberg number (Wi) of 10}
+\label{sec:couette_implicit}
+
+Various Couette flow examples using implicit time integration are available. The constitutive equation is always solved with a fully implicit scheme. However the coupling with the momentum balance is either stress explicit, stress implicit of fully implicit. Furthermore the formulation is either the standard c formulation or the b formulation (logc is not available). The following table shows the examples:\medskip\\
+\begin{tabular}{llll}
+Example & c or b  & coupling & postprocessing \\\hline
+ \texttt{couette17.f90} & c & explicit stress & \texttt{couette\_post17.f90} \\
+ \texttt{couette18.f90} & c & implicit stress & \texttt{couette\_post17.f90} \\
+ \texttt{couette19.f90} & b & explicit stress & \texttt{couette\_post17.f90} \\
+ \texttt{couette20.f90} & b & implicit stress & \texttt{couette\_post17.f90} \\
+ \texttt{couette21.f90} & c & fully implicit & \texttt{couette\_post21.f90} \\
+ \texttt{couette22.f90} & b & fully implicit & \texttt{couette\_post21.f90} 
+\end{tabular}\medskip\\
+We refer to Sec.~\ref{sec:couette} for a description of the Couette problem.
+
+Examples \texttt{couette19a.f90}, \texttt{couette20a.f90} and \texttt{couette22a.f90} are similar to examples \texttt{couette19.f90}, \texttt{couette20.f90} and \texttt{couette22.f90}, respectively, but use element level rotation reinitialization instead of the nodal based one.
+
+The examples can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+
+\subsection{Flow around a cylinder between two plates (implicit; decoupled and fully implicit)}
+\label{sec:cylinderimplicit}
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_b}
+\end{quote}
+
+The examples describe the flow
+around a fixed cylinder positioned between two walls. For the examples \texttt{cylinder3.f90} and \texttt{cylinder4.f90} the numerical scheme is decoupled with
+stress-explicit (see Sec.~\ref{sec:explicitstress}) and stress-implicit (see
+Sec.~\ref{sec:implicitstress}) approaches for the two examples, respectively. The example \texttt{cylinder5.f90}
+shows the use of a fully implicit scheme. The example \texttt{cylinder6.f90} is similar to \texttt{cylinder5.f90} but has the option to reduce the memory footprint of the system matrix when dealing with a large number of modes.
+
+Examples \texttt{cylinder3a.f90}, \texttt{cylinder4a.f90}, \texttt{cylinder5a.f90} and \texttt{cylinder6a.f90} are similar to examples \texttt{cylinder3.f90}, \texttt{cylinder4.f90}, \texttt{cylinder5.f90} and \texttt{cylinder6.f90}, respectively, but use element level rotation reinitialization instead of the nodal based one.
+Example \texttt{cylinder9.F90} is similar to \texttt{cylinder6a.f90}, but reads from an input file:
+ \begin{quote}
+   \texttt{cylinder9 < input\_cylinder9.txt}
+\end{quote}
+and there is also the option to restart from a previously saved solution. The example \texttt{cylinder9.F90} is used to create the results in \cite{JaenssonHulsen2024}.
+
+A default coarse mesh (\texttt{confined\_cylinder1.msh}) is supplied, but in the
+subdirectory \texttt{meshes} files are available to generate more refined 
+meshes.
+
+Examples \texttt{cylinder\_c3.f90}, \texttt{cylinder\_c4.f90}, \texttt{cylinder\_c5.f90}, \texttt{cylinder\_c6.f90} and \texttt{cylinder\_c9.f90} are also available
+and are similar to \texttt{cylinder3.f90}, \texttt{cylinder4.f90}, \texttt{cylinder5.f90}, \texttt{cylinder6.f90} and \texttt{cylinder9.f90}, respectively. However 
+the problems are solved using the conformation tensor approach. Since the log-conformation approach cannot yet be applied to the implicit time discretization, the Weissenberg number that can be imposed is limited for the conformation approach.
+

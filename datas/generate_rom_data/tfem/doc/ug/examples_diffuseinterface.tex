@@ -1,0 +1,1042 @@
+% !TEX root = userguide.tex
+\def\headdate{30th Sep 2021}
+
+\section{The diffuse-interface model}
+\label{sec:examples_dim}
+
+In this section an example using the diffuse-interface model will be given
+after the theory in the next section.
+
+\subsection{Weak form of the diffuse-interface model. Galerkin \fem}
+
+We consider the diffuse-interface model in a region $\Omega$, with the flow
+equations according to Stokes flow:
+\begin{alignat}{3}
+-&\nabla\cdot(2\eta \ten D)+\nabla g_0&&=\vek f+\nabla \cdot \ten    
+\tau_\text{c}, &&\qquad\text{in }\Omega \label{eq:di1}\\
+&\nabla\cdot\vek u &&=0 &&\qquad\text{in }\Omega \label{eq:di2}
+\end{alignat}
+where $\ten D=(\nabla\vek u+\nabla\vek u^T)/2$, $g_0$ is a pressure term, and 
+$\ten \tau_\text{c}$ is the 
+capillary stress tensor given by
+\[
+\ten \tau_\text{c} = \rho \kappa (|\nabla c|^2 \ten I - \nabla c \nabla c)
+\]
+where $c$ is the concentration, $\kappa$ is a parameter related to the thickness
+of the interface,  and $\rho$ is the density of the fluid (the inertia
+terms in the momentum balance, which also contain $\rho$, are assumed to be 
+negligible). Furthermore, an isotropic stress 
+$\rho \kappa |\nabla c|^2 \ten I$ was added to ensure 
+that the capillary stress is always parallel to the interface. We will call 
+this form of the momentum balance, where the capillary stress is used directly, 
+the \emph{stress form}. The divergence 
+of the capillary stress tensor $\nabla \cdot \ten \tau_\text{c}$ can be 
+rewritten to a body force $\rho \mu \nabla c$, or alternatively $-\rho c\nabla 
+\mu$, plus an isotropic term that can be absorbed in the pressure. We will call 
+these two forms of the 
+flow equations \emph{potential form 1} (with pressure $g_1$) and 
+\emph{potential form 
+	2} (with pressure $g_2$), 
+respectively \cite{Jaensson2015}. Note, that 
+potential form 1 is employed in most of the 
+diffuse-interface examples in \tfem.
+
+The equations for the
+concentration $c$ and chemical potential $\mu$ are given by:
+\begin{alignat}{3}
+&\pderiv{c}{t}+\vek u\cdot\nabla c&-M\nabla^2\mu=0&&\qquad\text{in }\Omega
+\label{eq:di3}\\
+\alpha c&-\beta c^3+\kappa\nabla^2 c&+\mu\,\,\,\,=0&&\qquad\text{in }\Omega
+\label{eq:di4}
+\end{alignat}
+where $M$ is the mobility, and $\alpha$ and $\beta$ are diffuse-interface
+parameters related to the shape of the double-well function.
+For a planar interface (varying only in $z$-direction) which is in 
+equilibrium ($\mu = 0$), the concentration
+profile can be determined:
+\begin{equation}
+c(z) = c_\text{B} \tanh\left(\frac{z}{\sqrt{2} \xi}\right)
+\end{equation}
+where the bulk values are given by $c_\text{B}=\pm \sqrt{\alpha/\beta}$ and 
+$\xi = \sqrt{\kappa / \alpha} $. In this case, the interfacial tension $\gamma$ 
+is given by 
+\begin{equation}
+\gamma = \frac{2 \sqrt{2}}{3} \frac{\rho \kappa c_\text{B}^2}{\xi}
+\label{eq:di_surface_tension}
+\end{equation}
+
+The boundary conditions for the
+flow problem are the same as in Sec.~\ref{sec:stokesweak}.
+The boundary conditions for $c$ and $\mu$ are assumed to be
+$\plderiv{c}{n}=0$ and $\plderiv{\mu}{n}=0$ on $\Gamma$, which correspond to a 
+90 degree contact angle and no influx of $c$, respectively. For a contact angle 
+different from 90 degrees see 
+Sec.~\ref{sec:contactangle}.                                                    
+
+
+The weak form of the flow equations using the stress form is similar to 
+Sec.~\ref{sec:stokesweak}:
+find $\vek u$ and $g_0$ such that
+\begin{alignat*}{3}
+&\big(\ten D_v,2\eta\ten D\big)-(\nabla\cdot\vek v,g_0)&&=(\vek v,
+\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)-(\ten D_v,\ten 
+\tau_\text{c})&\qquad&\text{for all }\vek v\\
+&\,(q,\nabla\cdot\vek u)&&=0&\qquad&\text{for all }q
+\end{alignat*}
+using appropriate spaces for $\vek u$, $g_0$, $\vek v$ and $q$. Using potential 
+form 1, we obtain the weak form: 
+find $\vek u$ and $g_1$ such that
+\begin{alignat*}{3}
+&\big(\ten D_v,2\eta\ten D\big)-(\nabla\cdot\vek v,g_1)&&=
+(\vek v,\vek f)+(\vek v,\rho \mu \nabla c)&\qquad&\text{for all }\vek v\\
+&\,(q,\nabla\cdot\vek u)&& =0&\qquad&\text{for all }q
+\end{alignat*}
+And similarly for potential form 2:
+find $\vek u$ and $g_2$ such that
+\begin{alignat*}{3}
+&\big(\ten D_v,2\eta\ten D\big)-(\nabla\cdot\vek v,g_2)&&= (\vek v,\vek f)   
+-(\vek v,\rho c \nabla \mu)&\qquad&\text{for all }\vek v\\
+&\,(q,\nabla\cdot\vek u)&& =0 &\qquad&\text{for all }q
+\end{alignat*}
+
+Note that the pressure fields $g_0$, $g_1$ and $g_2$ are defined differently 
+and therefore cannot be compared directly 
+\cite{Jaensson2015}. 
+
+In these equations
+$\ten D_v$ is defined by
+\[
+\ten D_v=(\nabla\vek v+\nabla\vek v^T)/2.
+\]
+It is important to note that adding Neumann (traction) boundary conditions for 
+the momentum balance 
+using one of the potential forms is not straightforward, as was shown in 
+\cite{Jaensson2015}. Therefore, Neumann (traction) boundary conditions are left 
+out of the weak forms of the momentum balance using the potential forms.
+
+The weak form of the $c$ and $\mu$ equations can easily be derived and reads:
+find $c$ and $\mu$ such that
+\begin{alignat*}{3}
+\big(r,\pderiv{c}{t}+\vek u\cdot\nabla c\big)+M(\nabla r,\nabla \mu)
+&=0 &&\qquad&\text{for all } r\\
+(s, \alpha c-\beta c^3)-\kappa(\nabla s,\nabla c) +(s,\mu) &=0
+&&\qquad&\text{for all } s
+\end{alignat*}
+using appropriate spaces for $c$, $\mu$, $r$ and $s$.
+
+
+The weak form can be used to obtain an approximate solution using the Galerkin 
+\fem\
+technique. For this we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+\text{for }e\neq f
+\]
+and interpolate $\vek u$, $g_0$, $c$ and $\mu$
+(and similarly $\vek v$, $g_1$, $g_2$, $q$, $r$ and $s$) by polynomials on each 
+element:
+\[
+\begin{split}
+\vek u_h&=\tsum_k \phi_k(\vek x)\vek u_k=\col\phi^T(\vek x)\col{\vek u}\\
+[g_0]_h&=\tsum_k \psi_k(\vek x) [g_0]_k=\col\psi^T(\vek x)\col{g_0}\\
+c_h&=\tsum_k \phi_k(\vek x) c_k=\col\phi^T(\vek x)\col{ c}\\
+\mu_h&=\tsum_k \phi_k(\vek x) \mu_k=\col\phi^T(\vek x)\col{ \mu}
+\end{split}
+\]
+where $\col\phi(\vek x)$ and $\col\psi(\vek x)$
+are global shape functions. Note, that $c$ and $\mu$ are interpolated using the
+same shape function as the velocity vector.
+
+\subsection{Explicit/implicit time discretization 
+	\label{sec:di_expl}}
+At the initial time $t_0$ we solve the flow equations to obtain an initial flow 
+field $\vek u^0=\vek u(t_0)$. This can be done with or without
+the right-hand side term $\nabla \cdot \ten \tau_\text{c}$ (which can be 
+replaced by $\rho\mu\nabla c$ or $-\rho c\nabla \mu$ when one of the potential 
+forms is used). Due to the time derivative of $c$, the initial field 
+$c^0=c(t_0)$ should be specified.
+Then we do a time
+stepping where we first solve the equations for 
+$c^{n+1}$ and $\mu^{n+1}$ using the values of $\vek u^n$ and $c^n$ at the
+current time $t^n$. Using an implicit Euler scheme, we obtain
+\begin{alignat*}{3}
+&\big(r,\frac{c^{n+1}-c^n}{\Delta t}+\vek u^n\cdot\nabla c^{n+1}\big)&
++M(\nabla r,\nabla \mu^{n+1})=0 &&\qquad&\text{for all } r\\
+(s,\alpha c^{n+1}&-\beta [c^{n+1}]^3)-\kappa(\nabla s,\nabla c^{n+1})   
+&+(s,\mu^{n+1})=0 &&\qquad&\text{for all } s 
+\end{alignat*}
+where $\Delta t$ is the time step. This is a non-linear equation, which we
+solve by Picard iteration:
+\begin{alignat}{3}
+&\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\vek u^n\cdot\nabla   
+c_{i+1}\big)&+M(\nabla r,\nabla \mu_{i+1})=0 &&\qquad&\text{for all } r\\
+\big(s,(\alpha &-\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1}) 
+&+(s,\mu_{i+1})=0 &&\qquad&\text{for all } s \label{eq:di_picard}
+\end{alignat}
+or by Newton-Raphson iteration:
+\begin{alignat}{3}
+&\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\vek u^n\cdot\nabla c_{i+1}\big)&+ 
+M(\nabla r,\nabla \mu_{i+1})=0 &&\qquad&\text{for all } r\\
+\big(s,(\alpha &-3\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1})
+&+(s,\mu_{i+1})= -\big(s,2\beta c_{i}^3 \big) &&\qquad&\text{for all } s
+\label{eq:di_newton}
+\end{alignat}
+for $i=0,1,\ldots$ with $c_0=c^n$, until convergence.
+Then we solve the flow equations to obtain $\vek u^{n+1}$ and $p^{n+1}$ using
+$c^{n+1}$ and $\mu^{n+1}$.
+
+Replacing the implicit Euler scheme with a Gear (BDF2) scheme,
+we obtain second-order time discretization:
+\begin{alignat*}{3}
+&\big(r,\frac{\frac32c^{n+1}-2c^n+\frac12c^{n-1}}{\Delta t}+
+\hat{\vek u}^{n+1}\cdot\nabla c^{n+1}\big)&+M(\nabla r,\nabla \mu^{n+1})
+=0 &&\qquad&\text{for all } r\\
+&(s, \alpha c^{n+1}-\beta [c^{n+1}]^3)-\kappa(\nabla s,\nabla c^{n+1})
+&+(s,\mu^{n+1})=0 &&\qquad&\text{for all } s
+\end{alignat*}
+where $\hat{\vek u}^{n+1}=2\vek u^n-\vek u^{n-1}$ is a prediction of the
+velocity vector field $\vek u$ at $t^{n+1}$.
+
+Remarks:
+\begin{enumerate}
+	\item The first-order discretization has been the base of the original
+	element routine\\ \texttt{diffuse\_interface\_elem}.
+	\item The second-order discretization has been the implemented in the
+	element routine \texttt{diffuse\_interface\_elem1}, along with the
+	extensions for ALE and tALE (see Sec.~\ref{sec:ale}).
+	\item In a scheme where the flow is computed first we can replace 
+	$\hat{\vek u}^{n+1}$ with the computed $\vek u^{n+1}$, however 
+	we need a predicted $\hat{c}^{n+1}=2c^n-c^{n-1}$ in order to obtain
+	second-order accuracy in time.
+	\item Picard iteration is used in  \texttt{diffuse\_interface\_elem}.
+	If \texttt{diffuse\_interface\_elem1} is used, both Picard and
+	Newton-Raphson iteration is available. 
+\end{enumerate}
+
+\subsection{Planar Couette flow}
+\label{sec:couettedi}
+
+We consider a planar Couette problem on a unit square.
+On the upper boundary a tangential
+velocity of 0.5 and a normal velocity of zero is imposed.
+On the lower boundary a tangential
+velocity of -0.5 and a normal velocity of zero is imposed.
+In horizontal direction periodical boundary conditions are assumed.
+In the lower left corner the pressure value is set to zero (Dirichlet).
+
+At the start of the flow the concentration $c$ is set to zero
+plus a small random perturbation.
+
+The example file is \texttt{diffuse\_interface1.f90}
+and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample diffuse\_interface}
+\end{quote}
+The post-processing part is done by the separate programs
+\texttt{diffuse\_interface\_post.f90} and \texttt{streamfunction.f90}.
+
+The example is rather straightforward and can be studied by examining the
+source files. The periodical boundary conditions are imposed using
+constraints (see Chap.~\ref{ch:constraints}).
+The add-on `diffuse interface' (see Sec.~\ref{sec:diffuse_interface})
+is used for the building of the system. 
+
+The example can be run by
+\begin{quote}
+   \texttt{diffuse\_interface1 < input\_diffuse\_interface1.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{diffuse\_interface\_post}\\
+   \texttt{streamfunction}
+\end{quote}
+
+After running the example
+the results in Fig.~\ref{fig:couette1di} are obtained.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.5]{c_color_fill}
+   \end{center}
+   \caption{Concentration $c$ at time 1 
+            in a planar Couette flow with parameters $M=0.02$,
+            $\kappa=4\times10^{-4}$ and $\rho=50$. All others parameters
+            ($\eta$, $\alpha$, $\beta$) are set to 1.
+            Mesh: 80$\times$80 elements. Time step $\Delta t=1\times10^{-2}$.}
+    \label{fig:couette1di}
+\end{figure}
+
+A similar example is \texttt{diffuse\_interface11.f90}, but now using spectral
+elements. 
+The example can be run by
+\begin{quote}
+   \texttt{diffuse\_interface11 < input\_diffuse\_interface11.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{diffuse\_interface\_post11}\\
+   \texttt{streamfunction11}
+\end{quote}
+
+Another similar example is \texttt{diffuse\_interface12.f90}, but now
+using second-order time discretization.
+The example can be run by
+\begin{quote}
+   \texttt{diffuse\_interface12 < input\_diffuse\_interface12.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{diffuse\_interface\_post}\\
+   \texttt{streamfunction}
+\end{quote}
+
+\subsection{Biperiodic shear flow. Lees-Edwards boundary conditions}
+\label{sec:couettedi5}
+
+We consider a biperiodic shear flow problem on a unit square.
+The upper and lower boundary are coupled using Lees-Edwards boundary
+conditions (LEbc) with velocity difference of 1 between the upper and lower
+boundary of the domain.
+In horizontal direction periodical boundary conditions are assumed.
+Halfway on the left boundary the velocity is set to zero (Dirichlet).
+In the lower left corner the pressure value is set to zero (Dirichlet).
+
+At the start of the flow the concentration $c$ is set to zero
+plus a small random perturbation.
+
+The example file is \texttt{diffuse\_interface5.f90}
+and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample diffuse\_interface}
+\end{quote}
+The post-processing part is done by the separate programs
+\texttt{diffuse\_interface\_post.f90} and \texttt{streamfunction.f90}.
+
+The example is rather straightforward and can be studied by examining the
+source files. The (periodical) boundary conditions are imposed using
+weak constraints on objects (see Chap.~\ref{ch:constraints}).
+Some notes on the source:
+\begin{listing}{481}
+!   shift mapped coordinates forward in time for Lees-Edwards conditions
+
+    time = time + deltat
+
+    call find_refcoor_objects ( mesh, object1=4, mapcoor=mapcoor )
+\end{listing}
+Here the intersections of the coordinates of object 4 are recomputed every time
+step. The function \texttt{mapcoor} maps the coordinates according to
+Lees-Edwards boundary conditions before the intersection is computed.
+
+NOTE: the weak constraint integrals need to be computed
+exact to get the best results (see \cite{Hwang04}).
+In this example we achieve this in the following way. 
+The number of elements along the object is 80. The integration rule is
+two-point Gauss on 5 subintervals. This means that if we take the time step to
+be a multiple of $1/(5*80)=2.5\times10^{-3}$ the integrals are computed 
+exactly.
+A disadvantage of this approach is that if the shear rate is not constant the
+integrals cannot be integrated exactly. In that case much more integration
+points need to used or, even better, the integration should be performed
+analytically (like in \cite{Hwang04}) or numerically with a split interval
+(like in \cite{Anderson06}).
+
+The example can be run by
+\begin{quote}
+   \texttt{diffuse\_interface5 < input\_diffuse\_interface5.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{diffuse\_interface\_post}
+\end{quote}
+
+After running the example
+the results in Fig.~\ref{fig:couette5di} are obtained.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{c_color_fill5}
+   \end{center}
+   \caption{Concentration $c$ at time 1 
+            in a biperiodic (with LEbc)
+            flow with parameters $M=0.02$,
+            $\kappa=4\times10^{-4}$ and $\rho=50$. All others parameters
+            ($\eta$, $\alpha$, $\beta$) are set to 1.
+            Mesh: 80$\times$80 elements. Time step $\Delta t=1\times10^{-2}$.}
+    \label{fig:couette5di}
+\end{figure}
+\subsection{More diffuse-interface examples}
+\label{sec:diexamples}
+
+(These examples have been developed by Patrick Anderson of the TU/e).
+
+One of the nice features of the diffuse-interface model is that it can easily 
+be used to study a variety of different problems by changing
+the concentration $c$. The example file is \texttt{diffuse\_interface3.f90}
+and is obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample diffuse\_interface}
+\end{quote}
+The post-processing part is again done by the separate programs
+\texttt{diffuse\_interface\_post.f90} and \texttt{streamfunction.f90}.
+
+Below, a part of the source file is given defining the initial concentration 
+vector such that retraction of a non-circular drop is studied:
+\begin{listing}{250}
+! create concentration vector
+!
+!   funcnr = 1 : unstable stratified layers
+!   funcnr = 2 : retraction of non-circular drop
+!   funcnr = 3 : spinodal decomposition
+!   funcnr = 4 : a supercritical and a subcritical nucleus
+
+  call fill_sysvector ( mesh, problemdi, soldin, degfd=1, &
+       node1=1, node2=mesh%nnodes, func=difunc, funcnr=2)
+\end{listing}
+
+Again this example is rather straightforward and can be studied by examining 
+the source files. In this example bi-periodic boundary conditions are also 
+imposed  using constraints (see Chap.~\ref{ch:constraints}), but now coupling 
+the top and bottom curve and the two side curves.
+The add-on `diffuse interface' (see Sec.~\ref{sec:diffuse_interface})
+is used for the building of the system.
+
+The example can be run by
+\begin{quote}
+   \texttt{diffuse\_interface3 < input\_diffuse\_interface3.txt}
+\end{quote}
+which might take a while depending on the exact conditions.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{diffuse\_interface\_post}
+\end{quote}
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{dropretract0}
+   }
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{dropretract10}
+   }
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{dropretract20}
+   }
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{dropretract50}
+   }
+   \end{center}
+   \caption{Concentration $c$ at different times 
+            in a bi-periodic flow domain with parameters $M=0.04$,
+            $\kappa=16\times10^{-4}$ and $\rho=250$. All others parameters
+            ($\eta$, $\alpha$, $\beta$) are set to 1.
+            Mesh: 40$\times$40 elements. Time step $\Delta t=1\times10^{-2}$.}
+    \label{fig:diexample3}
+\end{figure}
+
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{bingrowth0}
+   }
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{bingrowth05}
+   }
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{bingrowth050}
+   }
+   \resizebox{0.2\textwidth}{!}{
+     \includegraphics*{bingrowth100}
+   }
+   \end{center}
+   \caption{A supercritical and a subcritical nucleus; 
+            concentration $c$ at different times
+            in a bi-periodic flow domain with parameters $M=0.04$,
+            $\kappa=16\times10^{-4}$ and $\rho=250$. All others parameters
+            ($\eta$, $\alpha$, $\beta$) are set to 1.
+            Mesh: 40$\times$40 elements. Time step $\Delta t=1\times10^{-2}$.}
+    \label{fig:diexample3a}
+\end{figure}
+
+
+A three-dimensional example of the diffuse-interface model in a brick
+with no external flow, homogeneous essential boundary conditions for 
+velocities 
+can be run by
+\begin{quote}
+   \texttt{diffuse\_interface4 < input\_diffuse\_interface4.txt}
+\end{quote}
+which really take a while depending on the exact conditions.
+This example generates VTK data files (see
+Sec.~\ref{sec:vtk}) for plotting the results.
+
+An axisymmetric example of a drop deforming in extensional flow is provided 
+in a sixth example, i.e.
+\texttt{diffuse\_interface6.f90} where the constant
+\begin{quote}
+    coorsys = 1       ! axisymmetric coordinate system
+\end{quote}
+has been defined. After 250 time steps the boundary conditions are set to 
+zero, 
+the drop relaxes and breaks up into multiple drops. This example uses the 
+commercial package Tecplot (see Sec.~\ref{sec:tec}) for post processing at 
+each 
+tenth time step. A one-dimensional example is provided in 
+\texttt{diffuse\_interface7.f90} where only 
+the equations for $c$ and $\mu$ are solved to study spinodal decomposition in 
+great 
+detail. Example \texttt{diffuse\_interface8.f90} can be used to study the 
+effect 
+of hydrodynamic forces on growth rates in chaotic flow. The program 
+demonstrates how 
+to apply a time-periodic source term for the momentum equation.
+
+\subsection{The ternary diffuse-interface model}
+
+(This module have been developed by Patrick Anderson of the TU/e).
+
+Also a ternary version of the diffuse-interface model is available in \tfem.
+The main difference compared to the two-component Cahn-Hilliard model is that 
+now
+a third phase is present; thus the free energy is now a function of $c_1$ and 
+$c_2$.
+Given the ternary free energy
+\begin{equation}
+f_0 = \frac{1}{4} 
+\left(
+c_1^2 c_2^2 + (c_1^2+c_2^2)\times(1-c_1-c_2)^2 -c_1c_2 (1-c_1-c_2)
+\right)
+\end{equation}
+the derivatives read
+\begin{align*}
+\frac{\partial f_0}{\partial c_1} &=
+0.5c_1 
+-1.5c_1^2+c_1^3-0.25c_2-0.5c_1c_2+1.5c_1^2c_2-0.25c_2^2+1.5c_1c_2^2+0.5c_2^3\\
+&= ( 0.5 -1.5c_1+c_1^2 - 0.5c_2+1.5c_1c_2
++1.5c_2^2)c_1 + (-0.25 -0.25c_2 +0.5c_2^2)c_2\\
+\frac{\partial f_0}{\partial c_2} &=
+( 0.5 -1.5c_2+c_2^2 - 0.5c_1+1.5c_1c_2
++1.5c_1^2)c_2 + (-0.25 -0.25c_1 +0.5c_1^2)c_1
+\end{align*}
+The system of equations for $\mu_1,\mu_2, c_1, c_2,\vec u, p$, derived by  
+Mauri, Molin and Anderson, now reads
+\begin{align}
+\mu_1 &= \frac{\partial f_0}{\partial c_1}-{\epsilon^2}\nabla^2 c_1 - 
+\frac{\epsilon^2}{2} \nabla^2 c_2 \\
+\mu_2 &= \frac{\partial f_0}{\partial c_2} -{\epsilon^2}\nabla^2 c_2 - 
+\frac{\epsilon^2}{2} \nabla^2 c_1 \\
+\frac{\partial c_1}{\partial t} +{\vec u} \cdot \nabla c_1 &=  \nabla  \cdot M 
+c_1 c_2 \nabla \mu_2 +
+ \nabla  \cdot M c_1 (1-c_2) \nabla i\mu_1\\
+\frac{\partial c_2}{\partial t} +{\vec u} \cdot \nabla c_2 &=  \nabla  \cdot 
+M  
+c_1 c_2 \nabla \mu_1 +
+ \nabla  \cdot M c_1 (1-c_2) \nabla \mu_2
+\end{align}
+solved in combination with the mass and momentum balance
+\begin{align}
+0&= -\nabla p + \eta\nabla^2 {\vec u} + \rho (\mu_1\nabla c_1 + \mu_2\nabla 
+c_2)\\
+\nabla \cdot {\vec u}  &=0
+\end{align}
+In \tfem\ a more general version of the ternary free energy is implemented, 
+i.e.\
+\begin{equation}
+f_0 = \frac{1}{4} 
+\left(
+\alpha c_1^2 c_2^2 + \beta (c_1^2+c_2^2)\times(1-c_1-c_2)^2 - \gamma c_1c_2 
+(1-c_1-c_2)
+\right)
+\end{equation}
+
+A one-dimensional example of the ternary diffuse-interface model
+can be run by
+\begin{quote}
+   \texttt{diffuse\_interface9 < input\_diffuse\_interface9.txt}
+\end{quote}
+and an two-dimensional example of the ternary diffuse-interface model
+can be run by
+\begin{quote}
+   \texttt{diffuse\_interface10 < input\_diffuse\_interface10.txt}
+\end{quote}
+
+Another type of the ternary diffuse-interface model is also available in \tfem.
+Detail of the model can be found in \cite{Boyer2006},
+and only the relevant equations are summarized here.
+The total free energy reads
+\begin{equation}
+f = f_0 + \frac{1}{2} \epsilon_1 | \nabla c_1 |^2
+        + \frac{1}{2} \epsilon_2 | \nabla c_2 |^2
+        + \frac{1}{2} \epsilon_3 | \nabla c_3 |^2
+\end{equation}
+where the homogeneous part $f_0$ is given by
+\begin{equation}
+f_0(c_1, c_2, c_3)
+    = \frac{1}{2} \alpha c_1^2 \left( 1 - c_1 \right)^2
+    + \frac{1}{2} \beta c_2^2 \left( 1 - c_2 \right)^2
+    + \frac{1}{2} \gamma c_3^2 \left( 1 - c_3 \right)^2
+    + 3 \Omega c_1^2 c_2^2 c_3^2
+\end{equation}
+The convection-diffusion equation for $c_i, (i = 1, 2, 3)$ reads
+\begin{equation}
+\pderiv{c_i}{t} + \vec{u} \cdot \nabla c_i =
+\nabla \cdot \left( M_i \nabla \mu_i \right)
+\end{equation}
+The chemical potential $\mu_i, (i = 1, 2, 3)$ is given by
+\begin{equation}
+\mu_i = \pderiv{f_0}{c_i} - \epsilon_i \nabla^2 c_i + \lambda
+\end{equation}
+where $\lambda$ is a Lagrange multiplier
+to ensure the constraint of $c_1 + c_2 + c_3 = 1$.
+With a postulate of $M_1 \epsilon_1 = M_2 \epsilon_2 = M_3 \epsilon_3$,
+the Lagrange multiplier can be defined by
+\begin{equation}
+\lambda = - \frac{1}{M_s} \left( M_1 \pderiv{f_0}{c_1}
+        + M_2 \pderiv{f_0}{c_2}
+        + M_3 \pderiv{f_0}{c_3} \right)
+\end{equation}
+where $M_s = M_1 + M_2 + M_3$.
+Therefore, the chemical potential can be rewritten as
+\begin{align}
+\mu_1 = \frac{M_2}{M_s} \left( \pderiv{f_0}{c_1} - \pderiv{f_0}{c_2} \right)
+      + \frac{M_3}{M_s} \left( \pderiv{f_0}{c_1} - \pderiv{f_0}{c_3} \right)
+      - \epsilon_1 \nabla^2 c_1
+\\
+\mu_2 = \frac{M_3}{M_s} \left( \pderiv{f_0}{c_2} - \pderiv{f_0}{c_3} \right)
+      + \frac{M_1}{M_s} \left( \pderiv{f_0}{c_2} - \pderiv{f_0}{c_1} \right)
+      - \epsilon_2 \nabla^2 c_2
+\\
+\mu_3 = \frac{M_1}{M_s} \left( \pderiv{f_0}{c_3} - \pderiv{f_0}{c_1} \right)
+      + \frac{M_2}{M_s} \left( \pderiv{f_0}{c_3} - \pderiv{f_0}{c_2} \right)
+      - \epsilon_3 \nabla^2 c_3
+\end{align}
+It can be noted that $M_1 \mu_1 + M_2 \mu_2 + M_3 \mu_3 = 0$.
+Finally, the system of equations for $\mu_1, \mu_2, c_1$ and $c_2$ reads
+\begin{align}
+& \pderiv{c_1}{t} + \vec{u} \cdot \nabla c_1 =
+\nabla \cdot \left( M_1 \nabla \mu_1 \right)
+\\
+& \pderiv{c_2}{t} + \vec{u} \cdot \nabla c_2 =
+\nabla \cdot \left( M_2 \nabla \mu_2 \right)
+\\
+& \mu_1 = \frac{M_2}{M_s} \left( \pderiv{f_0}{c_1} - \pderiv{f_0}{c_2} \right)
+      + \frac{M_3}{M_s} \left( \pderiv{f_0}{c_1} - \pderiv{f_0}{c_3} \right)
+      - \epsilon_1 \nabla^2 c_1
+\\
+& \mu_2 = \frac{M_3}{M_s} \left( \pderiv{f_0}{c_2} - \pderiv{f_0}{c_3} \right)
+      + \frac{M_1}{M_s} \left( \pderiv{f_0}{c_2} - \pderiv{f_0}{c_1} \right)
+      - \epsilon_2 \nabla^2 c_2
+\end{align}
+which is solved in combination with the Stokes equation
+\begin{align}
+0& = -\nabla p + \eta\nabla^2 {\vec u}
+   + \rho (\mu_1\nabla c_1 + \mu_2\nabla c_2 + \blue{\mu_3 \nabla c_3})
+\\
+\nabla \cdot {\vec u}  &=0
+\end{align}
+Because $\nabla c_3 = - \nabla c_1 - \nabla c_2$ and
+$\mu_3 = - \dfrac{M_1}{M_3} \mu_1 - \dfrac{M_2}{M_3} \mu_2$,
+the momentum conservation equation actually implemented in \tfem\ is
+\begin{equation}
+0 = -\nabla p + \eta\nabla^2 {\vec u}
+   + \rho \left( (\mu_1 + \blue{ \frac{M_1}{M_3} \mu_1
+                               + \frac{M_2}{M_3} \mu_2 } ) \nabla c_1
+               + (\mu_2 + \blue{ \frac{M_1}{M_3} \mu_1
+                               + \frac{M_2}{M_3} \mu_2 } )\nabla c_2
+          \right)
+\end{equation}
+
+The example file is \texttt{diffuse\_interface19.f90}, and
+there are two different input files (\texttt{input\_diffuse\_interface19a.txt} and
+\texttt{input\_diffuse\_interface19b.txt}).
+A drop is initially located between two stratified fluids.
+With the former input file, the three phases are fully symmetric and the drop will partially spread between the upper and lower fluid.
+In the latter case, the upper fluid is totally spreading between the drop and lower fluid as shown in Fig. \ref{fig:ternary_spread}.
+
+Note, the coefficients $M_2$ and $M_3$ should not be defined in the input file
+but they are computed in the element routine via the relationship of
+$M_1 \epsilon_1 = M_2 \epsilon_2 = M_3 \epsilon_3$.
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[width=0.3\textwidth]{ternary_spread_1}
+   \includegraphics[width=0.3\textwidth]{ternary_spread_2}
+   \includegraphics[width=0.3\textwidth]{ternary_spread_3}
+   \end{center}
+   \caption{Drop between two fluids:
+            the upper fluid is totally spreading between
+            the drop and lower fluid.
+            $\alpha = 3$, $\beta = -1$, $\gamma = 3$, $\Omega = 7$,
+            $M_1 = 2 \times 10^{-2}$, $\epsilon_1 = 12 \times 10^{-4}$,
+            $\epsilon_2 = -4 \times 10^{-4}$,
+            $\epsilon_3 = 12 \times 10^{-4}$,
+            and time step $\Delta t = 5 \times 10^{-4}$.}
+    \label{fig:ternary_spread}
+\end{figure}
+
+\subsection{Static contact angle}
+\label{sec:contactangle}
+
+(This text and examples in this section have been supplied by Nick Jaensson of the TU/e).
+
+When two fluids are in contact with a solid, the angle the fluid-fluid 
+interface makes with the solid interface is called the contact angle and is 
+denoted by $\theta_\text{c}$, as is shown in Fig.~\ref{fig:droplet_on_solid}. 
+The contact angle is related to the 
+interfacial tensions/energies through Young's equation, given by
+\begin{equation}
+\gamma_{sb} = \gamma_{sa} + \gamma \cos{\theta_\text{c}},
+\label{eq:youngs_eq}
+\end{equation}
+where $\gamma_{sb}$, $\gamma_{sa}$ and $\gamma$ are the interfacial 
+tensions/energies 
+between fluid $b$ and the solid, between fluid $a$ and the solid and between 
+the two fluids, respectively.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.2]{droplet_on_solid}
+   \end{center}
+   \caption{Droplet of fluid $a$ , surrounded by fluid $b$, in contact with a 
+      solid surface.}
+    \label{fig:droplet_on_solid}
+\end{figure}
+In the diffuse-interface model, a contact angle that is not 
+equal to $90^\circ$ can be imposed by adding a wall energy that is a function 
+of $c$ \cite{Khatavkar2007}
+\begin{equation}
+F = \int_{\Omega} \rho f \, dV + \int_{\Gamma} \rho f_\text{w} \, dS,
+\label{eq:total_free_energy}
+\end{equation}
+where $F$ is the total free energy and $f$ and $f_\text{w}$ are the 
+(specific) free energies in the bulk and at the wall.
+Furthermore, $\Gamma$ is the 
+boundary where the contact angle boundary conditions is applied.
+Using variational calculus, the wall energy in Eq.~\eqref{eq:total_free_energy} 
+leads to the following boundary condition \cite{Beveridge1970} 
+\begin{equation}
+\kappa \frac{\partial c}{\partial n } + \frac{\partial 
+f_\text{w}}{\partial c} 
+= 0 \,\,\,\ \text{on} \,\, \Gamma, \label{eq:bc_contact_angle}
+\end{equation}
+where $n$ is the normal to the boundary $\Gamma$, pointing away from the 
+fluids. Note, that $\rho$ is assumed constant and was divided out in 
+Eq.~\eqref{eq:bc_contact_angle}.
+For $f_\text{w}$, we use the following function, which was proposed by Jacqmin 
+\cite{Jacqmin2000} 
+\begin{equation}
+f_\text{w} = \phi \left(c-\frac{c^3}{3} \right), \label{eq:fw}
+\end{equation}
+where $\phi$ is the wetting potential. We can relate $\phi$ to the contact 
+angle by considering the change in wall energy $\Delta 
+f_\text{w}$ across the 
+fluid-fluid interface, as one moves along the solid boundary. Assume, for 
+example, that the composition of fluid $a$ in Fig.~\ref{fig:droplet_on_solid} 
+is given by $-c_\text{B}$, while the composition of fluid $b$ is given by 
+$c_\text{B}$. Moving along the solid boundary from fluid $a$ to fluid $b$, the 
+change in wall energy is given by
+\begin{equation}
+\Delta f_\text{w}=f_\text{w}(c_\text{B}) - f_\text{w}(-c_\text{B}).
+\label{eq:Delta_f1}
+\end{equation}
+From 
+Eq.~\eqref{eq:youngs_eq} follows that the difference between $f_{sa}$ and 
+$f_{sb}$ (times $\rho$ since $f_\text{w}$ is the specific wall free energy) 
+is given by $\gamma \cos \theta_\text{c}$, therefore 
+\begin{equation}
+\rho \Delta f_\text{w}=\gamma \cos \theta_\text{c}. \label{eq:Delta_f2}
+\end{equation}
+Equating Eqs.~\eqref{eq:Delta_f1} and \eqref{eq:Delta_f2} and using the definition 
+of $f_w$ given by Eq.~\eqref{eq:fw} yields an expression for the wetting 
+potential in terms of the contact angle and (known) diffuse-interface 
+coefficients
+\begin{equation}
+\phi = \frac{\cos \theta_\text{c}}{2(c_\text{B} -c_\text{B}^3/3 )} 
+\frac{\gamma}{\rho}.
+\label{eq:wetting_potential}
+\end{equation}
+The approximation for the surface tension of a planar interface, denoted by
+$\gamma$ and given in Eq.~\eqref{eq:di_surface_tension} can be used to
+ determine $\phi$ in Eq.~\eqref{eq:wetting_potential}.
+
+\subsubsection{Numerical implementation}
+Rewriting the weak from of Eq.~\eqref{eq:di4}, but now without the boundary 
+condition $\partial c / \partial n = 0$ yields
+\begin{equation}
+  (s, \alpha c-\beta c^3) -   \kappa(\nabla s,\nabla c) + ( s, \kappa
+  \frac{\partial c}{\partial n})_{\Gamma}
+  +(s,\mu) =0 \qquad\text{for all } s.
+\end{equation}
+The boundary condition given by Eq.~\eqref{eq:bc_contact_angle} can now
+be directly substituted into the third term on the left hand side, which is 
+then given by
+\begin{align}
+  ( s, \kappa  \frac{\partial c}{\partial  n} )_{\Gamma} 
+  &= -( s, \frac{\partial f_\text{w}}{\partial c} )_{\Gamma} \\
+  &= -\left( s, \phi (1-c^2) \right)_{\Gamma} \label{eq:weak_di_bc}
+\end{align}
+Note, that Eq.~\eqref{eq:weak_di_bc} is non-linear and can be solved by 
+a Picard iteration
+\begin{align}
+ ...+\left(s,\phi c_i\right)_{\Gamma}c_{i+1} = 
+ ...+\left(s,\phi\right)_{\Gamma},
+\end{align}
+where the dots mean that this equation is added to Eq.~\eqref{eq:di_picard}. 
+When using a Newton-Raphson iteration, Eq.~\eqref{eq:weak_di_bc} becomes
+\begin{align}
+ ...+\left(s,2\phi c_i\right)_{\Gamma}c_{i+1} = 
+ ...+\left(s,\phi(1+c_i^2)\right)_{\Gamma},
+\end{align}
+where the dots mean that this equation is added to Eq.~\eqref{eq:di_newton}.
+
+In the example file \texttt{diffuse\_interface13.f90} a droplet of fluid 
+with $c=-1$, surrounded by fluid with $c=1$, lying on the bottom of a closed 
+cylindrical 
+container is simulated. The problem is solved using the assumption of 
+axisymmetry.
+The contact angle boundary condition is imposed on the bottom of the cylinder, 
+where the contact angle measured through the droplet is given in 
+degrees in \texttt{theta\_c}. In this example, first-order time integration and 
+a mesh with a uniform element size is used. Furthermore, the diffuse-interface  
+equations are solved using a Newton iteration.
+
+More example files are \texttt{diffuse\_interface14.f90}, where again a droplet 
+on the bottom of a cylindrical container is solved using the axisymmetry 
+assumption, and \texttt{diffuse\_interface15.f90} where a droplet on the bottom 
+of a closed cylindrical container is simulated in 3D. Note, that in 
+\texttt{diffuse\_interface14.f90} and \texttt{diffuse\_interface15.f90} the 
+time integration is second-order. Furthermore, adaptive meshing is used, as 
+will be explained in the following. In 3D, solving the system of equations 
+can take a long time using a sequential solver. In that case, 
+\texttt{diffuse\_interface16.f90} can be used, which is similar to 
+\texttt{diffuse\_interface15.f90}, but now using Pardiso as the (parallel) 
+solver.
+
+\subsubsection{Adaptive meshing}
+Gmsh (see Sec.~\ref{sec:readgmshmesh}) is used to generate meshes that are
+refined in the interface 
+region, but coarse far way. Gmsh can use ``refinement fields'' to
+locally control the element size. Refinement fields can be
+defined using refinement points: 
+points that are not part of the mesh (geometrical points), that 
+define an element size $h_\text{fine}$ in the circle/sphere with 
+radius $d_\text{min}$, as is shown in Fig.~\ref{fig:refinement_point}. Outside 
+the circle/sphere with radius $d_\text{max}$, element size $h_\text{coarse}$ 
+is used, with a transitional region in $d_\text{max}-d_\text{min}$. Each 
+refinement field can contains multiple refinement points (with the same $h_\text{fine}$, $h_\text{coarse}$, $d_\text{min}$ and $d_\text{max}$). Furthermore,
+multiple refinement fields can be used simultaneously (at every point in space, the smallest target element size is used when meshing).   To make sure
+Gmsh does not specify the elementsize by itself, it
+advised to use the option 
+\texttt{Mesh.CharacteristicLengthExtendFromBoundary = 0}. For the 
+diffuse-interface simulations, the refinement points have to initially be given 
+manually, but during the simulation, refinement points can be generated using 
+the $c$-field. The approach taken here is to generate a list of
+refinement points by adding a refinement point in each element 
+that 
+crosses the isoline $c=0$. The coordinates of the refinement point are given by 
+the coordinates of the nodal point with the smallest $|c|$, i.e. the nodal 
+point that is closest to the interface. 
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.2]{refinement_point}
+   \end{center}
+   \caption{A refinement point (with coordinates $(x,y)$) can be used in Gmsh 
+   to enforce a 
+   element size $h_\text{fine}$ in the circle with radius $d_\text{min}$ 
+   around the refinement point, while a larger elements size $h_\text{coarse}$ 
+   is used outside the circle with radius $d_\text{max}$.}
+    \label{fig:refinement_point}
+\end{figure}
+Since the interface might move out of the refined region, a criterion is needed 
+to invoke remeshing when the element size around the interface becomes too 
+large. An approach similar
+to \cite{Yue2006} is used, where a 
+ribbon of elements around the interface is defined which are allowed to contain 
+the interface (given by the isoline $c=0$). As soon as this isoline moves into 
+a non-allowed element, remeshing is invoked. The distance to the isoline $c=0$ 
+could 
+be computed to determine which element is an allowed element, but it is more 
+convenient to use the nodal values of $c$, since these are readily available. 
+Allowed elements are given by elements for which \emph{any} nodal value of 
+$|c| < c^*$, where  $c^*$ is a threshold value. A graphical representation of 
+this criterion is shown in Fig.~\ref{fig:allowed_elements}. Examples for using 
+the refinement fields for adaptive meshing are given in
+\texttt{diffuse\_interface14.f90} and \texttt{diffuse\_interface15.f90}. 
+The code to include the refinement points when meshing with Gmsh can be found
+in the corresponding \texttt{.igo} files.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.2]{allowed_elements}
+   \end{center}
+   \caption{Elements for which any of the nodal values of $|c|$ are smaller 
+   than a treshold value $c^*$ are added to the list of allowed 
+   elements (shown in green). When the interface (defined by the line $c=0$) 
+   enters a non-allowed element (shown in red) remeshing is invoked.}
+    \label{fig:allowed_elements}
+\end{figure}
+
+\subsection{Fully implicit time discretization}
+The time discretization schemes shown in Section \ref{sec:di_expl} take the 
+surface tension explicitly into account in the momentum balance. At high 
+surface tension (or low capillary number), this can lead to instabilities of 
+the interface when the time step is taken too large. As is shown in 
+\cite{Aland2014}, a fully implicit scheme leads to large increase in stability 
+and allows 
+much larger time steps, while maintaining a stable interface. The fully 
+implicit scheme is obtained by solving for $\vek u$, $g$, $c$ and $\mu$ in one 
+system. The terms $\rho \kappa (|\nabla c|^2 \ten I 
+- \nabla c \nabla c)$ (when using the stress form), $\rho \mu \nabla c$ (when 
+using potential form 1), $\rho c \nabla \mu$ (when 
+using potential form 2) and $\vek u \cdot 
+\nabla c$ are quadratic for which we can use a Picard iteration (note that 
+$\mu$ is chosen as the implicit unknown in the potential forms, which has the 
+largest stabilizing effect \cite{Aland2014}).
+Using an implicit Euler scheme for the time derivative of $c$, we obtain the 
+weak form for the stress form:
+find $\vek u_{i+1}$, $[g_0]_{i+1}$, $c_{i+1}$ and $\mu_{i+1}$ such that
+\begin{align*}
+\big(\ten D_v,2\eta \ten D_{i+1} \big) - (\nabla\cdot\vek v,[g_0]_{i+1})
++\blue{(\ten D_v, \rho \kappa(\nabla c_i \cdot \nabla c_{i+1} 
+	\ten I } \blue{- \nabla c_i \nabla c_{i+1}))}&= \\
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+&\;(\vek v, \vek f)
+&\qquad&\text{for all }\vek v\\
+(q,\nabla\cdot\vek u_{i+1})&=0&\qquad&\text{for all }q\\
+\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\blue{\vek u_i}\cdot\nabla c_{i+1}\big)
++M(\nabla r,\nabla \mu_{i+1})&=0&\qquad&\text{for all } r\\
+\big(s, (\alpha -\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1}) 
++(s,\mu_{i+1})&=0&\qquad&\text{for all }s
+\end{align*}
+where the  
+terms that arise due to implicit time discretization are marked in blue. Using 
+potential form 1, we obtain the weak form:
+find $\vek u_{i+1}$, $[g_1]_{i+1}$, $c_{i+1}$ and $\mu_{i+1}$ such that
+\begin{alignat*}{6}
+\big(\ten D_v,2\eta \ten D_{i+1} \big) -(\nabla\cdot\vek v,[g_1]_{i+1})
+-\blue{( \vek v, \rho \mu_{i+1}\nabla c_{i})}&=(\vek v, \vek f)
+&\qquad&\text{for all }\vek v\\
+(q,\nabla\cdot\vek u_{i+1})&=0&\qquad&\text{for all }q \\
+\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\blue{\vek u_i}\cdot\nabla c_{i+1}\big)
++M(\nabla r,\nabla \mu_{i+1})&=0 &\qquad&\text{for all } r\\
+\big(s, (\alpha -\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1}) 
++(s,\mu_{i+1})&=0&\qquad&\text{for all } s
+\end{alignat*}
+Using potential form 2, we obtain the weak form:
+find $\vek u_{i+1}$, $[g_2]_{i+1}$, $c_{i+1}$ and $\mu_{i+1}$ such that
+\begin{alignat*}{6}
+\big(\ten D_v,2\eta \ten D_{i+1} \big) -(\nabla\cdot\vek v,[g_2]_{i+1})
++\blue{( \vek v, \rho c_{i}\nabla \mu_{i+1})}&=(\vek v, \vek f)
+&\qquad&\text{for all }\vek v\\
+(q,\nabla\cdot\vek u_{i+1})&=0&\qquad&\text{for all }q \\
+\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\blue{\vek u_i}\cdot\nabla c_{i+1}\big)
++M(\nabla r,\nabla \mu_{i+1})&=0 &\qquad&\text{for all } r\\
+\big(s, (\alpha -\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1}) 
++(s,\mu_{i+1})&=0&\qquad&\text{for all } s
+\end{alignat*}
+
+Alternatively, we can handle the quadratic terms with a Newton-Raphson
+iteration (similar to Section \ref{sec:nonlin}):
+\begin{alignat*}{3}
+\rho \kappa (|\nabla c|^2 \ten I -\nabla c \nabla c) &\approx 
+&& 2\rho \kappa \nabla c_i \cdot \nabla c_{i+1} \ten I -\rho \kappa 
+|\nabla c_i|^2 \ten I-\rho \kappa \nabla c_{i+1} \nabla c_i -\rho \kappa 
+\nabla c_i \nabla c_{i+1}\\
+&\quad\; &&+ \rho \kappa \nabla c_i \nabla c_i\\
+\rho \mu \nabla c &\approx &&\rho \mu_{i+1} \nabla c_{i}+\rho \mu_{i} 
+\nabla c_{i+1} - \rho \mu_{i} \nabla c_{i} \\
+-\rho c \nabla \mu &\approx &&-\rho c_{i+1} \nabla \mu_{i}-\rho c_{i} 
+\nabla \mu_{i+1} + \rho c_{i} \nabla \mu_{i} \\
+\vek u \cdot \nabla c &\approx &&\vek u_{i+1} \cdot \nabla c_{i} + \vek u_{i} 
+\cdot \nabla c_{i+1} - \vek u_{i} \cdot \nabla c_{i} 
+\end{alignat*}
+Substitution of these terms (and using a Newton-Raphson iteration for the 
+$c^3$-term, similar to Eq.~\eqref{eq:di_newton}) 
+leads to the weak form for the stress form:
+find $\vek u_{i+1}$, $[g_0]_{i+1}$, $c_{i+1}$ and $\mu_{i+1}$ such that
+\begin{align*}
+\big(\ten D_v,2\eta \ten D_{i+1} \big) - (\nabla\cdot\vek v,[g_0]_{i+1})
++\blue{(\ten D_v, \rho \kappa(2\nabla c_i \cdot \nabla c_{i+1} \ten I }
+\blue{-\nabla c_i \nabla c_{i+1}}&\blue{-\nabla c_{i+1} \nabla c_{i}))}=\\
+(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v, \vek f) 
++\blue{(\ten D_v, \rho \kappa (|c_i|^2\ten I}&\blue{-\nabla c_i 
+	\nabla c_i))}\\
+(q,\nabla\cdot\vek u_{i+1})&=0\\
+\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\blue{\vek u_i}\cdot\nabla c_{i+1}\big)
++\blue{\big(r, \vek u_{i+1} \cdot \nabla c_i \big)}+M(\nabla 
+r,\nabla \mu_{i+1})&=\blue{(r, \vek u_i \cdot \nabla c_i)} \\
+\big(s, (\alpha -3\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1})
++(s,\mu_{i+1})&=-\big(s,2\beta c_{i}^3 \big)
+\end{align*}
+for all $\vek v$, $q$, $r$ and $s$, respectively. Using potential form 1, we 
+obtain the weak form:
+find $\vek u_{i+1}$, $[g_1]_{i+1}$, $c_{i+1}$ and $\mu_{i+1}$ such that
+\begin{alignat*}{6}
+\big(\ten D_v,2\eta \ten D_{i+1} \big)-(\nabla\cdot\vek v,[g_1]_{i+1})
+-\blue{(\vek v,\rho \mu_{i+1}\nabla c_{i})}-\blue{( \vek v,\rho \mu_{i}
+	\nabla c_{i+1})}&=(\vek v,\vek f)-\blue{(\vek v,\rho \mu_{i}\nabla c_{i})}\\
+(q,\nabla\cdot\vek u_{i+1})&=0\\
+\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\blue{\vek u_i}\cdot\nabla c_{i+1}\big)
++\blue{\big(r, \vek u_{i+1} \cdot \nabla c_i \big)}+M(\nabla r,\nabla 
+\mu_{i+1})&=\blue{(r, \vek u_i \cdot \nabla c_i)} \\
+\big(s, (\alpha -3\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1}) 
++(s,\mu_{i+1})&=-\big(s, 2\beta c_{i}^3 \big)
+\end{alignat*}
+for all $\vek v$, $q$, $r$ and $s$, respectively. Using potential form 2, we 
+obtain the weak form:
+find $\vek u_{i+1}$, $[g_2]_{i+1}$, $c_{i+1}$ and $\mu_{i+1}$ such that
+\begin{alignat*}{6}
+\big(\ten D_v,2\eta \ten D_{i+1} \big) -(\nabla\cdot\vek v,[g_2]_{i+1})   
++\blue{( \vek v, \rho c_{i}\nabla \mu_{i+1})}+\blue{( \vek v, \rho c_{i+1} 
+	\nabla \mu_{i})}&=(\vek v,\vek f)+\blue{(\vek v,\rho c_{i}\nabla \mu_{i})}\\
+(q,\nabla\cdot\vek u_{i+1})&=0\\
+\big(r,\frac{c_{i+1}-c^n}{\Delta t}+\blue{\vek u_i}\cdot\nabla c_{i+1}\big) 
++\blue{\big(r, \vek u_{i+1} \cdot \nabla c_i \big)}+M(\nabla r,\nabla
+\mu_{i+1})&=\blue{(r, \vek u_i \cdot \nabla c_i)} \\
+\big(s, (\alpha -3\beta c_{i}^2)c_{i+1}\big)-\kappa(\nabla s,\nabla c_{i+1}) 
++(s,\mu_{i+1})&=-\big(s, 2\beta c_{i}^3 \big)
+\end{alignat*}
+for all $\vek v$, $q$, $r$ and $s$, respectively.
+
+An example of the diffuse-interface model with fully implicit time 
+discretization is \texttt{diffuse\_interface18} (the same problem but with 
+explicit/implicit time discretization is  \texttt{diffuse\_interface17}). In 
+these examples, an axisymmetric droplet (initially spherical) is simulated in a 
+hyperbolic flow. Depending on the capillary number 
+$\text{Ca}=\eta_\text{d}\dot{\epsilon} r / \gamma$ (where 
+$\eta_\text{d}$ is the droplet viscosity, $\dot{\epsilon}$ is the elongation 
+rate, $r$ is the initial drop radius and $\gamma$ is the surface tension), the 
+droplet will deform and possibly break up.
+
+Remarks:
+\begin{enumerate}
+	\item Potential form 1, potential form 2 and the stress 
+	form are implemented in both examples, and can be used to add the
+        effect of surface tension to the momentum balance.
+	\item It is possible to have a different viscosities for 
+	the droplet and the ambient fluid. A linear mixing rule is used:
+	\[
+	\eta(c) = \eta_1 \frac{c+c_\text{B}}{2c_\text{B}} - \eta_2   
+	\frac{c-c_\text{B}}{2c_\text{B}}
+	\]
+	where $c_B$ is the concentration in the bulk and $\eta_1$ and $\eta_2$ 
+        are the viscosities for $+c_\text{B}$ and $-c_\text{B}$, respectively. 
+	For the implicit scheme, a second order prediction 
+        $\hat{c}=2c_n-c_{n-1}$ is used to determine 
+	$\eta(c)$, which can be combined with a Newton-Raphson iteration.
+	Alternatively, the variable viscosity can be included in the iteration,
+        but this limits the  
+	iteration to Picard (the approximation $\eta(c)\ten D \approx 
+	\eta(c_i)\ten D_{i+1}$ is used). By default, the second-order prediction
+        is used in \texttt{diffuse\_interface18}, but the implicit viscosity 
+        iteration is implemented as well.
+	\item Since in these examples a variable viscosity is used, the system 
+	matrix in the momentum 
+	balance changes between time steps and iteration steps and has to be 
+	rebuild (also the LU decomposition can not be reused).
+\end{enumerate}

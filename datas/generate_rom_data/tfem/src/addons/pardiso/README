@@ -1,0 +1,76 @@
+This add-on assumes the pardiso package to be available and installed.
+The package is part of MKL or can be obtained for various architectures from 
+http://www.computational.unibas.ch/cs/scicomp/software/pardiso/
+
+INSTALLATION & USAGE::
+====================
+
+- Use a recent version of MKL (I tested MKL8.1).
+
+- Build tfem using:
+
+    make all pardiso
+
+  for a usual build + pardiso.
+
+- Use like:
+
+  program myprog
+
+    ...
+
+    use pardiso_m
+
+    ...
+
+    call solve_system_pardiso ( sysmatrix, rhsd, sol )
+
+    ...
+
+  end program myprog
+
+- set the environment variable OMP_NUM_THREADS to the number of processors
+  available for the solver.
+
+
+Remarks:
+=======
+
+- For symmetric systems the routine create_sysmatrix_structure must be called 
+  with symmetric=.true.
+  Also the solver variable matrixtype must be set to 2 (symmetric 
+  positive definite) or -2 (symmetric indefinite) before the solve call, for
+  example:
+
+    solver_options%matrixtype = -2
+
+    call solve_system_pardiso ( sysmatrix, rhsd, sol, &
+      solver_options=solver_options )
+
+  The default value is matrixtype=11 (a real unsymmetric matrix).
+
+- For symmetric and structurally symmetric systems the diagonal elements must
+  be available in the matrix. Since the diagonal zero blocks of the contraint
+  equations and the additional unknowns equation are not stored in the matrix
+  in TFEM, the zero diagonal needs to be added explicitly. This is
+  done by calling both the routines:
+
+    create_sysmatrix_structure_constraint 
+    build_system_constraint
+
+  with the argument "diagonal=.true."
+
+- Depending on the detection of small pivots, pardiso performes two steps of
+  iterative refinement. The actual number of iterative refinement steps
+  performed can be printed by setting solver_options%printlevel=4. 
+  By setting solver_options%niter_ref thei maximum number of iterative 
+  refinement steps can be controlled.
+
+- some first speed/memory indications on a 2.2Ghz dual-core Athlon64 using
+  PARDISO from MKL-8.1 with BLAS from ACML-3.1.0 (all 64bit).
+
+                                            MA41     PARDISO(1p) PARDISO(2p)
+  2D Stokes problem (100x100 elements): 4.3s/0.32GB  7.0s/0.27GB  5.4s/0.27GB
+  2D Stokes problem (200x200 elements):  35s/1.5GB    42s/1.2GB    30s/1.2GB
+  3D Stokes problem (17x8x17 elements):  93s/1.6GB    51s/0.9GB    33s/0.9GB
+

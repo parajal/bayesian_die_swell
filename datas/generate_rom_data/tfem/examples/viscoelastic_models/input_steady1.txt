@@ -1,0 +1,21 @@
+&comppar
+  flowtype = 1           ! flow type:
+                         ! 1: shear
+                         ! 2: planar elongation
+                         ! 3: uniaxial elongation
+  includesolvent = F     ! solvent included only if .true. (T)
+  eta_s = 1.0            ! solvent viscosity
+  G      = 10            ! modulus G
+  lambda = 0.1           ! relaxation time
+  tau_y  = 0.2           ! tau_y
+  mu     = 0.2           ! mu
+  numdatapoints = 1000   ! number of steady data points for functions of
+                         !    shear rate (for flowtype=1)
+                         !    extension rate (for flowtype=2,3)
+  eps = 1.e-10           ! Newton-Raphson accuracy
+  maxnumiterations = 100 ! maximum number of iterations
+  start_rate = 0.001     ! start data point
+  end_rate = 100         ! end data point
+  factor = 10000         ! data point distance: last=factor * first 
+  eigen = F              ! compute eigenvalues/vectors of Jacobian of rhs
+/

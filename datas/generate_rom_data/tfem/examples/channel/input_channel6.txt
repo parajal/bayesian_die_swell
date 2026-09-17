@@ -1,0 +1,21 @@
+&comppar
+    nx=10                ! number of elements in x
+    ny=10                ! number of elements in y
+    lx = 1.0             ! size in x-direction
+    ly = 1.0             ! size in y-direction 
+    timeint = 1          ! (first-order) time integration
+    numtimesteps = 2000  ! number of time steps
+    logc = 0             ! standard scheme or log transformation
+    model = 3            ! Oldroyd-B:2 Giesekus:3
+    eta_s = 0.1          ! solvent viscosity
+    eta_p = 0.9          ! polymer viscosity
+    lambda = 10.0        ! relaxation time
+    alphapar = 0.1       ! alpha parameter in the Giesekus model
+    deltat = 5.e-2       ! time step
+    U = 1.0              ! average velocity in channel
+    beta = 1.0           ! upwinding parameter in the SUPG method
+    rs_gup = 1.5         ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0         ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_c  = 2.0          ! real_storage for the conformation LU (HSL)
+    is_c  = 1.4          ! integer_storage for conformation LU (HSL)
+/

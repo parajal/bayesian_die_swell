@@ -1,0 +1,17 @@
+&comppar
+    timeint = 2            ! (first-order) time integration
+    eqnumtimesteps = 1000  ! number of equilibrium time steps
+    numtimesteps = 300     ! number of time steps
+    printtimesteps = 5     ! print every ... timesteps
+    nfield = 1000          ! number of fields
+    logq = 0               ! standard scheme or log transformation
+    eta_s = 0.59           ! solvent viscosity
+    eta_p = 0.41           ! modulus
+    lambda = 2.0           ! relaxation time
+    b = 50                 ! nonlinear FENE parameter
+    deltat = 1.e-2         ! time step
+    rs_gup = 1.5           ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0           ! integer_storage gradient-velocity-pressure LU (HSL)
+    U = 1.0                ! average velocity in the channel
+    restart = 0            ! restart from old data
+/

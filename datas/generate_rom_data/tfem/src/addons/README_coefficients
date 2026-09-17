@@ -1,0 +1,152 @@
+Reserved ranges of coefficients for the element routines in the add-ons
+=======================================================================
+
+Add-on convection_diffusion and all dependent add-ons
+-----------------------------------------------------
+
+Integer coefficients:
+
+  1-100: convection_diffusion add-on
+
+Real coefficients:
+
+  1- 50: convection_diffusion add-on
+
+
+Add-on elastic and all dependent add-ons
+----------------------------------------
+
+Integer coefficients:
+
+  1-100: elastic add-on
+
+Real coefficients:
+
+  1- 50: elastic add-on
+
+
+Add-ons stokes + viscoelastic and all dependent add-ons
+-------------------------------------------------------
+
+Integer coefficients:
+
+  1-150: stokes and viscoelastic add-on
+151-200: diffuse_interface add-on
+201-250: inertia add-on
+251-300: generalized Stokes add-on
+301-350: compressible_fluid add-on
+351-400: deformation fields add-on
+401-450: convection-diffusion-reaction using SUPG add-on
+451-500: bcf add-on
+
+
+Real coefficients:
+
+  1-100: stokes and viscoelastic add-on
+101-150: diffuse_interface add-on
+151-200: inertia add-on
+201-250: generalized Stokes add-on
+251-300: compressible_fluid add-on
+301-350: deformation fields add-on
+351-400: convection-diffusion-reaction using SUPG add-on
+401-450: bcf add-on
+
+
+Add-on surface_advection and all dependent add-ons
+--------------------------------------------------
+
+Integer coefficients:
+
+  1-100: surface_advection add-on
+
+Real coefficients:
+
+  1- 50: surface_advection add-on
+
+
+Add-on projection and all dependent add-ons
+-------------------------------------------
+
+Integer coefficients:
+
+  1-100: projection add-on
+
+Real coefficients:
+
+  1- 50: projection add-on
+
+
+Add-on structures
+-----------------
+
+Integer coefficients:
+
+  1-100: structures add-on
+
+Real coefficients:
+
+  1- 50: structures add-on
+
+
+Add-on interface_tracking
+-------------------------
+
+Integer coefficients:
+
+  1-100: interface_tracking add-on
+
+Real coefficients:
+
+  1- 50: interface_tracking add-on
+
+
+Add-on interfacial_rheology
+---------------------------
+
+Integer coefficients:
+
+  1-100: interfacial_rheology add-on
+
+Real coefficients:
+
+  1- 50: interfacial_rheology add-on
+
+
+Add-on surface_convection_diffusion 
+-----------------------------------
+
+Integer coefficients:
+
+  1-100: surface_convection_diffusion add-on
+
+Real coefficients:
+
+  1- 50: surface_convection_diffusion add-on
+
+
+Add-on linear_elastic
+---------------------
+
+Integer coefficients:
+
+  1-100: linear_elastic add-on
+
+Real coefficients:
+
+  1- 50: linear_elastic add-on
+
+
+General use
+-----------
+
+The following ranges are free to use and will not be occupied by any (future)
+add-on:
+
+Integer coefficients:
+
+501-1000: free to use
+
+Real coefficients:
+
+501-1000: free to use
+

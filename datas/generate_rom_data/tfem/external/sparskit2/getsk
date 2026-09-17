@@ -1,0 +1,19 @@
+#!/bin/sh
+
+sparskit=$HOME/Software/SPARSKIT2  # replace with dir of sparskit
+pwd=`pwd`
+cd $sparskit
+cp BLASSM/blassm.f         \
+        BLASSM/matvec.f         \
+        FORMATS/formats.f       \
+        FORMATS/unary.f         \
+        INFO/infofun.f          \
+        INOUT/inout.f           \
+        ITSOL/ilut.f            \
+        ITSOL/iters.f           \
+        ORDERINGS/ccn.f         \
+        ORDERINGS/color.f       \
+        ORDERINGS/dsepart.f    \
+$pwd
+cp DOC/paper.pdf $pwd/../doc/sparskit2.pdf
+

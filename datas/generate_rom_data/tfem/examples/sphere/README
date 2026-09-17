@@ -1,0 +1,300 @@
+NOTE: 
+
+sphere_post is the post_processing program for sphere2--sphere5, sphere9 etc.
+streamfunction is for sphere2--sphere5, sphere9 etc.
+
+The examples in this directory are described in the userguide, except for
+sphere9a
+
+
+Short description:
+-----------------
+
+sphere1:
+
+ Axisymmetrical Stokes problem: a sphere moving with velocity U on the center
+ line of a cylindrical container with a bottom (at infinity).
+
+sphere2:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ first-order time integration
+
+sphere3:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration
+
+sphere4:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS/DG
+ first-order time integration
+
+sphere5:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS/DG
+ second-order time integration (AB2)
+
+sphere6:
+
+ Axisymmetrical Stokes problem: a sphere moving with velocity U on the center
+ line of a cylindrical container with a bottom (at infinity).
+ Drag computations. 
+ This problem is identical to sphere1 + drag
+
+sphere9:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ first-order time integration
+ triangles
+ This example is similar to sphere2, but uses triangles instead of quads.
+
+sphere9a:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ first-order time integration
+ triangles
+ This is the sphere9 problem with the following changes:
+  1) P1isoP2 shape functions
+  2) subdomain Gauss integration (using 4 subtriangles)
+
+sphere13:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+
+ Identical to sphere3, but now using the sparskit solver with metis renumbering
+
+sphere21:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration
+
+sphere22:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+ NOTE: this is similar to sphere21, but now using the L2-projection of
+       c=exp(s). 
+
+sphere23:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ The sphere is fixed and the cylinder wall is moved with velocity -U 
+ (moving frame).
+ At the ends fluid is moving with velocity -U as well, representing zero
+ flux in the stationary frame (bottom). At the right inflow wall the stress is
+ assumed to be zero.
+ Dirichlet boundary conditions for the velocities are used.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration of the CE using a Gear/conformation
+ time prediction scheme 
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ To increase the time step limit, c/lambda has been added to both sides of 
+ the discretized CE and this term in the LHS is treated implicitly, while 
+ it is treated explicitly on the RHS
+ two viscoelastic modes
+
+sphere24:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ The sphere is fixed and the cylinder wall is moved with velocity -U 
+ (moving frame).
+ At the ends fluid is moving with velocity -U as well, representing zero
+ flux in the stationary frame (bottom). At the right inflow wall the stress is
+ assumed to be zero.
+ Dirichlet boundary conditions for the velocities are used.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration of the CE using a Gear/conformation
+ time prediction scheme 
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ To increase the time step limit, c/lambda has been added to both sides of 
+ the discretized CE and this term in the LHS is treated implicitly, while 
+ it is treated explicitly on the RHS
+ two viscoelastic modes
+
+ Similar to sphere23, but using a four mode Giesekus model.
+
+sphere25:
+
+ 3D Stokes problem: a sphere moving with velocity -U on the center
+ line of a container with a square cross section and a bottom (at infinity).
+ The sphere is fixed and the container wall is moved in z-direction with
+ velocity U (moving frame).
+ At the ends fluid is moving with velocity U as well, representing zero
+ flux in the stationary frame (bottom).
+ Dirichlet boundary conditions for the velocities are used.
+ Drag computations. 
+ Sparskit solver
+ Metis renumbering
+ Gmsh mesh with tetrahedrons.
+
+sphere26:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+
+ Similar to sphere22, but now using an XPP model.
+
+sphere27:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+
+ Similar to sphere22, but now using an elastoviscoplastic model.
+
+sphere28:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+
+ Similar to sphere27, but now using a CDT formulation.
+
+sphere29:
+
+ Axisymmetrical Stokes problem: a sphere moving with velocity U on the center
+ line of a cylindrical container with a bottom (at infinity).
+
+ This problem is similar to sphere1, but now with high-order elements having
+ equal-order continuous stabilized velocity/pressure Qp/Qp quadrilateral
+ elements 
+
+sphere30:
+
+ Axisymmetrical Stokes problem: a sphere moving with velocity U on the center
+ line of a cylindrical container with a bottom (at infinity).
+
+ This problem is similar to sphere1, but now with high-order elements having
+ equal-order continuous stabilized velocity/pressure Pp/Pp triangular elements 
+
+sphere31:
+
+ Axisymmetrical Stokes problem: a sphere moving with velocity U on the center
+ line of a cylindrical container with a bottom (at infinity).
+
+ This problem is similar to sphere1, but now using blended meshes with
+ both biquadratic and bilinear quadrilateral elements.
+ 
+sphere32:
+
+ Axisymmetrical Stokes problem: a sphere moving with velocity U on the center
+ line of a cylindrical container with a bottom (at infinity).
+ High-order Taylor-Hood quadrilateral elements using blended meshes.
+
+ This problem is similar to sphere1, but now with high-order Taylor-Hood
+ velocity/pressure Qp/Qp-1 elements using blended meshes.
+
+sphere33:
+
+ Axisymmetrical viscoelastic problem: a sphere moving with velocity U on the
+ center line of a cylindrical container with a bottom (at infinity).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+
+ Similar to sphere3, but now using the UMFPACK solver.
+
+sphere34:
+
+ Axisymmetrical generalized Newtonian problem: a sphere moving with
+ velocity U on the center line of a cylindrical container with a bottom
+ The sphere is moving with velocity U. At the ends fluid is at rest 
+ (zero velocity) representing a bottom.
+ Dirichlet boundary conditions for the velocities are used.
+ Picard iteration followed by Newton-Raphson iteration.
+ All models can be tested, including the yield models.
+
+sphere35:
+
+ Axisymmetrical generalized Newtonian problem: a sphere moving with
+ on the center line of a cylindrical container with a bottom
+ (at infinity) due to an applied force F. 
+ At the ends fluid is not moving, representing a bottom.
+ Dirichlet boundary conditions for the velocities are used.
+ Picard iteration followed by Newton-Raphson iteration.
+ All models can be tested, including the yield models.
+
+sphere36:
+
+ 3D Stokes problem: a sphere moving with velocity -U on the center
+ line of a container with a square cross section and a bottom (at infinity).
+ The sphere is fixed and the container wall is moved in z-direction with
+ velocity U (moving frame).
+ At the ends fluid is moving with velocity U as well, representing zero
+ flux in the stationary frame (bottom).
+ Dirichlet boundary conditions for the velocities are used.
+ Drag computations. 
+
+sphere37:
+
+ 3D Stokes problem: a sphere moving with velocity -U on the center
+ line of a container with a square cross section and a bottom (at infinity).
+ The sphere is fixed and the container wall is moved in z-direction with
+ velocity U (moving frame).
+ At the ends fluid is moving with velocity U as well, representing zero
+ flux in the stationary frame (bottom).
+ Dirichlet boundary conditions for the velocities are used.
+ Drag computations. 
+ Mkl_gmres solver
+ Metis renumbering
+
+sphere38:
+
+ 3D Stokes problem: a sphere moving with velocity -U on the center
+ line of a container with a square cross section and a bottom (at infinity).
+ The sphere is fixed and the container wall is moved in z-direction with
+ velocity U (moving frame).
+ At the ends fluid is moving with velocity U as well, representing zero
+ flux in the stationary frame (bottom).
+ Dirichlet boundary conditions for the velocities are used.
+ Drag computations. 
+ P2+/P1^d tetrahedrons

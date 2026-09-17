@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# buildallexamples: build all examples from the tfem directory
+
+. settfemroot
+. testdir
+
+SRCDIRS="$tp/examples"
+
+for dir in $SRCDIRS
+do
+  for direx in $dir/*
+  do
+    if [ -d $direx ]
+    then
+      example=`basename $direx`
+      echo "Copying example $example"
+      if [ -d $example ]
+      then
+        echo Error directory exists: $example
+        exit 1
+      fi
+      mkdir $example
+      cp -r $direx/* $example
+      cd $example
+      getmdefs >Mdefs.mk
+      fmm -a >Makefile
+      make
+      cd ..
+    fi
+  done
+done

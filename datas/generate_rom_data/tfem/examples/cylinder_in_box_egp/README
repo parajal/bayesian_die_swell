@@ -1,0 +1,130 @@
+The examples in this directory are described in the userguide.
+
+NOTE: Examples with the extension _hJ are similar to the corresponding
+example without the extension, but now includes a pressure (J) dependent
+factor h(J) in the relaxation term.
+
+Short description
+-----------------
+
+cylinder_egp1
+
+ Startup + steady state of flow around a rotating cylinder in a square box.
+ Incompressible EGP model.
+ Contravariant deformation tensor formulation (b-tensor).
+ Fully-implicit with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally after the final time step do an iteration to steady-state.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_egp1a
+
+ Similar to cylinder_egp1, but the material data is now stored in a 2D array
+ in coefficients%ra2.
+
+cylinder_egp2
+
+ Sequence of steady states of flow around a rotating cylinder in a square box.
+ Incompressible EGP model.
+ Contravariant deformation tensor formulation (b-tensor).
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_egp3
+
+ (This a problem similar to cylinder_egp1, but now with a compressible EGP
+  model with pressure coupling to an incompressible flow.)
+
+ Startup + steady state of flow around a rotating cylinder in a square box.
+ Compressible EGP model with pressure coupling to an incompressible flow.
+ Contravariant deformation tensor formulation (b-tensor).
+ Fully-implicit with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally after the final time step do an iteration to steady-state.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_egp4, cylinder_egp4_hJ
+
+ (This a problem similar to cylinder_egp2, but now with a compressible EGP
+  model with pressure coupling to an incompressible flow.)
+
+ Sequence of steady states of flow around a rotating cylinder in a square box.
+ Compressible EGP model with pressure coupling to an incompressible flow.
+ Contravariant deformation tensor formulation (b-tensor).
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+ Extension _hJ: Pressure (J) dependent relaxation term using adapted lambda.
+
+cylinder_egp5
+
+ (This a problem similar to cylinder_egp3, but now with a compressible flow)
+
+ Startup of flow around a rotating cylinder in a square box.
+ Compressible EGP model with compressible flow.
+ Contravariant deformation tensor formulation (b-tensor).
+ Fully-implicit with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally after the final time step do an iteration to steady-state.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_egp6, cylinder_egp6_hJ
+
+ (This a problem similar to cylinder_egp4, but now with a compressible flow)
+
+ Sequence of steady states of flow around a rotating cylinder in a square box.
+ Compressible EGP model with compressible flow.
+ Contravariant deformation tensor formulation (b-tensor).
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+ Extension _hJ: Pressure (J) dependent relaxation term using adapted lambda.
+
+cylinder_egp7, cylinder_egp7_hJ, cylinder_egp7_hJ_gammap
+
+ (This a problem similar to cylinder_egp5, but now with a
+  multi-mode/multiprocess model of PMMA from Breemen et al. (2012))
+
+ Startup of flow around a rotating cylinder in a square box.
+ Compressible EGP model with compressible flow.
+ 14-mode model with 12 alpha process viscoelastic modes, one elastic mode for
+ strain hardening and one mode for the beta process. 
+ Data for PMMA from van Breemen et al. (2012) DOI: 10.1002/polb.23199
+ Contravariant deformation tensor formulation (b-tensor).
+ Fully-implicit with Newton-Raphson.
+ Compute drag and torque on cylinder using reaction forces.
+ Optionally integral pressure constraint imposed.
+ Optionally impose pressure in a single point (P1).
+ Optionally after the final time step do an iteration to steady-state.
+   This option is not applicable to the model used here because of the
+   elastic mode, which gives solid material behavior.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+ Extension _hJ: Pressure (J) dependent relaxation term using adapted lambda.
+ Extension _gammap: Plastic strain softening
+
+cylinder_egp7a
+
+ Similar to cylinder_egp7, but the material data is now stored in a 2D array
+ in coefficients%ra2.

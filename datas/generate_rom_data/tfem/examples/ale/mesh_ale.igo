@@ -1,0 +1,46 @@
+// Create domain vertices
+ 
+Point(1) = {ox,    oy,    0.0, dx_box};
+Point(2) = {ox+lx, oy,    0.0, dx_box};
+Point(3) = {ox+lx, oy+ly, 0.0, dx_box};
+Point(4) = {ox,    oy+ly, 0.0, dx_box};
+ 
+For i In {1:4}
+  Physical Point(i) = i;
+EndFor
+
+// Create domain sides
+ 
+Line(1) = {1, 2};
+Line(2) = {2, 3};
+Line(3) = {3, 4};
+Line(4) = {4, 1};
+
+For i In {1:4}
+  Physical Line(i) = i;
+EndFor
+
+// Create outer boundary
+
+Line Loop(1) = { 1, 2, 3, 4 };
+
+// Circle
+
+Point(5) = {xp,     yp,   0.0,   dx_part};
+Point(6) = {xp-rp,  yp,   0.0,   dx_part};
+Point(7) = {xp+rp,  yp,   0.0,   dx_part};
+ 
+Circle(5) = {6, 5, 7};
+Circle(6) = {7, 5, 6};
+ 
+Line Loop(2) = {5, 6};
+ 
+Physical Line(5) = {5, 6};
+  
+// Create surface mesh
+ 
+Plane Surface(1) = {1,2};
+ 
+Physical Surface(1) = {1};
+
+// vim: set filetype=gmsh :  //

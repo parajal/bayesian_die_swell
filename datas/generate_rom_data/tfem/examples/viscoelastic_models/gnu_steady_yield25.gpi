@@ -1,0 +1,16 @@
+#set terminal epslatex standalone color solid \
+#    header "\\usepackage{amsmath,amssymb}" 12
+# set the name of the .tex output file
+#set output 'steady_yield25.tex'
+
+set ylabel '$\tau_\text{e}$'  rotate by 0 offset 1
+set xlabel 'trace $\boldsymbol{\tau}/3$'
+
+
+set key left reverse Left
+mu=0.2; tau_y=0.2; taue_max=16; tr_min=-6; tr_max=6
+#plot [] [0:taue_max] "steady25.out" us ($9):($8) w l
+plot [tr_min:tr_max] [0:taue_max] "steady25.out" us ($9):($8) w l, \
+       tau_y-mu*x title '$y=\tau_\text{y}-\mu x$', \
+       3*(mu*x-tau_y)/(2*mu**2) title '$y=3(\mu x-\tau_\text{y})/2\mu^2$'
+pause -1

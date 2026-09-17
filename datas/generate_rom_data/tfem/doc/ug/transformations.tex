@@ -1,0 +1,332 @@
+% !TEX root = userguide.tex
+
+\chapter{Local transformations}
+\pgst{tfemch}
+
+\label{ch:transformations}
+
+\def\chaptertitle{Local transformations}
+\def\headdate{14th September 2024}
+
+In this chapter it is shown how to handle local transformations in \tfem.
+
+\section{Introducing local transformations}
+
+Local transformations are transformations of the degrees of freedom in nodes,
+such as those resulting from a coordinate transformation.
+Transformations are defined node for node, hence they are local.
+ The primary reason
+for introducing local transformations is the ability to combine Dirichlet conditions with
+Neumann, Robin and slip boundary conditions
+in a rotated coordinate system, possibly different for each node. For example,
+in Fig.~\ref{fig:branch} the entry and exit flows at A, B and C could be
+imposed by a Neumann condition in flow direction and a zero Dirichlet
+condition normal to the flow. This requires a rotation of the local
+coordinate system for the velocity vector at exit B.
+\begin{figure}[ht!]
+   \begin{center}
+      \includegraphics[scale=0.7]{branch}
+   \end{center}
+   \caption{Flow with a branch.}
+    \label{fig:branch}
+\end{figure}
+
+Local transformations are defined as follows:
+\begin{equation}
+    \col u = \mat A \col u'
+   \label{eq:transform}
+\end{equation}
+where $\col u$ is the vector of standard degrees, $\col u'$
+is the vector of transformed degrees of freedom and $\mat A$ is the
+transformation matrix. The matrix $\mat A$ is a block-diagonal sparse matrix,
+where each block is limited by the degrees of freedom in each node. The
+non-singular matrix $\mat A$ must be defined by the user, although some tools
+are available to make life easier, such as
+\begin{itemize}
+   \item $\mat A$ equal for all nodes on a geometry,
+   \item $\mat A$ is a coordinate transformation where the first axis is in the direction of a
+                  specified vector,
+   \item $\mat A$ is a coordinate transformation where the first axis is in the direction of the
+                  local normal vector,
+   \item a user definable subroutine is called for each node to define $\mat A$
+in each node.
+\end{itemize}
+The (discretized) weak form 
+\[
+     \col v^T \mat S \col u = \col v^T \col f
+\]
+leads to the system 
+\[
+   \mat S \col u = \col f
+\]
+Using the same transformation for the test function $\col v$ as for
+$\col u$ (Eq.~\eqref{eq:transform}), the weak form becomes
+\[
+     \col v'^T \mat S' \col u' = \col v'^T \col f'
+\]
+leading to the transformed system 
+\[
+   \mat S' \col u' = \col f'
+\]
+with
+\[
+   \mat S'=\mat A^T\mat S\mat A, \quad \col f'=\mat A^T \col f
+\]
+
+Transforming a vector of standard degrees to a vector of rotated degrees
+requires the inverse matrix $\mat A^{-1}$:
+\begin{equation}
+    \col u' = \mat A^{-1} \col u
+\end{equation}
+For the most common case, i.e.\ a coordinate transformation, matrix
+$\mat A$ is orthogonal and therefore $\mat A^{-1}=\mat A^T$. 
+
+\section{Implementation and usage details}
+
+\subsection{Defining the transformation}
+
+The first step is defining the local transformations by one or more calls to
+the routine 
+\texttt{define\_transformation}, where information is stored in a structure
+of type \texttt{input\_probdef\_t}. For example
+\begin{verbatim}
+
+  call define_transformation ( mesh, input_probdef, surface=6, Amatrix=Q )
+
+\end{verbatim}
+defines a transformation on surface 6 using a
+constant square transformation matrix \texttt{Q} in each node, which should be a
+two-dimensional array of shape $(n,n)$, where $n$ is the number of degrees
+of freedom in each node of surface. If the array \texttt{Q} is not
+orthogonal, this should be specified with the additional argument
+\texttt{orthogonal=.false.}.
+Note, that:
+\begin{itemize}
+  \item Transformations can be defined in points, nodesets and on curves,
+        surfaces and volumes.
+  \item The usual arguments \texttt{physq} and \texttt{layer},
+        can be used to limit
+        the number of degrees involved in the transformation.
+  \item The usual arguments
+        \texttt{step}, \texttt{exclude}, \texttt{excludepoints},
+        \texttt{excludecurves} and\\ \texttt{excludesurfaces} can be used to limit
+        the number of nodes where the transformation is defined.
+  \item Dirichlet conditions are defined with respect to the \emph{transformed}
+   degrees of freedom $\col u'$. Thus setting \texttt{degfd=[1]} in the call
+   to \texttt{define\_essential} for the surface 6 means the first degree
+   of the transformed degrees of freedom is set to Dirichlet.
+   \item Multiple defined transformations should not overlap, i.e.\ a degree
+   of freedom can be involved in a single transformation only.
+\end{itemize}
+Other possibilities exist for defining transformations on geometries, such as
+an orthogonal coordinate transformation\footnote{Note, that the coordinate
+transformation only transforms the local degrees of freedom as if they are
+components of a vector. The global coordinates (positions) of the mesh nodes
+are \emph{not} transformed. Also tensor transformations have not yet been 
+implemented and need to be specified by a full square array \texttt{Q}.}:
+\begin{verbatim}
+
+  call define_transformation ( mesh, input_probdef, surface=6, Amatrix=V )
+
+\end{verbatim}
+where \texttt{V} is a non-square two-dimensional array of shape $(n,n-1)$,
+where $n$ is the dimension of space, i.e.\ $(2,1)$ in 2D and $(3,2)$ in 3D. This
+matrix defines $n-1$ vectors (one in 2D, two in 3D). The first vector 
+\texttt{V(:,1)} points in the direction of the first coordinate direction. In
+2D, the second coordinate direction is normal to that direction such, that the third coordinate
+direction is pointing at you, when the system would be extending to a
+3D right-handed system. 
+In 3D, \texttt{V(:,2)} is used to define the second coordinate direction to
+point in the direction of the vector \texttt{V(:,1)}$\times$\texttt{V(:,2)}.
+The third coordinate direction is defined by assuming a right-handed system.
+
+Furthermore, it is possible to define the local coordinate transformation such,
+that the first coordinate direction is in the direction of the local normal
+vector:
+\begin{verbatim}
+
+  call define_transformation ( mesh, input_probdef, surface=6, & 
+    normalvector=1, v2=[0._dp,1._dp,0._dp] )
+
+\end{verbatim}
+where the vector \texttt{v2} is used similar to the vector \texttt{V(:,2)} 
+above, and needs to be present only in 3D. Specifying the argument
+\texttt{normalvector=-1} assumes that the first direction is opposite to the direction of the
+normal vector. Note, that the normal vector in a node has been defined as the average
+normal vector as computed in the (geometry) elements connected to that node. Obviously, this only
+works for curves in 2D and surfaces in 3D.
+
+Finally, if both \texttt{Amatrix} and \texttt{normalvector} are absent from the
+argument list (or equivalently specifying \texttt{normalvector=0}, which is the default
+value):
+\begin{verbatim}
+
+  call define_transformation ( mesh, input_probdef, surface=6 )
+
+\end{verbatim}
+a user subroutine \texttt{nodesub} will be called for each node in the
+transformation (see below).
+
+\subsection{Building the transformation}
+
+In \tfem\ the transformation matrix $\mat A$ is stored as a sparse matrix
+similar to the system matrix\footnote{The matrix $\mat A$ is stored in the
+problem structure \texttt{problem} of type \texttt{problem\_t}.}.
+After defining the transformations and finishing the problem definition the
+matrix $\mat A$ needs to be built:
+\begin{verbatim}
+
+  call build_transformation_matrix ( mesh, problem )
+
+\end{verbatim}
+and is stored in the structure \texttt{problem}. The optional arguments \texttt{transformation1} and
+\texttt{transformation2} can be used to specify a particular transformation or a range of transformations.
+
+Note, that in \tfem\ the transformations are applied to the element matrices
+just after the call to the element subroutine, but before the assembling into
+the full matrix. This means, that the element matrices must be computed as
+before, i.e.\ using the standard (not transformed) degrees. However, in the call to the
+system build routines\footnote{\texttt{build\_system}, \texttt{add\_boundary\_elements\_point}, 
+\texttt{add\_boundary\_elements},
+\texttt{build\_system\_constraint} and \texttt{build\_system\_connection}.} there is
+an optional argument to not apply the transformations for this call
+ (\texttt{transform=.false.}).
+This means that \emph{in that call},
+the element routines must be built for the transformed degrees directly.
+
+Note, that calling \texttt{build\_transformation\_matrix} again for a transformation will just replace
+the old values of $\mat A$ for the nodes involved. This can be useful for a moving mesh problem, where the normal
+on an interface changes in time, but the topology does not change. \red{Be careful}: don't forget to transform all solution vectors to the
+global system before changing the transformation matrix!
+
+In case \texttt{normalvector=0} has been specified in the definition of the
+transformations, a user subroutine \texttt{nodesub} needs to be supplied as well:
+\begin{verbatim}
+
+  call build_transformation_matrix ( mesh, problem,
+    coefficients=coefficients, oldvectors=oldvectors, nodesub=nodesub )
+
+\end{verbatim}
+where the user subroutine must be defined according the following interface:
+\begin{verbatim}
+
+  subroutine nodesub ( mesh, problem, geom, node, first, last, &
+    coefficients, oldvectors, nodemat )
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: geom, node
+    logical, intent(in) :: first, last
+    type(coefficients_t), intent(in) :: coefficients
+    type(oldvectors_t), intent(in) :: oldvectors
+    real(dp), intent(out), dimension(:,:) :: nodemat
+
+\end{verbatim}
+with\\[2ex]
+\begin{tabular}{ll}
+\texttt{mesh, problem} & mesh and problem structure as in the heading of \\
+  &\hfill                  \texttt{build\_transformation\_matrix}\\
+\texttt{geom} & geometry number \\
+\texttt{node} & node number (local) within the geometry\\
+\texttt{first, last} & logicals indicating whether the current call
+    is the first/last \\ & in this transformation. \\
+\texttt{coefficients}, & coefficient and oldvectors as supplied
+        in the heading of \\
+\texttt{oldvectors} & \hfill \texttt{build\_transformation\_matrix}.\\
+\texttt{nodemat} & transformation matrix $\mat A$ for this node.
+\end{tabular}\\[2ex]
+
+\subsection{Transforming the degrees of freedom}
+
+The system matrix is built and solved for the transformed degrees of freedom
+$\col u'$. In order to be able to use this vector in, for example, the build 
+of a new system matrix or for plotting, or if the transformation is going to be changed,
+the vector needs to be transformed back
+to the standard (global) degrees $\col u$ as follows:
+\begin{verbatim}
+   
+  call transform_to_global ( problem, sol )
+  
+\end{verbatim}
+It is recommended to always transform back to global right after the solve.
+
+Transformation from $\col u$ to $\col u'$ can be performed as follows:
+\begin{verbatim}
+   
+  call transform_to_local ( problem, sol )
+  
+\end{verbatim}
+which is currently only implemented for orthogonal transformation matrices.
+This option can be useful, for example, if the essential boundary conditions
+are more easily filled in the global system vector $\col u$ 
+before transformation to the local one $\col u'$.
+
+\subsection{Caveats}
+
+\subsubsection{Reusing a system vector that has been transformed to the global system}
+
+For a linear problem with just one solve, the \texttt{sol} vector, after applying \texttt{transform\_to\_global}, is represented in the global coordinate system and can be used for postprocessing and that's it. However, in many cases \texttt{sol} is being reused for a new solve and you would like to keep the Dirichlet conditions in \texttt{sol} as you usually do without transformations. \red{Here you need to be careful!} It is tempting to apply \texttt{transform\_to\_local} to correctly reset to the correct Dirichlet conditions, however this is not recommended, because the imposed Dirichlet conditions might change slightly due to truncation errors in the transformation. Especially if the transformation is applied many times, like in a time-dependent calculation, you get accumulation of truncation errors. Therefore it is recommended to properly fully reset \texttt{sol} to the correct imposed Dirichlet conditions in the local system. Examples:
+\begin{itemize}
+  \item In a Newton-Raphson iteration the Dirichlet conditions for the difference solution \texttt{dsol} needs to be set to zero after the first iteration. The proper way of doing this is setting all Dirichlet conditions to zero again in the local Dirichlet directions. A brute force way is setting the whole vector to zero (\texttt{dsol\%u=0}) at the start of a new iteration (see example \texttt{settling2.f90} in the examples section below).
+  \item Consider a time-dependent simulation. If Dirichlet conditions are constant in time, but non-zero, resetting these conditions in the local system again every time step can be expensive if these are complicated in space. In that case, it might be handy to introduce a separate system vector with the correct Dirichlet boundary conditions in the local space and copy that to \texttt{sol} at the start of every time step. If Dirichlet conditions are not constant in time, there is no alternative to resetting these conditions in the local system again every time step (see example \texttt{coneplate4.f90} in the examples section below).  
+\end{itemize}
+
+\subsubsection{Reaction forces need to be computed in the local space}
+
+Reaction forces on the Dirichlet nodes $r_\text{p}$ can be computed with the routine \texttt{reaction\_forces}. It uses the ``unbalance'' in the prescribed Dirichlet rows of the system of equations:
+\begin{equation}
+   \begin{pmatrix}
+      S_{\text{uu}} & S_{\text{up}} \\
+      S_{\text{pu}} & S_{\text{pp}} 
+   \end{pmatrix} 
+   \begin{pmatrix}
+      u_\text{u} \\
+      u_\text{p}
+   \end{pmatrix}=
+   \begin{pmatrix}
+      f_\text{u} \\
+      f_\text{p}
+   \end{pmatrix}
+   \label{eq:partitionedsystem2}
+\end{equation}
+from which we get:
+\begin{equation}
+   r_\text{p} = S_{\text{pu}} u_\text{u} + S_{\text{pp}} u_\text{p} - f_\text{p}
+\end{equation}
+Since, the matrices are defined in the local space, the reaction forces need to be computed in the local space also \emph{before} being transformed to the global space for further processing (see example \texttt{settling2.f90} in the examples section below).
+
+\section{Examples using transformations}
+
+The cavity flow examples \texttt{stokes1.f90}
+ (see Sec.~\ref{sec:driven_cavity2D})
+and \texttt{stokes11.f90/stokes13.f90} (see
+Secs.~\ref{sec:stokes3Ddrivencavity} and \ref{sec:vtk}) have been adapted to
+show the possibilities of transformations. The example files are 
+\texttt{stokes45.f90} (2D) and \texttt{stokes46.f90} (3D) and the modifications
+are:
+\begin{itemize}
+   \item the mesh is rotated first over an arbitrary angle $\alpha$.
+   \item the boundary conditions on the lid are imposed in a rotated
+         local coordinate system.
+   \item the possibility of using a Neumann condition normal to the lid is
+         shown.
+   \item all the possibilities of using a constant transformation matrix,
+         a transformation using the normal to the lid and a user subroutine is
+         shown. 
+   \item the Fortran~2008 feature of using an internal subroutine as actual
+         argument is shown.
+\end{itemize}
+
+The example \texttt{coneplate4.f90} (see Sec.~\ref{sec:cone-plate_ve_si_fs}) uses local transformations to impose a perfect slip condition on the cone. Since the nodes are able to move tangential to the cone surface, the Dirichlet condition for the swirl velocity $u_\theta$ is not constant and imposed again every time step.
+
+Taylor-Couette flow example \texttt{taylor\_couette2.f90}
+(see Sec.~\ref{sec:persist_taylorcouette})
+makes use of the local transformation to impose
+a periodic boundary condition of the velocity on two curves
+that have different orientations.
+
+Settling sphere example \texttt{settling2.f90} (see Sec.~\ref{sec:settsphere}) simulates a sphere settling 
+in viscoelastic fluid.
+A Newton-Raphson iteration is used to calculate a sequence of imposed particle 
+velocities. The simulation is full 3D using an angular cutout of the domain. On 
+the sides of the domain, which are created by the cutout, transformations are applied such that 
+the normal component of the velocity and the tangential components of the traction are zero.

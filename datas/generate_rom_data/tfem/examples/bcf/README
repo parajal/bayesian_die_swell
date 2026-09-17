@@ -1,0 +1,100 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+startup1:
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Simple shear flow
+ The model is a Hookean dumbbell (stochastic model)
+ The integration scheme is explicit Euler
+
+startup2:
+
+ Stochastic problem on a unit square
+ linear Couette flow
+ DEVSS/DG
+ Hookean dumbbell. Initial disturbance of the velocity to generate a
+ disturbance in the Q-vectors.
+ BCF explicit first-order scheme
+
+startup3:
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Uniaxial elongational flow
+ The model is a FENE model
+ The integration scheme is explicit Euler
+
+startup4:
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Simple shear flow
+ The model is a Hookean dumbbell (stochastic model)
+ The integration scheme is implicit Euler
+
+startup5:
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Planar elongational flow
+ The model is a FENE model
+ The integration scheme is explicit Euler
+
+startup6:
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Uniaxial elongational flow
+ The model is a FENE model
+ The integration scheme is implicit Euler
+
+couette1:
+
+ Stochastic problem on a unit square
+ linear Couette flow
+ DEVSS/DG
+ Hookean dumbbell. Initial disturbance of the velocity to generate a
+ disturbance in the Q-vectors.
+ BCF explicit first-order scheme
+
+cylinder1:
+
+ Flow around a cylinder confined between two plates for a Hookean dumbbell,
+ solved using BCF. The entry and exit sides are connected by periodical
+ boundary conditions and a constant flow rate is imposed.
+ Only the upper-half of the domain is modelled and symmetry conditions are
+ assumed (zero tractions).
+ Dirichlet boundary conditions for the velocities are used.
+ DEVSS/DG
+ first-order time integration
+
+cylinder2:
+
+ Flow around a cylinder confined between two plates for a Hookean dumbbell,
+ solved using BCF. The entry and exit sides are connected by periodical
+ boundary conditions and a constant flow rate is imposed.
+ Only the upper-half of the domain is modelled and symmetry conditions are
+ assumed (zero tractions).
+ Dirichlet boundary conditions for the velocities are used.
+ DEVSS/DG
+ first-order time integration
+
+ This problem is similar to cylinder1, however it shows in addition the
+ possibilities to output the determinant of c in three different ways:
+   1) compute detc in the element nodes and average element contributions
+   2) compute detc in the element nodes and store elementwise (no averaging)
+   3) compute detc in the Gauss points
+
+cylinder3:
+
+ Flow around a cylinder confined between two plates for a FENE dumbbell,
+ solved using BCF. The entry and exit sides are connected by periodical
+ boundary conditions and a constant flow rate is imposed.
+ Only the upper-half of the domain is modelled and symmetry conditions are
+ assumed (zero tractions). 
+ Dirichlet boundary conditions for the velocities are used.
+ DEVSS/DG
+ first-order implicit time integration
+
+streamfunction:
+
+ streamfunction problem for the flow around a cylinder

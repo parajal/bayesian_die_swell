@@ -1,0 +1,61 @@
+% !TEX root = userguide.tex
+
+\def\headdate{1st November 2023}
+
+\section{Linear stability of viscoelastic fluid flow}
+\label{sec:linearstability}
+
+In this section some examples will be given that determine the linear stability
+of the equations for viscoelastic fluid flow. For that, we will make use of the
+Jacobian of the nonlinear equations used for Newton-Raphson iteration in
+Sec.~\ref{sec:implicit}.
+
+The equations Eqs.~\eqref{eq:impve1}--\eqref{eq:impve3}, when discretized in space only, become a set of nonlinear ODEs:
+\begin{equation}
+  \mat B\col{\dot u} = \col F(\col u)
+\end{equation}
+where $\col u$ is the column vector of unknown degrees of freedom. Since not all equations have a time derivative, the matrix $\mat B$ will have rows with zeros for these equations. Assume, we have a solution $\col u=\col{s}$ of the system. This can be a steady state solution, i.e.\ $\col F(\col{s})=\col 0$, or a transient solution at a chosen time. Assume the solution $\col{s}$ is slightly perturbed by a very small value of $\col\epsilon$, i.e.\ $\col{s}+\col\epsilon$ is a solution of the equation:
+\begin{equation}
+  \mat B(\col{\dot{s}} +\col{\dot\epsilon}) = \col F(\col{s}+\col\epsilon)
+\end{equation}
+Linearizing, and using that $\col{s}$ is a solution of the equations, we get
+\begin{equation}
+ \mat B\col{\dot\epsilon} = \mat A(\col{s})\col\epsilon
+\end{equation}
+where the matrix $\mat A(\col{s})$ is given by
+\begin{equation}
+ \mat A(\col{s}) = \pderiv{\col F}{\col u}(\col{s})
+\end{equation}
+Note, that $\mat A$ is equal to minus the Jacobian for Newton-Raphson, however with the time derivative terms excluded.
+
+To determine the stability of the solution $\col s$ we fill in $\col\epsilon=\col v\exp(\lambda t)$ and get
+\begin{equation}
+    (\mat A - \lambda \mat B ) \col v =\col 0
+\end{equation}
+or in other words: $(\lambda,\col v)$ is an (eigenvalue, eigenvector) pair of a generalized eigenvalue problem. To study the stability we need to find the spectrum of eigenvalues and in particular the ones that are closest to the imaginary axis or even go beyond and obtain positive real parts (unstable eigenmodes). 
+
+\subsection{Linear stability of a planar Couette flow}
+\label{sec:linearstabilityCouette}
+
+Various Couette flow examples solving the eigenvalue problem around the steady state solution are available. 
+The following table shows the examples available:\medskip\\
+\begin{tabular}{llll}
+Example & c or b  & minimal $\mat A$ and $\mat B$ \\\hline
+ \texttt{couette23.f90} & c & no  \\
+ \texttt{couette24.f90} & c & yes \\
+ \texttt{couette25.f90} & b & no  \\
+ \texttt{couette26.f90} & b & yes 
+\end{tabular}\medskip\\
+where `minimal' refers to a sparse matrix where the zero blocks have been excluded (see Sec.~\ref{sec:excludezeroblocks}). We refer to Sec.~\ref{sec:couette} for a description of the Couette problem.
+
+The examples can be obtained by typing at the command line:
+\medskip
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+
+The linear stability of a planar Couette flow is a \emph{very difficult} problem. In theory the problem is linearly stable for the UCM model. However the numerical solution of the problem usually is not due to spurious eigenvalues that get positive real parts. We also noticed persistent algebraic growth ($t^\epsilon$, $\epsilon>0$) for the fully implicit case (both in the c and b formulation). This requires further investigation.
+
+Although the Couette flow is a numerically very difficult problem, the examples can serve as templates for applying linear stability analysis to other problems where there is a real physical distinct bifurcation point.
+
+

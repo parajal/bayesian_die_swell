@@ -1,0 +1,11 @@
+&comppar
+    numtimesteps = 500   ! number of time steps
+    plot_mesh_every = 10 ! plot mesh every .. steps
+    eta = 1.0            ! viscosity
+    gamma_fa = 0.05      ! surface tension coefficient fluid-air interface
+    surface_tension = F  ! include surface tension
+    U = 1.0              ! -U is the velocity of the walls 
+    deltat = 1.e-1       ! time step
+    rs_up = 1.5          ! real_storage velocity-pressure LU (HSL)
+    is_up = 1.5          ! integer_storage velocity-pressure LU (HSL)
+/

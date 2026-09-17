@@ -1,0 +1,102 @@
+% !TEX root = userguide.tex
+
+\chapter{Stochastic fluid models}
+\pgst{tfemchA}
+\label{chap:stochasticmodels}
+
+\def\chaptertitle{Stochastic fluid models}
+\def\headdate{6th February 2009}
+
+In this Appendix some information is provided on the stochastic fluid
+models available in the add-on `bcf'.
+
+\section{Notation}
+
+The Cauchy stress tensor is denoted by $\ten\sigma$. We assume that
+the fluid is incompressible.  Hence, we split $\ten\sigma$
+as follows
+\[
+   \ten\sigma = -p\ten 1 +\ten\tau_\text{ex},
+\]
+where $p$ is the pressure and $\ten\tau_\text{ex}$ is the extra-stress tensor,
+which vanishes in equilibrium.
+The tensor $\ten\tau_\text{ex}$ is split into a solvent part and a polymer part
+\[
+   \ten\tau_\text{ex} = 2\eta_s\ten D + \ten\tau, 
+\]
+where $\eta_s$ is the solvent viscosity and $\ten D$ is Euler's
+rate-of-deformation tensor: 
+\[
+         \ten D=\frac12(\ten L + \ten L^T)\quad\text{with}\quad 
+         \ten L^T= \nabla\vek u.
+\]
+
+\section{Dumbbell model}
+
+This model is based on elastic dumbbells. The Langevin equation is
+given by
+\begin{equation}
+  \mathrm{d}\vek{Q}=(\ten L\cdot\vek Q - \frac{1}{2\lambda_H}\vek F_c)
+    \mathrm{d}t+\frac{1}{\sqrt{\lambda_H}}\mathrm{d}\vek W,
+\label{eq:Langevin}
+\end{equation}
+where $\vek Q$ is the dumbbell connector vector scaled with
+$\sqrt{kT/H}$, $\lambda_H=\zeta/4H$ is a time constant, $\mathrm{d}\vek W$
+is a Wiener increment and $\vek F_c$ is the connector force given by
+\begin{align*}
+     \text{Hookean dumbbells:\qquad}\vek F_c&=\vek Q,\\
+     \text{FENE-P:\qquad}\vek F_c&=\frac{\vek Q}{1-\langle Q^2\rangle/b}.\\
+     \text{FENE:\qquad}\vek F_c&=\frac{\vek Q}{1-Q^2/b}.
+\end{align*}
+The expression for the stress tensor is
+\begin{equation}
+ \ten \tau_p=G(\langle\vek Q\vek F_c\rangle-\ten 1 ),
+ \label{eq:sttress}
+\end{equation}
+with $G=nkT$.
+
+In equilibrium the structure tensor $\ten\alpha=\langle\vek Q\vek Q\rangle$
+is given by
+\begin{align*}
+     \text{Hookean dumbbells:\qquad}\ten\alpha_{\text{eq}}&=\ten 1,\\
+     \text{FENE-P:\qquad}\ten\alpha_{\text{eq}}&=\frac{b}{b+3}\ten 1,\\
+     \text{FENE:\qquad}\ten\alpha_{\text{eq}}&=\frac{b}{b+5}\ten 1.
+\end{align*}
+
+
+\section{Filling of the material parameters}
+
+The properties of the model are stored in a structure of type
+\texttt{stmodel\_t}. The structure must first be constructed by calling the
+routine \texttt{create\_stochastic\_model}. Then the material parameters must
+be filled in the components \texttt{modulus}, \texttt{lambda}, \texttt{nonlin}
+of the structure. In Table~\ref{tab:matparbcf} it is shown which parameters need
+to be filled for each model
+\begin{table}[!hbtp]
+\begin{center}
+   
+  \caption{Material parameters}\label{tab:matparbcf}\medskip
+  \begin{tabular}{l|ccc}
+    \texttt{model} & \texttt{modulus} & \text{lambda} & \texttt{nonlin}\\\hline
+          1 (Hookean dumbbell) & $G=nkT$ & $\lambda_H$ & - \\
+          2 (FENE-P)  &  $G=nkT$ & $\lambda_H$ & $b$ \\
+          3 (FENE)    &  $G=nkT$ & $\lambda_H$ & $b$ 
+  \end{tabular}
+
+\end{center}
+\end{table}
+
+\section{Implementation}
+
+All the models are implemented with three component equations
+($Q_x$, $Q_y$ and $Q_z$), except for the Hookean dumbbell in planar flows,
+which use only two ($Q_x$ and $Q_y$). The number of stress and conformation
+tensor components is four in 2D/axisymmetrical flows and six in 3D,
+except the for Hookean dumbbell in planar flows,
+which has only three.
+
+The Langevin equation is solved using Brownian dynamics. The numerical
+parameters for this method should be stored in a structure of type
+\texttt{stnumpar\_t}, with components \texttt{nfield} (number of
+fields/realizations), \texttt{timeint} (the type of integration)
+and \texttt{tstep} (the time step).

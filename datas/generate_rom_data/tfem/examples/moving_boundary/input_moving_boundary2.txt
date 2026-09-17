@@ -1,0 +1,14 @@
+&comppar
+    rho = 0.1,           ! density
+    grv = 10.0,          ! gravity constant g
+    numtimesteps = 800   ! number of time steps
+    plot_mesh_every = 10 ! plot mesh every .. steps
+    eta = 1.0            ! viscosity
+    gamma_fa = 0.6       ! surface tension coefficient fluid-air interface
+    dgamma_w = -0.3      ! surface tension difference fluid-air wrt the wall
+    surface_tension = T  ! include surface tension
+    omega = 3.0          ! angular rate of the wall(s) and bottom
+    deltat = 2.e-1       ! time step
+    rs_up = 1.5          ! real_storage velocity-pressure LU (HSL)
+    is_up = 1.5          ! integer_storage velocity-pressure LU (HSL)
+/

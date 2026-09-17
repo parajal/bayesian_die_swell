@@ -1,0 +1,1219 @@
+% !TEX root = userguide.tex
+
+\def\headdate{27th July 2023}
+
+\section{Arbitrary Lagrangian Eulerian formulation}
+\label{sec:ale}
+
+If we have moving boundaries and/or interfaces, the mesh will change as a
+function of time. If the mesh moves independently from the material, we
+use the so-called Arbitrary Lagrangian Eulerian (ALE)
+formulation. In \xfem\ the mesh does not move and
+we will use a special ALE version called tALE.
+In this section examples using the ALE
+formulation will be given after the theory in the next section.
+
+\subsection{Basics}
+
+In order to describe inhomogeneous functions we need coordinates as function
+argument. For example, consider a quantity $f$ specified by a function:
+\begin{equation}
+ f=\hat f(\vek x,t)
+\end{equation}
+where the arguments are the
+(fixed) spatial coordinates (position vector) $\vek x$ and time $t$. This is
+called the spatial or Eulerian formulation. However, it is also possible to use
+a moving curvilinear coordinate system given by
+\begin{equation}
+   \vek x = \hat{\vek x}(\col\xi,t)
+    \label{eq:mappingxi}
+\end{equation}
+where $\col\xi=(\xi_1,\xi_2,\xi_3)$ are the curvilinear coordinates and
+$\hat{\vek x}$ is the function that maps the coordinates $\col\xi$ onto the
+spatial coordinates $\vek x$. Note, that the mapping is a function of time
+(moving coordinates). We now can find a new function
+with $\col\xi$ as an argument to define the quantity $f$:
+\begin{equation}
+   f=\hat f(\vek x,t)=\hat f(\hat{\vek x}(\col\xi,t),t)\equiv \bar
+f(\col\xi,t)
+  \label{eq:fexpr}
+\end{equation}
+In the following we will call $\col\xi$ the grid coordinates, or simply the
+grid.
+
+We have the following extreme cases:
+\begin{itemize}
+   \item The mapping function $\hat{\vek x}$ is independent of time. The grid is
+``fixed'' and basically we have a Eulerian formulation, where the grid is just
+a curvilinear coordinate system to describe space.
+   \item The grid coordinates $\col\xi$ move with the material. Thus each
+material point can be identified with the unique coordinates $\col\xi$
+(``material label''). This is called a Lagrangian formulation.
+\end{itemize}
+If the grid can move independently it is called an Arbitrary Lagrangian
+Eulerian (ALE) formulation. The ALE formulation helps to minimize mesh
+distortion while still
+being able to track material boundaries similar to a Lagrangian
+formulation.
+
+We can define the grid time derivative:
+\begin{equation}
+   \frac{\delta f}{\delta t} = \pderiv{f}{t}\Big|_{\col\xi=\text{constant}}
+                             = \pderiv{\bar f}{t}
+\end{equation}
+Hence, the grid time derivative describes the change in time of the quantity
+$f$ as seen from a fixed grid point $\col\xi$.	In order to find an expression
+for the grid time derivative we differentiate Eq.~\eqref{eq:fexpr} in time
+using the chain rule:
+\begin{equation}
+   \frac{\delta f}{\delta t} = \pderiv{\hat f}{t}+\pderiv{\hat{\vek
+x}}{t}\cdot\nabla \hat f
+\end{equation}
+Here, the first term on the right-hand side is the local time derivative
+(usually denoted by $\plderiv{f}{t}$), the first factor in the second term is
+the grid velocity (denoted by $\vek u_\text{g}$) and the second factor is the
+spatial gradient of $f$. Therefore, we get
+\begin{equation}
+   \frac{\delta f}{\delta t} = \pderiv{f}{t}+\vek u_\text{g}\cdot\nabla f
+  \label{eq:gridderiv}
+\end{equation}
+For the special cases we get:
+\begin{itemize}
+   \item Eulerian formulation, $\vek u_\text{g}=\vek 0$:
+\begin{equation}
+    \frac{\delta f}{\delta t} = \pderiv{f}{t}
+\end{equation}
+   \item Lagrangian formulation, $\vek u_\text{g}=\vek u$ (velocity of the
+fluid):
+\begin{equation}
+    \frac{\delta f}{\delta t} = \pderiv{f}{t}+\vek u\cdot\nabla f\equiv\dot f
+  \label{eq:substan}
+\end{equation}
+where $\dot f$ is the material (or substantial) derivative.
+\end{itemize}
+Combining Eqs.~\eqref{eq:gridderiv} and \eqref{eq:substan}$_2$ gives
+\begin{equation}
+    \dot f=\frac{\delta f}{\delta t}+ (\vek u-\vek u_\text{g})\cdot\nabla f
+  \label{eq:substan2}
+\end{equation}
+which is quite useful for transforming the physical equations into a suitable
+form for implementation.
+
+In conventional ALE the grid will be identified with the moving mesh and
+the grid
+derivative can be described by the time derivative of the nodal values as in the
+Eulerian formulation. In the convection terms the velocity needs to be
+changed (subtraction of the grid velocity). 
+
+In \xfem\ (see Sec.~\ref{sec:xfem}) the mesh is usually not moving in time, but
+the boundaries/interfaces often are. Here we use also Eq.~\eqref{eq:substan2}
+to handle material derivatives. Since the mesh is not moving, we cannot
+identify the grid with the computational mesh. Therefore we will use a so-called
+temporary ALE (tALE) mesh for that. A tALE mesh describes a mapping between two
+consecutive time steps. For a first-order time discretization we only need 
+one tALE mesh, which is renewed every time step. For a second-order multi-step
+discretization we need two tALE meshes, with one renewal every time step.
+The grid velocity $\vek u_\text{g}$ is defined by (backwards) differentiation
+of the grid position.
+Note, that the tALE meshes are different from the computational mesh.
+The tALE technique has been developed by
+Choi \cite{Choi11b}. See also \cite{Choi11c,choi_alignment_2012} for a detailed description
+of the tALE technique as implemented in \tfem.
+
+\subsection{Oscillating planar Couette flow with a freely suspended particle
+in a viscoelastic liquid}
+\label{sec:couette_ale}
+
+(This example has been developed by Gaetano d'Avino of the University of
+Naples)
+
+We consider a planar Couette problem (shear flow between two moving walls) with
+a (off-center) freely suspended particle. 
+The curves describing the domain are plotted in Fig.~\ref{fig:curves_ale1}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.5]{ale1_curves}
+   \end{center}
+   \caption{Points and curves of the oscillating
+     Couette flow problem with a suspended particle.}
+    \label{fig:curves_ale1}
+\end{figure}
+The walls (at curves \texttt{C1} and \texttt{C3}) 
+are moving in an oscillatory way and 180~degrees out of phase. 
+In horizontal direction periodical boundary conditions are assumed.
+In the lower left corner the pressure value is set to zero (Dirichlet).
+The viscoelastic model is a Giesekus fluid.
+
+The initial mesh is generated using Gmsh (see Sec.~\ref{sec:readgmshmesh})
+and is shown in Fig.~\ref{fig:mesh_ale1}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.5]{ale1_mesh}
+   \end{center}
+   \caption{Mesh of the oscillating
+     Couette flow problem with a suspended particle.}
+    \label{fig:mesh_ale1}
+\end{figure}
+
+The example file is \texttt{ale1.f90}\footnote{The example does not run
+currently. Combining the ALE approach with time-integration schemes requiring
+multiple evaluations of the convection term at different times in a single time
+step does not take the proper mesh coordinates into account. Use example \texttt{ale2.f90} instead.}
+and can be obtained by typing at the
+command line
+\medskip
+\begin{quote}
+   \texttt{getexample ale}
+\end{quote}
+
+Some notes on the source:
+\begin{itemize}
+   \item
+     The periodical boundary conditions are imposed using
+     constraints (see Chap.~\ref{ch:constraints}).
+   \item 
+     The explicit stress formulation with DEVSS-G/SUPG is used (see
+     Sec.~\ref{sec:explicitstress}). 
+   \item The position of the particle is obtained using an explicit
+     second-order Adams-Bashforth scheme.
+   \item The grid velocity is defined by solving a Laplace equation
+   \begin{equation}
+      \nabla\cdot(k^e\nabla\vek u_\text{g})=\vek 0 \label{eq:laplace_ale}
+   \end{equation}
+     where $\vek u_\text{g}$ is equal to the particle velocity on the surface
+     of the particle (curve \texttt{C5}). On all other boundaries $\vek
+     u_\text{g}$ is set to zero.
+    In Eq.~\eqref{eq:laplace_ale} 
+   $k^e$ is a function that controls the deformation of the domain.
+   As suggested in \cite{Hu2001} we take $k^e$ 
+   constant on an element and equal to the inverse of the
+     area/volume of the element. In this way the deformation of the mesh is
+largely performed by the big elements and the small ones around the solid
+particle just move almost rigidly with the particle.
+   \item
+    The conformation tensor equation (constitutive model)
+    is written in the ALE grid using
+    Eq.~\eqref{eq:substan2}.
+    A Crank-Nicolson/Adams-Bashforth (second-order)
+    with velocity prediction time discretization
+    (see Eq.~\eqref{eq:explicitCrankAB2}) is used to discretize the grid time
+    derivative.
+    \item \texttt{vtk} files are written to make a movie with Paraview.
+\end{itemize}
+
+After running the example
+the results in Fig.~\ref{fig:ale1_position} for the vertical position of the
+particle is obtained.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{ale1_position}
+   \end{center}
+   \caption{Vertical position of the particle as a function of time.}
+    \label{fig:ale1_position}
+\end{figure}
+We see a migration of the particle towards the wall.
+
+Note, that a similar problem has been described in \cite{DAvino10a}. An
+important difference, however, is that in \cite{DAvino10a} the horizontal
+grid velocity is taken equal to the particle velocity for \emph{all nodes}. In
+this way the grid is only deformed if the particle moves vertically. This 
+minimizes grid distortion, but is not applicable if multiple particles are
+present.
+ 
+A second example \texttt{ale2.f90} is available with the following differences:
+\begin{itemize}
+   \item 
+     The implicit stress formulation with DEVSS-G/SUPG is used (see
+     Sec.~\ref{sec:implicitstress}). 
+   \item
+    A second-order semi-implicit Gear scheme with conformation prediction
+    (see Eq.~\eqref{eq:Gearimp}) is used to discretize the grid time
+    derivative.
+\end{itemize}
+
+\subsection{Oscillating planar Couette flow with a freely suspended particle
+in a Newtonian liquid. Effect of particle and fluid inertia included.}
+\label{sec:couette_ale_inertia}
+
+(This example has been developed by Gaetano d'Avino of the University of
+Naples)
+
+We again
+consider a planar Couette problem (shear flow between two moving walls) with
+a (off-center) freely suspended particle. The example is similar to the example
+in Sec.~\ref{sec:couette_ale}, but now the fluid is Newtonian and
+inertia is included for both the particle and the fluid. 
+
+The example files are \texttt{ale3.f90} and \texttt{ale4.f90}.
+and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample ale}
+\end{quote}
+
+Some notes on the source:
+\begin{itemize}
+   \item The difference between \texttt{ale3.f90} and \texttt{ale4.f90} is the
+way the particle motion is handled. In \texttt{ale3.f90} an Adams-Bashforth
+scheme is used (see Figure~\ref{fig:particle_inertia_AB2}). 
+In \texttt{ale4.f90}
+a predictor-corrector scheme (see Figure~\ref{fig:particle_inertia_predcor}) is used.
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.65]{step_inertia3}\hspace{1cm}
+   \includegraphics[scale=0.65]{step_inertia4}
+   \end{center}
+   \caption{Time discretization of the particle motion in \texttt{ale3.f90}.
+    At the initial time $t_0$ the initial position $\vek X_0$ and velocity
+    $\vek U_0$ of the particle is given. In step 1 (left)
+    the particle position is
+    updated using an explicit Euler scheme. The velocity of the particle is
+    found by solving the coupled system of equations using the new position of 
+    the particle.
+    In any step beyond 1 (right) a second order AB2 scheme is used to update the
+    position of the particle.
+    The velocity of the particle is
+    found by solving the coupled system of equations using the new position of
+    the particle.}
+    \label{fig:particle_inertia_AB2}
+\end{figure}
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.65]{step_inertia1}\hspace{1cm}
+   \includegraphics[scale=0.65]{step_inertia2}
+   \end{center}
+   \caption{Time discretization of the particle motion in \texttt{ale4.f90}.
+    At the initial time $t_0$ the initial position $\vek X_0$ and velocity
+    $\vek U_0$ of the particle is given. In step 1 (left)
+    the particle position is
+    predicted using an explicit Euler scheme. The velocity of the particle is
+    found by solving the coupled system of equations using the predicted
+    position of the particle.
+    Using the new velocity of the particle a corrected position of the particle
+    is computed with a trapezoidal rule.
+    In any step beyond 1 (right) 
+    the particle position is
+    predicted using an extrapolation scheme. The velocity of the particle is
+    found by solving the coupled system of equations using the predicted
+    position of the particle.
+    Using the new velocity of the particle a corrected position of the particle
+    is computed with a trapezoidal rule.}
+    \label{fig:particle_inertia_predcor}
+\end{figure}
+   The advantages of the predictor-corrector scheme are that the current
+   velocity is used in the particle position and that it can be easily extended
+   to problems where the updating of the interface is more complicated (see,
+   for example Sec.~\ref{sec:swellNewtonian}). A disadvantage is that the
+   position of the particle-fluid interface does not coincide with the mesh
+   used for computing the velocities.  
+   \item The grid displacement within a time step $\vek d_\text{g}$
+    is defined by solving a Laplace equation
+   \begin{equation}
+      \nabla\cdot(k^e\nabla\vek d_\text{g})=\vek 0 \label{eq:laplace_ale2}
+   \end{equation}
+     $\vek d_\text{g}$ is equal to the particle displacement
+     on the surface
+     of the particle (curve \texttt{C5}). On all other boundaries $\vek
+     d_\text{g}$ is set to zero. In Eq.~\eqref{eq:laplace_ale2} 
+   $k^e$ is a function that controls the deformation of the domain.
+   As suggested in \cite{Hu2001} we take $k^e$ 
+   constant on an element and equal to the inverse of the
+     area/volume of the element. In this way the deformation of the mesh is
+largely performed by the big elements and the small ones around the solid
+particle just move almost rigidly with the particle.
+   \item The mesh velocity $\vek u^{n+1}_\text{g}$ at time 
+    $t_{n+1}$ is defined by backwards
+   differencing of the positions of the nodes of the mesh ($\vek x_\text{g}$).
+   The first time step we use a first-order differentiation:
+\begin{equation}
+  \vek u^{n+1}_\text{g}=(\vek x^{n+1}_\text{g} - \vek x^{n}_\text{g})/\Delta t
+\end{equation}
+   and for steps two and further a second-order differentiation:
+\begin{equation}
+  \vek u^{n+1}_\text{g}=(\frac32\vek x^{n+1}_\text{g} - 2\vek x^{n}_\text{g}
+            +\frac12\vek x^{n-1}_\text{g})/\Delta t
+\end{equation}
+  \item The inertia terms (of both fluid and particle)
+        are time discretized using an implicit scheme (first
+        step: Euler implicit, then second-order implicit Gear).
+  \item The system is solved using a Newton-Raphson iteration scheme.
+\end{itemize}
+
+\subsection{Planar Couette flow with a freely suspended particle
+in a viscoelastic liquid. Effect of particle and fluid inertia included.}
+\label{sec:couette_ale_inertia_viscoelastic}
+
+(This example has been developed by Gaetano d'Avino of the University of
+Naples)
+
+We again
+consider a planar Couette problem (shear flow between two moving walls) with
+a (off-center) freely suspended particle. The example is similar to the example
+in Sec.~\ref{sec:couette_ale}, but now 
+inertia is included for both the particle and the fluid. Also, the walls have a
+constant velocity. Results on the migration of the particle in this problem
+are reported in Huang et al.\ \cite{Huang97}.
+
+The example files are \texttt{ale5.f90}, \texttt{ale6.f90}, \texttt{ale7.f90}
+and \texttt{ale8.f90} and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample ale}
+\end{quote}
+
+Some notes on the sources:
+\begin{itemize}
+   \item An Adams-Bashforth
+scheme is used (see Figure~\ref{fig:particle_inertia_AB2}) to update the
+particle position.
+   \item The grid displacement in $y$-direction within a time step
+    is defined by solving a Laplace equation
+   \begin{equation}
+      \nabla\cdot(k^e \nabla d_\text{g})= 0 \label{eq:laplace_ale4}
+   \end{equation}
+     where $d_\text{g}$ is equal to the particle $y$-displacement
+     on the surface
+     of the particle (curve \texttt{C5}). On all other boundaries 
+     $d_\text{g}$ is set to zero.
+     In Eq.~\eqref{eq:laplace_ale4} 
+   $k^e$ is a function that controls the deformation of the domain.
+   As suggested in \cite{Hu2001} we take $k^e$ 
+   constant on an element and equal to the inverse of the
+     area/volume of the element. In this way the deformation of the mesh is
+largely performed by the big elements and the small ones around the solid
+particle just move almost rigidly with the particle.
+   \item The mesh velocity in $y$-direction $v^{n+1}_\text{g}$ at time 
+    $t_{n+1}$ is defined by backwards
+   differencing of the positions of the nodes of the mesh ($y_\text{g}$).
+   The first time step we use a first-order differentiation:
+\begin{equation}
+  v^{n+1}_\text{g}=(y^{n+1}_\text{g} - y^{n}_\text{g})/\Delta t
+\end{equation}
+   and for steps two and further a second-order differentiation:
+\begin{equation}
+  v^{n+1}_\text{g}=(\frac32 y^{n+1}_\text{g} - 2 y^{n}_\text{g}
+            +\frac12 y^{n-1}_\text{g})/\Delta t
+\end{equation}
+   \item The mesh velocity in $x$-direction $u^{n+1}_\text{g}$ at time 
+    $t_{n+1}$ is constant in space and found by backwards
+   differencing of the $x$-position of the particle.
+   The first time step we use a first-order differentiation
+   and for steps two and further a second-order (BDF2) differentiation.
+   Due to this procedure the particle does not move in $x$-direction relative
+   to the mesh.
+  \item The inertia terms (of both fluid and particle)
+        are time discretized using an implicit scheme (first
+        step: Euler implicit, then second-order implicit Gear).
+  \item The non-linear convection term for the inertia are solved using
+        a Newton-Raphson iteration scheme in \texttt{ale5.f90} and
+        \texttt{ale6.f90}. In \texttt{ale7.f90} and \texttt{ale8.f90}
+         the inertia convection terms
+        are discretized using a second-order predictor
+        (Eq.~\ref{eq:predictor_inertia}), which avoids expensive iteration.
+   \item 
+     In \texttt{ale5.f90} the explicit stress formulation
+     is used (see Sec.~\ref{sec:explicitstress})\footnote{Like the \texttt{ale1.f90} example, \texttt{ale5.f90} does not run currently.
+Combining the ALE approach with time-integration schemes requiring
+multiple evaluations of the convection term at different times in a single time
+step does not take the proper mesh coordinates into account. Use examples \texttt{ale6.f90}, \texttt{ale7.f90} or \texttt{ale8.f90} instead.}. 
+     In \texttt{ale6.f90}, \texttt{ale7.f90} and \texttt{ale8.f90}
+     the implicit stress formulation
+     is used (see Sec.~\ref{sec:implicitstress}). 
+     The example \texttt{ale8.f90} uses, in addition, the projection of
+     $\exp(\ten s)$ as given by Eq.~\eqref{eq:expsprojection}.
+\end{itemize}
+
+In Figure.~\ref{fig:Huang_compare} we compare the migration results with 
+Huang et al.\ \cite{Huang97}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.6]{Huang_compare}
+   \end{center}
+   \caption{Vertical position of the particle as a function of time. Comparison
+    to the results in Huang et al.\ \cite{Huang97}. We find time and space
+converged solutions for various methods, but there is still a difference with
+\cite{Huang97}. Maybe the meshes in \cite{Huang97} are not refined enough.}
+    \label{fig:Huang_compare}
+\end{figure}
+
+
+\subsection{Extrudate swell of a Newtonian fluid}
+\label{sec:swellNewtonian}
+
+(This example has been developed by Young Joon Choi of the TU/e.)
+
+The example is derived from the examples in Sec.~\ref{sec:stick_slip}.
+The slip surface is replaced by a free surface.
+The fluid is Newtonian.
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}).
+See \cite{Choi11c,Choi11b} and the references therein for the details on
+solving the surface advection equation.
+
+The example file is \texttt{extrudate\_swell1.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample extrudate\_swell}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary.
+We assume zero normal traction and zero vertical velocity at the exit.
+The free surface is traction free.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+The flow can be chosen to be planar of axisymmetric.
+Below the free surface the nodes of the ALE mesh move proportional to the
+vertical height of the free surface and the initial position of the
+node.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{extrudate\_swell1 < input\_extrudate\_swell1.txt}\\
+   \texttt{post\_swell1}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+Results of the final mesh and streamlines for a planar flow are shown in
+Fig.~\ref{fig:swell_newtonian}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{mesh_swell_0200}\\[2mm]
+   \includegraphics[scale=0.8]{streamfunction_0200}
+   \end{center}
+   \caption{Final mesh and streamlines
+    of the extrudate swell problem using a Newtonian fluid.}
+    \label{fig:swell_newtonian}
+\end{figure}
+
+In the example there is an option to add surface tension. The implementation is
+based on a membrane with an isotropic surface stress $\gamma$. This means,
+we add to the right-hand side of the weak form:
+\begin{equation}
+  -\int_S(\nabla\vek v)^T:\gamma(\ten I-\vek n\vek n)\,dS+
+\int_{\partial S}\vek v\cdot\gamma\vek n_\text{c}\,ds
+\end{equation}
+where $\vek n$ is the unit normal vector on the surface $S$, $\partial S$ the
+boundary of the surface (a point in 2D and a curve in 3D) and
+$\vek n_\text{c}$ the
+unit vector that is tangential to $S$ and normal to $\partial S$ and pointing
+``outwards''. In the example \texttt{extrudate\_swell1.f90} the surface tension
+integral is implemented using an object. A more simple approach is integration
+on a curve (surface in 3D) and using $\nabla_\text{s}\vek v$ ($\nabla_\text{s}$
+is the surface gradient operator) instead of $\nabla\vek v$. Furthermore, the
+surface identity tensor ($\ten I-\vek n\vek n$) and $\nabla_\text{s}\vek v$ are
+rewritten using the tangential (dual) base vectors. This approach is
+used in \texttt{extrudate\_swell6.f90} and can be run by:
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{extrudate\_swell6 < input\_extrudate\_swell1.txt}\\
+   \texttt{post\_swell1}\\
+   \texttt{streamfunction}
+\end{quote}
+
+\subsection{Extrudate swell of a viscoelastic fluid. Conventional ALE.}
+\label{sec:swellviscoelastic}
+
+(These examples have been developed by Young Joon Choi of the TU/e.)
+
+The examples here are derived from the example \texttt{stick\_slip4.f90}
+(second-order stress-implicit formulation) in Sec.~\ref{sec:stick_slip_impl}.
+The slip surface is replaced by a free surface.
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}).
+See \cite{Choi11c,Choi11b} and the references therein for the details on
+solving the surface advection equation.
+
+The example files are \texttt{extrudate\_swell2.f90} and
+\texttt{extrudate\_swell3.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample extrudate\_swell}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary.
+We assume zero normal traction and zero vertical velocity at the exit.
+The free surface is traction free.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+Below the free surface the nodes of the ALE mesh move proportional to the
+vertical height of the free surface and the initial position of the
+node.
+The time integration is second-order implicit Gear with conformation prediction
+(Equation~\eqref{eq:Gearimp}).
+
+The example \texttt{extrudate\_swell2.f90} uses a UCM/Oldroyd-B model in a
+planar flow.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{extrudate\_swell2 < input\_extrudate\_swell2.txt}\\
+   \texttt{post\_swell2}\\
+   \texttt{streamfunction}
+\end{quote}
+The example \texttt{extrudate\_swell3.f90} uses a Giesekus model in an
+axisymmetric flow.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{extrudate\_swell3 < input\_extrudate\_swell3.txt}\\
+   \texttt{post\_swell3}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated in the
+examples.
+
+\subsection{3D swell problem containing sharp edges}
+
+(This example has been developed by Michelle Spanjaards of the TU/e.)
+
+The examples \texttt{extrudate\_swell7.f90} and \texttt{extrudate\_swell8.f90} describe a transient 3D extrudate swell problem with a square die for a purely viscous fluid and a viscoelastic fluid, respectively. In many extrusion processes, the dies have complex shapes containing sharp edges such as squares. The sharp edge is maintained over a large distance in the extrudate and will swell in two directions. In this example the sharp edges are described as material lines. The positions of these lines can be used to describe the transverse swelling of the 2D free surfaces and expand the domain over which a 2D height function on the free surfaces is applied. Solving the 2D height functions gives the positions of the free surfaces \cite{spanjaards_transient_2019}. Figure \ref{fig:swellsquare} shows the swell in time for a quarter of an extrudate coming from a square die. Here, $t^{*} = H_{0}/U_{\text{avg}}$ with $H_{0}$ the initial half height of the die and $U_{\text{avg}}$ the average velocity over the inlet.
+
+\begin{figure}[h!]
+	
+	\includegraphics[scale=.3]{squareN1.png}
+	\includegraphics[scale=.3]{squareN2.png}
+	\includegraphics[scale=.3]{squareN3.png}
+	
+	\caption{Swell of a quarter of a square extrudate in time (left to right): $t/t^{*}=0$, $6.25$ and $12.5$. }
+	\label{fig:swellsquare}
+\end{figure}
+
+\subsection{Extrudate swell of a viscoelastic fluid. \xfem\ with temporary ALE.}
+\label{sec:swellviscoelasticxfem}
+
+(This example has been developed by Young Joon Choi of the TU/e.)
+
+The example here is derived from the example \texttt{extrudate\_swell4.f90},
+see Sec.~\ref{sec:swellNewtonian_xfem}
+(Extrudate swell of a Newtonian fluid using \xfem).
+
+The example file is \texttt{extrudate\_swell5.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample extrudate\_swell}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary.
+We assume zero normal traction and zero vertical velocity at the exit.
+The free surface is traction free.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary. The flow is planar.
+The example uses a UCM/Oldroyd-B model.
+The time integration is second-order implicit Gear with conformation prediction
+(Equation~\eqref{eq:Gearimp}).
+A temporary ALE scheme is used to handle the convection term in the
+constitutive equation. For a description of the temporary ALE scheme, as
+implemented in \tfem, see the papers \cite{Choi11c,choi_alignment_2012} and also the
+thesis \cite{Choi11b}.
+In the example there is an option to add surface tension (see
+Sec.~\ref{sec:swellNewtonian_xfem}).
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_extrudate\_swell\_xfem < meshinput\_xfem.txt}\\
+   \texttt{extrudate\_swell5 < input\_extrudate\_swell5.txt}\\
+   \texttt{post\_swell5}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+\subsection{Spinning of a Newtonian fluid}
+\label{sec:spinningNewtonian}
+
+The example is derived from the extrudate swell
+example in Sec.~\ref{sec:spinningNewtonian}.
+The fluid is Newtonian.
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}).
+See \cite{Choi11c,Choi11b} and the references therein for the details on
+solving the surface advection equation.
+
+The example file is \texttt{spinning1.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample spinning}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary.
+We assume a prescribed
+horizontal velocity and zero vertical velocity at the exit.
+The free surface is traction free.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+The flow is axisymmetric.
+Below the free surface the nodes of the ALE mesh move proportional to the
+vertical height of the free surface and the initial position of the
+node.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{spinning1 < input\_spinning1.txt}\\
+   \texttt{post\_spinning1}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+Results of the spin velocity and streamlines for a planar flow are shown in
+Fig.~\ref{fig:spinning_newtonian}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{velocity_color_spinning}\\[1cm]
+   \includegraphics[scale=0.8]{streamfunction_spinning}
+   \end{center}
+   \caption{Spin velocity and streamlines
+    of a spinning problem with draw ratio $\text{DR}=10$
+    using a Newtonian fluid.}
+    \label{fig:spinning_newtonian}
+\end{figure}
+
+\subsection{Spinning of a viscoelastic fluid}
+\label{sec:spinningviscoelastic}
+
+The examples here are derived from the extrudate swell examples
+in Sec.~\ref{sec:swellviscoelastic}.
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}).
+See \cite{Choi11c,Choi11b} and the references therein for the details on
+solving the surface advection equation.
+
+The example files are \texttt{spinning2.f90} and
+\texttt{spinning3.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample spinning}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary.
+We assume a prescribed
+horizontal velocity and zero vertical velocity at the exit.
+The free surface is traction free.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+Below the free surface the nodes of the ALE mesh move proportional to the
+vertical height of the free surface and the initial position of the
+node.
+The time integration is second-order implicit Gear with conformation prediction
+(Equation~\eqref{eq:Gearimp}).
+
+The example \texttt{spinning2.f90} uses a Giesekus model.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{spinning2 < input\_spinning2.txt}\\
+   \texttt{post\_spinning2}\\
+   \texttt{streamfunction}
+\end{quote}
+Results of the spin velocity and streamlines for $\text{DR}=10$ are shown in
+Fig.~\ref{fig:spinning_viscoelastic}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{velocity_color_spinning2}\\[1cm]
+   \hspace*{-1.1cm}\includegraphics[scale=0.8]{streamfunction_spinning2}
+   \end{center}
+   \caption{Spin velocity and streamlines
+    of a spinning problem with draw ratio $\text{DR}=10$
+    using a Giesekus fluid.}
+    \label{fig:spinning_viscoelastic}
+\end{figure}
+
+The example \texttt{spinning3.f90} uses an XPP model.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput.txt}\\
+   \texttt{spinning3 < input\_spinning3.txt}\\
+   \texttt{post\_spinning2}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated in the
+examples. Note, that the example \texttt{spinning3.f90} uses the same post
+program as \texttt{spinning2.f90} (for now).
+
+\subsection{Oscillating planar Couette flow with a freely suspended particle
+in a Newtonian liquid. Remeshing using gmsh.}
+\label{sec:couette_ale_stokes_remeshing}
+
+(These examples have been developed by Gaetano d'Avino of the University of
+Naples)
+
+We again
+consider a planar Couette problem (shear flow between two moving walls) with
+a (off-center) freely suspended particle. The example is similar to the example
+in Sec.~\ref{sec:couette_ale}, but now the fluid is Newtonian (Stokes flow) and
+the fluid domain is remeshed using gmsh (see Sec.~\ref{sec:readgmshmesh}),
+either at regular intervals or if the mesh is too deformed.
+
+The example files are \texttt{ale9.f90} (remeshing at regular time intervals)
+and \texttt{ale10.f90} (remeshing if the mesh is too deformed)
+and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample ale}
+\end{quote}
+
+Some notes on the source:
+\begin{itemize}
+   \item The routine \texttt{generate\_read\_mesh} performs the remeshing. A general
+  ``incomplete'' geometry file for gmsh (\texttt{particles\_in\_a\_box\_2D.igo}) is made available, which does not change.
+  A geometry file (\texttt{mesh.geo}) is written with the actual data for the position of the particle,
+  which `includes' the incomplete geometry file. The remeshing is performed by running gmsh
+  from the command line using the intrinsic subroutine \texttt{execute\_command\_line}. 
+  The new mesh is read from a file written by gmsh.
+   \item Physical entities are used in gmsh to identify the boundary of the particle by a single curve.
+   \item The grid displacement within a time step $\vek d_\text{g}$
+    is defined by solving a Laplace equation
+   \begin{equation}
+      \nabla\cdot(k^e\nabla\vek d_\text{g})=\vek 0 \label{eq:laplace_ale3}
+   \end{equation}
+     $\vek d_\text{g}$ is equal to the particle displacement
+     on the surface
+     of the particle (curve \texttt{C5}). On all other boundaries $\vek
+     d_\text{g}$ is set to zero. In Eq.~\eqref{eq:laplace_ale3} 
+   $k^e$ is a function that controls the deformation of the domain.
+   As suggested in \cite{Hu2001} we take $k^e$ 
+   constant on an element and equal to the inverse of the
+     area/volume of the element. In this way the deformation of the mesh is
+largely performed by the big elements and the small ones around the solid
+particle just move almost rigidly with the particle.
+   \item The mesh deformation is measured by 
+\[
+   f^e_1 = |\log(A^e/A^e_0)|\quad\text{ and } \quad
+   f^e_2 = |\log(S^e/S^e_0)|
+\]
+where $A^e$ and $S^e$ are the area and 
+the aspect ratio of an element $e$, respectively.
+The subindex 0 means the initial value.
+The aspect ratio of an element $S^e$ is defined by
+\[ 
+   S^e=(L_\text{max}^e)^2/A^e
+\]
+where $L^e_\text{max}$ is the maximum length of the sides. 
+Remeshing is performed if either of
+\[
+  f_1=\max_e f^e_1 \quad \text{ or } \quad 
+  f_2=\max_e f^e_2 
+\]
+exceed a certain
+threshold. This mesh quality criterion is identical to the one used
+in \cite{Hu2001}, where a threshold of 1.39 is used. This corresponds to the
+area or aspect ratio allowing to become four times larger or smaller than
+initially before remeshing. In the example \texttt{ale10.f90} we use the same
+threshold value of 1.39 (factor of four). In Figure~\ref{fig:remesh} we see the
+initial mesh, the deformed mesh and the mesh after remeshing.
+\end{itemize}
+\begin{figure}[hb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{mesh0000}\\[1cm]
+   \includegraphics[scale=0.5]{mesh0034}\\[1cm]
+   \includegraphics[scale=0.5]{mesh0035}
+   \end{center}
+   \caption{The initial mesh, a deformed mesh (after step 34)
+            and a mesh after remeshing (after step 35).}
+    \label{fig:remesh}
+\end{figure}
+
+
+\subsection{Couette flow with a freely suspended particle
+in a viscoelastic liquid. Remeshing using gmsh.}
+\label{sec:couette_ale_viscoelastic_remeshing}
+
+(This example has been developed by Nick Jaensson of the TU/e).
+
+We again
+consider a Couette problem (shear flow between two moving walls) with
+a (off-center) freely suspended particle. The example is similar to the example
+in Sec.~\ref{sec:couette_ale_stokes_remeshing}, but now the fluid is viscoelastic.
+The example files are \texttt{ale11.f90} and \texttt{ale12.f90} which use the
+explicit stress formulation and implicit stress formulation respectively.
+An extension of \texttt{ale12.f90} to 3D 
+is available as example \texttt{ale13.f90}.
+
+The time discretization used in \texttt{ale11.f90} (explicit stress) is
+the semi-implicit Gear scheme with velocity prediction \cite{Karniadakis91,Hulsen96}.
+\begin{equation}
+\frac32 \frac{\ten c^{n+1}}{\Delta t}+(\hat{\vek u}^{n+1}-
+ \vek u^{n+1}_\text{g})\cdot\nabla\ten c^{n+1}=
+ \frac{2\ten c^{n}-\frac12\ten c^{n-1}}{\Delta t} +
+2\ten g(\ten G^n,\ten c^n) -\ten g(\ten G^{n-1},\ten c^{n-1})
+\end{equation}
+where $\hat{\vek u}^{n+1}=2\vek u^n-\vek u^{n-1}$ and $\vek u^{n+1}_\text{g}$ is
+the grid velocity. Since a displacement based mesh deformation approach is used, 
+the mesh velocity can be determined using backwards differencing (BDF) and is thus 
+known at the current time step $t_{n+1}$.
+The velocity, pressure and velocity gradients at $t=0$ are found by
+solving the velocity-pressure-gradient
+problem without the extra stress tensor $\ten \tau$. The conformation tensor at $t=0$ is
+initialized with zero stress. The time stepping scheme is started by using a
+combined forward/backward Euler scheme with velocity prediction
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t}+(\hat{\vek u}^{n+1}-
+ \vek u^{n+1}_\text{g}) \cdot\nabla\ten c^{n+1}=
+ \frac{\ten c^{n}}{\Delta t} +\ten g(\ten G^n,\ten c^n)
+\end{equation}
+where $\hat{\vek u}^{n+1}=\vek u^n$. 
+
+For the time discretization, some field variables need to be known at previous
+timesteps. For the semi-implicit Gear scheme these are:
+$\vek u^n$, $\vek u^{n-1}$, $\ten G^n$, $\ten G^{n-1}$, $\ten c^n$
+and $\ten c^{n-1}$, after remeshing these will be obtained on the new mesh by solving a projection
+problem. Note, that in the BDF schemes to determine the mesh velocity, the previous mesh
+coordinates, $\vek x^n_\texttt{m}$ and $\vek x ^{n-1}_\texttt{m}$ are needed, which
+are not known when a remeshing is performed. To find the mesh velocity after remeshing, the
+new (remeshed) mesh at the previous time steps is found by projecting the coordinates of the
+old (discarded) mesh at the previous time steps (see Fig.~\ref{fig:ale_remeshing}).
+
+In \texttt{ale12.f90} (and \texttt{ale13.f90})
+the implicit stress formulation is used, which means
+that the velocity-pressure-gradient problem
+is solved first in a time step, using a prediction for the conformation tensor.
+This yields the velocity and velocity gradients
+at the current time step, $\vek u^{n+1}$ and $\ten G^{n+1}$ which can be used
+directly in the viscoelastic problem, so the velocities
+and gradients do not have to be projected. 
+
+Some notes on the source:
+\begin{itemize}
+   \item Similarly to \texttt{ale10.f90}, remeshing is performed when the
+     mesh becomes too distorted. By default, the remeshing criterion is set unnecessarily low
+     to show the effect of remeshing better.
+   \item It would be possible to use the (known) Dirichlet boundary conditions
+     and/or constraints in the
+     projection problem (e.g. the velocity on the walls and the particle or periodic boundaries).
+     Although this would increase the accuracy of the projection, the same system
+     matrix can not be used for all projections. In \texttt{ale11.f90} and
+     \texttt{ale12.f90}, no Dirichlet
+     boundary conditions are used in the projection problem, and the same system matrix
+     is used for all projections.
+   \item The velocity and mesh coordinates are quadratically interpolated ($P_2$),
+     so the projection is also quadratic. The conformation tensor and velocity gradients
+     are linearly interpolated ($P_1$), so the projection is linear. To be able to project the 
+     field variables using the same system matrix, a vector is created in each of the problems
+     with the number of components to be projected. The variables \texttt{ncompv\_P2} and
+     \texttt{ncompv\_P1} give the number of components to be projected using $P_2$ and $P_1$
+     respectively. Be aware that the gradients are part of the 
+     gradient-velocity-pressure problem, but are projected using a vector in the
+     conformation problem. So when the data is transferred using \texttt{transfer\_data},
+     both problems should be given.
+   \item The logical \texttt{check\_projection} can be set to \texttt{.true.} to print VTK
+    files before and after the projection that can be used to investigate the projection.
+   \item For the integration in the projection problem, tabulated
+    results using Gauss-Legendre are used. The integration rule can be set in 
+    \texttt{gauss\_proj}
+    which, for triangles, gives the maximum polynomial order for exact integration. 
+\item Similarly to \texttt{ale8.f90}, if the log conformation approach is used (\texttt{logc = 1}), a
+  projection problem is solved at each time step to find $\ten c^n$ from $\ten s^n$
+  ($\ten c^n = \exp({\ten s^n})$).
+\end{itemize}
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{ale_remeshing}
+   \end{center}
+   \caption{When a remeshing is performed, a new (remeshed)
+     mesh (with coordinates $\vek x_\text{m,new}^{n+1}$)
+     is created using the particle position $\vek X_\text{p}^{n+1}$. To obtain the new mesh at
+     $t_n$ ($\vek x_\text{m,new}^n$), the coordinates of the old (discarded) mesh at
+     $t_n$ ($\vek x_\text{m,old}^n$) are set as nodal values 
+     in the old mesh at $t_{n+1}$ and projected onto the new mesh at $t_{n+1}$. The new mesh at 
+     $t_n$ ($\vek x_\text{m,new}^n$)  can now simply be obtained by using the projected
+     values as nodal coordinates. The new mesh at $t_{n-1}$ is obtained in a similar way. 
+     Note, that the mesh deformation is exaggerated for clarity.}
+    \label{fig:ale_remeshing}
+\end{figure}
+
+\subsection{Moving boundary due to capillary forces (surface tension, contact angle, gravity).}
+\label{sec:capillary}
+
+This example computes the interface between a Newtonian fluid in a cup
+and gas (having a constant zero pressure). The surface tension is
+$\gamma$, the density of the fluid is $\rho$ and the gravity constant is
+$g$. Assuming a circular cup of radius $R$, the shape of the interface
+(meniscus) is governed by the Bond number:
+\[
+   \mathrm{Bo} = \frac{\rho g R^2}\gamma
+\]
+For large values of the Bond number ($\mathrm{Bo}\gg1$) gravity dominates over surface tension and the interface is flat, except a region near the wall. The size of that wall region is given by the capillary length:
+\[
+    L_\text{c} = \sqrt{\frac{\gamma}{\rho g}}
+\]
+The height of the interface in this region is governed by the contact angle $\theta_\text{c}$, see Figure~\ref{fig:meniscus}. Note, that $\mathrm{Bo}=R^2/L_\text{c}^2$. The contact angle is given by Young's equation:
+\[
+  \gamma\cos\theta_\text{c}+\gamma_\text{fw}-\gamma_\text{aw}=0\quad\Rightarrow\quad 
+  \cos\theta_\text{c}=-\frac{\gamma_\text{fw}-\gamma_\text{aw}}\gamma=-\frac{\Delta\gamma_\text{w}}\gamma
+\]
+where we introduced the difference in wall surface tension $\Delta\gamma_\text{w}=\gamma_\text{fw}-\gamma_\text{aw}.$
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.5]{meniscus}
+   \end{center}
+   \caption{Fluid-air interface.}
+    \label{fig:meniscus}
+\end{figure}
+
+For medium values of the Bond numbers ($\mathrm{Bo}=\mathcal{O}(1-10)$) the capillary length is similar to the length of the domain and the shape of the interface is affected in the whole region and capillary effects become important.
+
+For small values of the Bond numbers ($\mathrm{Bo}\ll1$) surface tension dominates and the shape of the interface is approximately spherical. For the limit $\mathrm{Bo}=0$ the shape is spherical with a Laplace pressure of $2\Delta\gamma_\text{w}/R$ and a radius of curvature $-R\gamma/\Delta\gamma_\text{w}$.
+
+The example file is \texttt{moving\_boundary1.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample moving\_boundary}
+\end{quote}
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}) to solve the height function equation.
+The contact angle is imposed by applying a surface tension on the fluid-wall interface of $\Delta\gamma_\text{w}$.
+The fluid is Newtonian and the viscosity $\mu$ determines the time for the surface to become steady.
+Perfect slip is assumed at the wall(s).
+Both 2D and axisymmetric cases can be solved. Both the symmetric and the full problem (two walls) can be solved. In the axisymmetric case, the full problem is for a fluid between two concentric cylinders.
+Below the free surface the nodes of the ALE mesh move according to the solution of a Poisson equation. The nodes on the wall(s) move proportional to the vertical height of the free surface and the position of the node.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput1.txt}\\
+   \texttt{moving\_boundary1 < input\_moving\_boundary1.txt}
+\end{quote}
+Inspect the source files to see which data and plot files are generated.
+Results of steady interface for three values of the Bond number are shown in
+Fig.~\ref{fig:capillary}.
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.07]{cup1}
+   \includegraphics[scale=0.07]{cup2}
+   \includegraphics[scale=0.07]{cup3}
+   \end{center}
+   \caption{Steady shape of the interface for three values of the Bond number (left to right): $\mathrm{Bo}=160$, $16$ and $0$. Axisymmetric case where the symmetry line is the right boundary of the domain. Contact angle $\theta_\text{c}=60^\circ$.}
+    \label{fig:capillary}
+\end{figure}
+
+\subsection{Moving boundary in a rotating cup due to centrifugal forces and gravity.}
+\label{sec:centrifuge}
+
+This example computes the interface between a Newtonian fluid in a cup and gas (having a constant zero pressure). 
+The cup is rotating with a rotation rate $\omega$, 
+ the density of the fluid is $\rho$ and the gravity constant is $g$. Assuming a circular cup of radius $R$, the shape of the interface without surface tension is found by a balance of static pressure due to gravity ($\rho g h$) and pressure due to the rotation ($\frac12\rho\omega^2r^2$):
+\[
+   h(r) = \frac{\omega^2 r^2}{2g}
+\]
+
+The example file is \texttt{moving\_boundary2.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample moving\_boundary}
+\end{quote}
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}) to solve the height function equation.
+The fluid is Newtonian. Surface tension can be included, similar to the example in Sec.~\ref{sec:capillary}.
+Perfect slip is assumed at the wall(s).
+Both 2D and axisymmetric cases can be solved. Both the symmetric and the full problem (two walls) can be solved. In the axisymmetric case, the full problem is for a fluid between two concentric cylinders.
+Below the free surface the nodes of the ALE mesh move according to the solution of a Poisson equation. The nodes on the wall(s) move proportional to the vertical height of the free surface and the position of the node.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput2.txt}\\
+   \texttt{moving\_boundary2 < input\_moving\_boundary2.txt}
+\end{quote}
+Inspect the source files to see which data and plot files are generated.
+Results of a steady interface is shown in
+Fig.~\ref{fig:centrifuge}. Note, that if there is not enough fluid in the cup to create the required height, the problem becomes much more difficult due to the thin fluid layer at the bottom of the cup.
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.2]{centrifuge1}
+   \includegraphics[scale=0.2]{centrifuge2}
+   \end{center}
+   \caption{Steady shape of the interface for $\omega=3$, $g=10$, $R=4$ (figure on the right). 
+   The figure on the left is the initial fluid shape. Axisymmetric case where the symmetry line is the right boundary of the domain. Surface tension has been included (contact angle $\theta_\text{c}=60^\circ$).}
+    \label{fig:centrifuge}
+\end{figure}
+
+\subsection{Moving boundary in a Couette device due to viscoelastic normal stress differences (Weissenberg effect) and gravity.}
+\label{sec:weisseff}
+
+This example computes the interface between a viscoelastic fluid in a Couette device and gas (having a constant zero pressure). 
+The inner cylinder is rotating with a rotation rate $\omega$, 
+ the density of the fluid is $\rho$ and the gravity constant is $g$.  
+The example file is \texttt{moving\_boundary3.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample moving\_boundary}
+\end{quote}
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}) to solve the height function equation.
+The fluid is viscoelastic (Giesekus). Surface tension can be included, similar to the example in Sec.~\ref{sec:capillary}. At the ``bottom'' there is perfect slip for radial and tangential motion. The vertical velocity at the bottom is set to zero (Dirichlet). At the inner and outer cylinder perfect slip is assumed in vertical direction. In radial and tangential direction the velocities are imposed (Dirichlet).
+Below the free surface the nodes of the ALE mesh move according to the solution of a Poisson equation. The nodes on the wall(s) move proportional to the vertical height of the free surface and the position of the node.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput3.txt}\\
+   \texttt{moving\_boundary3 < input\_moving\_boundary3.txt}
+\end{quote}
+Inspect the source files to see which data and plot files are generated.
+Results of a steady interface is shown in
+Fig.~\ref{fig:weisseffect}. 
+A small amount of surface tension has been included to stabilize the interface. During the start-up of the flow
+the interface seems to become vertical at some point, which cannot be handled by the height function approach.
+ For this case, we have added a surface tension of $\gamma=2\Delta x G$, where $\Delta x$ is the size of elements on the interface and the elastic modulus is $G=\eta_\text{p}/\lambda$. The argument here is: we want the surface tension to be active on grid scale, i.e.\ the grid Laplace pressure $\gamma/2\Delta x\approx G$. The factor 2 seems to work for this example, but for other examples a different factor might be necessary. Note, that the grid emulsion time scale $\Delta x \eta_\text{p}/\gamma=\lambda/2$.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.15]{weisseff1}
+   \includegraphics[scale=0.15]{weisseff2}
+   \end{center}
+   \caption{Steady shape of the interface for $\omega=1$, $\rho g=1$, $R_1=1$, $R_2=4$ (figure on the right). 
+   Giesekus model $\eta_\text{s}=0.1$, $\eta_\text{p}=1$, $\lambda=2$, $\alpha=0.01$.
+   The figure on the left is the initial fluid shape. Axisymmetric, where the inner cylinder (radius $R_1$) is at the right boundary of the domain. Surface tension has been included (contact angle $\theta_\text{c}=90^\circ$).}
+\label{fig:weisseffect}
+\end{figure}
+
+There are two other examples, \texttt{moving\_boundary3a.f90} and \texttt{moving\_boundary3b.f90}, that use a different discretization of the velocities and/or height function. The example \texttt{moving\_boundary3a.f90}
+uses $P_1$ shape functions for the height function, whereas \\
+\texttt{moving\_boundary3b.f90} optionally uses $Q_1\text{-iso-}Q_2$ shape functions for the velocity and/or 
+$P_1\text{-iso-}P_2$ line elements for the height function. Note however, that for this particular problem there is no need to use a different discretization and the 
+original \texttt{moving\_boundary3.f90} is just fine.
+
+\subsection{Open channel flow: curved boundary due to the second normal stress difference.}
+\label{sec:curvedN2}
+
+This example computes the viscoelastic flow in an open channell. The surface becomes curved due to second normal stress differences \cite{kuo_use_1974}. 
+The example file is \texttt{moving\_boundary4.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample moving\_boundary}
+\end{quote}
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}) to solve the height function equation.
+The fluid is viscoelastic (Giesekus). There is perfect slip on the side walls in vertical direction. The flow is imposed by a flow rate in third direction.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput4.txt}\\
+   \texttt{moving\_boundary4 < input\_moving\_boundary4.txt}
+\end{quote}
+Inspect the source files to see which data and plot files are generated.
+Results of a steady interface is shown in
+Fig.~\ref{fig:curvedN2}. 
+A small amount of surface tension has been included to stabilize the interface near the walls. See Sec.~\ref{sec:weisseff} for a discussion on the amount of surface tension added.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.1]{gootje1}
+   \includegraphics[scale=0.1]{gootje2}
+   \includegraphics[scale=0.1]{gootje3}
+   \end{center}
+   \caption{Steady shape of the interface for $\alpha=0$ (Oldroyd-B), $\alpha=0.01$ and $\alpha=0.1$ for the
+   Giesekus model.
+   Symmetry is assumed at the right boundary of the domain. Surface tension has been included for stability (contact angle $\theta_\text{c}=90^\circ$).}
+\label{fig:curvedN2}
+\end{figure}
+
+\subsection{Fountain flow of a Newtonian fluid. Imposed parabolic in/out profile.}
+\label{sec:fountainN1}
+
+This example computes the fountain flow for a Newtonian fluid with an imposed in/out profile (see Fig.~\ref{fig:fountaingeom1}). See \cite{bogaerds_stability_2004} for more info on the fountain flow problem.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{fountaingeom}
+   \end{center}
+   \caption{Flow domain for the fountain flow computation. The upper and lower wall have a velocity $U$ to the left. On the left boundary a parabolic velocity profile is imposed have a flow rate $Q=0$. On the right, the initally flat free surface will become curved and the contact points on the upper and lower walls will move to the left until a steady state is reached. Note: $H$ is the half-height of the domain and $L$ is the initial length of the domain with a flat free surface.}
+\label{fig:fountaingeom1}
+\end{figure}
+
+The example file is \texttt{fountain\_flow1.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample fountain\_flow}
+\end{quote}
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}) to solve the height function equation for obtaining the position of the free surface. Taylor-Hood $Q_2/Q_1$ quad elements are used for the velocity/pressure and $P_2$ shape functions are used for the height function.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_four\_blocks < meshinput1.txt}\\
+   \texttt{fountain\_flow1 < input\_fountain\_flow1.txt}
+\end{quote}
+Inspect the source files to see which data and plot files are generated.
+
+After starting the flow, the contact points will move to the left until a steady state is reached. In Figure~\ref{fig:contactpoint} the position of the contact point (upper and lower point are identical within truncation errors) is shown relative to the steady state value. We clearly see the a single exponential decay to a steady value over a large time interval.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{contact_position}
+   \end{center}
+   \caption{Position of the contact point relative to the steady state value as a function of time. Note: $H=1$, $U=1$, $\mu=1$, $L=10$. The green line represents $\exp(-1.2t)$, where $t$ is the time.}
+\label{fig:contactpoint}
+\end{figure}
+Results of a steady interface with streamlines is shown in
+Fig.~\ref{fig:flowfront}. 
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.2]{flowfront1}
+   \end{center}
+   \caption{Steady fountain flow with streamlines near the flow front.}
+\label{fig:flowfront}
+\end{figure}
+
+There are two other examples, \texttt{fountain\_flow1a.f90} and \texttt{fountain\_flow1b.f90}, that use a different discretization of the velocities and/or height function. The example \\
+\texttt{fountain\_flow1a.f90}
+uses $P_1$ shape functions for the height function, whereas \\
+\texttt{fountain\_flow1b.f90} uses $Q_1\text{-iso-}Q_2$ shape functions for the velocity and 
+$P_1\text{-iso-}P_2$ line elements for the height function. Note however, that for this particular problem there is no need to use a different discretization, but it can be useful for viscoelastic fluid flow.
+
+\subsection{Cone-plate with free surface (axisymmetric with swirl)}
+\label{sec:cone-plate_ve_si_fs}
+
+(This example has been contributed by Michelle Spanjaards of the TU/e)
+
+The problem is an extension of the viscoelastic problem in Sec.~\ref{sec:cone-plate_ve_si}.
+The geometry is depicted in Figure~\ref{fig:coneplategeom}. The plate (curve 1) is stationary ($\vek u=\vek 0$). The cone (curve 2) is rotating around the $z$-axis ($\vek u=\omega r \vek e_\theta$). Curve 3 is a traction free moving surface ($\vek t_\text{N}=\vek 0$) and is \emph{initially} of a circular shape having point 1 as its center. The angle between the cone and plate $\theta_\text{cp}$ is 0.1~rad in the figure, but can be adjusted. The shear rate is approximately constant and is given by $\omega/\theta_\text{cp}$. 
+
+The initially circular shape of the free surface cannot be maintained and the surface starts to move.
+The contact points 2 and 3 are able to move along the plate and cone, respectively. It is assumed that there is perfect slip (no shear stress) in a direction tangential to the plane and normal the $\theta$ direction of Figure~\ref{fig:coneplategeom}. Optionally, surface tension can be added.
+
+The free surface is described in a polar coordinate system\footnote{Actually, the free surface is described in a \emph{spherical} coordinate system $(\phi,\rho,\theta)$, where the polar system is obtained for the cross section at a fixed $\theta$.} $(\phi,\rho)$, where $\phi$ is the angle relative to the plate and $\rho$ the distance to the origin, see Figure~\ref{fig:polar_cone_plate}. The height function describing the free surface is taken to be the distance from the origin as a function of the angle $\phi$,
+i.e.\ $\rho(\phi)$, for the points on the interface. The kinematic equation for $\rho(\phi)$ to be solved on a fixed domain $\phi\in(0,\theta_\text{cp})$ is given by
+\[
+   \pderiv{\rho}t+\frac{u_\phi}{\rho}\pderiv{\rho}\phi=u_\rho
+\]
+where $u_\phi=\vek e_{\phi}\cdot\vek u$ and $u_\rho= \vek e_\rho\cdot \vek u$.
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{polar}
+   \end{center}
+   \caption{Polar coordinate system used for the height function.}
+\label{fig:polar_cone_plate}
+\end{figure}
+The source of the example is in the file \texttt{coneplate4.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample coneplate}
+\end{quote}
+
+\subsection{Sagging of a cylindrical fluid column between two flat plates}
+\label{sec:sagging}
+
+This example computes the sagging of cylindrical column between two flat plates under the influence of gravity. 
+Surface tension at the fluid-air interface and a contact angle between the fluid and wall has been taken into account. Perfect slip (zero friction) has been assumed between the fluid and flat plates.
+
+The example file is \texttt{moving\_boundary5.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample moving\_boundary}
+\end{quote}
+Use is made of the add-on surface advection (Sec.~\ref{sec:surfaceadvection}) to solve the height function equation.
+The fluid is Newtonian and inertia has been neglected.
+
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput5.txt}\\
+   \texttt{moving\_boundary5 < input\_moving\_boundary5.txt}
+\end{quote}
+Inspect the source files to see which data and plot files are generated.
+Results are shown in Fig.~\ref{fig:sagging}. Note, that the initial column is not consistent with the imposed contact angle and that there is an immediate shape change at $t=0^+$.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.08]{sagging1}
+   \includegraphics[scale=0.08]{sagging2}
+   \end{center}
+   \caption{Sagging of an initially cylindrical fluid column under the influence of gravity. Left: Initial column. Right: Column after some time.}
+\label{fig:sagging}
+\end{figure}
+

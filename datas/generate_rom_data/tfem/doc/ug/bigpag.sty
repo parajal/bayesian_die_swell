@@ -1,0 +1,108 @@
+% bigpag.sty developed form a4.sty (Martien Hulsen 28-01-90)
+% ---------------------------------------------------------------------
+% This is A4.sty in text format.
+%
+% ---------------------------------------------------------------------
+% This file is based on the document style options A4 and A4wide 
+% that can be found in the Rochester style archive.
+% These files were written by 
+%     John Pavel,         May  1987,    `a4' document style option.
+%     Jean-Francois Lamy, July 1986,    `A4wide' document style option.
+%
+% In the near future, this document style option will be modified,
+% especially for use with ten point typefaces.
+%
+% Version 0.1: 28 Mar 89
+%              combined A4.sty and A4wide.sty from Rochester archive
+%         0.2: 9 Jun 89
+%              decreased \textwidth for 10pt and 11pt
+%
+% Editor     : Nico Poppelier
+%
+%         0.3: 28 Jul 89
+%              decreased \textwidth for 11pt and 12pt
+%              modified the margins for twodsided printing so that
+%              text is printed in the same place on both pages
+%              modified marginparwidth's to fit on the paper
+%              modified the comments
+%
+% Editor     : Johannes Braams
+%
+%         0.4: 28 Jan 90
+%              \evensidemargin and \oddsidemargin changed to center the
+%              text on the page for onesided printing.
+%              bigpag.sty has 0.5in wider \textwidth than a4.sty
+%              Number of lines for 12pt increased to 43 (=+1).
+%
+%
+% Editor     : Martien Hulsen
+% ---------------------------------------------------------------------
+%
+%
+% First, redefine the \textheight and \topmargin
+% for A4 paper, as opposed to US paper.
+%
+% \textheight is the height of text (including footnotes and figures,
+% excluding running head and foot).
+%
+% Adjusting \textheight will adjust position of the bottom of the page.
+% Must preserve `(\textheight - \topskip) divides \baselineskip'.
+% \topskip always appears to be 10pt.
+%
+% Following Lamport's change to other style files on 24 Jun 86,
+% changed to explicitly compute \textheight to avoid roundoff.
+% The value of the multiplier was calculated as the floor of the old
+% \textheight minus \topskip, divided by \baselineskip for
+% \normalsize.
+%
+%
+\topmargin 0 pt     % Nominal distance from top of paper to top of page
+\ifcase \@ptsize
+    % modifications for 10 pt
+    \textheight 53\baselineskip
+\or % modifications for 11 pt
+    \textheight 46\baselineskip
+\or % modifications for 12 pt
+    \textheight 43\baselineskip
+\fi
+\advance\textheight by \topskip
+%
+%
+% Now redefines the margins so that they are more in line with
+% what we are used to see.
+%
+\ifcase \@ptsize
+    % modifications for 10pt
+    \textwidth      5.50in    % Width of text line.
+  \if@twoside
+    \oddsidemargin  0.30in    % Left margin on odd-numbered pages.
+    \evensidemargin 0.50in    % Left margin on even-numbered pages.
+    \marginparwidth 1.00in    % Width of marginal notes.
+  \else
+    \oddsidemargin  0.40in    % Note that \oddsidemargin = \evensidemargin
+    \evensidemargin 0.40in
+    \marginparwidth 1.00in
+  \fi
+\or % modifications for 11 pt
+    \textwidth      5.70in    % Width of text line.
+  \if@twoside
+    \oddsidemargin  0.20in    % Left margin on odd-numbered pages.
+    \evensidemargin 0.40in    % Left margin on even-numbered pages.
+    \marginparwidth 0.85in    % Width of marginal notes.
+  \else
+    \oddsidemargin  0.30in    % Note that \oddsidemargin = \evensidemargin
+    \evensidemargin 0.30in
+    \marginparwidth 0.85in
+  \fi
+\or % modifications for 12 pt
+    \textwidth      6.20in    % Width of text line.
+  \if@twoside
+    \oddsidemargin -0.05in    % Left margin on odd-numbered pages.
+    \evensidemargin 0.15in    % Left margin on even-numbered pages.
+    \marginparwidth 0.70in    % Width of marginal notes.
+  \else
+    \oddsidemargin  0.05in    % Note that \oddsidemargin = \evensidemargin
+    \evensidemargin 0.05in
+    \marginparwidth 0.70in
+  \fi
+\fi

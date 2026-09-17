@@ -1,0 +1,194 @@
+This file describes how to install tfem on Linux. This a generic file.
+See INSTALL.fedora, INSTALL.macos for more specific info on certain systems.
+----------------------------------------------------------------------------
+
+It is assumed you are using a Linux (or Unix) distribution where the
+"usual suspects" have already been installed:
+
+    * bash
+    * basic Unix utilities (sed, echo, sort, ...)
+    * git
+    * make
+    * ctags (Universal Ctags form https://ctags.io)
+    * fig2dev
+    * ghostscript
+    * a pdf viewer
+    * ... ?
+
+
+System requirements
+===================
+
+1) A fortran compiler supporting the latest standards. Recent versions of
+   the following compilers (*1) are known to work:
+
+  * Intel Fortran (*2)
+  * Gfortran
+  * NAG Fortran
+
+Other compilers might work as well, but you will be on your own.
+
+2) An optimized BLAS/LAPACK library, such as MKL (*3) or OpenBLAS (*4).
+
+3) A complete LaTeX installation to build the userguide.
+
+4) (Option) An external mesh generator. For example gmsh.
+
+5) (Option) An external visualization program. For example paraview.
+
+NOTES:
+ *1 A new tfem revision is only tested against the most recent released
+    versions of the three mentioned compilers.
+ *2 Only the new ifx Intel Compiler is supported. Do not use ifort anymore.
+ *3 See file README.MKL for more instructions on using MKL.
+ *4 Use the system provided version of OpenBLAS, where possible. See file
+    README.OpenBLAS for instructions on compiling the library yourself.
+
+
+Installing TFEM from a fresh checkout tree
+==========================================
+
+(See Userguide how to check out a fresh TFEM tree using git).
+
+1) Create a file Mdefs.mk in the root of the tree to define the Makefile macros.
+
+Copy the file Mdefs.mk from Mdefs_distr.mk:
+
+  cp Mdefs_distr.mk Mdefs.mk
+
+and edit Mdefs.mk to represent your system (libraries/compiler(s)/options).
+
+NOTE: If you do not have or have not compiled the HSL libary (see below),
+you need to add the -DNO_LIBHSL flag to the FPPFLAGS macro in the Mdefs.mk file.
+
+2) You need a linear equation solver. The default solver is MA41 from the
+HSL2002 library, however you need a license for that. The department of
+Mechanical Engineering of the TU/e has an academic licence and the source
+files can be obtained from Martien Hulsen (m.a.hulsen@tue.nl). Unpack the
+hsl2002.tar.gz file into the tfem root directory by using the commands:
+
+  cd <root-of-tfem>
+  tar zxf <path_of_hsl2002.tar.gz>/hsl2002.tar.gz
+
+and type
+
+  make libhsl
+  make libhsldirclean
+
+The documentation is in the directory doc and can be viewed with the tfdoc
+command.
+
+NOTE: If you do not have a license for HSL, you can use other solvers. See the
+userguide.
+
+3) Compile/build TFEM. Type:
+
+  make all
+
+The target 'all' will build the core, some common addons, basic physics add-ons
+and the userguide. Note: the target 'all' is the default target, so typing
+just 'make' is also sufficient is this case.
+
+Some computational nodes/machines do not provide LaTeX and
+
+  make allc
+
+will build everything 'all' does, except for the userguide.
+
+NOTE: If you do not have a license for HSL or you will use another linear solver
+and did not compile libhsl, type
+
+  make all libhsldummy
+
+The interface to HSL (the add-on hsl) is still compiled, but a dummy hsl
+library is created to resolve the missing symbols.
+
+
+Installing additional add-ons
+==============================
+
+Although the name suggest otherwise: not all add-ons are installed for the
+target 'all'. To install additional add-ons type
+
+  make all <add-on-name(s)>
+
+If the tfem tree has already been build using `make all', the target 'all' can
+be omitted. It is however recommended to always include the 'all' target to be
+sure it is up to date.
+
+An alternative for adding add-ons to the arguments of make is setting an
+environment variable TFEMADDONS. Examples:
+
+  csh:
+
+    setenv TFEMADDONS "viscoelastic inertia"
+
+  bash:
+
+    export TFEMADDONS="viscoelastic bcf diffuse_interface elastic \
+    viscoelastic_integration inertia generalized_stokes"
+
+The add-ons specified in TFEMADDONS will be added to "all". So typing just
+"make" will include compilation of the additional add-ons.
+
+If you want to include all "physics" related add-ons in one go, type:
+
+  make all physics
+
+You can install other add-ons (like solvers etc.) by adding them to the
+command line or including these in the environment variable TFEMADDONS.
+Similarly, you can use
+
+  make allc physics
+
+to exclude the LaTeX documentation.
+
+
+Updating TFEM to a new version
+==============================
+
+Use git to update your tree (see userguide). It is advised to always
+rebuild the whole tree to get rid of possible incompatibilities between new
+and previously compiled routines. Therefore type in the root of the tfem tree:
+
+  make clean
+  make all <add-on-name(s)>
+
+Rebuild your own code also after the update.
+
+
+Rebuilding the HSL solver library
+=================================
+
+The HSL solver library is usually not updated and recompiled. However, it is
+a good idea to rebuild the library if your compiler has been updated to a newer
+version. For the HSL library this amounts to
+
+make libhslclean
+make libhsl
+
+
+Dummy libraries
+===============
+
+If you do not have external libraries installed (for example HSL or Lapack), you
+will get unresolved symbols while building an executable. You can build dummy
+symbols by typing
+
+  make libhsldummy
+
+for HSL and
+
+  make liblapackdummy
+
+for Lapack.
+
+
+Developers
+==========
+
+If you are developer of sources in the tfem tree run from the root of the
+tree:
+
+  make developer
+

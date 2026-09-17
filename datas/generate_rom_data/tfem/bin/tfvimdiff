@@ -1,0 +1,83 @@
+#!/bin/sh
+
+# tfvimdiff: show difference with tfem sourcefile(s) using vimdiff
+
+mvm=
+gvm=
+rev=
+while getopts mgr optvar; do
+  case "$optvar"
+  in
+     m) mvm=1 ;;
+     g) gvm=1 ;;
+     r) rev=1 ;;
+     "?") exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ $# -eq 0 ]
+then
+     echo "Usage: tfvimdiff [OPTIONS] files(s)"
+     echo "Options:   (Description)          (default)"
+     echo "   -m      use mvimdiff           use vimdiff"
+     echo "   -g      use gvimdiff           use vimdiff"
+     echo "   -r      diff local -> tfem     diff tfem -> local"
+     exit
+fi
+
+if [ $mvm ]; then
+  vd=mvimdiff
+elif [ $gvm ]; then
+  vd=gvimdiff
+else
+  vd=vimdiff
+fi
+
+. settfemroot
+. testdir
+
+. $tp/bin/setsrcdirs
+
+SRCDIRS="test misc $SRCDIRS"
+
+for dir in $tp/examples/*
+do
+  if [ -d $dir ]
+  then
+    SRCDIRS="examples/`basename $dir` $SRCDIRS"
+  fi
+done
+
+while  [ -n "$1" ]
+do
+	if [ `basename $1 .f` == "$1" -a \
+	     `basename $1 .f90` == "$1" -a \
+	     `basename $1 .F90` == "$1" ]
+        then
+	  echo "Source file extension is not .f, .f90 or .F90: $1"
+          echo "Aborting"
+    	  exit
+        fi
+	notfound=t
+	for dir in $SRCDIRS
+	do	if [ -s $tp/$dir/$1 ]
+		then	notfound=
+                        if [ -f $1 ]
+                        then
+                          if [ $rev ]; then
+		             $vd -R $1 $tp/$dir/$1
+			     break
+                          else
+                             $vd -R $tp/$dir/$1 $1
+			     break
+                          fi
+                        fi
+		fi
+	done
+	if	[ $notfound ]
+	then	echo "$1 could not be found"
+	fi
+	shift
+done

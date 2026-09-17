@@ -1,0 +1,41 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+concentric_cylinder1:
+
+ Stokes problem on a rectangular (2D) domain with 3D velocities (axisymmetric).
+ Cylindrical coordinates with circumferential velocity included (swirl).
+ Periodical conditions and imposed flow rate in z-direction.
+
+concentric_cylinder2:
+
+ Viscoelastic problem on a rectangular (2D) domain with 3D velocities
+ (axisymmetric).
+ Cylindrical coordinates with circumferential velocity included (swirl).
+ Periodical conditions and imposed flow rate in z-direction.
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+
+concentric_cylinder3:
+
+ Viscoelastic problem on a rectangular (2D) domain with 3D velocities
+ (axisymmetric).
+ Cylindrical coordinates with circumferential velocity included (swirl).
+ Periodical conditions and imposed flow rate in z-direction.
+ DEVSS-G/SUPG
+ second-order time integration to steady state
+
+concentric_cylinder4:
+
+ Viscoelastic problem on a rectangular (2D) domain with 3D velocities
+ (axisymmetric).
+ Cylindrical coordinates with circumferential velocity included (swirl).
+ Periodical conditions and imposed flow rate in z-direction.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady state
+

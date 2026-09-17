@@ -1,0 +1,90 @@
+#
+#  This file is part of MUMPS 5.1.2, released
+#  on Mon Oct  2 07:37:01 UTC 2017
+
+#Start orderings
+SCOTCHDIR  = ${HOME}/scotch_6.0.5a
+ISCOTCH    = -I$(SCOTCHDIR)/include
+
+LSCOTCH    = -L$(SCOTCHDIR)/lib -lesmumps -lscotch -lscotcherr
+
+LPORDDIR = $(topdir)/PORD/lib/
+IPORD    = -I$(topdir)/PORD/include/
+LPORD    = -L$(LPORDDIR) -lpord
+
+LMETISDIR = ${HOME}/metis-5.1.0/build/Linux-x86_64/libmetis
+IMETIS    = -I${HOME}/metis-5.1.0/include
+
+LMETIS    = -L$(LMETISDIR) -lmetis
+
+ORDERINGSF = -Dscotch -Dmetis -Dpord
+ORDERINGSC  = $(ORDERINGSF)
+
+LORDERINGS = $(LMETIS) $(LPORD) $(LSCOTCH)
+IORDERINGSF = $(ISCOTCH)
+IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)
+
+#End orderings
+########################################################################
+
+########################################################################
+# DEFINE HERE SOME COMMON COMMANDS, THE COMPILER NAMES, ETC...
+
+OPENMPIBIN = ${HOME}/openmpi-3.0.1/install/bin
+
+# Library extension, + C and Fortran "-o" option
+# may be different under Windows
+LIBEXT  = .a
+OUTC    = -o
+OUTF    = -o
+# RM : remove files
+RM      = /bin/rm -f
+# CC : C compiler
+CC      = $(OPENMPIBIN)/mpicc
+# FC : Fortran 90 compiler
+FC      = $(OPENMPIBIN)/mpifort
+# FL : Fortran linker
+FL      = $(OPENMPIBIN)/mpifort
+# AR : Archive object in a library
+#      keep a space at the end if options have to be separated from lib name
+AR      = ar vr 
+# RANLIB : generate index of an archive file
+#   (optionnal use "RANLIB = echo" in case of problem)
+RANLIB  = ranlib
+#RANLIB  = echo
+
+MKLPATH = $(MKLROOT)/lib/intel64
+MKLSCALAP = -L$(MKLPATH) -lmkl_scalapack_lp64 -lmkl_intel_thread -lmkl_intel_lp64 -lmkl_core -lmkl_blacs_openmpi_lp64 -lmkl_gf_lp64 -liomp5 -lm -ldl
+
+
+# INCLUDE DIRECTORY FOR MPI
+INCPAR = -I${HOME}/openmpi-3.0.1/install/include
+
+# LIBRARIES USED BY THE PARALLEL VERSION OF MUMPS: $(SCALAP) and MPI
+LIBMPI = -L${HOME}/openmpi-3.0.1/install/lib
+LIBPAR = $(MKLSCALAP) $(LIBMPI) -lmpi
+
+# DEFINE HERE YOUR BLAS LIBRARY
+
+LIBBLAS = -L$(MKLPATH) -lmkl_intel_thread -lmkl_intel_lp64 -lmkl_core -lmkl_blacs_openmpi_lp64 -lmkl_gf_lp64 -liomp5 -lm -ldl
+
+# DEFINE HERE YOUR PTHREAD LIBRARY
+LIBOTHERS = -lpthread
+
+# FORTRAN/C COMPATIBILITY:
+#  Use:
+#    -DAdd_ if your Fortran compiler adds an underscore at the end
+#              of symbols,
+
+CDEFS = -DAdd_
+
+#COMPILER OPTIONS
+OPTF    = -O2 -fopenmp
+OPTC    = -O2 -I. -fopenmp
+OPTL    = -O2 -fopenmp
+
+#Parallel:
+INCS = $(INCPAR)
+LIBS = $(LIBPAR)
+LIBSEQNEEDED =
+

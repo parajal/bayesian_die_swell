@@ -1,0 +1,99 @@
+#!/bin/bash
+                                                                                
+# dotiming         : Run all programs
+# dotiming program : Run a single program
+
+# result is in timing.out
+
+# uncomment the following line if intel libraries on macOS cannot be found
+#export DYLD_LIBRARY_PATH=$LIBRARY_PATH
+
+if [ -f timing.out ]; then
+   rm timing.out
+fi
+
+# system info
+
+echo "Benchmark output on "`date` >> timing.out
+
+echo >>timing.out
+echo "System info:" >> timing.out
+echo "============" >> timing.out
+echo >> timing.out
+
+uname -a >>timing.out
+sys=`uname -s | cut -c 1-5`
+if [ "$sys" = Darwi ] ; then 
+  sysctl -n machdep.cpu.brand_string >>timing.out
+else
+  lscpu |grep "Model name" |cut -c22- >>timing.out
+fi
+
+echo >>timing.out
+echo "Environment variables:" >> timing.out
+echo "======================" >> timing.out
+echo >> timing.out
+
+echo MKLROOT=$MKLROOT >>timing.out
+echo MKL_NUM_THREADS=$MKL_NUM_THREADS >>timing.out
+echo OMP_NUM_THREADS=$OMP_NUM_THREADS >>timing.out
+echo OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS >>timing.out
+echo VECLIB_MAXIMUM_THREADS=$VECLIB_MAXIMUM_THREADS >>timing.out
+
+echo >>timing.out
+echo "Compiler versions:" >> timing.out
+echo "==================" >> timing.out
+echo >> timing.out
+
+gfortran --version >>timing.out 2>>timing.out
+ifx --version >>timing.out 2>>timing.out
+
+echo >>timing.out
+echo "Making benchmarks:" >> timing.out
+echo "==================" >> timing.out
+echo >> timing.out
+
+if [ $# -eq 1 ]
+then
+   src="$1.f90"
+else
+   src="*.f90"
+fi
+
+make clean
+
+programs=
+
+for file in $src
+do
+   base=`basename $file .f90`
+   grep "end program" $file >/dev/null
+   if [ $? == 0 ]; then
+     programs=$programs" $base"
+   fi
+done
+
+make $programs >> timing.out
+
+echo >>timing.out
+echo "Running benchmarks:" >> timing.out
+echo "===================" >> timing.out
+
+for prog in $programs
+do
+   if [ -x $prog ]; then
+      echo $prog
+      echo >> timing.out
+      echo $prog >> timing.out
+      echo >> timing.out
+      if [ -f $prog.inp ]; then
+         (time ./$prog <$prog.inp >>timing.out) 2>> timing.out
+      else
+         (time ./$prog >>timing.out) 2>> timing.out
+      fi
+   fi
+done
+
+echo "finished timing programs"
+
+make clean

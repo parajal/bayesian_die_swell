@@ -1,0 +1,70 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%vfunc1(1)%p => u_m ! vector function for velocity u_m.
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+1   interpolation of the position of the interface
+    NOTE: for high-order or spectral interpolation also the polynomial order p
+          needs to be set with coefficients%i(2).
+
+2   Polynomial order p of the spectral/high-order interpolation for the
+    position
+
+3   Numerical integration rule for the internal domain integrals of elements.
+
+4   nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(3) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(3) to each subdomain.
+
+5   Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle).
+      3: standard Gauss-Legendre (numerical tables)
+
+6   Time integration scheme (timeint):
+    1: first-order, implicit Euler
+    2: second-order, implicit Gear
+
+7  coordinate system for 2D elements:
+    0: Cartesian planar
+    1: Axisymmetrical
+    Note that for axisymmetrical coordinates we have (z,r), i.e. the first
+    coordinate is the axial coordinate z and the second coordinate is the
+    radial coordinate r.
+
+8--100 Reserved for future use. Set to zero for future compatibility.
+

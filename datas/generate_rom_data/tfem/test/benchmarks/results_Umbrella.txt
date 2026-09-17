@@ -1,0 +1,134 @@
+AMD EPYC 9474F 48-Core Processor @ 3.60 GHz (Umbrella cluster, MaTe partition)
+
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+ifx version 2024.2.0, -O3 -xHost -fpe0 -i8 -stand f18
+
+MKL 2024.2 (threading)
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.68047 35.70090  0m39.529s 0m38.873s 0m0.528s  1.88554
+   2    1.67976 47.55741  0m28.827s 0m50.188s 0m1.066s  1.88227
+   4    1.68390 63.63707  0m21.583s 1m5.328s  0m2.021s  1.88505
+   8    1.68002 89.85255  0m17.206s 1m29.724s 0m3.846s  1.88181
+  16    1.67985 154.8221  0m15.820s 2m30.339s 0m8.222s  1.88100
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys 
+   1    1.68783 50.79079  0m52.754s 0m51.871s 0m0.729s
+   2    1.69094 55.12531  0m31.582s 0m56.173s 0m0.764s
+   4    1.69017 56.61900  0m19.177s 0m57.537s 0m0.900s
+   8    1.67911 64.38576  0m13.574s 1m5.071s  0m1.132s
+  16    1.68391 70.51450  0m10.351s 1m10.573s 0m1.785s
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    1.69500 141.14699 9.11470  2m33.464s 2m32.836s 0m0.222s  .97583
+
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+ifx version 2024.2.1, -O3 -march=core-avx2 -fpe0 -i8 -stand f18
+
+MKL 2024.2 (threading)
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.68047 35.77444  0m39.465s 0m38.783s 0m0.576s  1.78587
+   2    1.67461 47.66110  0m28.807s 0m50.112s 0m1.130s  1.78663
+   4    1.67424 63.62401  0m21.503s 1m5.194s  0m2.017s  1.78631
+   8    1.67691 89.12479  0m17.063s 1m28.818s 0m3.909s  1.78782
+  16    1.68946 154.88626 0m15.797s 2m30.357s 0m8.167s  1.78655
+
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys 
+   1    1.69064 50.80525  0m52.766s 0m51.847s 0m0.769s
+   2    1.68671 55.03229  0m31.538s 0m56.091s 0m0.753s
+   4    1.68248 56.52946  0m19.155s 0m57.442s 0m0.898s
+   8    1.71944 64.23320  0m13.608s 1m4.945s  0m1.148s
+  16    1.68600 71.43408  0m10.302s 1m11.514s 0m1.768s
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    1.7056  141.11894 9.08278  2m33.413s 2m32.792s 0m0.229s  .97580a
+
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+ifx version 2023.1.0, -O3 -march=core-avx2 -fpe0 -i8 -stand f18
+Note: this is the ifx version available through "module load intel"
+
+MKL 2023.1 (threading)
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.47416 36.31989  0m39.860s 0m39.173s 0m0.550s  1.79589
+   2    1.47655 48.45988  0m29.046s 0m50.755s 0m1.105s  1.79190
+   4    1.47127 64.62001  0m21.604s 1m6.027s  0m1.996s  1.79684
+   8    1.48439 92.16460  0m17.323s 1m31.536s 0m4.047s  1.79898
+  16    1.48759 155.6023  0m15.694s 2m30.771s 0m8.255s  1.80060
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys 
+   1    1.44638 54.33317  0m56.132s 0m55.155s 0m0.749s
+   2    1.46292 59.15141  0m33.709s 0m59.970s 0m0.769s
+   4    1.43965 61.25053  0m20.290s 1m1.896s  0m0.924s
+   8    1.45770 70.92412  0m14.398s 1m11.350s 0m1.177s
+  16    1.43856 78.26933  0m10.674s 1m18.019s 0m1.855s
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    1.46452 151.9449  9.17891  2m44.150s 2m43.446s 0m0.249s  1.00823
+
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+gfortran gcc version 12.3.0 (GCC), -O3 -march=native -funroll-loops 
+  -fstack-arrays -std=f2018 -fall-intrinsics -ffpe-trap=zero,overflow,invalid
+
+OpenBLAS 0.3.23, 32 bit ints, multithreading
+Note: this is the Openblas version available through "module load OpenBLAS"
+
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.11303 34.42856  0m37.464s 0m36.845s 0m0.471s  1.65727
+   2    1.11396 43.89972  0m26.767s 0m45.331s 0m1.454s  1.65572
+   4    1.11386 59.31370  0m20.616s 0m59.807s 0m2.390s  1.65379
+   8    1.10954 83.19835  0m16.650s 1m22.516s 0m3.563s  1.65521
+  16    1.10974 146.3940  0m15.744s 2m18.722s 0m10.550s 1.65289
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    1.23408 131.5710  8.05304  2m22.349s 2m21.753s 0m0.154s  .92454
+
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+gfortran gcc version 12.3.0 (GCC), -O3 -march=native -funroll-loops 
+  -fstack-arrays-fdefault-integer-8 -std=f2018 -fall-intrinsics 
+  -ffpe-trap=zero,overflow,invalid
+
+OpenBLAS (cloned from https://github.com/OpenMathLib/OpenBLAS, commit 4850275)
+compiled with 64 bit ints (interface64=1), single thread
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    1.48307 34.77346  0m38.292s 0m37.620s 0m0.546s  1.77442
+
+Solver: sparskit2, metis5
+threads build   precond   matvec   real      user      sys       renumber
+   1    1.52948 131.65363 8.51321  2m23.185s 2m22.594s 0m0.206s  .98115
+

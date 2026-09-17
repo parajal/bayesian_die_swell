@@ -1,0 +1,24 @@
+&comppar
+    numtimesteps=200 ! number of time steps
+    itermax=3        ! maximum number of iterations in a time step
+    flowreverse=50   ! flow reverse every ... steps
+    figoutput=10     ! figure output every ... steps
+    nx_f = 40        ! number of elements of fluid domain x-direction
+    ny_f = 10        ! number of elements of fluid domain y-direction
+    nx_s = 8         ! number of elements of solid domain x-direction
+    ny_s = 4         ! number of elements of solid domain y-direction
+    epsdd=1e-3       ! stop criterium for iterative displacement differences
+    epspd=1e-2       ! stop criterium for iterative pressure differences
+    lx_f = 4.        ! width of fluid domain
+    ly_f = 1.        ! height of fluid domain
+    ox_s = 1.95      ! position of solid domain
+    lx_s = 0.1       ! width of solid domain
+    ly_s = 0.7       ! height of solid domain
+    eta = 1.0        ! viscosity of the fluid
+    C1 = 1.0e2       ! C1 parameter Mooney-Rivlin, G modulus neo-Hookean
+    C2 = 0.2e2       ! C2 parameter Mooney-Rivlin
+    model = 2        ! solid model=1 (neo-Hooken), 2 (Mooney-Rivlin)
+    deltat = 5.e-2   ! time step
+    rs_up = 1.0      ! real_storage gradient-velocity-pressure LU (HSL)
+    is_up = 1.0      ! integer_storage gradient-velocity-pressure LU (HSL)
+/

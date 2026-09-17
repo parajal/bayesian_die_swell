@@ -1,0 +1,46 @@
+This add-on assumes the MKL library to be available and installed.
+
+INSTALLATION & USAGE::
+====================
+
+- Use a recent version of MKL (version must be at least 10.0).
+
+- Build tfem using:
+
+    make all mkl_gmres
+
+  for a usual build + mkl_gmres.
+
+- Edit Mdefs.mk for use with the MKL library.
+
+Remarks:
+
+ - use an iterative solver only when the direct solver needs too much memory.
+ 
+ - for a velocity-pressure to work you need to renumber the unknowns such that
+   the pressures are at the end of the system vector (see userguide).
+
+ - renumbering for minimal fill-in in sparse matrix LU-decomposition seems to
+   be affect memory use and/or convergence rate. Use the add-on metis for that
+   or use renumbering already in your external meshgenerator.
+
+ - experiment with the parameters, for example droptol>0 may decrease the
+   computation time.
+
+ - when you need large fillins you might better use a direct solver, such as
+   ma41, which is usually much faster.
+
+ - for the ILUT preconditioner, it is recommended to set zero_diag_par=0 
+   (this is the default) otherwise a careful choice of zero_diag_comp must be
+   done to avoid that the program aborts.
+
+ - for ILU0 preconditioner, zero_diag_par should be set to 1. Indeed, in this
+   case, a zero value on the diagonal (for the solver, "zero value" means that
+   it is less than zero_diag_comp) is substituted with the value in
+   zero_diag_value. If zero_diag_par = 0, the ILU0 cannot be built and
+   the program aborts, at least for a Stokes problem.
+
+-  notice that the parameter "maxfil" is an integer parameter used for the
+   fill-in if larger than zero (default is maxfil=0). The default is to 
+   use the "fillin" parameter similar to the sparskit fillin parameter, which
+   scales with the matrix size, whereas maxfil does not.

@@ -1,0 +1,88 @@
+% !TEX root = userguide.tex
+
+\def\headdate{10th October 2012}
+
+\section{Eltree}
+\label{sec:exampleeltree}
+
+In this section examples are given for using the module eltree
+(Sec.~\ref{sec:subdivide}).
+
+The main purpose of the module-on eltree is to divide a reference domain/element
+into subdomains to easily integrate on
+parts of the domain and/or on the zero levelset interface.
+A typical eltree generates a subdivision like in Figure~\ref{fig:eltree},
+where subdomains are progressively smaller near a line or surface. Use is made of a levelset function to 
+separate parts of the domain and refine near the interface between the parts.
+\begin{figure}[hbtp!]
+ \begin{center}
+  \includegraphics[scale=0.5]{meshquadtree}
+ \end{center}
+  \caption{Subdivision near a circular interface using a quadtree of quadrilateral subdomains.} 
+  \label{fig:eltree}
+\end{figure}
+The element tree can exist lines (1D), triangles, quads (2D), tetrahedrons or hexahedrons (3D).
+The subdivision into triangles and hexahedrons is not straight forward and has been further
+described in Appendix~\ref{chap:subdivide}.
+If the domain is different from the reference element a mapping function
+(\texttt{mapcoor}) needs to be defined.
+
+The basic tree structure can be combined with a further subdivision of the elements
+near the interface using the module \texttt{submesh} (see Sec.~\ref{sec:submesh}).
+The module \texttt{intmesh} (see Sec.~\ref{sec:intmesh}) can optionally be used to
+reconstruct the zero levelset interface and define a composite surface integration rule.
+A typical eltree with further subdivision generates a subdivision like in Figure~\ref{fig:eltreesubmesh}.
+\begin{figure}[hbtp!]
+ \begin{center}
+  \includegraphics[scale=0.5]{eltreesubmesh}
+ \end{center}
+  \caption{Subdivision near a circular interface using a quadtree and 
+a further subdivision of the quads at the interface into triangles aligned with
+the interface (zero levelset).} 
+  \label{fig:eltreesubmesh}
+\end{figure}
+Note, that the subdivision is used for integration only and that therefore the
+actual geometric properties of the triangles is unimportant as long as they fill the domain.
+
+In the example file \texttt{eltree1.f90} an integral is performed over a circular (2D) or spherical (3D)
+domain using a quadtree of quadrilaterals or octree of hexahedrons.
+
+In the example file \texttt{eltree2.f90} a unit hexahedron is divided into a
+number of tetrahedrons using the module submesh.
+An integral is performed on part of the domain.
+
+In the example file \texttt{eltree3.f90} an integral is performed over a circular (2D) or spherical (3D)
+domain using a quadtree  of quadrilaterals or octree of hexahedrons with a further subdivision into triangles or tetrahedrons near the interface.
+
+In the example file \texttt{eltree4.f90} an integral is performed over the boundary of a circular (2D) or spherical (3D)
+domain using a quadtree of quadrilaterals  or octree of hexahedrons with a further subdivision into triangles or tetrahedrons near the interface.
+The zero levelset interface is reconstructed and used for integration.
+In Fig.~\ref{fig:sphere_surface} an example of a reconstructed surface mesh
+of a sphere is shown.
+\begin{figure}[hbtp!]
+ \begin{center}
+  \includegraphics[scale=0.3]{sphere_surface}
+ \end{center}
+  \caption{Reconstructed surface mesh of a sphere}
+  \label{fig:sphere_surface}
+\end{figure}
+
+In the example file \texttt{eltree5.f90} an integral is performed over the boundary of a circular (2D)
+domain using a finite element mesh, where each element is subdivided using a quadtree of quadrilaterals and further subdivided into triangles
+near the interface. The zero levelset interface is reconstructed and used for integration (see Fig.~\ref{fig:mesh_sd5_plot} for
+a rather coarse example).
+\begin{figure}[hbtp!]
+ \begin{center}
+  \includegraphics[scale=0.5]{mesh_sd5_plot}
+ \end{center}
+  \caption{Curved $5\times5$ mesh, with a subdivision near a circular interface using a quadtree of quadrilaterals and 
+a further subdivision of the quads at the interface into triangles aligned with
+the interface (zero levelset). The red curve is the reconstructed zero levelset interface.} 
+  \label{fig:mesh_sd5_plot}
+\end{figure}
+
+The example file \texttt{eltree6.f90} is similar to \texttt{eltree5.f90}, but now the problem is 3D and the integral in
+on the surface of a sphere.
+
+The examples \texttt{eltree7.f90}--\texttt{eltree10.f90} are similar to the examples above, but now using a quadtree
+of triangles or an octree of tetrahedrons.

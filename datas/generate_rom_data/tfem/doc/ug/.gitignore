@@ -1,0 +1,9 @@
+*.aux
+*.log
+*.dvi
+*.out
+*.blg
+*.toc
+*.synctex.gz
+*.synctex
+userguide.pdf

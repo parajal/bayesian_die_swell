@@ -1,0 +1,54 @@
+NOTE: 
+
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+foam1
+
+ Stokes problem on a square domain with a circular bubble (void) at the center.
+ There is surface tension on the bubble boundary.
+ Inside the bubble a constant pressure is imposed and the domain boundaries
+ remain straight, but can move according to a zero imposed force.
+ A time stepping is performed where the nodes of the mesh are updated
+ according to a Lagrangian scheme (forward Euler).
+ Gmsh mesh.
+
+foam2
+
+ Stokes problem on a cubic domain with a spherical bubble (void) at the center.
+ There is surface tension on the bubble boundary.
+ Inside the bubble a constant pressure is imposed and the domain boundaries
+ remain straight, but can move according to a zero imposed force.
+ A time stepping is performed where the nodes of the mesh are updated
+ according to a Lagrangian scheme (forward Euler).
+ Gmsh mesh.
+
+foam3
+
+ Stokes problem on a square domain with a circular bubble (void).
+ There is surface tension on the bubble boundary.
+ Inside the bubble a constant pressure is imposed.
+ Biperiodicity is imposed and the domain can freely stretch (without force)
+ in x- and y-direction.
+ A time stepping is performed where the nodes of the mesh are updated
+ according to a Lagrangian scheme (forward Euler).
+ Gmsh mesh.
+ NOTE: this problem is similar to foam1, but now periodic conditions instead of
+ symmetry conditions on the outer boundaries. The bubble can be placed
+ off-center, but basically leads to the same problem.
+
+foam4
+
+ Stokes problem on a cubic domain with a spherical bubble (void).
+ There is surface tension on the bubble boundary.
+ Inside the bubble a constant pressure is imposed.
+ Triperiodicity is imposed and the domain can freely stretch (without force)
+ in x-, y- and z-direction.
+ A time stepping is performed where the nodes of the mesh are updated
+ according to a Lagrangian scheme (forward Euler).
+ Gmsh mesh.
+ NOTE: this problem is similar to foam2, but now periodic conditions instead of
+ symmetry conditions on the outer boundaries. The bubble can be placed
+ off-center, but basically leads to the same problem.

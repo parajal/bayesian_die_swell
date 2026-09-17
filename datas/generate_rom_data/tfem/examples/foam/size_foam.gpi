@@ -1,0 +1,14 @@
+set terminal epslatex standalone color solid \
+    header "\\usepackage{amsmath,amssymb}" 12
+set output 'size_foam.tex'
+
+set yrange [0:16]
+
+set xlabel '$t$'
+
+set ylabel 'size of the foam'  rotate by 90 offset 1
+set lmargin 9
+set key off
+plot 'size.out' w l lc 1 lw 2
+
+

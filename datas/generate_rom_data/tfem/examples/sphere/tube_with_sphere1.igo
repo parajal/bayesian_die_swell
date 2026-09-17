@@ -1,0 +1,158 @@
+// Structured mesh for a sphere in a tube (axisymmetric).
+// Quadrilateral elements.
+
+// The geometry:
+//
+//
+//          c13       c12         c11         c10  
+//      p14----- p13 ------ p12 --------- p11----- p10
+//      |        |  \         |        /    |        |
+//      |        |   \        |       /     |        |
+//      |        |   c16   c17|      c18    |        |
+//      |        |      \     |     /       |        |
+//      |        |       \ c4 | c5 /        |        |
+//  c14 |    c15 |     p4 -- p5 -- p6       | c19    | c9
+//      |        |      /           \       |        |
+//      |        |     /             \      |        |     
+//      |        |    / c3        c6  \     |        |     
+//      |        |    |               |     |        | 
+//      p1 ----- p2 - p3     p15      p7 - p8 ----- p9 
+//          c1     c2                   c7     c8
+//
+
+// The constants to be set before including this file:
+
+// L1 = entry length (P1-P15)
+// L2 = exit length (P15-P9)
+// R1 = radius of the sphere
+// R2 = radius of the tube
+
+// numelc1 = number of elements on C1, C13
+// numelc2 = number of elements on C2, C7, C16, C17, C18
+// numelc3 = number of elements on C3, C6, C9, C14, C15, C19
+// numelc4 = number of elements on C4, C5, C11, C12
+// numelc8 = number of elements on C8, C10
+
+// Factor is the ration of the size of the two end elements of the curve:
+// factor1 on C1, C13
+// factor2 on C2, C7, C17
+// factor3 on C3, C6
+// factor4 on C8, C10
+// factor5 on C9, C19, C14, C15
+// factor6 on C16, C18
+
+// quad = 0 (triangles) or 1 (quads)
+
+
+// Points
+
+Point(1) = {-L1,0,0,1.0};
+Point(2) = {-R2,0,0,1.0};
+Point(3) = {-R1,0,0,1.0};
+Point(4) = {-R1*Sqrt(2)/2,R1*Sqrt(2)/2,0,1.0};
+Point(5) = {0,R1,0,1.0};
+Point(6) = {R1*Sqrt(2)/2,R1*Sqrt(2)/2,0,1.0};
+Point(7) = {R1,0,0,1.0};
+Point(8) = {R2,0,0,1.0};
+Point(9) = {L2,0,0,1.0};
+Point(10) = {L2,R2,0,1.0};
+Point(11) = {R2,R2,0,1.0};
+Point(12) = {0,R2,0,1.0};
+Point(13) = {-R2,R2,0,1.0};
+Point(14) = {-L1,R2,0,1.0};
+Point(15) = {0,0,0,1.0};
+
+For i In {1:14}
+  Physical Point(i) = i;
+EndFor
+
+
+// Curves
+
+Line(1) = {1, 2};
+Line(2) = {2, 3};
+Circle(3) = {3, 15, 4};
+Circle(4) = {4, 15, 5};
+Circle(5) = {5, 15, 6};
+Circle(6) = {6, 15, 7};
+Line(7) = {7, 8};
+Line(8) = {8, 9};
+Line(9) = {9, 10};
+Line(10) = {10, 11};
+Line(11) = {11, 12};
+Line(12) = {12, 13};
+Line(13) = {13, 14};
+Line(14) = {14, 1};
+Line(15) = {13, 2};
+Line(16) = {4, 13};
+Line(17) = {5, 12};
+Line(18) = {6, 11};
+Line(19) = {8, 11};
+
+p1 = Exp(Log(factor1)/(numelc1-1)); 
+p2 = Exp(Log(factor2)/(numelc2-1));
+p3 = Exp(Log(factor3)/(numelc3-1));
+p4 = Exp(Log(factor4)/(numelc8-1));
+p5 = Exp(Log(factor5)/(numelc3-1));
+p6 = Exp(Log(factor6)/(numelc2-1));
+
+Transfinite Curve {-1} = numelc1+1 Using Progression p1;
+Transfinite Curve {-2} = numelc2+1 Using Progression p2;
+Transfinite Curve {3} = numelc3+1 Using Progression p3;
+Transfinite Curve {4} = numelc4+1;
+Transfinite Curve {5} = numelc4+1;
+Transfinite Curve {-6} = numelc3+1 Using Progression p3;
+Transfinite Curve {7} = numelc2+1 Using Progression p2;
+Transfinite Curve {8} = numelc8+1 Using Progression p4;
+Transfinite Curve {9} = numelc3+1 Using Progression p5;
+Transfinite Curve {-10} = numelc8+1 Using Progression p4;
+Transfinite Curve {11} = numelc4+1;
+Transfinite Curve {12} = numelc4+1;
+Transfinite Curve {13} = numelc1+1 Using Progression p1;
+Transfinite Curve {-14} = numelc3+1 Using Progression p5;
+Transfinite Curve {-15} = numelc3+1 Using Progression p5;
+Transfinite Curve {16} = numelc2+1 Using Progression p6;
+Transfinite Curve {17} = numelc2+1 Using Progression p2;
+Transfinite Curve {18} = numelc2+1 Using Progression p6;
+Transfinite Curve {19} = numelc3+1 Using Progression p5;
+
+For i In {1:19}
+  Physical Curve(i) = i;
+EndFor
+
+
+// Surfaces
+
+Curve Loop(1) = {1,-15,13,14};
+Curve Loop(2) = {2,3,16,15};
+Curve Loop(3) = {4,17,12,-16};
+Curve Loop(4) = {5,18,11,-17};
+Curve Loop(5) = {7,19,-18,6};
+Curve Loop(6) = {8,9,10,-19};
+
+If ( quad == 1 ) // quads
+
+  For i In {1:6}
+    Plane Surface(i) = {i};
+    Transfinite Surface {i};
+    Recombine Surface {i};
+  EndFor
+
+ElseIf ( quad == 0 ) // triangles
+
+  For i In {1:6}
+    Plane Surface(i) = {i};
+  EndFor
+  For i In {1:3}
+    Transfinite Surface {i} Right; 
+  EndFor
+  For i In {4:6}
+    Transfinite Surface {i};
+  EndFor
+
+EndIf
+
+Physical Surface(1) = {1,2,3,4,5,6};
+
+// vim: set filetype=gmsh :  //
+

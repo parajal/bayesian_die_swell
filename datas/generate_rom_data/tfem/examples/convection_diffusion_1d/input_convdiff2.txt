@@ -1,0 +1,20 @@
+&sourcepar
+  const = 1
+  sigma = 0.05
+  Lh = 0.5
+/
+&elementpar
+ isource = 0
+ u = 1
+ alpha = 2e-2
+ gamma = 0
+ ninti = 10
+/
+&problempar
+ iboun = 1
+ ne = 5
+ L = 1
+ c0 = 0 
+ cL = 1
+ dcdxL = 0
+/

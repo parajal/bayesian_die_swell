@@ -1,0 +1,70 @@
+This add-on assumes the FEAST package to be available and installed.
+FEAST can be downloaded from https://www.feast-solver.org.
+Read the documentation of FEAST carefully for the installation and use.
+Note that:
+ * FEAST requires MKL-PARDISO and therefore does not run natively on
+   Apple Silicon Macs. However, it does run in a Docker container build
+   for amd64 on Apple Silicon Macs using all processors available.
+ * Should work with gfortran, but I got a compile error. Hence only tested
+   with ifx, which worked.
+ * Currently, only the real generalized eigenvalue routine of FEAST for
+   sparse matrices with factorization is used.
+
+INSTALLATION & USAGE::
+====================
+
+- Use a recent version of MKL, which is part of Intel OpenAPI.
+
+- Adapt Mdefs.mk to link to the FEAST library, if not done already.
+
+- Build tfem using:
+
+    make all feast
+
+  for a usual build + feast.
+
+- For a real generalized eigenvalue problem (A-lambda B) v=0:
+
+  program myprog
+
+    ...
+
+    use feast_m
+
+    ...
+
+    type(solver_options_feast_t) :: so
+    type(arg_feast_t) :: arg
+
+    ...
+
+    (set optional parameters in structure so)
+    (set input arguments in structure arg)
+
+    call solve_system_real_gen_feast ( sysmatrixA, sysmatrixB, arg, &
+      solver_options=so )
+
+    ...
+
+    (postprocessing output arguments in structure arg)
+
+    ...
+
+    call delete ( arg )
+
+  end program myprog
+
+- Use the environment variable OMP_NUM_THREADS to specify the number of
+  processors available for the solver, similarly to pardiso.
+
+
+Remarks:
+=======
+
+- See code of feast_m and the examples for the parameters that can be set
+  in the structures so and arg. Also in the examples it is shown how to obtain
+  the eigenvalues.
+
+- FEAST uses MKL-PARDISO for the handling of sparse-CSR matrices and a direct
+  sparse solver. This means that the sequential library of MKL cannot be used.
+  Like when using pardiso, the threaded library needs to be linked.

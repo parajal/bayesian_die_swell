@@ -1,0 +1,72 @@
+Apple M1 (MacBook Air, 13-inch, 2020, 8GB) 
+
+GNU Fortran (GCC) 11.0.0 20201114 (experimental)
+gfortran 11.0.0, -O2 -funroll-loops -fstack-arrays 
+
+Stokes11, mesh nx=20 ny=10 nz=20
+--------------------------------
+
+Apple Framework Accelerate (-framework accelerate)
+Threading with VECLIB_MAXIMUM_THREADS no effect: no multithreaded blas?.
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1    .52800  15.98576  0m16.885s 0m16.310s 0m0.285s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    .56723  18.07895  0m19.050s 0m18.205s 0m0.536s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    .56640  5.57169   0m6.937s  0m6.548s  0m0.279s  .61759
+
+Stokes11, mesh nx=20 ny=10 nz=20
+--------------------------------
+
+OpenBLAS libopenblas_armv8p-r0.3.12.a
+Threading with OPENBLAS_NUM_THREADS
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1    .53266  23.09114  0m24.014s 0m23.358s 0m0.351s
+   4   1.17225  48.91988  0m13.131s 0m50.084s 0m0.276s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    .56597  32.01872  0m32.872s 0m32.118s 0m0.545s
+   4   1.12237  49.34841  0m13.898s 0m49.576s 0m1.310s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    .57769  10.07993  0m11.725s 0m11.040s 0m0.326s  .61168
+   2    .75922  11.62515  0m7.843s  0m12.909s 0m0.285s  .60698
+   3    .98499  13.62792  0m6.611s  0m15.164s 0m0.297s  .60925
+   4   1.17998  15.25975  0m5.920s  0m17.075s 0m0.284s  .60972
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+Apple Framework Accelerate (-framework accelerate)
+Threading with VECLIB_MAXIMUM_THREADS no effect: no multithreaded blas?.
+
+Solver: MA57, HSL2002
+Memory pressed (swap): 8GB RAM too small.
+threads build   solve     real      user      sys
+   1    1.15170 109.44373 1m57.071s 1m44.773s 0m5.966s
+
+Solver: MA41, HSL2002
+Memory pressed (swap): 8GB RAM too small.
+threads build   solve     real      user      sys
+   1    1.23978 125.62831 2m28.912s 1m54.944s 0m12.085s
+
+Solver: MA41, HSL2002, metis5
+Memory pressed (swap): 8GB RAM (just) too small
+threads build   solve     real      user      sys       renumber
+   1    1.24575 27.70599  0m33.678s 0m28.087s 0m2.648s  1.61753
+
+Solver: sparskit2, metis5
+threads build   precond   matvec  real      user      sys       renumber
+   1    1.28019 150.59676 8.15172 2m41.444s 2m40.275s 0m0.868s  .94615 
+
+

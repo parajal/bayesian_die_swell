@@ -1,0 +1,4 @@
+for file in *.tex
+do
+   aspell -p ./words -c $file
+done

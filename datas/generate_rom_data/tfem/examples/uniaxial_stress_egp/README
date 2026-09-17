@@ -1,0 +1,30 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+uniaxial_stress_egp1
+
+ Uniaxial compression/extension using a single element in axisymmetric flow.
+ Compressible EGP model with compressible flow.
+ 14-mode model with 12 alpha process viscoelastic modes, one elastic mode for
+ strain hardening and one mode for the beta process. 
+ Data for PMMA from van Breemen et al. (2012) DOI: 10.1002/polb.23199
+ Pressure (J) dependent relaxation term using adapted lambda.
+ Plastic strain softening.
+ Contravariant deformation tensor formulation (b-tensor).
+ Fully-implicit with Newton-Raphson.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+uniaxial_stress_egp2
+
+ Similar to uniaxial_stress_egp1, but now for the iPP data.
+
+uniaxial_stress_egp3
+
+ Similar to uniaxial_stress_egp1, but now for the PS data.
+
+uniaxial_stress_egp4
+
+ Similar to uniaxial_stress_egp4, but now for the PLLA data.

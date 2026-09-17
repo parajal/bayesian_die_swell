@@ -1,0 +1,147 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+linear_elastic1
+
+ Linear elastic problem on a rectangle. Stretching a bar.
+ Standard displacement formulation. 2D, plane strain or plane stress.
+
+linear_elastic2
+
+ Linear elastic problem on a rectangle. Stretching a bar.
+ Mixed displacement-pressure formulation. 2D, plane strain or plane stress.
+
+linear_elastic3
+
+ Linear elastic problem on a rectangle. Stretching a bar.
+ Standard displacement formulation. Axisymmetric.
+
+linear_elastic4
+
+ Linear elastic problem on a rectangle. Stretching a bar.
+ Mixed displacement-pressure formulation. Axisymmetric.
+
+linear_elastic5
+
+ Linear elastic problem on a 3D rectangular box. Stretching a bar.
+ Standard displacement formulation.
+
+linear_elastic6
+
+ Linear elastic problem on a 3D rectangular box. Stretching a bar.
+ Mixed displacement-pressure formulation.
+
+linear_elastic7
+
+ Linear elastic problem on a rectangle. Stretching and rotating a bar.
+ Standard displacement formulation. Axisymmetric with torsion.
+
+linear_elastic8
+
+ Linear elastic problem on a rectangle. Stretching and rotating a bar.
+ Mixed displacement-pressure formulation. Axisymmetric with torsion.
+
+linear_elastic9
+
+ Linear elastic problem on a rectangle. Stretching a bar.
+ Standard displacement formulation. 2D, plane strain or plane stress.
+ Bilinear Q1 elements for the displacement.
+
+linear_elastic10
+
+ Linear elastic problem on a rectangle. Stretching a bar.
+ Standard displacement formulation. 2D, plane strain or plane stress.
+ Stabilized mixed element example: Q1/Q1 displacement/pressure
+
+linear_elastic11
+
+ Linear elastic problem on a domain two cylinders having a jump in radius.
+ Stretching and rotating.
+ Standard displacement formulation. Axisymmetric with torsion.
+
+linear_elastic12
+
+ Linear elastic problem on a square. Manufactured solution.
+ Standard displacement formulation. 2D, plane strain or plane stress.
+
+linear_elastic13
+
+ Linear elastic problem on a rectangle. Manufactured solution.
+ Mixed displacement-pressure formulation. 2D, plane strain or plane stress.
+
+linear_elastic14
+
+ Linear elastic problem on a square. Manufactured solution.
+ Standard displacement formulation. Axisymmetric.
+
+linear_elastic15
+
+ Linear elastic problem on a square. Manufactured solution.
+ Mixed displacement-pressure formulation. Axisymmetric.
+
+linear_elastic16
+
+ Linear elastic problem on a 3D cube. Manufactured solution.
+ Standard displacement formulation.
+
+linear_elastic17
+
+ Linear elastic problem on a 3D cube. Manufactured solution.
+ Mixed displacement-pressure formulation.
+
+linear_elastic18
+
+ Linear elastic problem on a square. Manufactured solution.
+ Standard displacement formulation. Axisymmetric with torsion.
+
+linear_elastic19
+
+ Linear elastic problem on a square. Manufactured solution.
+ Mixed displacement-pressure formulation. Axisymmetric with torsion.
+
+linear_elastic20
+
+ Linear elastic problem on a square with a hole. Stretching in x-direction
+ Standard displacement formulation. 2D, plane strain or plane stress.
+
+linear_elastic21
+
+ Linear elastic problem on a rectangle. Stretching a bar. Thermal expansion.
+ Standard displacement formulation. 2D, plane strain or plane stress.
+
+linear_elastic22
+
+ Linear elastic problem on a rectangle. Stretching a bar. Thermal expansion.
+ Mixed displacement-pressure formulation. 2D, plane strain or plane stress.
+
+linear_elastic23
+
+ Linear elastic problem on a rectangle. Stretching a bar. Thermal expansion.
+ Standard displacement formulation. Axisymmetric.
+
+linear_elastic24
+
+ Linear elastic problem on a rectangle. Stretching a bar. Thermal expansion.
+ Mixed displacement-pressure formulation. Axisymmetric.
+
+linear_elastic25
+
+ Linear elastic problem on a 3D rectangular box. Stretching a bar.
+ Thermal expansion.
+ Standard displacement formulation.
+
+linear_elastic26
+
+ Linear elastic problem on a 3D rectangular box. Stretching a bar.
+ Thermal expansion.
+ Mixed displacement-pressure formulation.
+
+linear_elastic27
+
+ Linear elastic problem on a 3D rectangular box. Stretching a bar.
+ Thermal expansion. Side pressure.
+ Example 3.8 of Fenner & Reddy (for uniform=.true.)
+ Standard displacement formulation.
+

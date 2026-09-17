@@ -1,0 +1,50 @@
+///////////////////////////////////////////
+// Defnition of semicircle element sizes //
+///////////////////////////////////////////
+
+dx_part = Pi*rp/Nelem_part;
+
+////////////////////////////////
+// Start creation of geometry //
+////////////////////////////////
+
+// Create domain vertices
+ 
+Point(1) = {ox,    oy,    0.0, dx_box};
+Point(2) = {ox+lx, oy,    0.0, dx_box};
+Point(3) = {ox+lx, oy+ly, 0.0, dx_box};
+Point(4) = {ox,    oy+ly, 0.0, dx_box};
+
+Point(5) = {xp   , oy, 0.0, dx_part};
+Point(6) = {xp-rp, oy, 0.0, dx_part};
+Point(7) = {xp+rp, oy, 0.0, dx_part};
+
+// Create domain sides
+ 
+lin[0] = newl; Line(lin[0]) = {1, 6};
+linc = newl; Circle(linc) = {7, 5, 6};
+lin[1] = -linc;
+lin[2] = newl; Line(lin[2]) = {7, 2};
+lin[3] = newl; Line(lin[3]) = {2, 3};
+lin[4] = newl; Line(lin[4]) = {3, 4};
+lin[5] = newl; Line(lin[5]) = {4, 1};
+
+// Create line loop and surface
+
+Line Loop(1) = {lin[]};
+
+Plane Surface(1) = {1};
+
+///////////////////////////
+// Set physical entities //
+///////////////////////////
+
+Physical Point(1) = 1;
+
+For i In {1:6}
+  Physical Line(i) = lin[i-1];
+EndFor
+
+Physical Surface(1) = {1};
+
+// vim: set filetype=gmsh :  //

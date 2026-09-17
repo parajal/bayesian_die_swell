@@ -1,0 +1,26 @@
+&comppar
+  flowtype = 1           ! flow type:
+                         ! 1: shear
+                         ! 2: planar elongation
+                         ! 3: uniaxial elongation
+  includesolvent = F     ! solvent included only if .true. (T)
+  eta_s = 1.0            ! solvent viscosity
+  G      = 4000.0, 1000  ! modulus G
+  lambda = 10.0, 5.0     ! relaxation time
+  alam_model = 4         ! adapted lambda model:
+                         ! 4: Eyring, 5: Ree-Eyring
+  tau_ref = 500.0 250    ! reference von Mises
+  tau_ref1 = 500.0 250   ! reference von Mises 1 RE
+  tau_ref2 = 2000.0 1000 ! reference von Mises 2 RE
+  f1 = 0.6 0.6           ! weight factor for first term RE
+  numdatapoints = 1000   ! number of steady data points for functions of
+                         !    shear rate (for flowtype=1)
+                         !    extension rate (for flowtype=2,3)
+  eps = 1.e-10           ! Newton-Raphson accuracy
+  maxnumiterations = 100 ! maximum number of iterations
+  start_rate = 0.01      ! start data point
+  end_rate = 100         ! end data point
+  factor = 1000          ! data point distance: last=factor * first 
+  method = 2             ! method 1: BDF1, 2: BDF2
+  timestep = 1e-5        ! time step for steady
+/

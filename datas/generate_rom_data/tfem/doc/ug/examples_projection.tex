@@ -1,0 +1,42 @@
+% !TEX root = userguide.tex
+
+\def\headdate{21st June 2012}
+
+\section{Projection}
+\label{sec:projection}
+
+In this section examples for the projection add-on (see
+Sec.~\ref{sec:projection_addon}) are given, including:
+\begin{enumerate}
+   \item projection of a vector defined on one mesh to a vector defined on
+         another mesh,
+   \item projection of a vector to another vector, both defined on the same
+         mesh, but having a different shape function.
+\end{enumerate}
+
+\subsection{Definition}
+
+The projection of field $u_1(\vek x)$, defined on mesh M1 using shape functions
+$\phi_1(\vek x)$: $u_1(\vek x)=\sum_k u_1^k\phi_1^k(\vek x)$ on a space 
+defined on mesh M2 using shape function
+$\phi_2(\vek x)$: $u_2(\vek x)=\sum_k u_2^k\phi_2^k(\vek x)$ is given by
+\begin{equation}
+  \sum_m (\phi^k_2,\phi^m_2) u_2^m = (\phi^k_2,u_1)
+\end{equation}
+The field $u_2$ is basically a least-squares ``fit'' of $u_1$. The add-on
+projection deals with the determination of the inner product of the
+right-hand side. This involves finding the values of $u_1$ defined on mesh M1
+in the integration points defined on mesh M2.
+
+\subsection{Examples}
+
+The example files are \texttt{projection1.f90} to 
+\texttt{projection5.f90} 
+and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample projection}
+\end{quote}
+Please read the \texttt{README} file and the sources for more information
+on the examples.

@@ -1,0 +1,67 @@
+&comppar
+    periodic = F       ! Use periodical boundaries in x and z-direction
+                       ! Only makes sense for vfuncnr=0 (zero velocity)
+                       ! or vfuncnr=2 (shear flow).
+    periodic_channel = F ! Use periodical boundaries in x-direction.
+                       ! Only makes sense for vfuncnr=0 (zero velocity)
+                       ! or vfuncnr=2 (shear flow).
+    flowrate = F       ! Impose flowrate in x-direction (for
+                       ! periodic=.true. or periodic_channel=.true. only)
+    move_mesh_x = T    ! Move the mesh in x-direction to keep the center
+                       ! of volume of the drop at the same position wrt
+                       ! to the mesh
+    monitor_func = F   ! Use a monitor function to move the surface
+                       ! elements tangential to high curvature regions.
+    mesh_plot = F      ! write mesh plot files/info (curves, mesh etc.)
+    compute_error = F  ! Compute error. Only makes sense for eta_e=eta_i
+                       ! (no viscosity difference) and gammac=0 (no
+                       ! surface tension) or if vfuncnr=0 (no flow)
+                       ! or vfuncnr=3 (rotation).
+    compute_volume = F ! Compute volume and center of volume. 
+    n=4                ! number of elements in x, y and z direction of box
+    nc=20              ! number of elements on the equator of the sphere
+    gauss = 8          ! order of integration for tetrahedral elements
+    gaussb = 6         ! order of integration for triangular elements
+    vfuncnr = 2        ! function number for the velocity field u
+    choice_um = 2      ! choice for um in the motion of the interface:
+                       !  0: um = 0
+                       !  1: um = average velocity of all interface nodes
+                       !  2: um = velocity of the center of volume 
+    vtkevery = 1       ! vtk file every vtkevery steps. -1: means none
+    ctime = T          ! continue time in output after restart
+    restart = 0        ! restart=0: no restart
+                       ! restart=1: normal restart
+                       ! restart=2: restart, but start with Euler step
+    restart_every = 10 ! write restart file every restart_every steps. 
+    timeint = 2        ! time integration scheme
+    timeint_sc = 2     ! time integration scheme for surfactant 
+		       ! concetration
+    numtimesteps = 150 ! number of time steps
+    ox = -5.0          ! x-coordinate left lower corner
+    oy = -5.0          ! y-coordinate left lower corner
+    oz = -5.0          ! z-coordinate left lower corner
+    lx = 10.0          ! length of the domain
+    ly = 10.0          ! width of the domain
+    lz = 10.0          ! height of the domain
+    xc = 0.0 0.0 0.0   ! center of the initial sphere
+    rc = 1.0           ! initial radius of the sphere
+    eta_e = 0.1        ! external fluid viscosity
+    eta_i = 0.1        ! internal fluid viscosity
+    beta_st = 0.1      ! surface tension beta coefficient
+    gammac = 1.0       ! initial surface tension
+    c0 = 1.0           ! initial surfactant concentration
+    Dcoef = 1.0        ! surfactant concentration diffusion coefficient
+    factor = 0.0       ! factor for the interface grid deformation
+    U_avg  = 0.0       ! imposed average velocity for flowrate=.true.
+    rs_up  = 1.4       ! real_storage velocity-pressure LU HSL
+    is_up  = 1.5       ! integer_storage velocity-pressure LU HSL
+    deltat = 1.e-2     ! time step
+    beta = 0.5         ! factor beta in SUPG
+    fac_min = 0.5      ! factor setting dx_min for the monitor function
+    fac_max = 2.0      ! factor setting dx_max for the monitor function
+    volume_threshold = 1.39         ! remeshing area threshold
+    aspect_ratio_threshold = 1.39 ! remeshing aspect ratio threshold
+!   volume_threshold = 0.2          ! remeshing area threshold
+!   aspect_ratio_threshold = 0.2  ! remeshing aspect ratio threshold
+
+/

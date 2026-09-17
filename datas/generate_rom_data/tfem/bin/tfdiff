@@ -1,0 +1,85 @@
+#!/bin/sh
+
+# tfdiff: write difference with tfem Fortran or text file(s) that are located
+# in the source directories: core addons examples test misc.
+
+function helptext ()
+{
+     echo "Usage: tfdiff [-r] files(s)"
+     echo "Options:   (Description)          (default)"
+     echo "   -r      diff local -> tfem     diff tfem -> local"
+}
+
+rev=
+while getopts rh optvar; do
+  case "$optvar"
+  in
+     r) rev=1 ;;
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ $# -eq 0 ]
+then
+  helptext >/dev/stderr; exit
+fi
+
+. settfemroot
+. testdir
+
+. $tp/bin/setsrcdirs
+
+SRCDIRS="test misc $SRCDIRS"
+
+for dir in $tp/examples/*
+do
+  if [ -d $dir ]
+  then
+    SRCDIRS="examples/`basename $dir` $SRCDIRS"
+  fi
+done
+
+while  [ -n "$1" ]
+do
+        if [ ! -f $1 ]
+	then
+          echo "$1: file does not exist"
+          break
+        fi
+	if [ `basename $1 .f` == "$1" -a \
+	     `basename $1 .f90` == "$1" -a \
+	     `basename $1 .F90` == "$1" -a \
+	     `basename $1 .txt` == "$1" ]
+        then
+	  echo "File extension is not .f, .f90, .F90 or .txt: $1"
+          echo "Aborting"
+    	  exit
+        fi
+	notfound=t
+	for dir in $SRCDIRS
+	do	if [ -s $tp/$dir/$1 ]
+		then	notfound=
+                        if [ -f $1 ]
+                        then
+                          if [ $rev ]; then
+		             diff -u --label "$1  (current dir)" \
+                                     --label "$dir/$1  (tfem)" \
+                                $1 $tp/$dir/$1
+			     break
+                          else
+		             diff -u --label "$dir/$1  (tfem)" \
+                                     --label "$1  (current dir)" \
+                               $tp/$dir/$1 $1
+			     break
+                          fi
+                        fi
+		fi
+	done
+	if	[ $notfound ]
+	then	echo "$1 could not be found in the tfem tree"
+	fi
+	shift
+done

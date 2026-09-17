@@ -1,0 +1,84 @@
+External tree for compiling routines from external sources, including routines
+from:
+
+  * the HSL2002 library: MA41 (unsymmetric solver, MA57 symmetric solver
+    and EA23 (eigenvector). The targets in the root Makefile are:
+
+         make libhsl
+
+  * the HSL library current, such as updated versions of MA41 and MA57,
+    where the last now includes scaling of the matrix and metis renumbering.
+    The targets in the root Makefile are:
+
+         make libhsl2
+
+    replaces libhsl, including newer versions of MA41 and MA57
+
+         make libhsl3
+
+    includes libhsl2, AMG (hsl_mi20) and iterative solvers.
+
+  * Sparskit2. The target in the root Makefile is sparskit2:
+
+         make sparskit2
+
+  * Numerical Recipes. The target in the root Makefile is nr.
+
+         make nr
+
+Notes:
+
+  - The MA57 routine from HSL current requires a link to the MeTiS-4 library.
+    The MeTiS package can be obtained from
+        http://glaros.dtc.umn.edu/gkhome/metis/metis/download.
+    Adjust Mdefs.mk according to the directions given in the comments.
+    Provided you have a license for MA57, you can ask for a modified MA57 that
+    works with MeTiS-5 by sending an email to m.a.hulsen@tue.nl.
+
+  - If you don't want to link with MeTiS, compile the fakemetis routine. The
+    target in the root Makefile is fakemetis:
+
+      make hslfakemetis
+
+  - The routines are NOT part of the tfem distribution and needs to be
+    obtained separately, most needing some kind of license:
+
+    1) The HSL routines/packages can be obtained free of charge by academics
+       for research and teaching purposes. See the website: http://hsl.rl.ac.uk/
+
+    2) The Sparskit2 routines can be obtained from Saad's website:
+         http://www-users.cs.umn.edu/~saad/software/SPARSKIT
+       and the license is LGPL.
+
+    3) The numerical recipes routines need to be purchased, either as part of
+       a book or purchased separately.
+
+  - In order to avoid mixing old and new routines of HSL, the target libhsl2
+    includes a "make libhslclean", removing the existing solver library
+    completely. Also libhsl3 depends on libhsl2 and therefore completely
+    removes the existing solver library.
+
+  - It is recommended to clean the complete external tree at once using
+
+      make externalclean
+
+    instead of cleaning individual packages. The reason is that cleaning an
+    individual package will also remove the complete solver library, leaving
+    other compiled packages "hanging", unable to build them again. 
+
+  - If you want to go back to libhsl from libhsl2 it is recommended to do a
+    complete external tree clean:
+
+      make externalclean
+
+    then build libhsl
+
+      make libhsl
+
+    and rebuild non-HSL external packages again, if needed.
+
+
+
+
+
+

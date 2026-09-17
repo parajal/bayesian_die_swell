@@ -1,0 +1,27 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+spinning1:
+
+ Spinning problem of a Newtonian fluid (Stokes)
+ Axisymmetrical flow.
+
+spinning2:
+
+ Viscoelastic spinning problem
+ Axisymmetrical flow for a Giesekus model
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration
+
+spinning3:
+
+ Viscoelastic spinning problem
+ Axisymmetrical flow for an XPP model
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order Gear time integration
+

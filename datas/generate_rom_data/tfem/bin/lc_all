@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# lc_all counts lines, comment lines and statement lines of Fortran 95 code.
+# It prints the values all files individually
+#
+# Usage:
+#
+#       lc_all [files]
+#
+# If files are omitted, all *.f90 and *.F90 files are assumed.
+
+if [ $# -eq 0 ]
+then
+  files="*.[fF]90"
+else
+  files=$*
+fi
+
+for file in $files
+do
+   echo ""
+   echo $file:
+   lc $file
+done

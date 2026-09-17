@@ -1,0 +1,148 @@
+% !TEX root = userguide.tex
+
+\chapter{Multiple element groups}
+\pgst{tfemch}
+
+\def\chaptertitle{Multiple element groups}
+\def\headdate{23rd September 2010}
+
+In this chapter we will briefly describe how to work with multiple element
+groups.
+
+\section{Introduction}
+
+The mesh can be splitted into multiple groups, where each group represents a set
+of elements. The splitting must already be done at the mesh generation level.
+In the basic meshgenerator of \tfem\ this can be achieved using the subroutine
+\texttt{mesh\_merge} of the module \texttt{meshgen\_extra}
+(see Sec.~\ref{sec:meshgenextra}).
+
+The reasons for introducing multiple groups include
+\begin{itemize}
+   \item different element shapes, for example triangles and quads in one mesh. 
+   \item different materials, material properties or, more generally,
+         different structure coefficients in one problem. For example, a Stokes
+         problem with two separate regions with a different viscosity.
+   \item different physical or mathematical models in separate regions.
+         For example with fluid-solid interactions, the fluid and the
+         solid will have different element groups.
+   \item different physical or mathematical models in partly overlapping
+         regions, for example a fluid domain with a ferrofluid influenced by a
+         magnetic field. The magnetic field is solved in a larger part of the
+         domain than the fluid.
+\end{itemize}
+
+\section{Basic usage}
+
+All the routines for assembling the matrix and vector, computing derive vectors,
+etc., but also the plotting routines have heading parameters \texttt{groups},
+\texttt{elgroups}, \texttt{elgroup2} to perform the operation for
+certain groups (e.g.\ \texttt{groups=[2,4]}),
+range of groups (e.g.\ \texttt{elgroup1=2}, \texttt{elgroup2=4} for range
+2,3,4) or a single group (e.g.\ \texttt{elgroup1=2})
+only\footnote{Don't forget to use the
+heading parameters \texttt{addmatvec}, \texttt{addvec}, \texttt{add} or some
+other variant if you split up an operation over multiple groups. If you do not
+use these parameters the output array/scalar will be set to zero at the start
+of a routine, destroying the results of a former part of the operation.}. In
+that way the assembling process, for example, can be splitted over several
+calls of \texttt{build\_system}\footnote{If
+element routines are designed to deal with multiple element types, it may not
+be necessary to split.}.
+
+\section{Degrees of freedom in connecting nodes of directly connected groups}
+
+If groups are directly connected, i.e.\ there are nodes which belong to more
+than one group, the number of degrees of freedom in the system vector
+(of type \texttt{sysvector\_t} and
+the number of degrees of all the vectors (of type \texttt{vector\_t}) need to
+be \emph{the same in common nodes of all connecting groups}. If not, an error
+message is produced and the program stops\footnote{If you \emph{really} want
+to get beyond this error message you can set
+\texttt{allow\_different\_numdegfd\_in\_nodes=.true.}\ before entering 
+\texttt{problem\_definition}, but then you are entering messy territory and you
+really have to know what you are doing. Lots of pitfalls here. Don't say you
+haven't been warned!}. 
+
+The best way to deal with a varying number of degrees between groups is to
+disconnect
+the element groups (overlapping curves/surfaces are separate and have different nodes).
+The connections between the degrees of freedom in the groups can be made using
+constraints (see Chapter~\ref{ch:constraints})
+on the interface between the groups.
+
+\section{Inactive groups in the problem definition}
+\label{sec:inactivegroups}
+Inactive groups in the problem definition\footnote{Inactive groups in the mesh
+have not been implemented. It could resolve some of the problems
+related to inactive groups in problems that use a mesh with connected groups.
+However it also makes everything more complicated, since then you have to deal
+with both multiple meshes and multiple problems.}
+ are element groups that 
+\begin{enumerate}
+   \item have zero degrees of freedom in the system vector and all the vectors
+         (\texttt{input\_probdef\%elnumdegfd=0} and 
+          \texttt{input\_probdef\%vec\_elnumdegfd=0}),
+   \item are excluded from the build process, derive vector computation,
+         plotting etc.
+\end{enumerate}
+In order to facilitate this without changing a lot of heading parameters and
+add the \texttt{groups} parameter, a parameter \texttt{numinactivegroups}
+has been added to the
+routine \texttt{create\_input\_probdef}. In the following excerpt from a main
+program we illustrate the use of this parameter
+\begin{listing}{1}
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=3, nphysq=2, &
+    numinactivegroups=1 )
+
+  input_probdef%vec_elementdof(1)%a =   &
+      reshape ( [2,2,2,2,2,2,2,2,2,    &  ! velocity
+                 1,0,1,0,1,0,1,0,0,    &  ! pressure
+                 1,1,1,1,1,1,1,1,1 ], &  ! scalar, such as vorticity
+                 [9,3] )
+  input_probdef%vec_elementdof(2)%a = 0
+
+  input_probdef%physq = [1,2]
+  input_probdef%inactivegroups = [2]
+
+  ... other statements, like setting essential nodes
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+\end{listing}
+Here it is assumed that the mesh has two groups, where group 2 is inactive in
+the problem definition.
+
+If you use inactive groups together with groups that have common nodes, an
+error will be produced as in the previous section: it is not allowed to have
+nodes that have different degrees of freedom in different elements connected to
+that node. You can circumvent the error in the same way as suggested in the
+previous section, but you are entering messy territory with lots of pitfalls.
+A more straightforwards solution, i.e.\ groups with essential degrees only,
+is given in the next section.
+
+\section{Element groups having essential degrees of freedom only}
+
+In the routine \texttt{define\_essential} it is possible to set complete
+element groups to have essential degrees of freedom only. This maybe useful for
+various applications. For example, it can be used as an alternative for
+inactive groups, as described in Sec.~\ref{sec:inactivegroups}. In
+particular for groups that are connected, it is an attractive approach. Some
+notes:
+\begin{itemize}
+   \item By default all the nodes are set to essential. Use
+         \texttt{excludecurves} and/or \texttt{excludesurfaces} to exclude
+         some nodes of the group, in particular on the connecting curves or
+         surfaces.
+   \item If connecting nodes have degrees of freedom that are not
+         essential 
+         and the group is to be discarded (inactive), the system
+         matrix of the
+         group should be build with \texttt{zeromatvec=.true.} in
+         \texttt{build\_system} to avoid any interactions.
+   \item Exclude the inactive groups from computing derivatives arrays
+         in \texttt{derive\_vector} when the result is an average of different
+         element values of all elements connected, such as gradients.
+\end{itemize}

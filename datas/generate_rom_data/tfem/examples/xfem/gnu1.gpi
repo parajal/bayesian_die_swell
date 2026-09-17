@@ -1,0 +1,34 @@
+#set output "vprofile.eps"
+#set term postscript enhanced eps color solid 20
+set xlabel "y"
+set ylabel "velocity"
+#set nokey
+plot "vprofile_bf.out" us 2:3 w l 
+replot "vprofile_fd.out" us 2:3 w l 
+replot "vprofile_xf.out" us 2:3 w l 
+pause -1
+set xlabel "theta"
+set ylabel "pressure"
+#set nokey
+set xrange [-pi:pi]
+plot "pressure_bf.out" us (atan2($2,$1)):3 w l 
+replot "sample_p_fd.out" us (atan2($2,$1)):3 w l 
+replot "sample_p_xf.out" us (atan2($2,$1)):3 w l 
+pause -1
+set xlabel "theta"
+set ylabel "vorticity"
+#set nokey
+set xrange [-pi:pi]
+plot "vorticity_bf.out" us (atan2($2,$1)):3 w l 
+replot "sample_vort_fd.out" us (atan2($2,$1)):3 w l 
+replot "sample_vort_xf.out" us (atan2($2,$1)):3 w l 
+pause -1
+set xlabel "theta"
+set ylabel "vx and vy on cylinder"
+#set key
+set xrange [-pi:pi]
+plot "sample_v_fd.out" us (atan2($2,$1)):3 w l 
+replot "sample_v_fd.out" us (atan2($2,$1)):4 w l 
+replot "sample_v_xf.out" us (atan2($2,$1)):3 w l 
+replot "sample_v_xf.out" us (atan2($2,$1)):4 w l 
+pause -1

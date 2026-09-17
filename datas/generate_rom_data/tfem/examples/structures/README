@@ -1,0 +1,182 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+structures1:
+
+ A simple truss problem (based on an example in the course Mechanics 4RA00).
+
+structures2:
+
+ A simple 3D truss problem.
+
+structures3:
+
+ A simple 1D cantilever beam problem 
+ P3 interpolation
+
+structures4:
+
+ A simple 1D cantilever beam problem 
+ P4 interpolation
+
+structures5:
+
+ A simply supported or built-in 1D beam problem
+ P3 interpolation
+
+structures6:
+
+ A simple 1D cantilever beam problem 
+ Function for distributive load.
+ P4 interpolation
+
+structures7:
+
+ A simply supported or built-in 1D beam problem
+ Different distributed load on parts of the beam using two groups of
+ elements with difference coefficients. Alternatively a function can be
+ defined for q.
+ P3 interpolation
+
+structures8:
+
+ A left built-in 1D beam problem with optional supports.
+ Different distributed load on parts of the beam using three groups of
+ elements with difference coefficients.
+ Alternatively a function can be defined for q.
+ Forces and/or moments in all points.
+ P3 interpolation
+
+structures9:
+
+ A left built-in 1D beam problem with optional supports.
+ Different distributed load on parts of the beam using three groups of
+ elements with difference coefficients.
+ Alternatively a function can be defined for q.
+ Forces and/or moments in all points.
+ P1/P3 interpolation. 
+
+ Identical to structures8, except using 2D elements instead of 1D elements.
+
+structures9a:
+
+ A left built-in 1D beam problem with optional supports.
+ Different distributed load on parts of the beam using three groups of
+ elements with difference coefficients.
+ Alternatively a function can be defined for q.
+ Forces and/or moments in all points.
+ P1/P4 interpolation. 
+
+ Identical to structures9, except using P1/P4 interpolation
+
+structures10:
+
+ A left built-in 2D beam problem with optional supports.
+ Different distributed load on parts of the beam using three groups of
+ elements with difference coefficients.
+ Alternatively a function can be defined for q.
+ Forces and/or moments in all points.
+ P1/P3 interpolation. 2D elements.
+ Similar to structures9 with the following extensions:
+  - axial loading
+  - optional angle with respect to the x-axis
+
+structures10a:
+
+ A left built-in 2D beam problem with optional supports.
+ Different distributed load on parts of the beam using three groups of
+ elements with difference coefficients.
+ Alternatively a function can be defined for q.
+ Forces and/or moments in all points.
+ P2/P4 interpolation. 2D elements.
+ Similar to structures9 with the following extensions:
+  - axial loading
+  - optional angle with respect to the x-axis
+
+ Identical to structures10, except using P2/P4 interpolation
+
+structures11:
+
+ A two-beam structure problem. Gravity load.
+ Forces and moment in point 2 (tip of triangle).
+ P1/P3 interpolation. 2D elements.
+ Gmsh mesh. 
+
+structures11a:
+
+ A two-beam structure problem. Gravity load.
+ Forces and moment in point 2 (tip of triangle).
+ P2/P4 interpolation. 2D elements.
+ Gmsh mesh. 
+
+ Identical to structures11, except using P2/P4 interpolation
+
+structures12:
+
+ A beam structure problem of exam Mechanics 8-11-2019. Gravity load.
+ Forces in point 2 and 3. Builtin at point 1 and 5
+ P1/P3 interpolation. 2D elements.
+ Gmsh mesh. 
+
+structures13:
+
+ A simple 2D truss problem
+ (question 1 of exam on 8-11-2019 of course Mechanics 4RA00).
+
+structures14:
+
+ A simple 2D truss problem with two groups having a different cross section.
+ (interim exam on 23-09-2015 of course Mechanics 4RA00).
+
+structures15:
+
+ A simple 2D truss problem with two groups having a different cross section.
+
+ Similar to structures14, but now includes gravity load (lumped to the nodes).
+
+structures16:
+
+ A two-beam structure problem. Gravity load. 3D beam elements.
+ Forces and moments in point 2 (tip of triangle).
+ Gmsh mesh. 
+ P1/P3/P1 interpolation for axial displacement, transverse displacement
+ and axial rotation, respectively.
+
+ Extension of structures11 to a 3D beam structure.
+
+structures16a:
+
+ A two-beam structure problem. Gravity load. 3D beam elements.
+ Forces and moments in point 2 (tip of triangle).
+ Gmsh mesh. 
+ P2/P4/P2 interpolation for axial displacement, transverse displacement
+ and axial rotation, respectively.
+
+ Identical to structures16, except using P2/P4/P2 interpolation.
+
+structures17:
+
+ A left built-in torsion shaft problem consisting of three parts. 3D beams.
+ Different polar second moments of area on parts of the shaft
+ using three groups of elements with difference coefficients.
+ External torques moments in all points.
+ P1/P3/P1 interpolation for axial displacement, transverse displacement
+ and axial rotation, respectively.
+
+structures18:
+
+ A two-beam structure problem: an L-shaped wrench. 3D beam elements.
+ A force down in point 3. Example from the Mechanics course 4RA00.
+ Gmsh mesh. 
+ P1/P3/P1 interpolation for axial displacement, transverse displacement
+ and axial rotation, respectively.
+
+structures19:
+
+ A 3D cantilever beam problem with unsymmetric bending
+ P1/P3/P1 interpolation for axial displacement, transverse displacement
+ and axial rotation, respectively.
+

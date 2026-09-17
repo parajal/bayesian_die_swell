@@ -1,0 +1,298 @@
+% !TEX root = userguide.tex
+
+\def\headdate{15th June 2009}
+
+\section{Iterative solvers for Stokes and Navier-Stokes}
+\label{sec:iterativestokes}
+
+In this section some examples using the block preconditioned iterative solvers
+for the Stokes and Navier-Stokes equations as described in the book
+by Elman \emph{et al.} \cite{Elman05} are given.
+
+\subsection{Theory}
+
+The system of equations that needs to be solved after discretization in time
+and space of the Navier-Stokes equations with constant 
+viscosity\footnote{It is important for convergence of the iterative solvers
+ that the
+``Laplace'' form of the Navier-Stokes equations is used.}
+\begin{align}
+ \rho \big( \frac{\partial \vek u}{\partial t} +
+     \vek u \cdot \nabla \vek u \big) + \nabla p 
+         - \eta \nabla^2 \vek u &=\vek f \label{eq:ns1} \\
+\nabla \cdot \vek u &= 0
+\label{eq:ns2}
+\end{align} 
+can be written in the following generic
+form\footnote{In this chapter we will be using the notation of the book
+by Elman \emph{et al.} \cite{Elman05} and the recent paper by Kay \emph{et al.}
+\cite{Kay08}.}
+\begin{equation}
+  \begin{bmatrix}
+    F & B^T \\ 
+    B & 0
+  \end{bmatrix}
+  \begin{bmatrix}
+     u \\ p
+  \end{bmatrix}=
+  \begin{bmatrix}
+     f \\ g
+  \end{bmatrix}
+ \label{eq:systemns}
+\end{equation}
+where the matrix $F$ can be written as
+\begin{equation}
+   F = a M + b A + c N + W
+\end{equation}
+where $M$ is the mass matrix, $A$ is the discrete vector-diffusion (Laplacian)
+matrix, $N$ is the vector convection matrix and
+$W$ is the Newton derivative
+matrix ($W=0$ for Picard iteration). All constant factors are put into 
+the coefficients $a$, $b$ and $c$, for example $a=\rho/\Delta t$, $b=\eta$,
+$c=\rho$ for an implicit Euler scheme. The first three terms of $F$ have a
+block diagonal structure, where the number of diagonal blocks is equal to the
+space dimension and each block is the same. If we denote this block 
+as $F_v$, we find
+\begin{equation}
+   F_v = a M_v + b A_v + c N_v(\vek w)
+\end{equation}
+where the individual matrices are given by
+\begin{align}
+   M_v&=[M_v]_{ij}=(\phi_i,\phi_j), \\
+   A_v&=[A_v]_{ij}=(\nabla\phi_i,\nabla\phi_j),  \\
+   N_v(\vek w)&=[N_v]_{ij}=(\phi_i,\vek w\cdot\nabla\phi_j)
+\end{align}
+Here $\phi_i$ are the velocity shape functions and
+$\vek w$ is a velocity vector depending on the time-integration and/or
+iteration scheme used.
+
+If we want to solve Eq.~\eqref{eq:systemns} using an iterative solver, we need 
+a good preconditioner. A good preconditioner is found by the following block
+LU-decomposition \cite{Elman05}:
+\begin{equation}
+  \begin{bmatrix}
+    F & B^T \\ 
+    B & 0
+  \end{bmatrix}=
+  \begin{bmatrix}
+    I & 0 \\ 
+    BF^{-1} & I
+  \end{bmatrix}
+  \begin{bmatrix}
+    F & B^T \\ 
+    0 & -BF^{-1}B^T
+  \end{bmatrix}
+\end{equation}
+So if the (inverse of the) upper-triangular factor
+\begin{equation}
+   U=  \begin{bmatrix}
+    F & B^T \\ 
+    0 & -BF^{-1}B^T
+  \end{bmatrix}
+\end{equation}
+is used as a preconditioner, i.e.\ the preconditioned matrix becomes
+$L=KU^{-1}$ with $K$ the coefficient matrix in Eq.~\eqref{eq:systemns}, then
+all the eigenvalues of the preconditioned matrix are identically one. The right
+lower block in $U$ is called the Schur complement $S$:
+\begin{equation}
+   S=BF^{-1}B^T
+\end{equation}
+so that
+\begin{equation}
+   U=  \begin{bmatrix}
+    F & B^T \\ 
+    0 & -S
+  \end{bmatrix}
+\end{equation}
+The preconditioning operation needed is $U^{-1}$ on a vector, which reduces to
+solving the following system
+\begin{equation}
+  \begin{bmatrix}
+    F & B^T \\ 
+    0 & -S
+  \end{bmatrix}
+  \begin{bmatrix}
+     w \\ s
+  \end{bmatrix}=
+  \begin{bmatrix}
+     v \\ q
+  \end{bmatrix}
+\end{equation}
+or
+\begin{equation}
+  S s = -q,\quad F w = v - B^T s
+\end{equation}
+Using $U^{-1}$ as a preconditioner combined with a GMRES iterative solver will
+lead to the solution in just two iterations independent of the mesh and the
+Reynolds number \cite{Elman05}. The last equation can be solved using a fast
+iterative solver using an algebraic multigrid (AMG) preconditioner 
+such as the HSL routine \texttt{hsl\_mi20}, see \cite{Doyle07}.
+A big problem, however, is the construction of the Schur
+complement matrix $S$, which is expensive and therefore
+not practical. We need an approximation to the Schur complement
+$\hat S$ such that the operation $\hat S^{-1}$ can be computed in an
+inexpensive way. Since this will lead to more iterations, we also use an
+inexpensive approximation for $F^{-1}$: one or two AMG V-cycles (as in
+\cite{Kay08}).
+
+A good approximation to the Schur complement is given by the so-called
+pressure convection-diffusion preconditioner \cite{Kay08,Elman05}:
+\begin{equation}
+   \hat S = A_p F_p^{-1}M_p
+\end{equation}
+with the matrices $M_p$, $A_p$ and $F_p$ defined for the pressure system
+in a similar way as for the velocity system:
+\begin{align}
+   F_p&= a M_p + b A_p + c N_p(\vek w), \\
+   M_p&=[M_p]_{ij}=(\psi_i,\psi_j), \\
+   A_p&=[A_p]_{ij}=(\nabla\psi_i,\nabla\psi_j),  \\
+   N_p(\vek w)&=[N_p]_{ij}=(\psi_i,\vek w\cdot\nabla\psi_j)
+\end{align}
+Here $\psi_i$ are the pressure shape functions.
+The operation $\hat S^{-1}$ can now be performed:
+\begin{equation}
+   \hat S^{-1} = M_p^{-1} F_pA_p^{-1}
+   \label{eq:expressS}
+\end{equation}
+The inverse operation $A_p^{-1}$ will be \emph{approximated}
+using one or two AMG
+V-cycles (as in \cite{Kay08}) and $M_p^{-1}$ by several (typically eight)
+diagonally (Jacobi) scaled conjugate gradient iterations. This has been
+implemented in the routine \texttt{hsl\_solve3\_mi20} of the add-on
+hsl\_extra (see Sec.~\ref{sec:hsl_extra_addon}).
+
+For a Stokes system $a=c=0$, $b=\eta$ and therefore
+ $F_v=\eta A_v$, $F_p=\eta A_p$ and
+\begin{equation}
+   \hat S = \frac1\eta M_p
+\label{eq:stokes_precon}
+\end{equation}
+so $\hat S$ reduces to the (viscosity scaled) pressure mass matrix.
+The inverse operation
+$\hat S^{-1}$ can be approximated by several (typically eight)
+diagonally (Jacobi) scaled conjugate gradient iterations.
+This has been implemented in the routine \texttt{hsl\_solve1\_mi20}
+of the add-on hsl\_extra (see Sec.~\ref{sec:hsl_extra_addon}).
+
+For semi-implicit time-integration schemes like CN/AB2 and GK2 (see
+Sec.~\ref{sec:navierstokes}) $c=0$ and therefore
+ $F_p=aM_p+bA_p$ and
+\begin{equation}
+   \hat S^{-1} = M_p^{-1} F_pA_p^{-1}= bM_p^{-1}+aA_p^{-1}=M_1^{-1}+M_2^{-1}
+\label{eq:stokes_helmholtz_precon}
+\end{equation}
+where the matrices are given by $M_1=M_p/b$ and $M_2=A_p/a$.
+The inverse operation
+$M_1^{-1}$ can be approximated by several (typically eight)
+diagonally (Jacobi) scaled conjugate gradient iterations and 
+$M_2^{-1}$ by one or two AMG V-cycles.
+This has been implemented in the routine \texttt{hsl\_solve2\_mi20}
+of the add-on hsl\_extra (see Sec.~\ref{sec:hsl_extra_addon}).
+
+Notes:
+\begin{itemize}
+   \item See \cite{Elman05} and \cite{Kay08} for the theory and a full list of
+proper references.
+   \item The Stokes system is solved using unsymmetric preconditioning and an
+iterative method for unsymmetric systems (BiCGSTAB or GMRES). In the book Elman
+\emph{et al.} \cite{Elman05} a symmetric preconditioner (using the block
+diagonal only) and an iterative method for indefinite symmetric systems
+(MINRES) is
+used. In the HSL-package MINRES is not available and we have not been able to
+test whether this gives any advantages in CPU time.
+\item The solvers require user input of the partitioning of the matrix
+      and the pressure matrices (such $M_p$ etc.).
+      The latter matrices require a separate pressure
+      problem to be setup. Therefore, they are not as straightforward to use
+      as direct solvers or ILU preconditioned iterative solvers. However, if
+      the solvers are applicable for the problem at hand $\mathcal{O}(N)$
+      scaling can be achieved, i.e.\ the CPU time and memory demands scale
+      linearly with the number of degrees of freedom.
+\item Currently the solvers are unable to handle constraints.
+\item The viscous term needs to be build using the Laplace expression
+      $\eta\nabla^2\vek u$ instead of $\nabla\cdot(2\eta\ten D)$ to get fast
+      convergence. This affects the natural boundary conditions, but it also
+remains uncertain whether generalized Newtonian systems can be solved. Maybe a
+Picard scheme using $\nabla\cdot(\eta\nabla\vek u)$ can work.
+\item For full Dirichlet conditions the pressure level can be left undetermined
+      \cite{Elman05}.
+\item There are some issues with the boundary conditions for the pressure
+      system for inflow boundaries at high Reynolds number if convection is
+      included in the pressure system ($N_p(\vek w)$) \cite{Elman05}.
+\item The DEVSS-Stokes system can be handled, but requires more iterations than
+      the Stokes system.
+\end{itemize}
+
+\subsection{Examples for Stokes and Stokes including a mass term}
+
+The examples are based on the cavity flow for 2D (\texttt{stokes1.f90}) and
+3D (\texttt{stokes11.f90}). The following examples are available:
+\begin{description}
+   \item{\texttt{stokes26}:} Block preconditioning using the pressure mass form
+\eqref{eq:stokes_precon} for the 2D cavity.
+   \item{\texttt{stokes26}:} Block preconditioning using the pressure mass form
+\eqref{eq:stokes_precon} for the 3D cavity.
+   \item{\texttt{stokes28}, \texttt{stokes29} and \texttt{stokes31}:}
+The following Helmholtz-Stokes system is solved:
+\begin{alignat}{3}
+a\vek u-&\nabla^2\vec u+\nabla p & &=\vek f,&&\qquad\text{in }\Omega
+ \label{eq:stokes+mass1}\\
+   &\nabla\cdot\vek u& &=0&&\qquad\text{in }\Omega
+ \label{eq:stokes+mass2}
+\end{alignat}
+for the 2D cavity.
+This form appears when applying semi-implicit 
+time-integration schemes like CN/AB2 and GK2 (see
+Sec.~\ref{sec:navierstokes}).
+In example \texttt{stokes28} this is solved using
+block preconditioning with the pressure mass
+form \eqref{eq:stokes_precon} as used for the Stokes equation.
+As the value of $a$ is increased the number of iterations needed rapidly
+increases.
+In the examples \texttt{stokes29} and \texttt{stokes31} this is solved using
+block preconditioning with the pressure mass and diffusion matrix, using
+the form \eqref{eq:expressS} and \eqref{eq:stokes_helmholtz_precon},
+respectively, for the approximate inverse of the Schur complement.
+Rapid convergence is maintained for any value of $a$.
+   \item{\texttt{stokes30}:} Block preconditioning using the pressure mass and
+diffusion matrix with \eqref{eq:expressS} for solving
+Eqs.~\eqref{eq:stokes+mass1}--\eqref{eq:stokes+mass2} in 
+ the 3D cavity.
+\end{description}
+
+\subsection{Examples for Navier-Stokes}
+The following examples are available:
+\begin{description}
+\item{\texttt{navier\_stokes12}:} Similar to \texttt{navier\_stokes1}
+ (steady flow in a 2D driven cavity see Sec.~\ref{sec:nssteady2D}),
+but now using pressure convection-diffusion
+preconditioning in the form \eqref{eq:expressS} for the approximate inverse of the Schur complement. A lot of tweaking can
+be done here for improving the performance (iterative solver, parameters in AMG, accuracy parameters, Picard versus Newton,
+resolution of the mesh, steps in Reynolds number, \ldots ). At least a good resolution of the mesh is very important.
+\item{\texttt{navier\_stokes13}:} Similar to \texttt{navier\_stokes7}
+(manufactured solution in a 2D cavity see Sec.~\ref{sec:testproblemNS} using
+AB2/CN time integration),
+but now using pressure mass and diffusion
+preconditioning in the form \eqref{eq:stokes_helmholtz_precon}
+for the approximate inverse of the Schur complement. It turns out that
+for this problem the solution is \emph{unstable}, whereas the direct solver
+(\texttt{navier\_stokes7}) seems to be stable. It is unclear how this can
+happen. Maybe, the AB2/CN method is only marginally stable and
+errors produced by the iterative solver triggers the instability.
+\item{\texttt{navier\_stokes14}:} Similar to \texttt{navier\_stokes11}
+(manufactured solution in a 2D cavity see Sec.~\ref{sec:testproblemNS} using
+GK2 time integration),
+but now using pressure mass and diffusion
+preconditioning in the form \eqref{eq:stokes_helmholtz_precon}
+for the approximate inverse of the Schur complement. It turns out that
+for this problem the solution is \emph{stable}, like the direct solver
+(\texttt{navier\_stokes11}). 
+ A lot of tweaking can
+be done here for improving the performance and accuracy (iterative solver,
+parameters in AMG, accuracy parameters, \ldots ). If the mass dominates (large
+Reynolds, small time steps) the number of iterations is low, but increasing the
+accuracy of the iterative solver (and thus more iterations) maybe necessary to
+obtain an accurate solution. In any case, this looks like a nice candidate for
+a fast Navier-Stokes solver comparable to pressure-correction, but without the
+problems of pressure boundary conditions.
+\end{description}

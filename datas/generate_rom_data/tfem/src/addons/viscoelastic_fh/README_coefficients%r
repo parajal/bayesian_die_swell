@@ -1,0 +1,6 @@
+Real coefficients for the element routines in this addon.
+-----------------------------------
+
+This add-on does not have coefficients yet.
+It use the generalized stokes add-on.
+Thus at least 250 real coefficients must be reserved.

@@ -1,0 +1,13 @@
+The examples in this directory are NOT described in the userguide.
+
+
+Short description
+-----------------
+
+second-moment1:
+
+ Compute area, centroid and second moment of area tensor for a cross section
+
+second-moment2:
+
+ Compute volume, centroid and second moment of volume tensor for a body

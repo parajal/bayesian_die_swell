@@ -1,0 +1,78 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+convection_diffusion1:
+
+ Steady scalar convection-diffusion problem on a unit square with
+ Dirichlet boundary conditions and natural boundary conditions.
+ Varying alpha coefficient using a function or a vector in the nodes.
+ Varying velocity coefficient using a function.
+
+convection_diffusion2:
+
+ Steady scalar convection-diffusion problem on a unit square with
+ Dirichlet boundary conditions and natural boundary conditions.
+ Varying alpha tensor coefficient using a function.
+ Varying velocity coefficient using a function.
+
+convection_diffusion3:
+
+ Time-dependent scalar convection-diffusion problem on a unit square with
+ Dirichlet boundary conditions and natural boundary conditions.
+ Varying alpha coefficient using a function or a vector in the nodes.
+ Varying velocity coefficient using a function.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+
+convection_diffusion4:
+
+ Time-dependent scalar convection-diffusion problem on a unit square with
+ Dirichlet boundary conditions and natural boundary conditions.
+ Varying alpha coefficient using a function or a vector in the nodes.
+ Varying beta coefficient using a function or a vector in the nodes.
+ Varying velocity coefficient using a function.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+
+convection_diffusion5:
+
+ Time-dependent scalar convection-diffusion problem on a unit square with
+ Dirichlet boundary conditions and natural boundary conditions.
+ Varying alpha coefficient using a function or a vector in the nodes.
+ Varying beta coefficient using a function or a vector in the nodes.
+ Varying velocity coefficient using a function.
+ Crank-Nicolson time discretization.
+
+convection_diffusion6:
+
+ Time-dependent scalar convection-diffusion problem on a unit square with
+ Dirichlet boundary conditions and natural boundary conditions.
+ Varying alpha tensor coefficient using a function.
+ Varying beta coefficient using a function or a vector in the nodes.
+ Varying velocity coefficient using a function.
+ Crank-Nicolson time discretization.
+
+convection_diffusion7:
+
+ Steady scalar convection-diffusion problem in 1D on an interval (0,L):
+
+   u dc/dx - d/dx ( alpha * dc/dx ) = 0 on (0,L)
+
+ with c(0)=c0 and c(L)=cL, using a spectral element method with a uniform grid.
+ The standard elements are used.
+
+convection_diffusion8:
+
+ Steady scalar convection-diffusion problem on a unit square with Dirichlet
+ and natural boundary conditions. There is a circular region in the domain,
+ where on the boundary a jump in flux is applied (heat supply).
+ This is basically an extension of diffusion7 to a convection-diffusion problem
+ Weak embedded interface conditions are imposed at the cylindrical interface.
+ XFEM is used to solve the problem.
+ Constant or varying alpha coefficient using a function.
+ Varying velocity coefficient using a function.
+ Optional different weighting for both sides of the interface.
+ Optional Nitsche's method.
+ Optional Baumann-Oden method.
+ Optional Lesaint-Raviart upwinding along the interface.

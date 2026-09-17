@@ -1,0 +1,317 @@
+The examples in this directory are described in the userguide, except for
+couette1a and couette1b.
+
+Short description
+-----------------
+
+couette1:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ first-order time integration
+
+couette1a:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ first-order time integration
+
+ This is the couette1 problem with the following changes:
+  1) Q1isoQ2 shape functions
+  2) subdomain Gauss integration (using 4 subdomains)
+
+couette1b:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ first-order time integration
+
+ This is the couette1 problem with the following changes:
+  1) triangular elements
+  2) P1isoP2 shape functions
+  3) subdomain Gauss integration (using 4 subdomains/subtriangles)
+
+couette2:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+
+couette3:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration
+
+couette4:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration
+
+couette5:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ two viscoelastic modes
+
+couette6:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration
+ two viscoelastic modes
+
+couette7:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS/DG
+ first-order time integration
+
+couette8:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS/DG
+ second-order time integration
+
+couette9:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+ NOTE: this is similar to couette4, but now using the L2-projection of
+       c=exp(s).
+
+couette10:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ G/SUPG
+ second-order time integration
+ NOTE: similar to couette2, but omitting DEVSS.
+
+couette11:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration
+ NOTE: similar to couette4, but omitting DEVSS.
+
+couette12:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ G/SUPG
+ first-order time integration
+ NOTE: similar to couette1, but omitting DEVSS.
+
+couette13:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration
+ NOTE: similar to couette3, but omitting DEVSS.
+
+couette14:
+
+ Linear Couette flow for an integral UCM model.
+ Problem 1:
+   Poiseuille flow on a unit square. Periodical boundary conditions.
+   Collocation of nodes.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: Deformation fields computed as a function of time, assuming the
+   a steady state initial condition for the fields.
+ Problem 3: Stress tensor projection on the interpolation space for F.
+ Implicit DG with P1 or P2 interpolation for tau-convection.
+ Extrapolated BDF2 time discretization.
+
+couette15, couette15a:
+
+ Viscoelastic problem on a unit square using b-formulation.
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=b.b^T on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+ NOTE: This is similar to couette9, but now using the b-formulation.
+ NOTE: To find the reference steady state conformation tensor, the flow is
+       first run starting from the exact steady state without an imposed
+       disturbance until timestep dist_step.
+ NOTE: couette15 uses nodal point level rotation reinitialization.
+       couette15a uses element level rotation reinitialization.
+
+couette16, couette16a:
+
+ Viscoelastic problem on a unit square using b-formulation
+ Explicit div tau term.
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ NOTE: This is similar to couette2, but now using the b-formulation.
+ NOTE: To find the reference steady state conformation tensor, the flow is
+       first run starting from the exact steady state without an imposed
+       disturbance until timestep dist_step.
+ NOTE: couette16 uses nodal point level rotation reinitialization.
+       couette16a uses element level rotation reinitialization.
+
+couette17:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ Fully-implicit with Newton-Raphson for the conformation tensor.
+ NOTE: Similar to couette2, but now with implicit conformation.
+
+couette18:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+ Fully-implicit with Newton-Raphson for the conformation tensor.
+ NOTE: Similar to couette9, but now with implicit conformation.
+
+couette19:
+
+ Viscoelastic problem on a unit square
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ Fully-implicit with Newton-Raphson for the b-tensor.
+ NOTE: To find the reference steady state conformation tensor, the flow is
+       first run starting from the exact steady state without an imposed
+       disturbance until timestep dist_step.
+ NOTE: This is similar to couette2, but now using the b-formulation with
+       implicit b-tensor.
+ NOTE: couette19 uses nodal point level rotation reinitialization.
+       couette19a uses element level rotation reinitialization.
+
+couette20:
+
+ Viscoelastic problem on a unit square using b-formulation.
+ linear Couette flow
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=b.b^T on the finite element approximation space in the
+ momentum balance.
+ second-order time integration
+ Fully-implicit with Newton-Raphson for the b-tensor.
+ NOTE: To find the reference steady state conformation tensor, the flow is
+       first run starting from the exact steady state without an imposed
+       disturbance until timestep dist_step.
+ NOTE: This is similar to couette15, but now with implicit b-tensor.
+ NOTE: couette20 uses nodal point level rotation reinitialization.
+       couette20a uses element level rotation reinitialization.
+
+couette21:
+
+ Viscoelastic problem on a unit square (c formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ Fully-implicit with Newton-Raphson
+ Optionally include Jacobian of SUPG test function.
+ NOTE: Similar to couette2, but now fully implicit
+
+couette22, couette22a:
+
+ Viscoelastic problem on a unit square (b formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ Fully-implicit with Newton-Raphson
+ Optionally include Jacobian of SUPG test function.
+ NOTE: To find the reference steady state conformation tensor, the flow is
+       first run starting from the exact steady state without an imposed
+       disturbance until timestep dist_step.
+ NOTE: Similar to couette15, but now fully implicit
+ NOTE: couette22 uses nodal point level rotation reinitialization.
+       couette22a uses element level rotation reinitialization.
+
+couette23:
+
+ Viscoelastic problem on a unit square (c formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ Building generalized eigenvalue problem
+    (A-lambda B)v = 0
+ for linear stability analysis.
+ Both A and B have the same non-zero matrix structure.
+ FEAST eigenvalue solver.
+
+couette24:
+
+ Viscoelastic problem on a unit square (c formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ Building generalized eigenvalue problem
+    (A-lambda B)v = 0
+ for linear stability analysis.
+ Matrices A and B have a different non-zero matrix structure.
+ FEAST eigenvalue solver.
+
+couette25:
+
+ Viscoelastic problem on a unit square (b formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ Building generalized eigenvalue problem
+    (A-lambda B)v = 0
+ for linear stability analysis.
+ Both A and B have the same non-zero matrix structure.
+ FEAST eigenvalue solver.
+ NOTE: Similar to couette23, but now using the b-formulation.
+
+couette26:
+
+ Viscoelastic problem on a unit square (b formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ Building generalized eigenvalue problem
+    (A-lambda B)v = 0
+ for linear stability analysis.
+ Matrices A and B have a different non-zero matrix structure.
+ FEAST eigenvalue solver.
+ NOTE: Similar to couette24, but now using the b-formulation.
+
+couette27
+
+ Viscoelastic problem on a unit square (b formulation)
+ linear Couette flow
+ DEVSS-G/SUPG
+ second-order time integration
+ Fully-implicit with Newton-Raphson
+ Optionally include Jacobian of SUPG test function.
+ Optionally use L=G or L=(nabla u)^T in constitutive equation.
+ NOTE: To find the reference steady state b-tensor, the flow is
+       first solved for the exact steady state without an imposed
+       disturbance using Newton-Raphson.
+ NOTE: This is similar to couette22a, but now using Newton-Raphson iteration to
+       find the steady state first instead of time-stepping.

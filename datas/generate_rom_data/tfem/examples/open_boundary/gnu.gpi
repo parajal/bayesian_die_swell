@@ -1,0 +1,9 @@
+plot "divergence_on_c2.out1" us 2:3 w lp, \
+     "divergence_on_c2.out2" us 2:3 w lp
+pause -1
+plot "pressure_on_c2.out1" us 2:3 w lp, \
+     "pressure_on_c2.out2" us 2:3 w lp
+pause -1
+plot "vorticity_on_c2.out1" us 2:3 w lp, \
+     "vorticity_on_c2.out2" us 2:3 w lp
+pause -1

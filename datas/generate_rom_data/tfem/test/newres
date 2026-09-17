@@ -1,0 +1,57 @@
+#!/bin/sh
+                                                                                
+# newres : copy new results for all testprograms to .res file
+# newres test : copy new results for a single testprogram to .res file
+
+function helptext ()
+{
+  echo "Usage: newres [OPTIONS] [program(s)]"
+  echo "Store new results for given or all test programs"
+  echo
+  echo "Options:   (Description)"
+  echo "   -c compiler  store output to the given compiler directory."
+  echo "   -d results_compiler  compare output to the results of the given compiler"
+  echo "                        specified by the directory of results"
+  echo "                Compilers available:"
+  ls | grep results_ | cut -c9- | sed "s/^/\t\t\t/" \
+     | sed "/nagfor_macos/s/$/ (default)/"
+  echo "   -h           this text is shown "
+}
+
+# get options
+
+dir=results_nagfor_macos_arm64
+
+while getopts c:d:h optvar; do
+  case "$optvar"
+  in
+     c) dir="results_"$OPTARG ;;
+     d) dir=$OPTARG ;;
+     h) helptext ; exit ;;
+     "?") helptext ; exit 1 ;;
+  esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ ! -d $dir ]; then
+  echo $dir: compiler directory unknown
+  exit 1
+fi
+
+if [ $# -ge 1 ]
+then
+   src="$*"
+else
+   src="*.f90"
+fi
+
+for file in $src
+do
+   base=`basename $file .f90`
+   grep "end program" $file >/dev/null
+   if [ $? == 0 ]; then
+      cp $base.res $dir/$base.res 
+   fi
+done
+

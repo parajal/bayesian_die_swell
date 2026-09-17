@@ -1,0 +1,133 @@
+
+// Create domain vertices
+ 
+Point(1) = { x[1], y[1],  z[1], dx_box};
+Point(2) = { x[2], y[2],  z[1], dx_refined};
+Point(3) = { x[1], y[1],  z[2], dx_box};
+Point(4) = { x[2], y[2],  z[2], dx_refined};
+
+Line(1) = {1, 2};
+Line(2) = {2, 4};
+Line(3) = {4, 3};
+Line(4) = {3, 1};
+
+Line Loop(1) = {1, 2, 3, 4};
+Plane Surface(1) = {1};
+
+
+// Extrude the surface
+
+out[] = Extrude {{0,0,1}, {0,0,0}, -theta} {
+     Surface{1}; Layers{n_th};
+};
+
+
+// Delete volume entity that is not needed after the extrude
+ 
+Delete {
+  Volume{1};
+}
+
+
+// Define physical points/lines from the geometric points/lines
+
+Physical Point(1) = 2;
+Physical Point(2) = 4;
+Physical Line(1) = 2;
+Physical Line(2) = 1;
+Physical Line(3) = 6;
+Physical Line(4) = 3;
+Physical Line(5) = 8;
+
+
+// Create outer boundary
+
+Physical Surface(1) = 17;
+Physical Surface(2) = 26;
+Physical Surface(3) = 25;
+Physical Surface(4) = 1;
+Physical Surface(5) = 13;
+Physical Surface(6) = 21;
+
+surf_loop[0] = newsl;
+
+Surface Loop(surf_loop[0]) = {1,13,26,21,17,25};
+
+
+// Sphere
+
+Function MakeSphere 
+
+  p1 = newp; Point(p1) = {x,   y,   z,   dx_part} ;
+  p2 = newp; Point(p2) = {x+r, y,   z,   dx_part} ;
+  p3 = newp; Point(p3) = {x,   y+r, z,   dx_part} ;
+  p4 = newp; Point(p4) = {x,   y,   z+r, dx_part} ;
+  p5 = newp; Point(p5) = {x-r, y,   z,   dx_part} ;
+  p6 = newp; Point(p6) = {x,   y-r, z,   dx_part} ;
+  p7 = newp; Point(p7) = {x,   y,   z-r, dx_part} ;
+
+  c1 = newl; Circle(c1) = {p2, p1, p7};
+  c2 = newl; Circle(c2) = {p7, p1, p5};
+  c3 = newl; Circle(c3) = {p5, p1, p4};
+  c4 = newl; Circle(c4) = {p4, p1, p2};
+  c5 = newl; Circle(c5) = {p2, p1, p3};
+  c6 = newl; Circle(c6) = {p3, p1, p5};
+  c7 = newl; Circle(c7) = {p5, p1, p6};
+  c8 = newl; Circle(c8) = {p6, p1, p2};
+  c9 = newl; Circle(c9) = {p7, p1, p3};
+  c10 = newl; Circle(c10) = {p3, p1, p4};
+  c11 = newl; Circle(c11) = {p4, p1, p6};
+  c12 = newl; Circle(c12) = {p6, p1, p7};
+
+// Spherical surface
+
+  lin1 = newll; Line Loop(lin1) = {c5, c10, c4};
+  surf1 = news; Surface(surf1) = {lin1};
+  lin2 = newll; Line Loop(lin2) = {c9, -c5, c1};
+  surf2 = news; Surface(surf2) = {lin2};
+  lin3 = newll; Line Loop(lin3) = {c12, -c8, -c1};
+  surf3 = news; Surface(surf3) = {lin3};
+  lin4 = newll; Line Loop(lin4) = {c8, -c4, c11};
+  surf4 = news; Surface(surf4) = {lin4};
+  lin5 = newll; Line Loop(lin5) = {-c10, c6, c3};
+  surf5 = news; Surface(surf5) = {lin5};
+  lin6 = newll; Line Loop(lin6) = {-c11, -c3, c7};
+  surf6 = news; Surface(surf6) = {lin6};
+  lin7 = newll; Line Loop(lin7) = {-c2, -c7, -c12};
+  surf7 = news; Surface(surf7) = {lin7};
+  lin8 = newll; Line Loop(lin8) = {-c6, -c9, c2};
+  surf8 = news; Surface(surf8) = {lin8};
+
+  surf_loop[t] = newsl;
+
+  Surface Loop(surf_loop[t]) = {surf8, surf5, surf1, surf2,
+                                surf3, surf7, surf6, surf4};
+
+  Physical Surface(t+6) = {surf8, surf5, surf1, surf2, 
+                           surf3, surf7, surf6, surf4};
+
+Return
+
+
+// Make nobj spheres
+
+For t In {1:nobj}
+
+  x = xp[t];
+  y = yp[t];
+  z = zp[t];
+  r = rp[t]; 
+
+  Call MakeSphere;
+
+EndFor
+
+
+// Make box with holes (=the spheres)
+
+Volume(1) = {surf_loop[]} ;
+
+Physical Volume(1) = {1};
+
+// vim: set filetype=gmsh :  //
+

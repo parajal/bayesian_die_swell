@@ -1,0 +1,24 @@
+! Data four modes Giesekus from:
+! Wilco M.H. Verbeeten, Gerrit W.M. Peters, Frank P.T. Baaijens, Viscoelastic
+! analysis of complex polymer melt flows using the eXtended Pom–Pom model
+! J. Non-Newtonian Fluid Mech. 108 (2002) 301–326
+
+&comppar
+    timeint1 = 1         ! (first-order) time integration
+    timeint2 = 7         ! (second-order) time integration
+    numtimesteps = 200   ! number of time steps
+    logc = 1             ! standard scheme or log transformation
+    eta_s = 0.0          ! solvent viscosity
+                         ! polymer modulus
+    G = 7.2006e4 1.5770e4 3.3340e3 3.0080e2
+    lambda = 3.8946e-3 5.1390e-2 5.0349e-1 4.5911e0 ! relaxation time
+    alphaG = 0.30 0.30 0.25 0.04  ! alpha parameter
+    deltat = 5e-2        ! time step
+    beta = 1.0           ! upwinding parameter in the SUPG method
+    rs_gup = 1.0         ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0         ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_c  = 1.0          ! real_storage for the conformation LU (HSL)
+    is_c  = 1.4          ! integer_storage for conformation LU (HSL)
+    U = 3                ! velocity of sphere
+    restart = 0          ! restart
+/

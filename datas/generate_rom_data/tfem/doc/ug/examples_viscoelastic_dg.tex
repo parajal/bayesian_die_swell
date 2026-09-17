@@ -1,0 +1,244 @@
+% !TEX root = userguide.tex
+
+\def\headdate{28th January 2014}
+
+\section{Viscoelastic fluid flow using DG (explicit stress formulation)}
+
+In this section some examples using the equations for viscoelastic fluid flow
+will be given after the theory in the next section.
+
+\subsection{Weak form of the viscoelastic fluid equations}
+\label{sec:DGweak}
+
+We assume the user is already familiar with Sec.~\ref{sec:weakviscoelastic}.
+We will only explain the differences between SUPG and DG here. 
+
+The equations for the flow of a single-mode viscoelastic fluid
+in a region $\Omega$ are given by Eqs.~\eqref{eq:ve1}--\eqref{eq:ve3}.
+
+For the discontinuous Galerkin \fem\ we first start with a finite element mesh
+before defining the weak form:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+The weak form can be now be stated, element wise for the constitutive equation,
+as:
+Find $\vek u$, $p$ and $\ten c$ such that
+\begin{alignat}{2}
+ \big(\vek v,\rho(\pderiv{\vek u}t+\vek u\cdot\nabla\vek u)\big) +
+  \big((\nabla\vek v)^T,2\eta_s\ten D\big)
+    &-(\nabla\cdot\vek v,p)+\big((\nabla\vek v)^T,\ten\tau(\ten c)\big)\notag\\
+    &=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\rho\vek b)
+&\qquad&\text{for all }\vek v\\
+  \,(q,\nabla\cdot\vek u)&=0,&\qquad&\text{for all }q\\
+ \int_{\Omega_e}\ten d:\big(\pderiv{\ten c}{t}
++\vek u\cdot\nabla\ten c-\ten g(\ten L,\ten c)\big)\D x
+    &+\int_{\Gamma^e_{\text{in}}}(\vek u\cdot\vek n)\ten d:[\ten c]\D s = 0,
+  &\qquad&\text{for all }\ten d,\Omega_e
+   \label{eq:weakcDG}
+\end{alignat}
+using appropriate spaces for $\vek u$, $p$, $\ten c$, $\vek v$, $q$ and $\ten
+d$.
+The function space for $\ten c$ and $\ten d$ is discontinuous on the
+element boundaries.
+In equation~\eqref{eq:weakcDG} $\Gamma^e_{\text{in}}$ is the
+inflow boundary of element $e$ and
+$[\ten c]=\ten c^+-\ten c$ is the ``jump'' across that element boundary.
+Also, $\vek n$ is the outwardly directed unit normal vector on the boundary of
+the element and $\ten c^+$ is
+the `outside' value of $\ten c$.
+ The function $\ten g(\ten L,\ten c)$ is given by
+\begin{equation}
+\ten g(\ten L,\ten c)=\ten L\cdot\ten c+\ten c\cdot\ten L^T
+ -\ten f(\ten c)
+\end{equation}
+
+The weak form can be used to obtain an approximate solution
+by interpolating $\vek u$, $p$ and $\ten c$ 
+(and similarly $\vek v$, $q$ and $\ten d$) by
+polynomials on each element:
+\begin{align}
+    \vek u_h&=\tsum_k \phi_k(\vek x)\vek u_k=\col\phi^T(\vek x)\col{\vek u}\\
+    p_h&=\tsum_k \psi_k(\vek x) p_k=\col\psi^T(\vek x)\col{ p} \\
+  \ten c_h&=\tsum_k \theta_k(\vek x)\ten c_k=\col\theta^T(\vek x)\col{\ten c}
+  \label{eq:thetaDG}
+\end{align}
+where $\col\phi(\vek x)$, $\col\psi(\vek x)$, $\col\theta(\vek x)$
+are global shape functions. Note, that most terms in the momentum balance and
+the continuity equation can be build using standard (Navier-) Stokes elements.
+
+We will be using the DEVSS formulation
+(see Sec.~\ref{sec:weakviscoelastic}) and the
+log-conformation scheme can be used as an option.
+
+\subsection{Time discretization (without inertia)}
+\label{sec:timeDG}
+
+The weak form of the constitutive equation \eqref{eq:weakcDG}
+can be written as
+\begin{equation}
+   \mat M\utilde{\dot c}=\utilde f(\utilde c,\vek u,t)
+\end{equation}
+where $\utilde c$ is the vector of conformation unknowns and $\mat M$ is a mass
+matrix of the form
+\begin{equation}
+   \mat M=\begin{pmatrix}
+              \mat M_1 & \mat 0 & \hdotsfor{2} & \mat 0 \\
+              \mat 0 & \mat M_2 & \mat 0 & \ldots & \mat 0 \\
+                              \vdots &  && \ddots  & \vdots \\
+              \mat 0 & \hdotsfor{2} & \mat 0 & \mat M_{N_e}
+      
+          \end{pmatrix}
+\end{equation}
+with $\mat M_e$ the mass matrix of element $e$. The matrix $\mat M$ is constant
+for a fixed Eulerian mesh and can easily be inverted:
+\begin{equation}
+   \mat M^{-1}=\begin{pmatrix}
+              \mat M_1^{-1} & \mat 0 & \hdotsfor{2} & \mat 0 \\
+              \mat 0 & \mat M_2^{-1} & \mat 0 & \ldots & \mat 0 \\
+                              \vdots &  && \ddots  & \vdots \\
+              \mat 0 & \hdotsfor{2} & \mat 0 & \mat M_{N_e}^{-1}
+      
+          \end{pmatrix}
+\end{equation}
+and it is possible to apply the inversion at element level. It is even possible
+to choose the shape function based on unknowns in Gauss points, 
+%as in done in
+%\dyn\ \cite{Hulsen05b}, 
+in which case the mass matrix is a diagonal matrix.	
+
+Once a routine exists for computing $\utilde f(\utilde c,\vek u,t)$ any
+standard \emph{explicit} time integration scheme can be easily implemented,
+for example Euler forward:
+\begin{equation}
+   \mat M\dfrac{\utilde c^{n+1}-\utilde c^n}{\Delta t}
+                               =\utilde f(\utilde c^n,\vek u^n,t^n)
+\end{equation}
+or second-order Adams-Bashforth (AB2):
+\begin{equation}
+   \mat M\dfrac{\utilde c^{n+1}-\utilde c^n}{\Delta t}
+                               =\frac32\utilde f(\utilde c^n,\vek u^n,t^n)
+                  -\frac12\utilde f(\utilde c^{n-1},\vek u^{n-1},t^{n-1})
+\end{equation}
+
+Remarks:
+\begin{enumerate}
+   \item In the examples below we build $\mat M$ as a system matrix and use the
+         default solver to perform an LU-decomposition only once.
+   \item Inflow boundary conditions at $\Gamma_{\text{in}}$ (see
+         Eq.~\eqref{eq:cinflow}) cannot be imposed as Dirichlet boundary
+         condition. The value of $\ten c_\text{in}$ must be given as a
+         function when $\vek u\cdot\vek n<0$ on the boundary.
+   \item For shape functions $\theta_k$ of first-order ($P_1^d$ or $Q_1^d$) 
+         on element level the forward Euler scheme is unstable for \emph{any}
+         time step $\Delta t$ with DG discretization of the convection terms
+         (see \cite{Hulsen91} and the references therein).
+         The relaxation terms can make it stable again, but time steps can be
+         very limited. Therefore it is recommended to use AB2 for stability,
+         which gives a proper CFL condition for the time step \cite{Hulsen01}.
+         Other second-order explicit schemes, such a RK2, are also possible
+         \cite{Hulsen91}.
+         Similarly a time integration scheme of order $k+1$ is need for
+         $k$-th order interpolation in space.
+\end{enumerate}
+
+After we have computed $\ten c^{n+1}$ we compute $\vek u^{n+1}$, 
+$\vek p^{n+1}$ and $\ten E^{n+1}$ from the momentum balance,
+ continuity equation and projection equation at time $t^{n+1}$:
+\begin{align}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +\nabla p^{n+1} 
+  -2\alpha\nabla\cdot\big( \ten D(\vek u^{n+1}) -\ten E^{n+1} \big)
+&=\nabla\cdot\ten \tau(\ten c^{n+1})
+        + \rho\vek b \label{eq:mombalDG}\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\ten D(\vek u^{n+1})+\ten E^{n+1} &= \ten 0
+\end{align}
+We call this scheme the \emph{explicit stress} formulation: the stress tensor
+$\ten \tau(\ten c^{n+1})$ in the momentum balance is computed in an
+explicit way from $\ten c^{n+1}$, which itself has been computed first from the
+constitutive equation.
+
+The time integration procedures described above are only suitable for fluids
+where $\eta_s\neq0$. For fluids with $\eta_s=0$, such as melts described by a
+large number of modes, other procedures are required. For small values of
+$\eta_s$ the time step limitation can be very severe and the explicit stress
+formulation cannot be used either. 
+
+\subsection{Planar Couette flow of an Oldroyd-B fluid for a
+ Weissenberg number (Wi) of 3 and 5}
+
+We consider an Oldroyd fluid for a planar Couette problem on a unit square.
+The problem is similar to the problem for an Oldroyd-B fluid in
+Sec.~\ref{sec:couette}, but now using the DG method with explicit
+time-integration.
+There are two problems \texttt{couette7.f90} (first-order time
+integration) and \texttt{couette8.f90} (second-order time integration AB2).
+For each main file there are two input files:
+\begin{quote}
+   \texttt{input\_couette7a.txt}: $\Wi=3$, time step $\Delta t=5\times10^{-3}$\\
+   \texttt{input\_couette7b.txt}: $\Wi=3$, time step $\Delta t=2\times10^{-3}$\\
+   \texttt{input\_couette8a.txt}: $\Wi=3$, time step $\Delta t=1\times10^{-2}$\\
+   \texttt{input\_couette8b.txt}: $\Wi=5$, time step $\Delta t=1\times10^{-2}$
+\end{quote}
+It is clear by running the examples that:
+\begin{itemize}
+ \item for the Couette problem time steps for the
+   first-order scheme need to be much smaller than for the second-order scheme
+to get similar results. The first example \texttt{input\_couette7a.txt} even is
+unstable.
+  \item the Couette problem is unstable for $\Wi=5$, which is one of the main
+drawbacks of DEVSS/DG compared to DEVSS-G/SUPG. It should be noted here that a
+square mesh is a bad case: stability improves when elements are stretched in
+$x$-direction. In many practical problems elements have been stretched in flow
+direction.
+\end{itemize}
+
+\subsection{Axi-symmetric problem: flow around a sphere in
+ cylindrical tube filled with a Giesekus fluid.}
+
+We consider the problem of a sphere moving along
+the center line of a cylindrical tube with a constant velocity of $U$.
+The problem is similar to the problem in Sec.\ref{sec:sphere2}, but instead of
+the DEVSS-G/SUPG method we use the DEVSS/DG method here.
+For the viscoelastic problem we have the additional boundary
+condition that it is assumed that the stress is zero at the inflow boundary.
+
+There are two example files: 
+\texttt{sphere4.f90} (first-order integration) and
+\texttt{sphere5.f90} (second-order integration AB2).
+The input files are \texttt{input\_sphere4.txt} and \texttt{input\_sphere5.txt}, respectively.
+For this problem the time step limitations of the first-order and second-order
+scheme are similar.
+In contrast to the DEVSS-G/SUPG there is no need for a restart from a lower
+Weissenberg number solution.
+The post-processing files are \texttt{sphere\_post.f90} and 
+\texttt{streamfunction.f90}.
+
+
+\subsection{Flow around a cylinder confined between two walls for a FENE-P
+model}
+\label{sec:cylinderfenepdg}
+
+This problem is a modification of the 
+2D flow around a cylinder confined between two walls using a FENE-P model,
+described in Sec.~\ref{sec:cylinderfenep} It uses small time steps to avoid the
+trace of the conformation tensor becoming too large.
+
+The example file for the 2D problem is \texttt{cylinder2.f90} and
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_FENE-P}
+\end{quote}
+The mesh is generated by \tfem\ in the
+following way:
+\begin{quote}
+   \texttt{mesh\_confined\_cylinder < meshinput1.txt}
+\end{quote}
+
+There is a main program \texttt{streamfunction.f90} to
+generate the stream function. 
+The program \texttt{cylinder\_post.f90}
+creates post-processing data for plotting.
+

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Convert dos to unix files (used under Msys)
+
+if [ $# -eq 0 ]
+then
+     echo "Usage: dos2unx file(s)"
+     exit
+else
+     files=$*
+fi
+
+tmpfile=tmp$$
+for file in $files
+do
+    echo "Translating $file from dos to unix"
+    tr -d "\r" <$file >$tmpfile
+    mv $tmpfile $file
+done

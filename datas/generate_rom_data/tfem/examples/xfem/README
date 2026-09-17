@@ -1,0 +1,212 @@
+Short description
+-----------------
+
+xfem1
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM (XFEM) approach with weak constraint on the cylinder.
+ Quadtree subdivision for integration.
+
+ NOTE: the following problems are similar to this problem but use a different 
+ technique:
+
+ body_fitted1:
+
+   Boundary (body) fitted mesh. The mesh is made by invoking
+   mesh_cylinder_in_box1 < meshinput1.txt
+
+ fic_dom1:
+
+   Fictitious domain technique.
+ 
+ Use gnu1.gpi to compare the pressure and vorticity on the cylinder for the 
+ three different methods.
+
+xfem2
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+
+ This problem is similar to xfem1, but now with a better integration technique.
+
+xfem3
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+ Fluid described by a layer.
+ Plot a layer.
+
+ This problem is similar to xfem2, but now the fluid is defined by a layer.
+
+xfem4
+
+ 2D Stokes problem on a square domain with a cylindrical shaped drop.
+ eXtended FEM approach with weak constraint on the cylinder for
+ a coupling of velocities on the interface between the two fluids.
+ Quadtree+triangle subdivision for integration.
+ Fluids described by layers.
+ Plot a layer.
+
+xfem5
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+
+ This problem is similar to xfem2, with the following changes:
+   * use of parameter split_threshold to avoid "holes" in interfaces
+   * prebuild of all the eltrees in elements near the interface
+
+xfem6
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+ Fluid described by a layer.
+ Plot a layer.
+
+ This problem is similar to xfem3, with the following changes:
+   * use of parameter split_threshold to avoid "holes" in interfaces
+   * prebuild of all the eltrees in elements near the interface
+
+xfem7
+
+ 2D Stokes problem on a square domain with a cylindrical shaped drop.
+ eXtended FEM approach with weak constraint on the cylinder for
+ a coupling of velocities on the interface between the two fluids.
+ Quadtree+triangle subdivision for integration.
+ Fluids described by layers.
+ Plot a layer.
+
+ This problem is similar to xfem4, with the following changes:
+   * use of parameter split_threshold to avoid "holes" in interfaces
+   * prebuild of all the eltrees in elements near the interface
+
+xfem8
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+
+ This problem is similar to xfem5, with the following changes:
+   * Removal of elements from eltree if integration area is too small.
+   * High-order exact integration for small integration areas.
+   * embedded Dirichlet boundary condition (eDbc)
+   * use of elementset to build the eDbc.
+   * optional non-zero imposed velocity of the cylinder.
+
+xfem9
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+
+ This problem is similar to xfem8, with the following changes:
+   * symmetric embedded Dirichlet boundary condition
+   * optional: Nitsche's method.
+
+xfem10
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+
+ This problem is similar to xfem8, with the following changes:
+   * Baumann-Oden embedded Dirichlet boundary condition
+
+xfem11
+
+ 2D Stokes problem on a square domain with a cylinder
+ eXtended FEM approach with weak constraint on the cylinder.
+ Quadtree+triangle subdivision for integration.
+
+ This problem is similar to xfem2, with the following changes:
+   * generalized Newtonian fluid ( Carreau viscosity model)
+
+xfem12
+
+ 3D Stokes problem on a cubic domain with a sphere
+ eXtended FEM approach with embedded Dirichlet condition on the sphere.
+ Quadtree+triangle subdivision for integration.
+ Prebuild eltree for all elements crossing the interface.
+ Removal of elements from eltree if integration area is too small.
+ High-order exact integration for small integration volumes.
+ Optional non-zero imposed velocity of the sphere.
+ Optional symmetric matrix.
+ Optional Nitsche's method.
+
+ Similar to xfem8/xfem9 but now 3D.
+
+xfem13
+
+ 2D Stokes problem on a square domain with a freely floating cylinder
+ (force=0,torque=0).
+ eXtended FEM approach with embedded particle condition on the cylinder.
+ Quadtree+triangle subdivision for integration.
+ Prebuild eltree for all elements crossing the interface.
+ Removal of elements from eltree if integration area is too small.
+ High-order exact integration for small integration areas.
+
+ Similar to xfem8+xfem9 but now with freely floating cylinder.
+
+xfem14
+
+ 3D Stokes problem on a cubic domain with a freely floating sphere (F=0,M=0).
+ eXtended FEM approach with embedded particle condition on the sphere.
+ Quadtree+triangle subdivision for integration.
+ Prebuild eltree for all elements crossing the interface.
+ Removal of elements from eltree if integration volume is too small.
+ High-order exact integration for small integration volumes.
+ Optional symmetric matrix.
+ Optional Nitsche's method.
+
+ Similar to xfem13 but now 3D.
+
+xfem15
+
+ 2D Stokes problem on a square domain with a freely floating cylinder
+ (force=0,torque=0).
+ eXtended FEM approach with embedded particle condition on the cylinder.
+ Quadtree+triangle subdivision for integration.
+ Prebuild eltree for all elements crossing the interface.
+ Removal of elements from eltree if integration area is too small.
+ High-order exact integration for small integration areas.
+
+ Similar to xfem13, but now with an elliptical particle.
+
+xfem16
+
+ 2D Stokes problem on a square domain with a cylindrical shaped drop
+ eXtended FEM approach with weak embedded interface conditions for
+ a coupling of velocities on the interface between the two fluids.
+ Fluids described by layers.
+ Quadtree+triangle subdivision for integration.
+ Prebuild eltree for all elements crossing the interface.
+ Removal of elements from eltree if integration area is too small.
+ High-order exact integration for small integration areas.
+ Optional different weighting for both sides of the interface.
+ Optional symmetric matrix.
+ Optional Nitsche's method.
+ Optional Baumann-Oden method.
+
+ Similar to xfem4 but now with embedded interface conditions
+
+xfem17
+
+ 3D Stokes problem on a cubic domain with a spherical shaped drop
+ eXtended FEM approach with weak embedded interface conditions for
+ a coupling of velocities on the interface between the two fluids.
+ Fluids described by layers.
+ Quadtree+triangle subdivision for integration.
+ Prebuild eltree for all elements crossing the interface.
+ Removal of elements from eltree if integration volume is too small.
+ High-order exact integration for small integration volumes.
+ Optional different weighting for both sides of the interface.
+ Optional symmetric matrix.
+ Optional Nitsche's method.
+ Optional Baumann-Oden method.
+
+ Similar to xfem16 but now 3D.
+

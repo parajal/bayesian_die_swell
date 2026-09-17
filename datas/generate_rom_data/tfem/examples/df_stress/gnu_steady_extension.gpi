@@ -1,0 +1,8 @@
+set log
+set format y "%h"
+plot "steady.out" us 1:($2-$6) w l title "eta_E=tau_{xx}-tau_{yy}"
+pause -1
+plot "steady.out" us 1:(($2-$6)/$1) w l title "eta_E=(tau_{xx}-tau_{yy})/x", [1:] 1000/x
+pause -1
+#plot [:100] "steady.out" us 1:(($10-$6)/$1) w l title "eta_E2=(tau_{zz}-tau_{yy})/x"
+#pause -1

@@ -1,0 +1,32 @@
+NOTE: 
+
+The command 
+
+  mesh_confined_cylinder < meshinput1.txt
+
+generates the mesh for cylinder1 and cylinder2
+
+cylinder_post is the post_processing programs for cylinder1 and cylinder2
+
+streamfunction is for cylinder1--cylinder2
+
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+cylinder1:
+
+ 2D viscoelastic problem: flow around a cylinder confined between two walls.
+ The problem uses a TFEM generated mesh.
+ DEVSS-G/SUPG
+ FENE-P model
+
+cylinder2:
+
+ 2D viscoelastic problem: flow around a cylinder confined between two walls.
+ The problem uses a TFEM generated mesh.
+ DEVSS/DG
+ FENE-P model
+

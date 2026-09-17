@@ -1,0 +1,19 @@
+Base functions
+--------------
+
+Base functions (or shape functions) have a unique number as follows:
+
+  1:P0   2:P1   3:P1+   4:Q1   5:Q1+   6:P2   7:P2+   8:Q2
+  9:P1isoP2    10:Q1isoQ2    11:serendipity (quadratic)
+ 12:P2+ on tetrahedron with face bubbles only (14 nodes)
+ 13:Qp spectral, polynomial order=p
+ 14:Pp spectral, Legrendre polymials, polynomial order=p
+ 15:P1Q1 on prism with 6 nodes
+ 16:P2Q2 on prism with 18 nodes
+ 17:Q1P1r on pyramid with 5 nodes
+ 18:Q2P2r on pyramid with 14 nodes
+ 19:Pp high order, polynomial order=p
+ 20:Qp high order, polynomial order=p
+ 21:Pp high order, Legrendre polymials, polynomial order=p
+ 22:P1isoPp macro high order, polynomial order=p
+ 23:Q1isoQp macro high order, polynomial order=p

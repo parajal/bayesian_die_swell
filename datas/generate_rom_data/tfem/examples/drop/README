@@ -1,0 +1,487 @@
+The examples in this directory are described in the userguide.
+
+NOTE: Examples drop1e-drop4e are similar to drop1-drop4, but use the old
+explicit scheme.
+
+Short description
+-----------------
+
+drop1:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+drop1a:
+ 
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ Similar to drop1, with extension:
+   Optionally compute the area tensor.
+
+drop1b:
+ 
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ Similar to drop1, but now with:
+   P1 shape function for the position of the interface.
+
+drop1c:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ Similar to drop1 but now:
+   P1isoP2 for velocities 
+   P1isoP2 line elements for position of the interface.
+
+drop2:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+  3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+drop2a:
+ 
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+  3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ Similar to drop2, with extension:
+   Optionally compute the area tensor.
+
+drop2b:
+ 
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+  3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ Similar to drop2, but now with:
+   P1 shape function for the position of the interface.
+
+drop2c:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+  3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ Similar to drop2 but now:
+   P1isoP2 for velocities 
+   P1isoP2 elements for position of the interface.
+
+drop3:
+
+ Drop consisting of a viscoelastic fluid suspended in a Newtonian fluid.
+ An elastic soft object as a limit. No inertia.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+drop4:
+
+ Drop consisting of a viscoelastic fluid suspended in a Newtonian fluid.
+ An elastic soft object as a limit. No inertia.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+   3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+drop5:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized area or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ NOTE: drop5 is similar to drop1, but now
+       1) remeshing is invoked if the mesh becomes too distored.
+       2) optionally the nodes of the interface mesh are mioved to
+          highly curved regions
+
+drop6:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+   3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+   4) periodic boundary conditions in xyz-directions (triperiodic=.true.)
+      and imposing an applied macroscopic shear rate.
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized volume or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ NOTE: drop6 is similar to drop2, but now
+       1) remeshing is invoked if the mesh becomes too distored.
+       2) optionally the nodes of the interface mesh are moved to
+          highly curved regions
+       3) optionally triperiodic boundary conditions
+
+drop7:
+
+ Multiple drops consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized area or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface meshes, but the 
+ interface meshes itself are not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ NOTE: drop7 is similar to drop5, but now with multiple drops.
+
+
+drop8:
+
+ Multiple drops consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+   3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized volume or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface meshes, but the 
+ interface mesh itself are not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ NOTE: drop8 is similar to drop6, but now with multiple drops.
+
+
+drop9:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Navier-Stokes flow.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized area or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ NOTE: drop9 is similar to drop5, but extended with inertia.
+
+
+drop10:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Navier-Stokes flow
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+   3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized volume or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself is not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ NOTE: drop10 is similar to drop6, but extended with inertia.
+
+drop11:
+
+ Drop consisting of a viscoelastic fluid suspended in a Newtonian fluid.
+ An elastic soft object as a limit. No inertia.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized area or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Two-dimensional "toy" model for testing purposes.
+
+ NOTE: drop11 is similar to drop3, but extended with remeshing.
+
+drop12:
+
+ Drop consisting of a Newtonian fluid suspended in a Newtonian fluid.
+ Stokes flow (no inertia) with insoluble surfactants on the interface.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+   3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized volume or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+
+ NOTE: drop12 is similar to drop6 but now includes insoluble surfactants 
+       on the interface.
+
+drop13:
+
+ Axisymmetric drop consisting of a Newtonian fluid suspended in a Newtonian 
+ fluid. Note in this example (x,y) coordinates should be read as (z,r).
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) imposing flowrate and periodic boundary conditions in the 
+      x-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized area or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+
+drop14:
+
+ Axisymetric drop consisting of a Newtonian fluid suspended in a Newtonian
+ fluid. Note in this example (x,y) coordinates should be read as (z,r).
+ Stokes flow (no inertia) containing insoluble surfactants on the
+ interface.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in the z-direction (periodic=.true.).
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized area or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+
+ NOTE: drop14 is similar to drop13 but now includes insoluble surfactants 
+       on the interface.
+
+drop15:
+
+ Drop consisting of a viscoelastic fluid suspended in a Newtonian fluid.
+ An elastic soft object as a limit. No inertia.
+ Flow imposed either:
+   1) on the whole boundary using a function, or 
+   2) on the upper and lower boundary using a function and
+      periodic boundary conditions in x- and z-direction (periodic=.true.)
+   3) periodic boundary conditions in x-direction and on the other boundaries
+      imposed by a function (periodic_channel=.true.)
+   4) periodic boundary conditions in xyz-directions (triperiodic=.true.)
+      and imposing an applied macroscopic shear rate.
+ ALE with interface tracking and optional displacement of the mesh in
+ x-direction to keep the center of volume at the same position in the mesh.
+ Remeshing is performed when the maximum normalized volume or aspect ratio 
+ of the mesh elements is higher than a threshold. 
+ Remeshing is based on position of nodes of the interface mesh, but the 
+ interface mesh itself not modified.
+ Compute the bulk stress in case of an elastic soft solid limit.
+ Optionally move the nodes of the interface mesh to highly curved regions.
+ Optionally impose flowrate if periodic=.true.
+ Optionally compute the error if the exact solution is known.
+ Optionally compute the volume and center of volume.
+ Three-dimensional model.
+ Use non-symmetric solver MA41 with metis5 renumbering.
+
+ NOTE: drop15 is similar to drop4, but extended with triperiodicity, remeshing,
+   bulkstress and metis5.
+
+drop16:
+
+ Similar to drop13, but including interfacial rheology as a Neumann boundary
+ condition using different rheological constitutive models, such as the
+ Boussinesq-Scriven viscous interface model, the Verwijlen and Huetter-Tervoort
+ elastic interface models and Kelvin-Voigt models by adding the viscous and
+ elastic interfacial stresses together.
+ Optionally applies the method of manufactured solutions by subtracting the
+ analytically determined interfacial boundary condition, for verifying
+ correctness of implementation and validating the order of spatial and
+ temporal convergence.
+
+drop17:
+
+ Similar to drop6, but including interfacial rheology as a Neumann boundary
+ condition using different rheological constitutive models, such as the
+ Boussinesq-Scriven viscous interface model, the Verwijlen and Huetter-Tervoort
+ elastic interface models and Kelvin-Voigt models by adding the viscous and
+ elastic interfacial stresses together.
+ Optionally applies the method of manufactured solutions by subtracting the
+ analytically determined interfacial boundary condition, for verifying
+ correctness of implementation and validating the order of spatial and
+ temporal convergence.
+ Computes and plots the principal interfacial stress and strain values
+ and directions, together with some other deformation (rate) scalar
+ quantities of the interface. Optionally tests the implementation of
+ these computations using the method of manufactured solutions.
+ Optionally uses iterative solvers from Sparskit to solve the
+ velocity-pressure problem.
+
+ Note: metis5 renumbering is used and the sk_solve (Sparskit) add-on also
+ needs to be compiled. 

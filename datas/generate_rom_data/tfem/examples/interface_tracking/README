@@ -1,0 +1,132 @@
+NOTE: 
+
+The examples in this directory are described in the userguide.
+
+NOTE: Examples interface_tracking1e-interface_tracking6e are similar to
+interface_tracking1-interface_tracking6, but use the explicit scheme.
+
+Short description
+-----------------
+
+interface_tracking1
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Interface moves in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ tfem mesh made using mesh_skeleton.
+ Error output.
+
+interface_tracking2
+
+ Tracking of an initially spherical interface in a flow given by a function.
+ Interface moves in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ Gmsh mesh with six-node triangles.
+ Error output
+
+interface_tracking3
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Tangential grid deformation in addition to the movement in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ tfem mesh made using mesh_skeleton.
+ Tangential grid deformation.
+ Error output
+
+interface_tracking4
+
+ Tracking of an initially spherical interface in a flow given by a function.
+ Tangential grid deformation in addition to the movement in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ Gmsh mesh with six-node triangles.
+ Tangential grid deformation.
+ Error output
+
+interface_tracking5
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Interface movement is Lagrange based.
+ Tangential grid deformation.
+ Second-order time integration (performed on element level).
+ tfem mesh made using mesh_skeleton.
+ Error output
+
+interface_tracking6
+
+ Tracking of an initially spherical interface in a flow given by a function.
+ Interface movement is Lagrange based.
+ Tangential grid deformation.
+ Second-order time integration (performed on element level).
+ Gmsh mesh with six-node triangles.
+ Error output
+
+interface_tracking7
+
+ Tracking of an initially square interface in a flow given by a function.
+ Interface moves in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ tfem mesh made using mesh_skeleton.
+
+interface_tracking8
+
+ Tracking of an initially square interface in a flow given by a function.
+ Interface movement is Lagrangian.
+ Explicit second-order time integration (on element level).
+ tfem mesh made using mesh_skeleton.
+
+interface_tracking9
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Interface movement is Lagrangian.
+ No tangential grid deformation (u_t=0).
+ Second-order time integration (performed on element level).
+ tfem mesh made using mesh_skeleton.
+ Error output
+ Note: similar to interface_tracking5, but u_t=0.
+
+interface_tracking10
+
+ Tracking of an initially spherical interface in a flow given by a function.
+ Interface movement is Lagrangian.
+ No tangential grid deformation (u_t=0).
+ Second-order time integration (performed on element level).
+ Gmsh mesh with six-node triangles.
+ Error output
+ Note: similar to interface_tracking6, but u_t=0.
+
+interface_tracking11
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Only the upper half is solved using the full system with symmetry conditions.
+ Therefore only elongational flow (vfuncnr=1) is applicable.
+ Interface moves in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ tfem mesh made using mesh_skeleton.
+ Error output.
+ Note: similar to interface_tracking1, but now solving only the upper half
+       of the domain.
+
+interface_tracking12
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Only the upper half is solved using the full system with symmetry conditions.
+ Therefore only elongational flow (vfuncnr=1) is applicable.
+ Tangential grid deformation in addition to the movement in normal direction.
+ SUPG with semi-implicit second-order time integration.
+ tfem mesh made using mesh_skeleton.
+ Error output
+ Note: similar to interface_tracking3, but now solving only the upper half
+       of the domain.
+
+interface_tracking13
+
+ Tracking of an initially circular interface in a flow given by a function.
+ Interface movement is Lagrangian.
+ No tangential grid deformation (u_t=0).
+ Only the upper half is solved using the full system with symmetry conditions.
+ Therefore only elongational flow (vfuncnr=1) is applicable.
+ tfem mesh made using mesh_skeleton.
+ Error output.
+ Note: similar to interface_tracking9, but now solving only the upper half
+       of the domain.
+

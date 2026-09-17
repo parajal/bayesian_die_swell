@@ -1,0 +1,338 @@
+% !TEX root = userguide.tex
+
+\def\headdate{4th June 2020}
+\label{sec:small_lambda}
+
+\section{Handling small relaxation times in multi-mode viscoelastic fluid flow}
+
+(This section has been contributed by Nick Jaensson of the TU/e).\medskip
+
+Most time integration schemes in Secs.~\ref{sec:explicitstress} and
+\ref{sec:implicitstress} have some form of implicit treatment, however the
+relaxation terms of the constitutive model are always explicit. Multi-mode
+models of real polymers usually have a broad spectrum with also very small
+relaxation times. This would limit the time step enormously, since it must be
+smaller than the smallest relaxation time. A possible solution is to use fully
+implicit schemes, but this is expensive since it requires iteration and the
+system matrix becomes larger. An ad hoc approach is to 
+replace the small relaxation time modes by a viscous component, but this is not
+very convenient and also fully ignores the non-linear behavior of a mode.
+
+In this section we propose an approach which gradually reduces the smallest
+relaxation time modes to Newtonian behavior. The cut-off depends on the time
+step taken.
+
+\subsection{Increasing the time step limit for small relaxation times}
+
+The approach taken here is to add
+the term $\ten c/\lambda$ to both sides of the constitutive 
+equation, and to use an implicit time discretization for this term on the LHS, 
+while using an explicit discretization of this term on the RHS. Note, that
+$\lambda$ is the viscoelastic relaxation time constant for the mode at hand.
+This approach assures that for sufficiently small time step the mode is fully
+resolved. For large time steps and small ``mode Deborah number'', Newtonian
+behavior is approached. For larger ``mode Deborah number'' it depends on the
+behavior of the non-linear terms whether stable steady state
+results are obtained. In any case,
+transient behavior is incorrect for time steps large compared to the
+relaxation time.
+
+For ease of reading, we begin by repeating the viscoelastic constitutive 
+equation:
+\begin{equation}
+  \pderiv{\ten c}{t}
+  +\vek u\cdot\nabla\ten c-\ten L\cdot\ten c-\ten c\cdot\ten L^T
+   +\ten f(\ten c)=\ten 0 \label{eq:const_ve}
+\end{equation}
+Using the definition $\ten g(\ten L,\ten c)=\ten L\cdot\ten c
++\ten c\cdot\ten L^T-\ten f(\ten c)$, Eq.~\eqref{eq:const_ve} is written as
+\begin{equation}
+  \pderiv{\ten c}{t}
+  +\vek u\cdot\nabla\ten c=\ten g(\ten L,\ten c) \label{eq:const_ve2}
+\end{equation}
+It is known that the Crank-Nicolson scheme can yield solutions that
+oscillate around the real solution when the time step is chosen large.
+Therefore, this approach is only implemented for 
+the first-order semi-implicit Euler scheme and the second-order
+semi-implicit Gear scheme, which both do not suffer from these
+oscillations.
+
+\subsubsection{Semi-implicit Euler}
+Adding the $\ten c/\lambda$ term to both sides of Eq.~\eqref{eq:const_ve2} 
+and using a semi-implicit Euler scheme for the discretization yields:
+\begin{equation}
+  \frac{\ten c^{n+1}-\ten c^n}{\Delta t}+\vek u^{n+1}\cdot\nabla\ten c^{n+1}+
+  \frac{\ten c^{n+1}}{\lambda}=
+\ten g(\ten L^{n+1}, \ten c^n)+
+  \frac{\ten c^{n}}{\lambda}
+  \label{eq:euler_c_over_lambda}
+\end{equation}
+The effectiveness of the additional terms can be seen by substituting the 
+UCM/Oldroyd-B model $\ten f(\ten c)=(\ten c - \ten I)/\lambda$ into
+Eq.~\eqref{eq:euler_c_over_lambda}:
+\begin{equation}
+  \frac{\ten c^{n+1}-\ten c^n}{\Delta t}+\vek u^{n+1}\cdot\nabla\ten c^{n+1}+
+  \frac{\ten c^{n+1}}{\lambda}=
+\ten L^{n+1}\cdot\ten c^n + \ten c^n \cdot 
+  {\ten{L}^{n+1}}^T +
+\frac{\ten c^{n}}{\lambda}-\frac{1}{\lambda}(\ten c^n-\ten I)
+\end{equation}
+which can be rewritten to
+\begin{equation}
+  \frac{\ten c^{n+1}-\ten c^n}{\Delta t}+\vek u^{n+1}\cdot\nabla\ten c^{n+1}+
+  \frac{1}{\lambda}(\ten c^{n+1}-\ten I)=
+  \ten L^{n+1}\cdot\ten c^n + \ten c^n \cdot {\ten{L}^{n+1}}^T
+\end{equation}
+Note that the third term on the LHS equals $\ten f(\ten c^{n+1})$. So, for 
+the UCM/Oldroyd-B model, 
+adding the $\ten c/\lambda$ implicitly/explicitly has the net effect 
+of treating the $\ten f(\ten c)$ term implicitly. 
+For the implementation in 
+\tfem, Eq.~\eqref{eq:euler_c_over_lambda} is rewritten to
+\begin{equation}
+  \left(\frac{1}{\Delta t}+\frac{1}{\lambda}\right)\ten c^{n+1}+
+  \vek u^{n+1}\cdot\nabla\ten c^{n+1}=
+     \frac{\ten c^n}{\Delta t} +
+     \ten g(\ten L^{n+1},\ten c^n) + \frac{\ten c^n}{\lambda}
+  \label{eq:Eulerimp_add}
+\end{equation}
+This form is used for the implementation, because the $\ten c^n/\lambda$ term 
+can be immediately combined with the $\ten g(\ten L^{n+1},\ten c^n)$ term.
+
+\subsubsection{Semi-implicit Gear with prediction}
+Adding the $\ten c/\lambda$ term to both sides of Eq.~\eqref{eq:const_ve2} 
+and using a second order semi-implicit Gear scheme for the discretization
+yields
+(note that the $\ten c/\lambda$ term on the RHS is based on the 
+prediction $\hat{\ten c}^{n+1}$):
+\begin{equation}
+  \frac{\frac32 \ten c^{n+1}-2\ten c^n+\frac12 \ten c^{n-1}}{\Delta t}+
+  \vek u^{n+1}\cdot\nabla\ten c^{n+1}+\frac{\ten c^{n+1}}{\lambda}=
+\ten g(\ten L^{n+1},\hat{\ten c}^{n+1})+
+  \frac{\hat{\ten c}^{n+1}}{\lambda}
+  \label{eq:gear_c_over_lambda}
+\end{equation}
+where $\hat{\ten c}^{n+1}=2\ten c^n-\ten c^{n-1}$ is a prediction for the 
+conformation tensor. In a similar way as was shown for the semi-implicit 
+Euler scheme, the additional terms have the net effect of treating the
+$\ten f(\ten c)=(\ten c - \ten I)/\lambda$ term implicitly for the
+UCM/Oldroyd-B model.
+For the implementation in 
+\tfem, Eq.~\eqref{eq:gear_c_over_lambda} is rewritten to
+\begin{equation}
+ \left(\frac{3}{2\Delta t}+\frac{1}{\lambda}\right)\ten c^{n+1} +
+   {\vek u}^{n+1}\cdot\nabla\ten c^{n+1}=
+  \frac{2\ten c^{n}-\frac12\ten c^{n-1}}{\Delta t} +
+    \ten g(\ten L^{n+1},\hat{\ten c}^{n+1}) +
+       \frac{\hat{\ten c}^{n+1}}{\lambda}  \label{eq:gear_implementation}
+\end{equation}
+This form is used for the implementation, where the $\hat{\ten 
+c}^{n+1}/\lambda$ term can be immediately combined with the $\ten 
+g(\ten L^{n+1},\hat{\ten c}^{n+1})$ term.
+
+\subsubsection{Semi-implicit Gear (with explicit Karniadakis)}
+Adding the $\ten c/\lambda$ term to both sides of Eq.~\eqref{eq:const_ve2} 
+and using a second order semi-implicit Gear scheme (with explicit Karniadakis)
+for the discretization yields
+\begin{multline}
+  \frac{\frac32 \ten c^{n+1}-2\ten c^n+\frac12 \ten c^{n-1}}{\Delta t}+
+  \vek u^{n+1}\cdot\nabla\ten c^{n+1}+\frac{\ten c^{n+1}}{\lambda}=\\
+2\big[\ten g(\ten L^n,{\ten c}^{n})+\frac{{\ten c}^{n}}{\lambda}\big]
+-\big[\ten g(\ten L^{n-1},{\ten c}^{n-1})+
+  \frac{\ten c^{n-1}}{\lambda}\big]
+  \label{eq:geark_c_over_lambda}
+\end{multline}
+In a similar way as was shown for the semi-implicit 
+Euler scheme, the additional terms have the net effect of treating the
+$\ten f(\ten c)=(\ten c - \ten I)/\lambda$ term implicitly for the
+UCM/Oldroyd-B model.
+For the implementation in 
+\tfem, Eq.~\eqref{eq:gear_c_over_lambda} is rewritten to
+\begin{multline}
+ \left(\frac{3}{2\Delta t}+\frac{1}{\lambda}\right)\ten c^{n+1} +
+   {\vek u}^{n+1}\cdot\nabla\ten c^{n+1}=
+  \frac{2\ten c^{n}-\frac12\ten c^{n-1}}{\Delta t} \\+
+2\big[\ten g(\ten L^n,{\ten c}^{n})+\frac{{\ten c}^{n}}{\lambda}\big]
+-\big[\ten g(\ten L^{n-1},{\ten c}^{n-1})+
+  \frac{\ten c^{n-1}}{\lambda}\big]
+  \label{eq:geark_implementation}
+\end{multline}
+This form is used for the implementation, where $\ten c/\lambda$
+can be immediately combined with $\ten 
+g(\ten L,\ten c)$ for the terms at $t^n$ and $t^{n-1}$.
+
+Some remarks on using these adapted schemes:
+\begin{itemize}
+   \item For all schemes the factor in front of $\ten c^{n+1}$ 
+         now depends on the relaxation time $\lambda$, and therefore the 
+         system matrix needs to be rebuild for every mode if multiple 
+         modes are used.
+   \item For $\Delta t$ several times smaller than $\lambda$ the mode will be
+         time-resolved. 
+   \item For $\Delta t\gg\lambda$ the time-dependent term will 
+         become very small compared to the relaxation terms. Therefore, the
+         mode goes into a `steady state'', which is solved iteratively
+         in the time stepping process. It now depends on the local Deborah
+         number $\text{De}=\lambda |\ten D| \ll 1$ what will happen:
+         \begin{itemize}
+            
+   \item If the $\text{De}\ll 1$, Newtonian    
+         behavior will be recovered for $\Delta t/\lambda \gg 1$.
+         This can be seen by expanding $\ten c$ in 
+         a power series in $\lambda \ten D$, which yields
+         \begin{equation}
+           \ten c = \ten I + 2 \lambda \ten D +  
+          \ten O\left( |\lambda \ten D|^2 \right) \label{eq:small_de}
+         \end{equation}
+         With the stress expression $\tau=G(\ten c-\ten I)$, Newtonian
+         behavior with viscosity $\eta=G\lambda$ is obtained.
+   \item For larger local Deborah numbers non-linear terms become important and
+         whether the approach obtains stable results must be found by numerical
+         experiments. At the time of writing not much experience is available.
+         \end{itemize}
+
+   \item For small Deborah numbers it follows from Eq.~\eqref{eq:small_de} that
+         $|\ten c - \ten I| \approx |2\lambda \ten D| \ll 1$. Therefore, 
+         $\ten f(\ten c)\approx(\ten c-\ten I)/\lambda$ and the Oldroyd/Maxwell
+         behavior is obtained 
+         and the approach is also valid if $\ten f(\ten c)$ is non-linear, but
+         local Deborah is small.
+
+\end{itemize}
+
+For the stress-implicit method of Sec.~\ref{sec:implicitstress},
+terms are also added to the prediction of
+the conformation tensor that is used in the momentum equation in the stress 
+implicit method. The stress tensor in the momentum balance is predicted using 
+the semi-implicit Euler scheme as given in~\eqref{eq:Eulerimp_add}. 
+In a similar way as in \ref{sec:implicitstress}, we can write the stress 
+tensor as
+\begin{equation}
+  \begin{split}
+   \ten \tau(\ten c^*{}^{n+1})&=
+ \ten \tau\left(\frac{
+          \Big(\Delta t(-\vek u^{n+1}\cdot\nabla\ten c^n+
+          \ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten L^{n+1}{}^T)
+          +\Big(1+\frac{\Delta t}{\lambda}\Big)\ten c^{n}-
+           \Delta t\ten f(\ten c^n)\Big)}{\Big(1+\frac{\Delta t}{\lambda}\Big)}
+      \right)\\
+   &= \ten \tau\left(
+           \frac{\Delta t}{1+\frac{\Delta t}{\lambda}}(-\vek u^{n+1}
+           \cdot\nabla\ten c^n+
+           \ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten L^{n+1}{}^T)
+           +\ten h^*(\ten c^n, \Delta t, \lambda )
+      \right)\\ 
+  \end{split}
+\end{equation}
+where 
+\begin{equation}
+ \ten h^*(\ten c, \Delta t, \lambda)= \ten c-\Big(\frac{\Delta t}
+  {1+\frac{\Delta t}{\lambda}}\Big)\ten f(\ten c)
+\end{equation}
+In case of a linear stress expression:
+\begin{equation}
+     \ten\tau=G(\ten c - \ten 1)
+\end{equation}
+we find
+\begin{equation}
+   \ten \tau(\ten c^*{}^{n+1})=
+           \frac{G \Delta t}{1+\frac{\Delta t}{\lambda}}(-\vek u^{n+1}
+           \cdot\nabla\ten c^n+
+           \ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten L^{n+1}{}^T)
+           +G\ten h^*(\ten c, \Delta t, \lambda )
+            -G\ten 1
+\end{equation}
+Substituting this stress expression into the momentum equation leads to 
+(for simplicity we set $\eta_s=0$):
+\begin{align}
+      \nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)
+  -\nabla\cdot\big(\frac{G\Delta t}{1+\frac{\Delta t}{\lambda}}
+   (&-\vek u^{n+1}\cdot\nabla\ten c^n+
+        \ten L^{n+1}\cdot\ten c^n+
+      \ten c^n\cdot\ten L^{n+1}{}^T)\big)\notag\\
+&=\nabla\cdot(G \ten h^*(\ten c^n,\Delta t, \lambda) -G\ten 1)
+        + \rho\vek b\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0
+\end{align}
+\newpage
+\noindent
+Remark:
+\begin{itemize}
+  \item For local $De\ll1$ and $\Delta t/\lambda\gg1$ the additional implicit
+terms tend to $\nabla\cdot(2G\lambda\ten D)$, i.e.\ the
+additional viscosity is $\eta=G\lambda$.
+\end{itemize}
+If the log-conformation representation is used ($\ten s = \log \ten c$, see
+Eq.~\eqref{eq:LCR})), the 
+first-order semi-implicit Euler scheme given by
+Eq.~\eqref{eq:Eulerimp_add} is written as
+\begin{equation}
+  \left(\frac{1}{\Delta t}+\frac{1}{\lambda}\right)\ten s^{n+1}+
+  \vek u^{n+1}\cdot\nabla\ten s^{n+1}=
+     \frac{\ten s^n}{\Delta t}+
+      \ten h(\ten L^{n+1},\ten s^n) +
+     \frac{\ten s^n}{\lambda}
+\end{equation}
+The second-order semi-implicit Gear scheme given by 
+Eq.\eqref{eq:gear_implementation} changes in a similar way
+\begin{equation}
+ \left(\frac{3}{2\Delta t}+\frac{1}{\lambda}\right)\ten s^{n+1} +
+   {\vek u}^{n+1}\cdot\nabla\ten s^{n+1}=
+  \frac{2\ten s^{n}-\frac12\ten s^{n-1}}{\Delta t} +
+    \ten h(\ten L^{n+1},\hat{\ten s}^{n+1}) +
+       \frac{\hat{\ten s}^{n+1}}{\lambda}
+\end{equation}
+where $\hat{\ten s}^{n+1}=2\ten s^n-\ten s^{n-1}$ is a prediction for the 
+conformation tensor in the logarithmic representation.
+
+\subsection{Axi-symmetric problem: flow around a sphere in
+ a cylindrical tube filled with a multi-mode model: handling 
+ small relaxation times}
+\label{sec:sphere_small_lambda}
+
+The first example file is \texttt{sphere23.f90} which simulates a sphere in a
+viscoelastic fluid with UCM two modes. Modes can have very short
+relaxation times.
+
+The example can be run by
+\begin{quote}
+   \texttt{sphere23 < input\_sphere23.txt}
+\end{quote}
+which might take a while. Change the parameters in the file
+\texttt{input\_sphere23.txt}, if necessary.
+
+Some notes on the source:
+\begin{itemize}
+   \item 
+     \texttt{coefficients\%i(57)=1} is used to indicate that the
+     $\ten c/\lambda$ term is added to both sides of the
+     constitutive equation.
+   \item 
+     If these adapted time schemes are used, the system matrix to solve the
+     constitutive equation is different for each mode. Therefore, 
+     \texttt{build\_system} has to be included in the loop over the modes. 
+     Furthermore, the current mode \texttt{m} has to be passed on to the 
+     element routine.
+     In order to do this, \texttt{coefficients\%i(26)=m} and 
+     \texttt{coefficients\%i(27)=m} are used, and 
+     \texttt{msysvector=rhsc(:,m)} is used in \texttt{build\_system} 
+     (instead of \texttt{m2sysvector=rhsc} in most of the other 
+     viscoelastic examples). Note, that any \texttt{build\_system\_constraint}
+     should use \texttt{msysvector=rhsc(:,m)} as well.
+   \item
+     In the momentum balance, all modes are needed, so both 
+     \texttt{coefficients\%i(26)} and \texttt{coefficients\%i(27)} 
+     are set to zero after solving the constitutive equation for all modes.
+   \item
+     To show the convergence to Newtonian behavior for all modes having very
+     small relaxation times, the output is the 
+     difference in velocity of the current time step and the previous 
+     time step. This is off by default and can be set by
+     \texttt{printstepvel=.true.} in the source.
+   \item The postprocessing \texttt{sphere\_post} can be used, but the mode
+     which is output must be set with \texttt{outpmode}.
+\end{itemize}
+The second example file is \texttt{sphere24.f90} and is similar to
+\texttt{sphere23.f90}, but uses a four mode Giesekus with data from literature.

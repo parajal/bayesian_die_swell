@@ -1,0 +1,322 @@
+#!/bin/bash
+#
+# author: Martien Hulsen (m.a.hulsen@tue.nl)
+# date:   14-11-2022 .F90 extension for invoking preprocesser
+# date:   07-06-2018 added *.bin to the clean: target
+# date:   11-06-2014 renamed macro ALLCLEAN to OUTCLEAN;
+#                    added outclean target and modified allclean in Makefile
+# date:   02-04-2014 Use -e option instead of -E for cat in Mac OS X.
+# date:   27-11-2012 simplify .exe for Mingw/MSys (only needed for make clean).
+# date:   01-07-2010 option -a
+# date:   29-08-2008 swith position of OBJS and main.o in dependency for main.
+# date:   08-04-2008 Mac OSX: no /i in sed (restriction to lower case only)
+# date:   18-11-2007 MSYS: .exe extension
+# date:   16-07-2007 slight change for cleaning modfiles (option -n)
+# date:   18-02-2007 Cygwin: .exe extension
+# date:   04-04-2006 option -f
+# date:   08-03-2006 options -p, -l
+# date:   08-11-2005 changes to make it work for Msys
+# date:   20-06-2005 testing of echo command on Unix
+# date:   10-06-2005 test for mingw/msys
+# date:   20-05-2005 (developed from fmm)
+#
+# fmme is a simple shell script to create a Makefile for all fortran files
+# in the current directory to deal with module dependencies. It is an extension
+# of fmm dealing with the search for modules in all the source files. Because
+# of this it is several times slower than fmm, but of more general use.
+#
+# Usage: fmme [OPTIONS] [>Makefile]
+#
+# Options:  see helptext below
+#
+# For example
+#
+#       fmme >Makefile
+#
+# to compile all files and link main programs (when present), or
+#
+#       fmme -l >Makefile
+#
+# to produce an archive library and no main programs or
+#
+#       fmme -ls >Makefile
+#
+# to produce an archive library and search for an existing Mdefs.mk file in
+# the project tree.
+#
+# Restrictions:
+#   - macro definitions must be defined in an include file "Mdefs.mk".
+#   - main programs must have an 'end program' statement
+#   - Only .o files produced by the Makefile are linked.
+#   - The main programs are linked to _all_ .o files produced by the Makefile
+#   - include files are not supported.
+#
+
+# functions
+
+function helptext ()
+{
+  echo "Usage: fmme [OPTIONS] [>Makefile]"
+  echo "Generate a fortran makefile on standard output"
+  echo
+  echo "Options:   (Description)"
+  echo "   -a      produce an allclean and outclean target"
+  echo "   -f      only free format fortran sources are included"
+  echo "   -h      this text is shown (on standard error)"
+  echo "   -l      the Makefile should produce an archive library and no main programs"
+  echo "   -n      do not clean the library and modfiles (if -l is specified)"
+  echo "   -s      search for existing Mdefs.mk file in the tree upwards of "
+  echo "           this directory"
+}
+
+function getbase ()
+{
+  fbase=$1
+  for ext in $extensions
+  do
+    fbase=`basename $fbase $ext`
+  done
+}
+
+# get options
+
+free=
+smd=
+lib=
+nlc=
+acln=
+while getopts slhfan optvar; do
+  case "$optvar"
+  in
+     f) free=1 ;;
+     s) smd=1 ;;
+     l) lib=1 ;;
+     n) nlc=1 ;;
+     a) acln=1 ;;
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+# test for old argument lib
+
+if [ "$1" = lib ] ; then
+  echo "Warning: argument lib not valid anymore. Use option -l" >/dev/stderr
+  exit 1
+fi
+
+if [ `uname -s` = xxxx ] ; then  # for traditional Unix echo command
+   opt=
+else
+   opt=-e
+fi
+
+sys=`uname -s | cut -c 1-5`
+
+if [ "$sys" = CYGWI -o "$sys" = MINGW ] ; then
+   exe=.exe  # Cygwin have .exe extension
+else
+   exe=
+fi
+
+if [ "$sys" = Darwi ] ; then
+   i= # Mac OSX does not support modifier /i in sed: only lower case supported
+   E=-e # Mac OSX does not support the -E option, use -e instead.
+else
+   i=i
+   E=-E
+fi
+
+if [ $free ] ; then
+  extensions=".f90 .F90"
+else
+  extensions=".f90 .F90 .f"
+fi
+
+if [ $smd ] ; then # search for Mdefs.mk
+  if [ -f Mdefs.mk ]; then
+    echo "include Mdefs.mk"
+    mdefs="./Mdefs.mk"
+  elif [ -f ../Mdefs.mk ]; then
+    echo "include ../Mdefs.mk"
+    mdefs="../Mdefs.mk"
+  elif [ -f ../../Mdefs.mk ]; then
+    echo "include ../../Mdefs.mk"
+    mdefs="../../Mdefs.mk"
+  elif [ -f ../../../Mdefs.mk ]; then
+    echo "include ../../../Mdefs.mk"
+    mdefs="../../../Mdefs.mk"
+  else
+    echo "Error: No Mdefs.mk found" >/dev/stderr
+    exit 1
+  fi
+  echo "Using $mdefs" >/dev/stderr
+else
+  if [ ! -f Mdefs.mk ]; then
+    echo "Warning: include file Mdefs.mk not found" >/dev/stderr
+  fi
+  echo "include Mdefs.mk"
+fi
+echo ""
+
+src=
+
+echo ".SUFFIXES:"
+echo ""
+echo ".SUFFIXES: .o $extensions"
+
+for ext in $extensions
+do
+  if [ -n "`ls *$ext 2>/dev/null`" ]; then
+     echo ""
+     echo "$ext.o:"
+     if [ $ext = .F90 ]; then
+       if [ $lib ] ; then
+         echo $opt "\t\$(FC) -c \$(FPPFLAGS) \$(FFLAGS) \$(FMODWRITE) \$(FMODINC) $<"
+       else
+         echo $opt "\t\$(FC) -c \$(FPPFLAGS) \$(FFLAGS) \$(FMODINC) $<"
+       fi
+     else
+       if [ $lib ] ; then
+         echo $opt "\t\$(FC) -c \$(FFLAGS) \$(FMODWRITE) \$(FMODINC) $<"
+       else
+         echo $opt "\t\$(FC) -c \$(FFLAGS) \$(FMODINC) $<"
+       fi
+     fi
+     echo ""
+     src=$src" *$ext"
+  fi
+done
+
+if [ -z "$src" ]; then
+  echo "Error: no source files" >/dev/stderr
+  exit 1
+fi
+
+objs=
+mainp=
+rmmainp=
+for file in $src
+do
+   getbase $file; base=$fbase
+   grep -i "end program" $file >/dev/null
+   if [ $? == 0 ]
+   then
+      mainp=$mainp" $base"
+      rmmainp=$rmmainp" $base$exe"
+   else
+      objs=$objs" $base.o"
+   fi
+done
+
+echo "SRC =$src"
+echo ""
+echo "OBJS =$objs"
+echo ""
+
+if [ $lib ] ; then
+  echo "all: \$(LIBCREATE) tags"
+  echo ""
+  echo "\$(LIBCREATE): \$(OBJS)"
+  echo $opt "\t\$(AR) \$@ \$?"
+  echo $opt "\t\$(RANLIB) \$@"
+else
+  echo "MAINP =$mainp"
+  echo ""
+  echo "all: objects programs tags"
+  echo ""
+  echo "objects: \$(OBJS)"
+  echo ""
+  echo "programs: \$(MAINP)"
+fi
+
+echo ""
+echo "tags: \$(SRC)"
+echo $opt "\tctags --fortran-kinds=+i \$(SRC) \$(EXTRATAGSSRC)"
+echo ""
+
+allmodules=`grep -i -H '^ *module' $src | \
+            sed -e "/module *procedure */d" -e "/MODULE *PROCEDURE */d" | \
+            cat $E`
+
+for file in $src
+do
+   getbase $file; base=$fbase
+   obj=$base.o
+   mods=`grep -i '^ *use ' $file | sed -e s"/; *use */\&/g$i" \
+               -e s"/^ *use *//$i" \
+               -e "s/!.*$//" -e "s/,.*$//" -e s"/ *$//" \
+         | tr "\&" "\n" | sort | uniq`
+   objmods=
+   for mod in $mods
+   do
+      modfile=`echo $allmodules | sed -e s/'\\$'/' \&'/g | tr "\&" "\n" | \
+               grep -i ': *module *'$mod' ' | sed -e 's/:.*$//'`
+      nummodfiles=`echo $modfile | wc -w`
+      if [ `expr $nummodfiles \> 1` = 1 ]
+      then
+         echo $modfile | grep $file >/dev/null
+         if [ $? == 1 ]; then
+           echo "Error: Unable to determine dependencies for $file" \
+                 >/dev/stderr
+           echo "because of multiple definitions for module $mod" >/dev/stderr
+           echo "in the files:" >/dev/stderr
+           echo "$modfile" >/dev/stderr
+           exit 1
+         fi
+         modfile=
+      fi
+      if [  -n "$modfile" ]
+      then
+         getbase $modfile; modbase=$fbase
+         if [ "$modbase" != "$base" ]
+         then
+            objmods=$objmods" $modbase.o"
+         fi
+      fi
+   done
+   if [ $lib ] ; then
+     grep -i "end program" $file >/dev/null
+     if [ $? == 1 ];  then
+        if [ -n "$objmods" ];  then
+           echo $obj: $objmods
+           echo ""
+        fi
+     fi
+   else
+     grep -i "end program" $file >/dev/null
+     if [ $? == 1 ]; then
+        if [ -n "$objmods" ]; then
+           echo $obj: $objmods
+           echo ""
+        fi
+     else
+        if [ -n "$objmods" ]; then
+           echo $obj: $objmods
+        fi
+        echo $opt "$base: \$(OBJS) $obj"
+        echo $opt "\t\$(FC) \$(FFLAGS) -o \$@ $obj \$(OBJS) \$(LIBS)"
+        echo ""
+     fi
+   fi
+done
+
+echo clean:
+if [ $lib ] ; then
+  if [ $nlc ]; then
+    echo $opt "\t\$(RM) *.o tags"
+  else
+    echo $opt "\t\$(RM) *.o \$(MODPATHWRITE)/*.mod tags \$(LIBCREATE)"
+  fi
+else
+  echo $opt "\t\$(RM) $rmmainp *.o *.mod *.bin tags"
+fi
+
+if [ $acln ] ; then
+  echo outclean:
+  echo $opt "\t\$(RM) \$(OUTCLEAN)"
+  echo ""
+  echo allclean: clean outclean
+fi

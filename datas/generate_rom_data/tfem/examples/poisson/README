@@ -1,0 +1,264 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+poisson1:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+
+poisson1a:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ This is the poisson1 problem with the following changes:
+  1) Q1isoQ2 shape functions
+  2) subdomain Gauss integration (using 4 subquads)
+
+poisson1b:
+
+ This is the poisson1 problem with the following changes:
+  1) triangular elements
+  2) P1isoP2 shape functions
+  3) subdomain Gauss integration (using 4 subtriangles)
+
+poisson1c:
+
+ This is the poisson1 problem with the following change:
+  1) The mesh is made by combining two submeshes using mesh_convert, together 
+     with the option remove_double_nodes=.true.
+
+poisson2:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions and
+ natural boundary conditions
+
+poisson3:
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions. 
+
+poisson4:
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions. Derived quantity.
+
+poisson5:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+
+poisson6:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ periodical boundary conditions in x-direction (collocation)
+
+poisson7:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ periodical boundary conditions in x-direction (weak connection)
+
+poisson8:
+
+ Poisson problem on a rectangle with Dirichlet boundary conditions
+ Weak coupling of two domains using mortars.
+
+poisson9:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ Line source, using a system build on an object.
+
+poisson12:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions and
+ natural boundary conditions (Robin)
+
+poisson13:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions and
+ natural boundary conditions
+ axisymmetric
+
+poisson14:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+
+ This is the poisson1 problem with the following changes:
+ Iterative solver BiCGSTAB with algebraic multigrid preconditioner.
+
+poisson15:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+
+ This is the poisson5 problem with the following changes:
+ Iterative solver BiCGSTAB with algebraic multigrid preconditioner.
+
+poisson16:
+
+ This is the poisson5 problem with the following changes:
+ Iterative solver CG with algebraic multigrid preconditioner.
+ Change the default parameters of the AMG preconditioner.
+ Do a second solve with the same matrix keeping the preconditioner setup.
+
+poisson17:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+
+ This is the poisson5 problem with the following changes:
+ Iterative solver GMRES with algebraic multigrid preconditioner.
+ Solve two different systems with the AMG preconditioner setup kept the same.
+
+poisson18:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+
+ This is the poisson5 problem with the following changes:
+ Iterative solver BiCGSTAB with diagonal (Jacobi) preconditioner using a fixed
+ number of iterations
+ This example is only to show the possibility of prescribing a fixed number of
+ iterations. In the current poisson example the number of iterations should be
+ increased if the mesh resolution is increased.
+
+poisson19
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+ Iterative solver CG with diagonal (Jacobi) preconditioner using a prescribed
+ relative error.
+
+poisson20
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ Spectral elements.
+
+ This problem is similar to poisson1, but now with spectral elements.
+
+poisson21
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions. 
+ Spectral elements.
+
+ This problem is similar to poisson3, but now with spectral elements.
+
+poisson22
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions. Derived quantity.
+ Spectral elements.
+
+ This problem is similar to poisson4, but now with spectral elements.
+
+poisson23:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+
+ Similar to problem1, but now with: Gmsh mesh with 6 nodes triangles.
+
+poisson24:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ periodical boundary conditions in x-direction (collocation)
+ Use non-symmetric solver MA41 with metis renumbering.
+
+ This problem is similar to poisson6, but now using MA41 with metis.
+ This is show how MA41 can be used with metis.
+
+poisson25:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ periodical boundary conditions in x-direction (collocation)
+ Use sparskit2 with metis renumbering based on nodes and/or degrees.
+
+ This problem is similar to poisson6, but now using sparskit2 with metis
+ degrees reordering/renumbering.
+
+poisson26:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ periodical boundary conditions in x-direction (collocation)
+ Use sparskit2 with metis renumbering based on nodes and/or degrees.
+
+ This problem is similar to poisson25, but now using ilutp preconditioner
+ (ilut with column pivoting).
+
+poisson27:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+ Linear prism elements
+
+poisson28:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+ Quadratic prism elements
+
+poisson29:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+ Hybrid mesh with linear tetrahedron and pyramid elements
+
+poisson30:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+ Hybrid mesh with quadratic tetrahedron and pyramid elements
+
+poisson31:
+
+ Poisson problem on a unit cube with Dirichlet boundary conditions and
+ natural boundary conditions
+ Hybrid mesh with quadratic tetrahedron and pyramid elements
+ Mapped integration on pyramids
+
+poisson32:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ This is the poisson1 problem with the following change:
+   1) Set Gauss by polynomial order of integration.
+ NOTE: not described in the userguide.
+
+poisson33:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ Gmsh mesh with 6 nodes triangles.
+ This is the poisson23 problem with the following change:
+   1) Set Gauss by polynomial order of integration.
+ NOTE: not described in the userguide.
+
+poisson34:
+
+ Poisson problem on a unit square with Dirichlet boundary conditions
+ High-order quadrilateral elements.
+
+ This problem is similar to poisson1, but now with high-order elements.
+
+poisson35:
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions.
+ High-order quadrilateral elements.
+
+ This problem is similar to poisson3, but now with high-order elements.
+
+poisson36:
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions. Derived quantity.
+ High-order quadrilateral elements.
+
+ This problem is similar to poisson4, but now with high-order elements.
+
+poisson37:
+
+ Poisson problem on a curved domain with Dirichlet boundary conditions and
+ natural boundary conditions. Derived quantity.
+ High-order triangular elements.
+
+ This problem is similar to poisson36, but now with triangular elements.
+

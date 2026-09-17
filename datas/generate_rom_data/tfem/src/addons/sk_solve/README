@@ -1,0 +1,38 @@
+This add-on assumes the sparskit2 external package to be available and
+installed.
+
+Remarks:
+
+ - why use an iterative solver? Answer:
+     1) an iterative solver needs much less memory than a direct solver,
+        which is particularly useful for large 3D problems.
+     2) a direct solver might break down, which ocassionally happens 
+        for the Pardiso solver.
+
+ - building the preconditioner is the most expensive step. However, often the 
+   program consists of iteration (Newton-Raphson) or time stepping and the
+   preconditioner can be reused and only matrix-vector multiplications are
+   needed in that case for the remaining iterations or steps.
+ 
+ - renumbering for minimal fill-in in sparse matrix LU-decomposition 
+   reduces memory use and/or increases convergence rate. Use the add-on
+   metis for that. 
+
+ - for a velocity-pressure problem, renumbering the unknowns such that
+   the pressures are at the end of the system vector, might lead to higher
+   convergence rates, but also might not. Experiment first! (see userguide).
+
+ - early experiments seems to indicate that for the velocity-pressure system
+
+    * you need fill-in of _at least_ the size of the matrix. So minimally
+        fillin=1 for preconditioner=1 (ilut)
+        fillin=1 for  preconditioner=5 (iluk)
+    * preconditioner=5 seems to be the best.
+
+   but ALWAYS experiment with the preconditioners and parameters first.
+
+ - experiment with the parameters, for example droptol>0 may decrease the
+   computation time.
+
+ - when you need large fillins you might better use a direct solver, such as
+   ma41.

@@ -1,0 +1,33 @@
+External HSL library packages:
+
+  * ea23 from the HSL2002 library (needed for eigenvalue/vector computations
+    in the log-conformation.
+
+  * updated versions of MA41 and MA57, where the last now includes scaling
+    of the matrix.
+
+  * fakemetis is really part of MA57, but is only needed if metis has not been
+    installed.
+
+  * mc75 used for the condition number of a sparse matrix.
+
+  * hsl_mi20, mi24, mi26 for iterative solvers and AMG solvers.
+
+Notes:
+
+  - The MA57 routine requires a link to the MeTiS-4 library. The MeTiS package
+    can be obtained from http://glaros.dtc.umn.edu/gkhome/metis/metis/download.
+    Adjust Mdefs.mk according to the directions given in the comments.
+
+  - The HSL routines/packages can be obtained free of charge by academics
+    for research and teaching purposes. See the website: http://hsl.rl.ac.uk/
+
+  - The obtained packages need be processed to fit the scheme here. The HSL
+    packages contain the main file in double precision and a dependencies file
+    ddeps.f. In order to avoid multiple symbols in a library if multiple
+    packages are used, the dependencies file needs to split into separate
+    files, where for example the routines mc21ad.f, mc21bd.f etc are contained
+    in one file mc21d.f.
+
+
+

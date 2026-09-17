@@ -1,0 +1,78 @@
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+diffusion1:
+
+ Steady scalar diffusion problem on a unit square with Dirichlet boundary 
+ conditions and natural boundary conditions.
+ Varying alpha coefficient using a function or a vector in the nodes.
+
+diffusion2:
+
+ Steady scalar diffusion problem on a unit square with Dirichlet boundary 
+ conditions and natural boundary conditions.
+ Varying alpha coefficient using a separate element to fill the Gauss
+ point values of alpha.
+
+diffusion3:
+
+ Steady scalar diffusion problem on a unit square with Dirichlet boundary 
+ conditions and natural boundary conditions.
+ Varying Gauss integration rule.
+ Varying alpha coefficient using a separate element to fill the Gauss
+ point values of alpha.
+
+diffusion4:
+
+ Time-dependent scalar diffusion problem on a unit square with Dirichlet
+ boundary conditions and natural boundary conditions.
+ Varying alpha coefficient using a function or a vector in the nodes.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+
+diffusion5:
+
+ Steady scalar diffusion problem on a unit square with Dirichlet boundary
+ conditions. There is a circular hole in the domain, where the scalar value
+ is imposed using a weak Dirichlet boundary condition.
+ XFEM is used to solve the problem.
+ Constant or varying alpha coefficient using a function.
+
+diffusion6:
+
+ Steady scalar diffusion problem on a unit cube with Dirichlet boundary
+ conditions. There is a spherical hole in the domain, where the scalar value
+ is imposed using a weak Dirichlet boundary condition.
+ XFEM is used to solve the problem.
+ Constant or varying alpha coefficient using a function.
+
+diffusion7:
+
+ Steady scalar diffusion problem on a unit square with Dirichlet boundary
+ conditions. There is a circular region in the domain, where the 
+ diffusion coefficient is different form the outside region.
+ Weak embedded interface conditions are imposed at the cylindrical interface.
+ XFEM is used to solve the problem.
+ Constant or varying alpha coefficient using a function.
+
+diffusion8:
+
+ Steady scalar diffusion problem on a unit cube with Dirichlet boundary
+ conditions. There is a spherical region in the domain, where the 
+ diffusion coefficient is different form the outside region.
+ Weak embedded interface conditions are imposed at the spherical interface.
+ XFEM is used to solve the problem.
+ Constant or varying alpha coefficient using a function.
+
+diffusion9:
+
+ Time-dependent temperature problem in a cylindrical rod.
+ This problem solves the example in Sec. 3.2.2. of Dantzig & Tucker:
+ A solid cylindrical rod of radius R and length L, at an initial
+ temperature T1, is quenched in a fluid at a lower temperature T0.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+ Half the domain, due to symmetry.
+ Plots as a function of time.
+

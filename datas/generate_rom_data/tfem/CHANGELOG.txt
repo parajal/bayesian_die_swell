@@ -1,0 +1,2490 @@
+v4.5.1 (March 9, 2026)
+
+  Highlights:
+
+  - Rules from the Fortran Linter Fortitude have been applied.
+    (https://github.com/PlasmaFAIR/fortitude)
+
+  - Addressed warning messages in examples when compiling with nagfor.
+    
+  General:
+
+  - Code improvements have been applied as suggested by the rules from
+    the Fortitude linter. The following rules have been addressed:
+
+    * Remove trailing whitespace (fortitude rule S101).
+    * Fix trailing backslash in comment lines (fortitude rule C051).
+    * Replace old array notation (/../) with [..] (fortitude rule MOD011).
+    * Fix missing exit/cycle label (fortitude rule C141).
+    * Fix unnamed end statement (fortitude rule S061).
+    * Fix deprecated relational operators (fortitude rule MOD021)
+    * Initialise pointer variables inside derived types (fortitude rule C101).
+    * Always include "case default" in select case (fortitude rule C011).
+    * Specify intent for all arguments (Fortitude rule C061)
+    * Add 'implicit none' in interface definition (Fortitude rule C002)
+    * Add intrinsic modifier to "use iso_fortran_env" (Fortitude rule C122)
+    * Limit line length to 80 for core and add-ons (Fortitude rule S001).
+    * Fix local variables initialised in the declaration (Fortitude rule C081)
+
+    Although the changes are mostly cosmetic, the last rule (C081)
+    can affect the runtime code behavior:
+
+       Local variables that are initialised in the declaration
+       automatically get the save attribute in Fortran. This can have
+       unexpected effects if a routine is called more than once. Therefore,
+       these variables should either get the save attribute explicitly,
+       defined as parameters or initialised by a separate assignment
+       statement, depending on their intended use.
+
+    Limiting the line length to 80 characters (Fortitude rule S001),
+    only applies to the core and the add-on files. Examples and test
+    files can have lines as long as the Fortran standard allows. For F2023
+    the maximum line length is 10,000.
+
+    NOTE: We have ignored the following Fortitude rules:
+    * C003: Checks if implicit none is missing external.
+    * C121: Checks if only: is used in the use statement.
+    * C131: Check whether modules contain public/private statements.
+    
+  Examples:
+
+  - Addressed warning messages in examples when compiling with nagfor.
+    The most frequent warning message was related to the use of global
+    variables as a do-loop index. It is better to restrict do-loop indices
+    to variables defined in the local scope to avoid changing global
+    variables that might be used in the global scope as well.
+
+v4.5.0 (December 22, 2025)
+
+  Highlights:
+
+  - Improved checking of coefficients. Most user codes that use the
+    stokes/viscoelastic add-on will probably print error messages and
+    REQUIRE UPDATING, i.e.
+     * increase the size of the integer and real coefficients arrays,
+     * move the viscoelastic material data to the free range.
+
+  - The viscoelastic material data can now be stored as 2D arrays
+    in the structure coefficients.
+
+  General:
+
+  - Improved checking of the integer and real arrays in coefficients,
+    because of the following problems:
+
+      * In version v4.0.0 of TFEM the range of coefficients in the
+        stokes and viscoelastic add-ons have been extended to
+        1:150 (integer) and 1:100 (real). Since we are now starting
+        to use integers beyond the previous limit of 100, existing
+        codes might show out-of-bound problems.
+
+      * The viscoelastic model parameters were usually stored in
+        a range of the real coefficients that belong to another
+        add-on.
+
+    Starting with this release an error message is given if the size of
+    the coefficients is lower than the new required values and/or if
+    the viscoelastic model parameters are stored in an illegal range.
+    To get rid of those error messages, the user should:
+
+      * increase the size of the integer and/or real arrays in
+        coefficients. See the file README.coefficients in the 
+        src/addons directory for the required sizes,
+
+      * store viscoelastic model parameters in the free range 501:1000
+        or in a 2D array of the new ra2 component of the coefficients.
+
+  - All examples have been changed according to the new requirements
+    for the coefficients. To show the changes in an example use git.
+    For example to show the changes in the files in the example
+    folder settling_sphere_b give the command from the root of TFEM:
+
+         git diff v4.4.0 examples/settling_sphere_b
+
+  - Type coefficients extended with arrays of 2D integer and real
+    arrays (components ia2 and ra2 of coefficients). The 2D arrays
+    are created with the ncoefia2/ncoefra2 keywords (see userguide).
+    The main use of this extension is to supply the viscoelastic
+    material data as 2D arrays (see below).
+
+  Add-ons:
+
+  - Viscoelastic material data can now be supplied to the elements
+    using a 2D array in coefficients%ra2 having a shape of
+    (npar,nmodes), where npar is the number of parameters per mode.
+
+    The new interface is easier to use and cleaner and does not
+    require the free range in coefficients%r to be allocated by
+    the user. The number of parameters is therefore also not limited
+    by the size of the free space.
+
+    The new interface is activated by supplying a negative value to
+    coefficients%i(20). Assuming m = -coefficients%i(20), the array
+    containing the material data is coefficients%ra2(m)%a. Both the
+    material_data and viscoelastic add-on have been adapted to support
+    the new interface.
+
+  Examples:
+
+  - Removed legacy example energy2.
+
+  - Added examples cylinder_egp1a and cylinder_egp7a showing the use
+    of the coefficients%ra2 to supply the material data.
+
+  Misc.:
+
+  - Changed install files to using universal-ctags, a modern and
+    maintained replacement for "Exuberant ctags".
+
+  - Increased the free range of coefficients to 501:1000. This applies
+    to both integer and real coefficients.
+
+v4.4.0 (September 15, 2025)
+
+  Highlight:
+
+  - A full EGP model implementation with
+      * global van Mises stress dependent relaxation
+      * pressure dependent relaxation
+      * elastic mode for strain hardening
+      * plastic strain softening
+      * explicit and implicit time stepping available
+      * full Newton-Raphson iteration for implicit time stepping
+
+  Add-ons:
+
+  - New add-on material_data for easy filling of material parameters
+    from a library of data. Currently, only the data of the EGP models
+    from van Breemen et al. (2012) DOI: 10.1002/polb.23199 are
+    implemented.
+
+  - The adapted lambda model can now depend on the global von Mises
+    shear stress. This means that the von Mises stress is based on
+    the stress tensor of the sum of multiple modes instead of the stress
+    per mode. In this way, the original multi-mode EGP model can be used.
+    Both explicit and fully implicit time integration can be used.
+    The modes can also be split into multiple "processes" each with a
+    von Mises shear stress defined per process.
+
+  - The adapted lambda model can now depend on the pressure. It is
+    implemented as a factor h(J)=J^beta, dependent on the relative
+    change in volume J. The function h(J) is consistent with the
+    pressure dependent exponential function used in the EGP model.
+
+  - With the argument norlxmode=m in create_viscoelastic_model
+    the single mode m will have no relaxation added and therefore will
+    act as an elastic mode. For the flow elements norlxmode is specified
+    using coefficients%i(93).
+
+  - The adapted lambda model can now depend on the equivalent plastic
+    strain (gammap). It is implemented as a factor
+         g(gammap)=exp(-Sa R(gammap))
+    where Sa is the state parameter and R(gammap) is a softening function
+    consistent with the softening function used in the EGP model.
+
+  - In the viscoelastic_models module the use of drhs has been changed:
+
+    * argument drhs moved to structure vemopt
+    * call create_vemopt with argument compute_drhs=.true. to allocate
+      and activate component drhs
+    * optional argument drhs still present, but is obsolete and prints
+      an error message.
+
+  - In the viscoelastic_models module the component drhs_mm has been
+    introduced in the structure vemopt to deal with coupling between
+    modes in the Jacobian:
+
+    * call create_vemopt with argument compute_drhs_mm=.true. to allocate
+      and activate component drhs_mm
+    * drhs_mm is required to compute the Jacobian of the adapted lambda
+      model that depends on the global von Mises stress (EGP model with
+      global von Mises stress).
+    * drhs_mm can also be used for models without mode coupling.
+      The matrix drhs_mm becomes a matrix with drhs on the diagonal wrt
+      to the mode indices.
+
+  - A new module viscoelastic_models_gammap_m with routines to compute
+    the equivalent plastic strain. It is currently based on a single mode,
+    like in the EGP model.
+
+  - In module viscoelastic_elements_implicit_m single mode routines are
+    replaced with multi-mode versions, assembling multiple modes in one go.
+    The multi-mode versions are designed to be compatible with the single
+    mode version, i.e. old programs should still work.
+    The multi-mode versions are required for applying Newton-Raphson for
+    models having coupling between modes, such as the EGP model with global
+    von-Mises stress.
+
+  - New module viscoelastic_elements_gammap_m defining the evolution
+    equation for the equivalent plastic strain gamma_p for the EGP model.
+
+  - Post processing:
+    * Option to output global von Mises stress.
+    * Coefficient 95 for setting mode number for regime in SRM DP model.
+    * Output of gammap.
+
+  Examples:
+
+  - All viscoelastic_models examples (startup,steady) that use drhs as
+    an argument have been adapted to use vemopt%drhs instead.
+
+  - Examples startup48, startup48_log and startup49 use the EGP model with
+    a global definition of the von Mises stress (multi-mode) for standard c,
+    logc and b formulation respectively. All use 3D models.
+
+  - Examples steady1[4-7].f90: EGP model with multi-mode von Mises stress
+
+  - In the folder confined_cylinder_egp new examples have been added:
+      cylinder1a_mm
+      cylinder_c1_mm
+      cylinder8_mm.f90
+    which use multiple modes and the use of the global von Mises stress
+    in the EGP model.
+
+  - In the folder confined_cylinder_egp the following example has been added:
+      cylinder1a_mm_gammap
+    which adds plastic strain softening to the example cylinder1a_mm.
+
+  - In the folder confined_cylinder_egp new examples have been added:
+      cylinder9
+      cylinder10
+      cylinder_c9
+    which use an EGP model with two processes. Example cylinder10 has
+    the option to take the off-diagonal zero blocks into account
+    in the sparseness of the system matrix.
+
+  - New example steady18 to test alamJ_model=1.
+
+  - In the folder cylinder_in_box_egp new examples have been added:
+      cylinder_egp4_hJ
+      cylinder_egp6_hJ
+      cylinder_egp7
+      cylinder_egp7_hJ
+      cylinder_egp7_hJ_gammap
+    where the extension _hJ means the example include the factor h(J) in
+    the relaxation term (pressure dependence) and _gammap denotes
+    an extension with plastic strain softening.
+
+    Examples cylinder_egp4_hJ.f90 and cylinder_egp6_hJ.f90 are extensions
+    of the existing cylinder_egp4.f90 and cylinder_egp6.f90 examples.
+
+    The examples cylinder_egp7, cylinder_egp7_hJ and cylinder_egp7_hJ_gammap
+    use an EGP model for PMMA from van Breemen et al. (2012)
+    DOI: 10.1002/polb.23199 having a 12-mode alpha process,
+    a one-mode beta process and an elastic mode.
+
+  - New examples in the folder viscoelastic models:
+     startup50 to startup57
+        using data for PMMA from van Breemen et al. (2012)
+        DOI: 10.1002/polb.23199
+        The examples differ in
+         * the use of c or b-formulation
+         * explicit RK2, implicit trapezoidal or BDF2 time integration
+         * 13 mode (alpha process and elastic mode)
+         * 14 mode (alpha process, elastic mode and beta process)
+     startup58 to startup64
+        various examples using EGP with plastic strain softening.
+
+   - New examples uniaxial_stress_egp[1-4].f90 to produce stress-strain
+     curves in compression for the EGP model, using data from
+     van Breemen et al. (2012) DOI: 10.1002/polb.23199 for PMMA, iPP,
+     PS and PLLA, respectively.
+
+  Userguide:
+
+  - Small update to the userguide about mode coupling in EGP.
+
+  - Add description of new examples.
+
+  - Add a subsection on pressure dependence of adaptive lambda. It
+    describes the function h(J) and the relation to the exponential
+    pressure dependance in the EGP model.
+
+  - Add a subsection on plastic strain softening in adaptive lambda. It
+    describes the function g(gammap) for the EGP model.
+
+  - The structure of the Jacobian matrix including the plastic strain
+    is discussed.
+
+  Misc.:
+
+  - BUG FIX: this affects all previously existing EGP examples in a flow.
+    In the following examples (all examples using the EGP model in a flow)
+
+      folder confined_cylinder_egp:
+        cylinder1a.f90, cylinder3a.f90, cylinder6a.f90, cylinder7.f90,
+        cylinder8.f90, cylinder_c1.f90, cylinder_c3.f90, cylinder_c6.f90,
+        cylinder_c7.f90, cylinder_c8.f90,
+      folder cylinder_in_box_egp:
+        cylinder_egp1.f90, cylinder_egp2.f90, cylinder_egp3.f90,
+        cylinder_egp4.f90, cylinder_egp5.f90, cylinder_egp6.f90,
+      folder poiseuille:
+        poiseuille5.f90, poiseuille6.f90
+
+    the line
+
+      coefficients%i(80) = alam_model ! adapted lambda
+
+    was missing. This basically meant adapted lambda was not activated and
+    therefore the EGP model WITHOUT Eyring/Ree-Eyring relaxation was used.
+
+  - The core module limits_m now contains the logical
+       USE_ADAP_LAMBDA_FOR_EGP_DET_STAB
+    to set the use of lambda constant in the determinant stabilization
+    of EGP. If set to .false. the original specified lambda is used.
+    The default is .true., which uses the adapted lambda.
+
+v4.3.0 (February 29, 2025)
+
+  Add-ons:
+
+  - The EGP model for compressible flow (model=24) has been integrated
+    in the viscoelastic elements to solve flows.
+
+  - In viscoelastic elements moved the theta parameter coefficients%r(11)
+    to coefficients%r(28). The position 11 in the real coefficients was
+    already taken in the stokes add-on. Shifted to the first free position.
+    NOTE: This is an INCOMPATIBLE change.
+
+  - compressible fluid:
+
+    * pressure_ce_elem: option to compute prediction on element level
+
+    * new element implicit_pressure_ce_elem for fully implicit schemes
+      and steady state computations with Newton-Raphson iteration.
+
+    * New element routines for imposing a nonlinear pressure constraint:
+        pp_constraint_Jacobian_elem
+        constraint_pressure_int_elementset
+
+    * New integrate element for checking the pressure constraint:
+        integrate_pressure_function
+
+  Examples:
+
+  - New compressible flow examples:
+
+    * compressible_fluid5: compute prediction on element level.
+
+    * compressible_fluid6: Compressible viscous fluid problem in a (2D) channel
+      or axisymmetric pipe. Fully-implicit time integration with Newton-Raphson
+      iteration for the pressure constitutive equation.
+
+    * compressible_fluid7: Startup of flow around a rotating cylinder in
+      a square box for a Newtonian fluid. Fully-implicit with Newton-Raphson.
+      Optionally after the final time step do an iteration to steady-state.
+
+  - New examples showing the use of the compressible EGP model in flows:
+    Example folder is cylinder_in_box_egp, containing six examples:
+
+    * cylinder_egp1: incompressible EGP in an incompressible flow.
+        Startup time stepping + steady state.
+    * cylinder_egp1: incompressible EGP in an incompressible flow.
+        Sequence of steady states.
+    * cylinder_egp3: compressible EGP in an incompressible flow.
+        Startup time stepping + steady state.
+    * cylinder_egp4: compressible EGP in an incompressible flow.
+        Sequence of steady states.
+    * cylinder_egp5: compressible EGP in a compressible flow.
+        Startup time stepping + steady state.
+    * cylinder_egp6: compressible EGP in a compressible flow.
+        Sequence of steady states.
+
+  Userguide:
+
+  - Decription of the implementation and use of compressible EGP model
+    in both compressible flows and incompressible flows. In the latter
+    case the pressure is used to compute the change in volume, but the
+    flow itself is incompressible.
+
+  - Extended description of compressible fluid flow, including the
+    effect of the initial condition on the solution for transients and
+    steady state flows.
+
+  - A new subsection on the integral pressure constraint. This
+    constraint is important for compressible flows to be able to obtain
+    a steady state solution in closed container flows. This involves
+    both long time transients and direct steady state solving with
+    Newton-Raphson.
+
+  - A new subsection on the numerical implementation of fully-implicit
+    compressible flows and the nonlinear pressure constraint for flows
+    in a closed container.
+
+v4.2.0 (November 9, 2024)
+
+  Add-ons:
+
+  - Interface to the viscoelastic models has been extended using a
+    structure vemopt to facilitate optional arguments to the models.
+
+    * On the lower (mode) level the structure vemmod is used to pass
+      optional arguments. The variable drlxmod, that was an optional
+      argument on the argument lists of the lower level routines, is
+      now included in the structure vemmod. However, for compatibility
+      reasons, the optional argument drhs of the main routines has
+      been kept and is not part of vemopt.
+
+    * The Fortran associate construct has been used to easily use the
+      components in the structure vemmod, without the code becoming
+      unwieldy and unreadable.
+
+    * The dependence on the change in volume J for EGP model 24 has
+      been implemented using vemopt.
+
+  - In the viscoelastic models, the deformation part (i.e. the part
+    with the velocity gradient) has been moved to a separate
+    subroutine. In this way, this part can be reused for the implicit
+    implementation for models with mode-coupling. Only applies to
+    the standard and the b-tensor formulation.
+
+  - EGP (Eindhoven Glassy Polymer) model for incompressible flow (model=23)
+    and compressible flow (model=24).
+
+    Notes:
+
+    * The c, b and log c formulations are available in 2D, axisymmetric and 3D.
+
+    * Newton-Raphson can be used with the c and b formulations.
+
+    * The stress-implicit approach has not yet been implemented for the
+      EGP model. Therefore either the stress-explicit or the fully coupled
+      implicit with Newton-Raphson must be used.
+
+    NOTE: The EGP model for compressible flow (model=24) is only
+          available on the viscoelastic model level. The use of the
+          EGP model 24 in a flow similation has not yet implemented
+          and will be part of a future release.
+
+  - Adapted lambda cases 4 (Eyring) and 5 (Ree-Eyring) for use with
+    the EGP model, but can be used with other models also.
+
+    NOTE: The Eyring and Ree-Eyring functions are applied per mode.
+          This means that the von Mises stress is based on the modal
+          stress. Eyring and Ree-Eyring functions based on the global
+          von Mises stress create a coupling between modes. Coupling
+          between the modes has not yet implemented and will be part
+          of a future release.
+
+  - USE_CONFORMATION_MODEL in the model limits_m has been disabled for now,
+    because it is not working correctly.
+
+  Examples:
+
+  - New examples showing the use of the incompressible EGP model:
+
+    * In example folder viscoelastic_models:
+        startup42, startup42_log, startup43, startup44, startup45,
+        startup46, startup46_log, steady10, steady11, steady12, steady13
+
+    * In new example folder confined_cylinder_egp:
+        cylinder1a, cylinder3a, cylinder6a, cylinder7, cylinder8,
+        cylinder_c1, cylinder_c3, cylinder_c6, cylinder_c7, cylinder_c8
+      The examples are copies of examples in confined_cylinder_b but modified
+      for the incompressible EGP model (model=23).
+
+    * poiseuille5, poiseuille6
+
+  - New examples in folder settling_sphere_b that use Newton-Raphson for
+    obtaining a steady-state solution for an axisymmetric and a 3D
+    problem. CDT (b-tensor) formulation only.
+    (Nick Jaensson)
+
+  Userguide:
+
+  - Description of the incompressible EGP model (model 23) and the
+    compressible EGP model (model 24).
+
+  - Description of a stability fix for the original EGP model for
+    the determinant of the conformation when applying Newton-Raphson.
+
+  - New section on the examples for the EGP model.
+
+  - Add table containing the number of components for the models.
+
+  - Description of the examples in settling_sphere_b.
+
+  Misc.:
+
+  - README of metis5 add-on: ignore the github metis version.
+
+  - Benchmark results for umbrella cluster, mate partition.
+
+  - Diff file (color.diff) for patching sparskit2 when compiling
+    with 64bit integers.
+
+v4.1.0 (July 1, 2024)
+
+  Add-ons:
+
+  - Element level rotation reinitialization for the CDT formulation
+    (b-tensor).
+
+  - "Steady time derivative" for the CDT formulation to obtain the
+    steady state by Newton-Raphson iteration. Works for BDF1 and BDF2.
+    This introduces the possibility to obtain the steady state solution
+    very accurately without time stepping.
+
+  - Jacobian of the SUPG test function to get quadratic convergence if
+    the velocity used for SUPG weighting is updated within the
+    Newton-Raphson iteration.
+
+  - Fix in devssg_rhs_div.
+    (Nick Jaensson)
+
+  - Jacobian for the Leonov model, XPP and XPP-PTT single equation models.
+
+  Examples:
+
+  - New examples that use element level rotation reinitialization,
+    simplifying the main program for the CDT formulation:
+
+    * cylinder[1-6]a.f90 in the confined_cylinder_b example folder
+    * channel14a.f90 in the channel example folder
+    * couette15a.f90, couette16a.f90, couette19a.f90, couette20a.f90,
+        couette22a.f90 in the couette example folder
+    * extrudate_swell2d_ba.f90, extrudate_swell3d_ba.f90 in the
+        extrudate_swell_b example folder
+
+  - New examples that use Newton-Raphson for obtaining a steady-state
+    solution:
+
+    * cylinder7 (CDT formulation) and cylinder_c7 (c formulation) solve a
+      steady state by first time-stepping and a final step iteration to
+      the steady state.
+
+    * cylinder8 (CDT formulation) and cylinder_c8 (c formulation) solve a
+      sequence of steady states by continuing from a lower Weissenburg
+      number.
+
+    * Examples cylinder9 and cylinder_c9 are similar to cylinder6a/cylinder_c6
+      but read parameters from a file and have the option to restart.
+
+    * Examples cylinder10 and cylinder_c10 are similar to cylinder8
+      and cylinder_c8 but read parameters from a file and have the
+      option to restart.
+
+    * couette27 solves the steady reference state first using Newton-Raphson
+      instead of time stepping like in couette22a.
+
+  - All examples using fully coupled/fully implicit Newton-Raphson iteration
+    for viscoelastic flow now have the option to use the Jacobian of the SUPG
+    test function in the Newton-Raphson iteration.
+
+  - Fix in coneplate4: impose Dirichlet boundary condition on the cone
+    every time step again. Since nodes move the swirl velocity changes.
+
+  - Modified examples steady[2,5,6,8,9] to be able to easily use other
+    models instead of SRM1.
+
+  Userguide:
+
+  - New subsection "Caveats" in the chapter on local transformations.
+    * Warn against the improper reuse of a solution vector that is transformed
+      to the global space.
+    * Stress that reaction forces need to be computed in the local space
+      before being transformed to the global space.
+
+v4.0.0 (December 7, 2023)
+
+  This new major version is basically a "big cleaning". The impact for
+  normal users will be minimal, since user programs should run unmodified.
+  Exceptions include user programs using the bcf add-on (see below).
+
+  However, during installation the following items should be taken
+  into account:
+
+  1. The files from the HSL2002 library now reside in the external folder.
+     This means that for those that have a license to use HSL2002 should
+     unpack the hsl2002.tar.gz file instead of the hsl.tar.gz in
+     previous versions of TFEM.
+
+  2. It is recommended to do a fresh install when upgrading to v4.0.0 from
+     a previous TFEM version. Just doing a "git pull" will work, but you
+     will have remaining folders and files from the previous version
+     that are ignored by git. Doing a "make allclean" before "git pull"
+     will help a lot, but you still might end up with remaining folders and
+     files that should not be there anymore.
+
+  Two new repositories have been created: tfem_legacy and tfem_experimental.
+
+  The repository tfem_legacy contains legacy modules, add-ons and examples
+  that have been moved from the main tfem repository.
+
+  The tfem_experimental repository of tfem contains add-ons and examples
+  that do not (yet) fulfill all the criteria needed for inclusion in tfem,
+  but can still be useful. It consists basically of the contents of
+  the experimental folder in previous versions of tfem.
+
+  Moved to tfem_legacy:
+
+  - misc folder
+
+  - add-ons metis, dummylibs/lapack, io_utils/comsol_utils, io_utils/marc_utils
+
+  - modules stokes_legacy, surface_advection_legacy, viscoelastic_legacy
+
+  - Examples using NX-Ideas: poisson10 and poisson11. Also the
+    Appendix with instructions has been moved to the legacy userguide.
+    The io_utils module for NX-Ideas remains available in the tfem repository.
+
+  - All examples using sepran generated meshes.
+    The io_utils module for Sepran remains available in the tfem repository.
+
+  Add-ons:
+
+  - Position of the coefficients of the bcf add-on have been moved up:
+      integer range (coefficients%i) from 101-150 to 451-500.
+      real range (coefficients%r) from 51-100 to 401-450.
+    Hence in both cases (%i and %r) the positions shifted up by 350.
+    The free ranges become available for the stokes and viscoelastic add-ons.
+
+  - Fix for mkl_gmres. Apparently setting ipar(15) using so%mgmres didn't
+    work anymore. It is set to the default value now and so%mgmres is obsolete.
+
+  Examples:
+
+  - Fix in bcf/cylinder3.f90 (ncompc=4 for FENE-P).
+
+  - New examples sphere36, sphere37 and sphere38 replacing the examples
+    sphere7, sphere18, sphere20. The new examples use a gmsh mesh instead
+    of a sepran mesh.
+
+  External:
+
+  - Moved hsl from the root of tfem to external/hsl2002.
+
+  Misc:
+
+  - Rearrange directory structure:
+
+      moved texfiles/ug to doc/ug
+      moved src to src/core
+      moved addons to src/addons
+
+      moved texfiles/uge to experimental/doc/uge
+      moved experimental/addons to experimental/src/addons
+
+  - Mdefs_distr_mk: set FSOLVERLIB to external_... instead of hsl_...
+
+  - Experimental example Quint_4layers_3materials modified to use generic
+    element surface_advection_elem.
+
+  - More options for getmdefs with a project.
+
+v3.9.0 (November 1, 2023)
+
+  Core:
+
+  - Dependencies branch merged (not yet finished).
+
+  - Optionally exclude partitions that contain just zeros (zero blocks)
+    from the system matrix to reduce the memory requirements and
+    possibly also reduce the CPU time for solving the system.
+    See the new Section 3.5.7 in the userguide.
+
+  Add-ons:
+
+  - ncompg was used, even if DEVSS not set (fixed).
+
+  - Moved DEVSS elements to the stokes add-on. DEVSS is a numerical trick
+    to create stable low-order mixed Stokes elements.
+
+  - Setting coefficients%i(30)=1 in the DEVSS-G elements does not
+    multiply the equation
+          nabla u - G^T = 0
+    with alpha, leading to a non-symmetric matrix. In this way, G will
+    still be properly defined if alpha=0. This is needed if the equations
+    are solved fully implicit without DEVSS-G, but G is still needed for the
+    constitutive equation (G-method).
+    NOTE: this only applies to DEVSS-G, not to DEVSS-E.
+
+  - New routine implicit_ce_timederiv_supg_elem in module
+    viscoelastic_elements_implicit_m that builds the matrix of the
+    time-derivative term only. It is needed for assembing a generalized
+    eigenvalue problem for linear stability analysis.
+
+  - Setting coefficients%i(30)=1 in the implicit_ce_supg_elem routine
+    excludes the time-derivative term. This will built the Jacobian
+    of the convection term and (minus) the right-hand side of the CE.
+    Possible reasons for excluding the time-derivative term are:
+    * Perform Newton-Raphson iteration for the steady state, if it exists.
+    * Together with a separate built of the matrix of the time-derivative
+      with the routine implicit_ce_timederiv_supg_elem, we can assemble a
+      generalized eigenvalue problem for linear stability analysis.
+
+  - New add-on feast for interfacing to the FEAST eigensolver.
+
+  Examples:
+
+  - New examples in stokes: stokes1b and stokes11a for
+    optionally excluding the p-p zero block from the system matrix.
+
+  - New examples in confined_cylinder_b: cylinder6 and cylinder_c6 for
+    optionally excluding zero blocks from the system matrix.
+
+  - Examples cylinder5, cylinder_c5 in confined_cylinder_b have been
+    adapted to support multiple modes.
+
+  - New examples in couette: couette23, couette24, couette25, couette26
+    for determining linear stability of the steady state flow using an
+    eigenvalue analysis with the FEAST eigensolver. These examples can
+    serve as templates for other linear stability problems.
+
+  - New example and modified examples in viscoelastic_models
+    (steady[1-4].f90 and new startup41.f90) for computing the
+    eigenvalues/eigenvectors of the Jacobian of the rhs of the models.
+
+  Userguide:
+
+  - Sections of Chapter Add-ons have been sorted alphabetically.
+
+  - New subsection 3.5.7: Excluding partitions with just zeros (zero blocks)
+    from the system matrix.
+
+  - New section 13.44: Linear stability of viscoelastic fluid flow.
+
+v3.8.0 (September 4, 2023)
+
+  Add-ons:
+
+  - viscoelastic_models: new routines
+
+       drhsdL_viscoelastic_2D
+       drhsdL_viscoelastic_2D_b
+       drhsdL_viscoelastic_3D
+       drhsdL_viscoelastic_3D_b
+
+    to compute the derivative of the rhs with respect to L in
+    multiple points with optional variable coefficients.
+
+  - viscoelastic/devssg_elements: element routine devssg_rhs_div
+    to add DEVSS-G term to the right-hand side.
+
+  - viscoelastic/viscoelastic_elements_implicit:
+
+    * Separate supg velocity vector that does not change during
+      iteration to see quadratic convergence with full Newton-Raphson.
+
+    * The element routine implicit_ce_vel_supg_elem couples
+      the velocity and gradient G (or nabla u^T) to the
+      constitutive equation. This basically completes
+      the full Newton-Raphson implementation for a fixed domain.
+
+  Examples:
+
+  - New examples in confined_cylinder_b: cylinder5 and cylinder_c5
+    employing fully implicit time discretization with Newton-Raphson
+    iteration.
+
+  - New examples couette21 and couette22 employing fully implicit
+    time discretization with Newton-Raphson iteration.
+
+v3.7.0 (August 16, 2023)
+
+  Core:
+
+  - Extended the tensor_m module with the following routines:
+
+      matrix_to_tensor4_left_symmetric
+      tensor2_to_vector
+      vector_to_tensor2
+      tensor2_to_vector_symmetric
+      vector_to_tensor2_symmetric
+
+  - Optional argument nodesx to get the node numbers also in:
+
+      get_coordinates
+      get_coordinates_sides
+      get_coordinates_side
+      get_coordinates_geometry
+
+  Add-ons:
+
+  - The number of models implemented in the contravariant deformation
+    (b-tensor) formulation is limited. However, setting
+
+       USE_CONFORMATION_MODEL=.true.
+
+    in the module limits_m will transform any model available
+    in the conformation tensor (c-tensor) formulation to the b-tensor
+    formulation. This means a new model needs to be implemented only
+    in the c-tensor formulation in order to be used in the b-tensor
+    formulation. A drawback is that it takes a little more CPU time.
+    If the model computation is time-critical, it is recommended to
+    implement the model in the b-tensor formulation directly.
+
+  - Fix for b-tensor formulation with axisymmetric swirl.
+
+  - Combining ALE with time integration methods requiring evaluation of
+    the convection term at different times within a single step has been
+    blocked. The change in the nabla operator due to the change in
+    coordinates within a time step has not yet been taken into account
+    in the element routines.
+
+  - viscoelastic_models: new routines
+
+       dstress_viscoelastic_2D
+       dstress_viscoelastic_2D_b
+       stress_viscoelastic_3D
+       dstress_viscoelastic_3D_b
+
+    to compute the Jacobian of the stress tensor (single mode) in
+    multiple points with optional variable coefficients.
+
+  - viscoelastic/viscoelastic_elements_generic: new routines
+
+       dstress_tensor_viscoelastic
+
+    to compute the Jacobian of the stress tensor (single mode) in
+    all points with optional variable coefficients.
+
+       get_conformation, get_conformation_geometry
+
+    to get the conformation tensor on element level.
+    These routines can handle different types of storage in the
+    sysvectors controlled by the coefficient coefficients%i(84)
+    (see file addons/viscoelastic/README.coefficients%i).
+
+  - viscoelastic/viscoelastic_elements_implicit: new module for
+    fully-implicit time-dependent viscoelastic flow computations.
+    Currently available routines:
+
+       implicit_divtau
+
+    element routine for implicit -div tau
+
+       implicit_ce_supg_elem
+
+    element routine for solving the constitutive equation for
+    known velocity/velocity gradient using Newton-Raphson iteration.
+    Only applies to the standard c and the b approach (not to logc yet).
+
+  - viscoelastic/viscoelastic_legacy: clean up (only error messages).
+
+  Userguide:
+
+  - Fix sign in weighting function in section on 1D convection diffusion.
+
+  - New section in Examples on implicit time discretization for
+    viscoelastic fluid flow.
+
+  Examples:
+
+  - Fix sign in weighting function in example convection_diffusion_1d for
+    negative velocity.
+
+  - New example startup40: variable time step Euler/trapezoidal/BDF2.
+
+  - New example channel14, which is like channel11 (swirl,axisymetric)
+    but now with the b-tensor formulation.
+
+  - New example couette16.f90 using b-tensor formulation with explicit
+    stress.
+
+  - New examples cylinder[3-4].f90, cylinder_c[3-4].f90 using implicit
+    time discretization for the constitutive equation (decoupled).
+
+  - New examples couette{17,18,19,20}.f90 using implicit
+    time discretization for the constitutive equation (decoupled).
+
+  Misc.:
+
+  - New benchmark results for Mac Mini/M2-Pro with 6 P-cores.
+
+  - Routines set_viscoelastic_supg/unset_viscoelastic_supg have been
+    removed
+
+v3.6.0 (June 16, 2023)
+
+  Add-ons:
+
+  - Jacobian matrix in viscoelastic models add-on:
+
+    * Jacobian matrix can be optionally computed when calling
+      rhs_viscoelastic using the argument drhs. The Jacobian matrix is
+      the functional derivative of the rhs with respect to the
+      conformation tensor components.
+
+    * Jacobian matrix has been implemented for standard and b-formulation
+      2D and 3D models, hence models with log-conformation reformulation
+      are excluded. In addition, the Leonov, XPP and Rolie-Poly models
+      are excluded for now.
+
+    * The Jacobian matrix is useful for:
+        1) studying linear stability problems using eigenvalue analysis,
+        2) solving transients with time stepping using implicit schemes
+           combined with iteration to solve the nonlinear equations,
+        3) solving steady state solutions by iteration,
+        4) ...
+
+    * The Jacobian matrix has been used in the examples steady1 to
+      steady7 to solve the steady state rheology curves for various models.
+
+    * The Jacobian matrix has been used in the examples startup36 to
+      startup39 to solve transient rheology curves for various models
+      using an implicit time integration scheme (trapezoidal method).
+
+  Examples:
+
+  - Steady examples steady1-steady3 have been modified to use the
+    built-in Jacobian matrix for the Newton-Raphson iteration.
+
+  - New example steady4 to find the steady state rheology curves for
+    the PTT models.
+
+  - New examples steady5-steady7 to find the steady state rheology curves for
+    the 2D and axisymmetric models.
+
+  - New examples startup36 to startup39 using an implicit trapezoidal
+    time integration method.
+
+  - New examples stresstest1 to stresstest4 to test the derivative of
+    the stress expression using the contravariant deformation tensor (b).
+
+  Misc.:
+
+  - Tests added.
+
+v3.5.0 (April 21, 2023)
+
+  General:
+
+  - tfdiff: add -h option and include diff with .txt files.
+
+  - Fixed missing tags for symbols in .F90 files.
+
+  Core:
+
+  - create_subscript_sysvector, create_subscript_vector:
+
+    * By default nodes are now included only once to avoid degrees of
+      freedom to appear multiple times. Previously, nodes could appear
+      multiple times when called with multiple curves or surfaces that
+      are connected. This could lead to unexpected problems when, for
+      example, summing the degrees in a subscript to obtain the reaction
+      force.
+
+    * To obtain the previous behavior call the routines with the
+      optional argument includenodesonce = .false.
+
+  Add-ons:
+
+  - Generalized Stokes add-on:
+
+    * Add constant viscosity model (gnmodel=0). Combined with a yield
+      model, the classic Bingham model can be created.
+
+    * The Bingham and the regularized Bingham yield models (Papanastasiou)
+      have been added to the generalized Newtonian elements. The yield
+      models can be combined with any of the generalized Newtonian
+      models (constant viscosity, power-law, Carreau and Carreau-Yasuda)
+      for the post-yield viscosity function.
+
+    * von Mises stress output in generalized_newtonian_stress
+
+    * In some cases the effective shearrate gammadot is exactly zero. This
+      usually happens when postprocessing the viscosity and gammadot=0 in a
+      node. However, for the power-law like models the viscosity cannot be
+      computed in that node. To avoid dividing by zero the following real
+      coefficients have been introduced:
+      211:  eta_max1, value of viscosity for gammadot=0 to avoid dividing
+            by zero. (for gnmodel=1)
+      212:  eta_max2, value of yield viscosity for gammadot=0 to avoid
+            dividing by zero. (for yieldmodel=1)
+
+  Examples:
+
+  - New examples in viscoelastic_models:
+
+    * startup26 to startup35:
+         Startup examples for shear, planar extension and
+         uniaxial extension.
+         Instantaneous elastic, i.e. no solvent, for startup26 to startup32.
+         Non-zero solvent for startup33, startup34 and startup35.
+         Imposed shear stress (shear flow) and imposed normal stress
+         difference (extensional flow).
+
+    * steady2 and steady3:
+         Steady examples for shear, planar extension and uniaxial extension
+         using Newton-Raphson iteration. The model is an evp model:
+           steady2: Saramito 2007, SRM1
+           steady3: Saramito 2009, SRM2
+         with Oldroyd-B or Giesekus relaxation expression.
+
+   - New examples using the regularized Bingham yield model (Papanastasiou):
+
+     * generalized_newtonian3 using Picard iteration.
+     * generalized_newtonian4 using Picard followed by Newton-Raphson
+       iteration.
+     * sphere34 and sphere35, with imposed velocity and force, respectively.
+       Both used Picard followed by Newton-Raphson iteration.
+
+v3.4.0 (February 20, 2023)
+
+  Core:
+
+  - IMPORTANT: The default in isoparametric_deformation has been set to
+    output |detF| instead of detF. This avoids the erratic combination of
+    detF<0 for domain integrals with curvel/surfl > 0 for boundary integrals
+    in the discretized weak form. This could, for example, happen with gmsh if
+    you define your 2D domain with curves ordered clockwise. Note, that
+    the default can be changed (see below).
+
+  - New settings in the limits module regarding the sign of detF.
+
+    For "domain" elements (line in 1D, tri/quad in 2D, tet/hexa/prisma/pmid
+    in 3D) the sign of detF in isoparametric elements is supposed to be a
+    positive value. Sometimes, however, you end up with a negative sign for
+    detF. For example, when you define a 1D mesh with decreasing coordinates for
+    increasing node number, define a 2D mesh in gmsh using curves that are
+    oriented clockwise, or if you mirror a mesh. This is not a problem if
+    the weak form consists of domain integrals only. However, if you also
+    have boundary integrals in the weak form or want to compute reaction
+    forces, this is a problem.
+
+    Therefore, two logicals have been defined in limits_m:
+
+     1. SET_ABSOLUTE_DETF, which takes the absolute value of detF always if
+        set to .true.
+
+     2. CHECK_POSITIVE_DETF, which tests the sign of detF and stops the program
+        if a non-positive values is detected, if set to .true.
+        The value of CHECK_POSITIVE_DETF is only relevant if
+        SET_ABSOLUTE_DETF=.false.
+
+    The previous default was
+          SET_ABSOLUTE_DETF=.false.
+          CHECK_POSITIVE_DETF=.false.
+    whereas the defaults from now on are
+          SET_ABSOLUTE_DETF=.true.
+          CHECK_POSITIVE_DETF=.false.
+
+    You can test your code for negative Jacobians in your mesh by setting
+          SET_ABSOLUTE_DETF=.false.
+          CHECK_POSITIVE_DETF=.true.
+    If you get an error message saying detF<0 and you also apply boundary
+    integrals (natural bc, slip, ...), you should check the correctness of
+    the (sign of the) coefficients for the boundary integrals carefully.
+
+  - Module sparse_m: new routine add_sparsematrix.
+
+  Add-ons:
+
+  - UMFPACK: give error message if symmetric matrix storage is used.
+
+  Examples:
+
+  - Modified the mesh of some 1D height function problems to have a
+    positive Jacobian determinant (detF>0).
+
+v3.3.0 (December 1, 2022)
+
+  General:
+
+  - Introduced conditional compilation by preprocessing .F90 files.
+    Condition compilation flags can be set by adding -Dmacro compiler options
+    to FFPFLAGS in the Mdefs.mk file.
+    See new file README.prepro in the folder install.
+
+    IMPORTANT: First save a copy of your current Mdefs.mk file. Then create
+    a new Mdefs.mk from scratch by copying Mdefs_distr.mk. Adapt the new
+    Mdefs.mk according to your system, possibly by copying some settings
+    from the old Mdefs.mk file.
+
+  - Currently, the following affects the source code by conditional compilation:
+
+     * Eigenvalue/vector computation for 3x3 matrices using either
+       HSL routine ea23 (default) or Lapack if macro NO_LIBHSL is set.
+
+     * Calling 64bit integer umfpack routines macro if I8 is set.
+
+     * Examples that have a .F90 extension (previously .f90.add files).
+
+  Core:
+
+  - Moved the interfaces to the HSL library routine MA41, MA57 and
+    EA23 from the core to the add-on hsl.
+
+  - Removed the using of module eig2d3d_m in module math_defs_m. For
+    eigenvalue/vector computation the module eig2d3d_m must be used
+    directly.
+
+  - The eig3x3_hsl routine has been removed from eig2d3d_m and is now
+    included in the module hsl_ea23_m, which itself is now in the new
+    add-on hsl.
+
+  Add-ons:
+
+  - Renamed all files in the addons directories according to
+      README.coefficients%i -> README_coefficients%i
+      README.coefficients%r -> README_coefficients%r
+    since the text after a . should be a known extension.
+
+  - New add-on umfpack: an interface to the UMFPACK direct solver. UMFPACK is
+    part of the SuiteSparse C library of Tim Davis. It is free software.
+
+  - Renamed add-on hsl to hsl_extra.
+
+  - Moved the interfaces to hsl routines from the core to the new add-on hsl.
+
+  - Fixes in stokes_P_scalar:
+    1. In axisymmetric case, tr(D^2) was computed incorrectly.
+    2. If tr(D^2) = 0, avoid dividing by zero, and
+       set the persistence a huge number.
+    (Jang-Min Park)
+
+  Userguide:
+
+  - New example moving_boundary5 with some results.
+  - Changed extension of .dat input filenames to .txt extension.
+  - Added Visual Studio Code to possible editors in Introduction.
+  - Fix Newton-Raphson weak form for generalized Newtonian. (Jang-Min Park)
+  - Added UMFPACK to the solvers and the add-ons chapters.
+  - Changes due to rename of add-on hsl to hsl_extra and the new add-on hsl.
+  - Changes due to rename of .f90.add to .F90 example files.
+
+  Examples:
+
+  - Changes to example moving_boundary:
+
+    * Simplified the update_mesh routine for the free boundary.
+    * Possibility to optionally rotate the mesh.
+    * New example moving_boundary5:
+        Fluid column between two plates loaded under gravity forces.
+        Surface tension on fluid-air interface and fluid-wall interface.
+        Perfect slip on the walls. Axisymmetric. Newtonian fluid (Stokes).
+
+  - Changes to all examples that have or generate files with a .dat extension:
+
+    Changed extension of .dat input files to the .txt extension. In this way
+    the files are recognized by editors, previewers, matlab etc. as regular
+    text files.
+
+    Changed extension of .dat output files to the .out extension. In this way
+    the files can easily be removed (e.g. with make clear), whereas the
+    input files (having now the .txt extension) remain.
+
+  - The example sphere33.F90 shows the use of the umfpack module.
+
+  - Changed extension of all .f90.add example files to .F90 requiring
+    preprocessing. This has the following advantages:
+
+     * File type is recognized as Fortran source by an editor.
+     * The example compiles/runs like any other example. No need to run
+       fmm again after renaming the file to a .f90 file.
+     * Running the example without setting the proper preprocessing macro(s)
+       gives a message what to do to get it running.
+
+  - All examples that use metis now use add-on metis5 exclusively and
+    add-on metis (based on metis-4) will be removed in a future tfem release.
+
+  Misc.:
+
+  - Clean-up:
+
+    * Moved Old_CHANGES to a HISTORY section at the end of CHANGELOG.txt
+    * Removed doc_updates, README_INSTALL, Old_CHANGES
+    * Renamed: Mdefs.mk.distr -> Mdefs_distr.mk, so it is recognized as
+      a makefile by editors etc.
+
+  - Removed the targets allp and allpc from the root Makefile.
+
+  - INSTALL.linux updated to show the possibility of compiling tfem
+    without the HSL library available.
+
+  - Set optimization to -O3 for gfortran in the Mdefs_distr.mk file.
+    An optimization bug seems to be triggered by -O2 for examples ale13 and
+    ale14, whereas -O1 and -O3 are fine.
+
+v3.2.0 (September 13, 2022)
+
+  Add-ons:
+
+  - Saramito (2021) EVP model with Drucker-Prager plasticity (SRM3).
+
+  Userguide:
+
+  - Describe model=22:
+    Saramito (2021) EVP model with Drucker-Prager plasticity (SRM3)
+
+  - Example poiseuille4 with some results.
+
+  Examples:
+
+  - startup19, startup19_log, startup20, startup20_log, startup21,
+    with Saramito (2021) EVP with DP plasticity model.
+
+  - poiseuille4 with Saramito (2021) EVP with DP plasticity model.
+
+  - startup22, startup23, startup24, startup25:
+
+    Startup from zero stress of a flow with a constant velocity gradient.
+    Multiple continuation with a different velocity gradient to obtain
+    the steady state values.
+    Models: Giesekus (22), PTT linear (23), PTT exponential (24), SRM3 (25)
+
+  - Example steady1.f90 in viscoelastic_models computes steady state
+    shear and extension curves for the Saramito (2021) model based on
+    Drucker-Prager plasticity (SRM3). It uses Newton-Raphson iteration.
+
+  Experimental examples:
+
+  - Example hopper1:
+    Elastoviscoplastic problem in a hopper (wedge or conical).
+    Saramito model (2021) with Drucker-Prager plasticity.
+
+  Misc.:
+
+  - Benchmark timings for Mac Studio with M1 max.
+
+  - Minor fixes to example generalized_stokes4.
+    (Jang-Min Park)
+
+v3.1.0 (May 11, 2022)
+
+  Core:
+
+  - Simplify delete subroutines using automatic deallocation.
+
+  - Simplify various modules using deallocate/allocate by assignment.
+
+  - mesh_convert with elementshapes=quadratictolinear to convert a mesh
+    with quadratic elements to a mesh with linear elements.
+
+    * Each quadratic element becomes a single linear element, hence no
+      subdivision like spectraltolinear.
+    * Curves and surfaces are also converted from quadratic to linear.
+    * Nodal sequence of vertices is preserved to easily copy data
+      defined in the vertices of the quadratic mesh to the linear mesh.
+
+  Userguide:
+
+  - In the description of mesh_convert it is shown how to convert
+    a quadratic mesh to a linear mesh.
+
+  Examples:
+
+  - New example generalized_stokes4: viscosity function according to a
+    regularized Bingham model.
+    (Jang-Min Park)
+
+  Misc.:
+
+  - Minor changes, clean-ups and bug fixes (see git log).
+
+v3.0.1 (February 24, 2022)
+
+   Core:
+
+ - Generalization of Gauss subintegration. Any Gauss integration rule can
+   now be combined with macro integration (subdomain integration).
+   Previously only inttype=0 (standard) was implemented.
+
+v3.0.0 (November 30, 2021)
+
+  Core:
+
+  - Infrastructure for blended meshes and elements. Blended meshes have
+    element shapes that are a "blend" of two or more standard element
+    shapes. In this way coupled or mixed problems can easily combine
+    different interpolations for the different quantities of the problem.
+
+  - elshape=105,106,107 for macro high-order elements.
+
+  - New macro high-order shape functions: P1-iso-Pp, Q1-iso-Qp.
+    Defined for lines, quadrilaterals and hexahedra.
+
+  - meshgen_extra, mesh_change: change a mesh with regular high-order
+    elements to macro elements (and back again).
+
+  - Qp shape function on a hexahedron.
+
+  - meshgen_extra, geometry_skeleton: create a geometry (curve,surface,volume)
+    that still needs the nodes and topology to be filled.
+
+  Add-ons:
+
+  - Adapt various I/O modules (vtk_utils,gmsh_utils,printinfo,...) to
+    the new infrastructure for blended meshes.
+
+  Userguide:
+
+  - New section on blended elements in the chapter on mesh generation.
+
+  - In the decription of mesh_convert it is shown how to make a blended
+    mesh from individual meshes.
+
+  - The examples sphere31 and sphere32 are described in a new section on
+    blended meshes.
+
+  - New section on mixed Stokes formulation in the examples chapter.
+
+  - Describe the new possiblities of mesh_change for macro elements.
+
+  - New subsection on geometry_skeleton.
+
+  Examples:
+
+  - sphere31, sphere32, mixed_stokes1, mixed_stokes2 that use blended meshes:
+
+    sphere31:
+      This problem is similar to sphere1, but now using blended meshes with
+      both biquadratic and bilinear quadrilateral elements.
+
+    sphere32:
+      High-order Taylor-Hood quadrilateral elements using blended meshes.
+      This problem is similar to sphere1, but now with high-order Taylor-Hood
+      velocity/pressure Qp/Qp-1 elements using blended meshes.
+
+    mixed_stokes1:
+      Mixed Stokes problem for a contraction flow. Q2/Q1 Taylor-Hood for
+      velocity-pressure, using main mesh for interpolation. Qp for stresses
+      using the blend mesh 1 for interpolation.
+
+    mixed_stokes2:
+      Mixed Stokes problem for a contraction flow. Q2/Q1 Taylor-Hood for
+      velocity-pressure, using main mesh for interpolation. Q1-iso-Qp
+      for stresses using the blend mesh 1 for interpolation. For p=4,
+      this is the 4x4 mixed Stokes element of Marchal & Chrochet (1987).
+
+  Compatibility:
+
+  - The infrastructure for blended meshes/elements is fully compatible
+    on the user level for codes running with previous tfem versions.
+
+  - On a lower level (components of structures, lower level interfaces)
+    changes have been made that might affect users having lower level code
+    in their own codes. Some notes on the structures mesh_t and
+    geometry_t:
+
+    * A structure of type mesh_t has acquired the components
+        integer :: nblend = 0
+        type(element_t), allocatable, dimension(:,:) :: element_blend
+        integer, allocatable, dimension(:) :: nnodes_blend
+        integer, allocatable, dimension(:) :: numnodtop
+      where the first three are part of a basic mesh and need to be
+      allocated and filled always. For a non-blend mesh the allocation
+      and filling must be according to:
+        allocate( mesh%element_blend ( mesh%nelgrp, 0 ) )
+        allocate( mesh%nnodes_blend(2) ); mesh%nnodes_blend = [0,mesh%nnodes]
+      The numnodtop component is only allocated and filled in fill_mesh_parts.
+      Note, a mesh created with mesh_skeleton already contains the
+      required additional components.
+
+    * A structure of type geometry_t (curves,surfaces,volumes) has acquired
+      the components
+        integer :: nblend = 0
+        type(element_t), allocatable, dimension(:) :: element_blend
+        integer, allocatable, dimension(:) :: nnodes_blend
+        integer, allocatable, dimension(:) :: numnodtop
+      where the first three are part of a basic geometry and need to be
+      allocated and filled always. For a non-blend mesh the allocation
+      and filling must be according to:
+        do i = 1, mesh%ncurves
+          allocate(mesh%curves(i)%element_blend(0))
+          allocate(mesh%curves(i)%nnodes_blend(2) )
+          mesh%curves(i)%nnodes_blend = [0,mesh%curves(i)%nnodes]
+        end do
+      and similarly for the surfaces and volumes.
+      The numnodtop component is only allocated and filled in fill_mesh_parts.
+      Note, a geometry created with geometry_skeleton already contains the
+      required additional components.
+
+    * The component elnumnod of a structure of type geometry_t is not
+      filled for basic geometries anymore, similar to elnumnod in a
+      basic mesh. The value for elnumnod is now filled in
+      fill_mesh_parts from the numnod values in the elements.
+
+v2.10.2 (October 31, 2021)
+
+  Add-ons:
+
+  - stokes_P_tensor, stokes_P_scalar: Adapt * to ALE
+    (Jang-Min Park)
+
+  Misc.:
+
+  - Minor changes, clean-ups and bug fixes (see git log).
+
+v2.10.1 (October 17, 2021)
+
+  Add-ons:
+
+  - stokes: Compute persistence-of-straining tensor and corresponding flow
+            classification parameter (stokes_P_tensor, stokes_P_scalar)
+    (Jang-Min Park)
+
+  Userguide:
+
+  - A new section on persistence-of-straining, describing briefly the theory
+    briefly and two examples.
+    (Jang-Min Park)
+
+  Examples:
+
+  - Two examples computing the persistence-of-straining parameter:
+    persist1: Persistence-of-straining for a given velocity field
+              on a cubic domain.
+    taylor_couette2: A segment of 2D Taylor-couette flow.
+    (Jang-Min Park)
+
+  Misc.:
+
+  - install/README.oneAPI: Add installation instructions for a minimal
+    oneAPI (ifort) installation.
+
+v2.10.0 (September 30, 2021)
+
+  Core:
+
+  - High-order elements using equidistant nodal distribution.
+
+    * Triangles and quadrilaterals available.
+    * Meshgen: line1d and quadrilateral2d extended with equidistant high-order
+    * Using mesh_convert/spectraltolinear for plotting mesh.
+    * find_refcoor for high-order elements
+
+  - Spectral elements
+
+    * Interpolation for any reference point for spectral elements
+    * find_refcoor for spectral elements
+
+  Add-ons:
+
+  - io_utils/gmsh_utils: read/write high order elements from/to gmsh files
+
+  - printinfo: printlevel=5,6 for printing order of elements
+
+  - second-order time integration for compressible fluid elements
+    (Vincent de Bie)
+
+  - a new ternary diffuse-interface model by Boyer and Lapuerta (2006)
+    (Jang-Min Park)
+
+  Userguide:
+
+  - Add a section on spectral and high order in the userguide.
+
+  - Describe the new ternary diffuse-interface model and corresponding
+    example diffuse_interface19.
+    (Jang-Min Park)
+
+  Examples:
+
+  - Examples for high-order elements: poisson34, poisson35, poisson36,
+      poisson37
+
+  - Two examples using stabilized high order elements:
+      stokes53: stabilized velocity/pressure Pp/Pp high-order triangle
+      stokes54: stabilized velocity/pressure Qp/Qp high-order quad
+
+  - Two examples combining a high-order mesh using gmsh and
+    stabilized high order elements:
+      sphere29 Qp/Qp velocity/pressure elements
+      sphere30 Pp/Pp velocity/pressure elements
+
+  - Example diffuse_interface19: ternary model
+    (Jang-Min Park)
+
+  - Examples compressible_fluid3, compressible_fluid4: second-order time
+    integration.
+    (Vincent de Bie)
+
+
+v2.9.1 (July 14, 2021)
+
+  Examples:
+
+  - New extrudate_swell_b example. The example contains 2D and 3D examples
+    of extrudate swell:
+      2D planar: extrudate_swell2d_c (logc and c-direct)
+      2D planar: extrudate_swell2d_b (b-representation)
+      3D cylinder: extrudate_swell3d_c (logc and c-direct)
+      3D cylinder: extrudate_swell3d_b (b-representation)
+    (Michelle Spanjaards)
+
+  Misc.:
+
+  - Bug fixes:
+    * coneplate4: torque calculated with solc and not solchat
+    * fix for deriv of stress scalar (vonmises) with multimode evp model.
+    * gauss_standard_numeric2: moved parameter z to subroutine
+
+  - README.macos_arm64: paraview 4.9.1 works with Rosetta2 on arm64 macs.
+
+  - Spectral elements test programs
+
+
+v2.9.0 (April 2, 2021)
+
+  Add-ons:
+
+  - Adapted lambda models in add-on viscoelastic_models
+
+    By adapting the relaxation time we have added the following models:
+
+    1 elastic or viscoelastic solid (1/lambda->0 or lambda->infty)
+    2 elastoviscoplastic model Saramito (2007)
+    3 elastoviscoplastic model Saramito (2009)
+
+    Appendix A of the userguide gives more info about the models.
+
+  - viscoelastic: deriv_viscoelastic_stress_scalar for von Mises equivalent
+    shear stress.
+
+  Examples:
+
+  - The examples startup15-startup18 in viscoelastic_models show how to
+    invoke the new elastoviscoplastic models for a point calculation.
+
+  - Examples of elastoviscoplastic models in a flow:
+       poiseuille2, poiseuille3
+       sphere27, sphere28
+    where the first uses c/logc and the second uses the CDT formulation.
+
+  Misc.:
+
+  - Option -i in tfgrep to include line numbers.
+
+  - README.nagfor:
+
+     * vpn in Linux client under Virtualbox to contact the license server
+     * update for compiling blas and lapack
+
+  - Rules allp and allpc in the root Makefile
+
+    If you want to include all "physics" related add-ons in one go, type:
+
+      make allp
+
+    You can install other add-ons (like solvers etc.) by adding them to the
+    commmand line or including these in the environment variable TFEMADDONS.
+    Similarly to allc you can use
+
+      make allpc
+
+    to exclude the LaTeX documentation.
+
+  - Bug fix: added interfacial_rheologyclean to clean rule in root Makefile
+
+  - Some reshuffling of sections in Chapter 3 of the userguide. The section on
+    creating your own project tree has been moved to an appendix.
+
+
+v2.8.0 (February 18, 2021)
+
+  Core:
+
+  - Module eig2D3D_m has been moved to the core.
+
+  - The module math_defs_m now includes 'using' eig2D3D_m.
+
+  Add-ons:
+
+  - Compute conformation directly from c=exp(s) or c=b.b^T in
+    stress-implicit. Up to now, the projected c has been used for all
+    terms in the stress-implicit scheme (divtau_implicit_ce_elem_c).
+    This can be problematic, since c in the integration points is not
+    necessarily positive (in divtau_implicit_ce_elem_c).
+    Coefficient coefficients%i(79) is now available to change this and use
+    the projected c only for the u.nabla c term (in
+    divtau_implicit_ce_elem_c) and compute c directly from c=exp(s) or
+    c=b.b^T for the other terms.
+    From addons/viscoelastic/README.coefficients%i:
+    79  how cn is computed in the integration points for stress-implicit methods
+             0: take default value (=1)
+             1: from nodal point value interpolation.
+             2: directly in the integration points from c=exp(s) or c=b.b^T.
+
+  - NEW add-on: Interfacial rheology
+    Boundary elements for an interfacial rheological boundary condition
+    and computing interfacial stress using viscous, elastic and
+    Kelvin-Voigt models.
+    (Mick Carrozza)
+
+  - Changed the position in oldvectors of the elvector for the viscoelastic
+    stress work term in viscoelastic_elements_generic for viscoelastic models
+    having multiple non-linear parameters.
+    (Michelle Spanjaards)
+
+  Examples:
+
+  - Example sphere26: flow around a sphere for an XPP model
+    The example sphere26 shows the use of coefficients%i(79)=2 to avoid
+    the stretch sqrt{trc/3} becoming invalid in the single equation
+    XPP model when applying the stress-implicit scheme.
+
+  - Examples drop16 and drop17 simulate a suspended drop with interfacial
+    rheology in uniaxial extensional and shear flow, respectively.
+
+  - Changed extrudate_swell7 and extrudate_swell8 in example extrudate swell.
+    More accurate displacement after prediction of free surface positions
+    (Michelle Spanjaards)
+
+  Misc.:
+
+  - Mdefs.mk.distr: add floating point exception trap to gfortran by
+    default.
+
+  - Add link to website fortran-lang.org to Introduction of the userguide.
+
+  - Bug fix (sphere/mesh1.geo).
+
+  - INSTALL.fedora: install metis5 using dnf
+
+v2.7.2 (January 17, 2021)
+
+  Core:
+
+  - Add argument newnr to add_to_mesh. If present, the value of newnr
+    gives on output the new entity number in the mesh. This only works
+    for: point, curve, surface.
+
+  Examples:
+
+  - Axisymmetric sphere examples use gmsh instead of sepmesh for
+    creating a curved structured mesh with quads.
+
+  Misc.:
+
+  - README.macos_arm64: some info on how to run tfem on an arm64 mac.
+
+  - Iterative solver benchmark.
+
+  - New benchmark results for MacBook Air M1.
+
+  - Benchmark results for OneAPI ifort on macOS (on Intel MBP13 2020)
+
+  - Bug fixes (see git log).
+
+v2.7.1 (June 18, 2020)
+
+  This is a bug fix release (see git log).
+
+v2.7.0 (May 8, 2020)
+
+  Add-ons:
+
+  - Added 3D cylindrical height function to the subroutine
+    surface_advection_polar_elem in the module surface_advection_elements.
+    The subroutine is now applicable for 1D and 2D height functions.
+    (Michelle Spanjaards)
+
+  - In generalized_newtonian_elements the viscosity coefficients eta0,
+    etainf, lambda can now be functions similar to the eta coefficient
+    in generalized_stokes-elements.
+    (Vincent de Bie)
+
+  - New and modified routines in b-formulation to replace similar routines
+    in the examples: skew_norm_2D/3D_b, sqrtc_2d/3D_b; rotate_2D/3D_b
+
+  - Moved 1D elements from module surface_advection_elements to
+    the module surface_advection_legacy and discourage the use by a
+    warning and encourage the use of the generic elements.
+
+  - Removed unused code in viscoelastic and viscoelastic_models:
+    rhs_viscoelastic_relax,
+    rhs_viscoelastic_relax_2D_b, rhs_viscoelastic_relax_3D_b,
+    rhs_viscoelastic_relax_2D_log, rhs_viscoelastic_relax_3D_log
+
+  Examples:
+
+  - Modified the examples
+      spinning, extrudate_swell,
+      fem_fluids_spinning, fem_fluids_extrudate_swell
+    to use the generic surface_advection_elements instead of the 1D elements.
+    The 1D elements have been moved to a legacy module and are now obsolete.
+
+  - Modified examples
+     confined_cylinder_b, couette15
+    to use the new routines skew_norm_2D/3D_b, sqrtc_2d/3D_b; rotate_2D/3D_b.
+
+  - Added cylinder_c1, cylinder_c2 examples to confined_cylinder_b to show the
+    difference in using the b-formulation compared to the logc formulation.
+
+  Misc.
+
+  - Modified two test problems to use the generic surface_advection_elements.
+
+v2.6.5 (March 9, 2020)
+
+  Core:
+
+  - Function chol in math_defs: compute Cholesky decomposition of
+    a 2x2 or 3x3 matrix.
+
+  Add-ons:
+
+  - The b-formulation has been extended with the symmetric assumption
+    (Balci et al.), Cholesky decomposition and Cholesky with log diagonal
+    terms (Vaithianathan Collins).
+
+  - Fix in tfem_utils_m:read_input_probdefs (Jang Min Park)
+
+  - convection_diffusion_supg extended to 3D velocities on a 2D mesh
+    (swirl, vel3D=1).
+
+  Examples:
+
+  - Change various examples using test for zero velocity in SUPG
+
+  - The examples startup11, startup12 and confined_cylinder_b upgraded
+    with the choice for the new b-formulation variants.
+
+  Userguide:
+
+  - Update section on the b-tensor formulation: include the new
+    variants, but recommend usage of the CDT formulation over the new
+    ones.
+
+  Misc.:
+
+  - Update README.nagfor with info on the latest version 7.0.
+
+v2.6.4 (February 21, 2020)
+
+  Core:
+
+  - Transform multiple sysvectors local<->global by one call.
+
+  Examples:
+
+  - coneplate4: add essential point (point on rotation axis). Transform sol
+    and reacf local->global in one call.
+
+v2.6.3 (February 20, 2020)
+
+  Core:
+
+  - The norm and sumsq functions in the math_defs_m module are now generic,
+    working on both vectors and matrices. Also the dim parameter is now an
+    option for matrix arguments, indicating the function is acting on
+    columns (dim=1) or rows (dim=2) only.
+
+  Add-ons:
+
+  - surface_advection:
+
+    * Bug fix: h/U for 2D in surface_advection_elem2 was missing (used the
+      1D case).
+    * Bug fix: h/U in surface_material_line_elem2 for 2D was present, but
+      cannot be used since only 1D elements are allowed.
+
+  - supg_utils:
+
+    * New routine supg_hU, replacing supg_hoverU. A call to supg_hoverU
+      still works, but it is an alias to the new routine supg_hU (using
+      an interface statement).
+    * The routine supg_hU now has an optional argument for computing h*U in
+      addition to h/U. The value of h*U can be used to compute the local mesh
+      Peclet number.
+    * New function supg_beta for computing the beta factor depending on
+      the local value of mesh Peclet number.
+    * Implemented the option to test for zero velocity in SUPG and revert to
+      h based on element volume and global velocity scaling for U.
+
+  - convection_diffusion_supg:
+
+    * Removed the option to set hlocation and Uscaling=1 (U in center of
+      the element) for SUPG. This simplifies the element routine.
+
+    * The element routine now uses the new supg_hU subroutine and the
+      supg_beta function for computing the local mesh Peclet number Peh and
+      setting of the beta factor as function of Peh, respectively.
+
+  - Update for viscoelastic_models_3D_b
+    (Mick Carrozza)
+
+  - Trim length of dataname in vtk_utils and gmsh_utils to avoid overflow
+    of line buffer.
+
+  Examples:
+
+  - Example coneplate4: Fixed boundary mesh. Added transform_to_local and
+    transform_to_global. Proportional mesh movement on plate. Computation
+    of the reaction forces is now performed before the transform local->global.
+    Also the reaction forces itself must be transformed from local->global
+    in addition to the solution vector sol.
+
+v2.6.2 (February 13, 2020):
+
+  Add-ons:
+
+  - Bug fix in convection_diffusion_supg: the computation of the mesh
+    Peclet number Peh has been corrected.
+
+  - viscoelastic elements: removed the option to set hlocation and
+    Uscaling=1 (U in center of the element) for SUPG. This cleans-up the code
+    and removes the Q1/P1 restriction for the conformation base function.
+
+  Examples:
+
+  - Removed the setting of hlocation in the viscoelastic examples.
+
+v2.6.1 (February 6, 2020):
+
+  Core:
+
+  - Functions norm and sumsq defined in the math_defs_m module.
+
+  Add-ons:
+
+  - Linear elastic elements have been extended with thermal expansion.
+
+  Examples:
+
+  - linear_elastic21-27: examples with thermal expansion.
+
+  Userguide:
+
+  - Section on thermal expansion in linear elastic solids.
+
+  Misc.:
+
+  - Test added for linear_elastic add-on (thermal expansion).
+
+v2.6.0 (January 29, 2020):
+
+  Core:
+
+  - The routines define_essential, change_essential have been extended with
+    the optional arguments degsfd, points, curves, surfaces, elgroups and
+    nodesets. It is now possible to give commands like:
+      call define_essential ( mesh, input_probdef, surfaces=[3,5,8], &
+        physq=1, degsfd=[2,3] )
+
+  - The routines fill_sysvector and fill_vector have been extended with the
+    optional argument degsfd, points, curves, surfaces, nodes, elgroups and
+    nodesets. It is now possible to give commands like:
+      call fill_sysvector ( mesh, problem, sol, curves=[2,3], physq=1, &
+        degsfd=[2,3], vvalue=[1._dp,2._dp] )
+
+  - The routines create_subscript and create_subscript_vector have been
+    extended with the optional argument degsfd. It is now possible to give
+    commands like:
+      call create_subscript ( mesh, problem, subscript=subs, degsfd=[1,3] )
+
+  Add-ons:
+
+  - Linear elastic elements (2D plane strain and plane stress, axisymmetric,
+    3D displacements on a 2D domain and full 3D). Isotropic material
+    properties. Both the displacement method and the mixed displacement-
+    pressure method have been implemented. The mixed method is useful for
+    incompressible and nearly incompressible materials.
+
+  - Output of global rotations in the nodes for 2D and 3D beam elements
+    as a separate vector.
+
+  - Added optional argument assume33 to write_tensor_gmsh and
+    write_tensor_vtk to write the 33-component of a tensor for 2D or
+    axisymmetric problems.
+
+  Examples:
+
+  - Adapted the example structures to output global rotations in the nodes
+    as a separate vector.
+
+  - Examples for the linear elastic elements. See file
+    addons/linear_elastic/README for a description.
+
+  - Examples in linear_elastic have been adapted to use the new
+    arguments in define_essential and fill_sysvector where it simplifies
+    the commands.
+
+  - Some examples in poisson, stokes have been adapted to use the new arguments
+    in define_essential and fill_sysvector.
+
+  Userguide:
+
+  - Section in the userguide on linear elastic solids.
+
+  Misc.:
+
+  - Some tests have been adapted to use the new arguments in define_essential
+    and fill_sysvector.
+
+  - Tests added for linear_elastic add-on.
+
+v2.5.0 (December 18, 2019):
+
+  - New math_defs_m module that defines (for now):
+    1) A parameter pi with a precision of 35 decimals.
+       This is sufficient for quad precision (after redefining dp).
+    2) A function cross_product.
+
+    NOTE: It is highly recommended to use the definition of pi and cross_product
+    from math_defs_m and not define these yourself.
+    Note also, that
+    * The new math_defs_m module includes kind_defs_m. This means that if
+      you want to use pi or cross_product in a function, using math_defs_m
+      instead of kind_defs_m is sufficient.
+    * Standard elements include the math_defs_m module in the _globals_m
+      module and therefore the math definitions are available in element
+      subroutines that use the _globals module.
+    * Using definitions from math_defs_m in your main program requires
+      including 'use math_defs_m' explicitly.
+
+  - 2D beam element. Linear elastic and geometrically linear.
+    Material property E is a constant.
+    Geometrical properties A and Iz can be functions of the axial coordinate.
+
+  - 3D beam element. Linear elastic and geometrically linear.
+    Material properties E and G are constants.
+    Geometrical properties A, Izz, Izy, Iyy, J can be functions of the
+    axial coordinate. Local axis (z,y) can be specified by the user.
+
+  - New (structures) examples using the 2D and 3D beam elements.
+    More generic post processing for trusses and beam structures that can
+    be used by the structures examples. Postprocessing using gmsh for
+    easy handling of discontinuous data.
+
+  - New section in the userguide about truss and beam structures.
+
+  - Example second_moment:
+     * second_moment1 for computing Ixx, Ixy, Iyy for bending.
+     * second_moment2 for computing moment of inertia for 3D bodies.
+
+  - Minor changes:
+     * Avoid zero domain size for blocks, sblocks and nodblocks.
+     * Add assume2D and assume3D to the arguments of write_xxxx_gmsh.
+     * Changed factor of P4 hermite bubble function.
+     * transfer_data: set sysvector1, vector1 to intent(in)
+     * Adopted .mso file extension for gmsh msh output files for
+       postprocessing simulation data similar to .vtk files.
+
+v2.4.3 (September 19, 2019):
+
+  - New Gauss integration rules for a hexahedron in gauss_standard_numeric2_m
+    in the routine Gauss_Legendre_numeric_hexahedron2. These can be used
+    only by setting the variable GAUSS_RULE in the module limits_m.
+    Although the number of integration points is less than the default product
+    rules, they are also less accurate in that only terms x^k*y^l*z^m, with
+    k+l+m<=p are exact for given order p. The product rules integrate
+    x^k*y^l*z^m exact for k<=p, l<=p, m<=p. Early testing with biquadratic
+    elements for poisson shows that the new rules require more integration
+    points to obtain sufficient accuracy. More testing is needed, but for now
+    the new rules are not recommended for standard finite elements.
+
+  - Set openblas with threads as default blas in INSTALL.fedora.
+
+  - Examples: Advise setting vtkevery=-1 for no vtk output. Similaryly
+    for restart_every. Setting vtkevery=0 works if vtkevery is a variable,
+    but gives a compile error in gfortran if is a constant (parameter).
+
+  - Bug fix for transformations in constraints: work1 -> work5.
+    (Reported by Jang Min Park)
+
+  - Height function equation in polar coordinates: surface_advection_polar_elem.
+
+    (Michelle Spanjaards)
+
+  - New example coneplate4: cone-plate with a free surface, perfect slip
+    along the cone and plate in radial direction and monitoring the torque
+    as function of time.
+
+    (Michelle Spanjaards)
+
+v2.4.2 (July 9, 2019):
+
+  - Added the option in add-ons convection_diffusion, stokes, projection,
+    elastic, interface_tracking and surface_advection to specify Gauss
+    integration by the polynomial order instead of the intrule directly.
+    This is shown in the new examples poisson32, poisson33 and stokes52.
+
+  - In gauss_m: functions set_intrule and set_intrule2 to set intrule
+    and intrule2 from globalshape, inttype, order. Here order is the
+    polynomial order that the Gauss integration rule must be able integrate
+    exactly.
+
+  - Added file addons/README.basefunctions for an overview of the
+    available base functions (shape functions; interpolation).
+    The same info in the README.coefficients%i files will be removed.
+
+  - Added file addons/README.Gauss for an overview of the Gauss rules.
+    The same info in the README.coefficients%i files will be removed.
+
+  - Update poisson_functions in example poisson
+
+  - Use \mat F in SUPG appendix of userguide
+
+  - Fix commands \ubar and \utilde for T1 fontencoding.
+
+  - tfgrep now requires /bin/bash.
+
+v2.4.1 (June 21, 2019):
+
+  - Fix in evaluate_nonlin_mve: end do at the wrong position in the loop
+    over the nonlinear parameters.
+
+    (Michelle Spanjaards)
+
+  - shape functions for pyramids:
+      shape_pyramid_P1, for discontinuous P1. This cannot be used yet, since
+                      pyramids having internal nodes are not yet available.
+      shape_pyramid_Q1P1r for use with elshape=51
+      shape_pyramid_Q2P2r, for use with elshape=53
+    The shape functions are based on rational functions. See
+       Bergot, M., Cohen, G. & Durufle, M. Higher-order Finite Elements for
+       Hybrid Meshes Using New Nodal Pyramidal Elements. J Sci Comput 42,
+       345-381 (2010).
+    for a comprehensive analysis and literature overview.
+
+  - Fix in set_shape_function_simple for prisms
+
+  - New module gauss_standard_numeric2_m for Gauss rules from the paper:
+      Witherden, F. D. & Vincent, P. E. On the identification of symmetric
+      quadrature rules for finite element methods.
+      Computers & Mathematics with Applications 69, 1232-1241 (2015).
+    For now, only the numerical data for the pyramid is used for the
+    routine Gauss_Legendre_numeric_pyramid2.
+
+  - New routine Gauss_Legendre_mapped_pyramid in the module
+    gauss_mapped_m. A hexahedron is mapped onto a pyramid.
+
+  - meshgen_objects: support for pyramids (elshape=51 and 53).
+
+  - Examples poisson29.f90, poisson30.f90, poisson31.f90, which are similar to
+    poisson5.f90, but now hybrid meshes with tetrahedrons and pyramids
+    are used. The meshes are generated using gmsh with the files cube3.geo
+    and cube4.geo as input.
+
+  - No examples for Stokes flow combined with pyramids have been made,
+    because the Taylor-Hood combination Q2P2r/Q1P1r on pyramids do not
+    seem the work (velocities OK, pressures are wrong). Further research
+    needed here.
+
+v2.4.0 (June 5, 2019):
+
+  - Prisms and pyramids have been added to elshape_t:
+      elshape=41: 6 node prism
+      elshape=42: 15 node prism
+      elshape=43: 18 node prism
+      elshape=51: 5 node pyramid
+      elshape=52: 13 node pyramid
+      elshape=53: 14 node pyramid
+    See userguide for the local node numbering
+
+  - Read and writing prisms and pyramids to/from a gmsh msh file for
+    all prism and pyramid shapes.
+
+  - Writing prisms and pyramids to a vtk file for all prism and pyramid shapes.
+
+  - meshgen_extra: support for prisms and pyramids.
+
+  - shape functions for prisms:
+      shape_prism_P1, for discontinuous P1. This cannot be used yet, since
+                      prisms having internal nodes are not yet available.
+      shape_prism_P1Q1, for use with elshape=41
+      shape_prism_P2Q2, for use with elshape=43
+
+  - refcoor_nodal_points accepts all prisms and pyramids.
+
+  - meshgen_objects: support for prisms (elshape=41 and 43).
+
+  - Gauss integration rules for prisms. These consist of (a product) of
+    two rules: one 2D rule for the triangular base and one 1D rule for the
+    height direction. Both rules need to specified separately (intrule
+    and intrule2).
+
+  - Prisms can be used with all element addons, where appropriate.
+
+  - Examples poisson27.f90 and poisson28.f90, which are similar to
+    poisson5.f90, but now the elements are prisms with linear (P1Q1) and
+    quadratic (P2Q2) base functions, respectively. The meshes are generated
+    using gmsh with the files cube1.geo and cube2.geo as input.
+
+  - Example stokes51.f90, which is similar to stokes11.f90, but now the
+    elements are prisms with quadratic base functions (P2Q2) for the
+    velocity and linear (P1Q1) for the pressure (Taylor-Hood). The meshes are
+    generated using gmsh with the files cube51.geo and cube51.geo as input.
+
+  - Examples channel12.f90 (Newtonian), channel13.f90 (viscoelastic)
+    using a mesh with prismatic shaped elements.
+
+v2.3.3 (May 27, 2019):
+
+  - bug fix: deriv_viscoelastic_stress_tensor can now properly compute
+    the stress in the nodes for varying coefficients.
+
+  - Added the possibility to compute viscoelastic stress for one mode
+    only in deriv_viscoelastic_stress_tensor with coefficients%i(28).
+    Note, that coefficients%i(28)=0 computes the total viscoelastic stress
+    as before.
+
+  - Added viscous and total viscoelastic stress computation to example energy3.
+
+v2.3.2 (May 24, 2019):
+
+  - Bug fixes in stokes_elements_generic for coorsys=1 (axisymmetric).
+    The following routines are affected:
+       stokes_rhs_divsigma for vel3D=1 (swirl) only,
+       stokes_sample_deriv
+
+v2.3.1 (May 24, 2019):
+
+  - Bug fix in generalized_newtonian_elements:
+    For coorsys=1 (axisymmetric) the velocity vector for computing the
+    viscosity was taken in the nodes instead of the integration points.
+
+    (Reported by Jang Min Park)
+
+v2.3.0 (May 21, 2019):
+
+  - Optional ignore_nodegfd argument in fill_sysvector and fill_vector:
+    If a specified degfd is not present in a node in fill_sysvector and
+    fill_vector, the node is ignored if ignore_nodegfd=.true.. Otherwise
+    an error is given (=default behavior).
+
+  - Optional varying model parameters (mvemodel) in viscoelastic models.
+    A vemodel array (mvemodel) is now an optional parameter in the call to the
+    viscoelastic models. In this way each (integration) point has its own
+    model parameters (modulus,lambda,nonlin).
+
+  - Bug fix: The value of input_probdef%numtransformations was not set to
+    zero after a delete of input_probdef.
+
+    (Giovanna Grosso)
+
+  - The elements in viscoelastic_elements_var are now integrated in the
+    standard elements in module viscoelastic_elements_generic_m and
+    viscoelastic_elements_SUPG_m.
+
+    Important changes:
+
+    * The module viscoelastic_elements_var has been removed.
+
+    * The "_var" functionality is set using coefficients%i(73)=1.
+
+    * evaluate_modulus, evaluate_relaxation_time, evaluate_nonlin_param
+      have been replaced by evaluate_modulus_gauss, evaluate_lambda_gauss,
+      evaluate_nonlin_gauss, respectively. The new routines read directly
+      the data into mvemodel, which is used in the viscoelastic models.
+      The arrays Gmod_g, lambda_g, nonlin_g are still being used, but
+      filled from mvemodel where needed.
+
+    * For compatibility with previous tfem versions, the old "_var"
+      interfaces are still available (part of viscoelastic_legacy module),
+      but these are just calls to the standard routines with
+      coefficients%i(73)=1 set. A warning message is also given to move
+      users to the standard routines.
+
+    * Similarly, for compatibility, the routines evaluate_modulus,
+      evaluate_relaxation_time, evaluate_nonlin_param are still available
+      as part of viscoelastic_legacy module for those that use these
+      routines directly in their own codes.
+
+    * deriv_viscoelastic_stress_tensor can now use variable coefficients.
+
+  - Bug fix in "stress work" routines for vel3D=1 (swirl):
+    In the routines fill_viscous_dissipation_gauss and
+    fill_viscoelastic_stress_work_gauss the velocity gradient components
+    for cylindrical coordinates and vel3D=1 were wrongly evaluated with
+    the nodal coordinates/velocities (x,uvector) instead of the
+    Gauss coordinates (xg,ugvector).
+
+  - Examples stress_work1 and stress_work2 illustrating and a test for the
+    fill_viscous_dissipation_gauss routine to build the viscous dissipation
+    term.
+
+  - Examples stress_work3 and stress_work4 illustrating and a test for the
+    fill_viscoelastic_stress_work_gauss routine to build the viscoelastic
+    stress work term.
+
+  - Update fill_viscoelastic_stress_work_gauss: possibility to use either
+      a. the least square projection of c=exp(s) or c=b/b^T,
+      b. or the directly computed c in the integration points
+    for evaluating the stress work term. Invoked by coefficients%i(74).
+
+  - New example energy3, that uses fill_viscoelastic_stress_work_gauss
+    to compute the viscoelastic stress work term. This example replaces
+    the example energy2. Note, that example energy2 is still available,
+    but is marked for removal in the near future.
+
+v2.2.1 (April 17, 2019):
+
+  - Effective strain rate in stokes_sample_deriv.
+  - Moved lu_projc and lu_projgrad to the internal subroutines in
+    energy2 example. In this way these are deleted automatically after
+    exiting the subroutines.
+
+    (Frank van Berlo)
+
+  - Modified the section "Contributing to tfem" in the userguide.
+
+v2.2.0 (April 13, 2019):
+
+  - Corner line method: Extrudate swell in 3D with sharp edges.
+    Two examples:
+      extrudate_swell7: 3D extrudate swell problem of a Newtonian fluid
+      extrudate_swell8: 3D extrudate swell problem of a viscoelastic fluid.
+
+    (Michelle Spanjaards)
+
+  - Made elvectors problem agnostic. This also means that the routines
+    create_elvector, put_elvector and get_elvector do not need the argument
+    problem anymore. The old interface is still available, but you get a
+    warning the first time you call the routine with the problem argument.
+
+  - New routine in generalized_stokes_elements: fill_viscous_dissipation_gauss.
+    This routine together with loop_over_elements fills the viscous
+    dissipation term in the Gauss points (elvector) for later use in the energy
+    balance. Includes the possibility for 3D velocities on a 2D domain, i.e.
+    vel3D=1 with coorsys=0 or 1 (swirl).
+
+  - Update examples energy1 and energy2 to use the routine
+    fill_viscous_dissipation_gauss instead of fill_diss_newt_gauss. The
+    routine fill_diss_newt_gauss has been removed from the subs.f90 file.
+
+v2.1.3 (March 15, 2019):
+
+  Bug fixes in example file energy/subs.f90:
+
+  - The computation of the rate-of-deformation tensor (Dten) was wrong for
+    the axisymmetric case. This affects both example energy1 and energy2.
+
+  - The computation of the viscoelastic stress tensor was wrong. This
+    affects only example energy2.
+
+    (Nick Jaensson)
+
+v2.1.2 (March 9, 2019):
+
+  - Bug fix in example file energy/subs.f90. The viscoelastic dissipation
+    (stress work) computation was wrong. This only affects the example energy2.
+
+  - New benchmark results (pc172).
+
+  - Renamed README.Mdefs to README.MKL
+
+  - Minor textual changes.
+
+v2.1.1 (February 21, 2019):
+
+  - Minor textual changes:
+      INSTALL.fedora: git -> git-all
+      INSTALL.linux: warn on bug in old ifort versions regarding binary vtk's
+      INSTALL.macos: some more notes on Mdefs.mk
+
+  - Add benchmarks using solvers MA57, MA41 (+Metis) or Pardiso.
+
+  - Add LIBBLAS for threading with MKL to Mdefs.mk.distr
+
+v2.1.0 (December 4, 2018):
+
+  - Fluctuation terms according to the CDT-formulation in
+    viscoelastic_models_3D_b.
+
+  - New example startup14 for time integration of the SDE with
+    a constant velocity gradient.
+
+    (Mick Carrozza)
+
+  - Make periodic meshes compatible with gmsh4 higher-order optimizing
+    For higher-order (>=2) meshes Gmsh4 introduced an optimization step
+    for positioning the nodes for periodic meshes. All geo files in tfem
+    have been modified to be compatible with the optimizer. See file
+    examples/README.gmsh for more information.
+
+  - Fix for example dimpart1.f90: thetac -> theta_c
+
+  - New section in the userguide on contributing to tfem using a branch.
+
+v2.0.4 (November 21, 2018):
+
+  - Examples energy1 and energy2 now use SUPG with linear interpolation
+    of temperature.
+
+    (Nick Jaensson)
+
+  - Complete rewrite of tfgrep with more options.
+
+  - Changes to some installation README files.
+
+  - New example structures8 and small changes to other structures examples.
+
+v2.0.3 (October 23, 2018):
+
+  - Temporary fix for experimental example diffuse_interface_biperiodic.
+    A definite fix should use the definitions of gmsh_utils for refinement
+    fields.
+
+v2.0.2 (October 12, 2018):
+
+  - Alternative formulation for the Chilcott-Rallison model (model=21)
+    has been implemented. This model formulation obeys the rule the
+    parameters G and lambda are the modulus and relaxation time of
+    the linear Maxwell model. Updated the userguide accordingly.
+
+  - Example startup13.
+
+  - Fix for the drop7 and drop8 examples (recl too small).
+
+v2.0.1 (October 10, 2018):
+
+  - README.md file for the frontpage of the gitlab site.
+
+  - Example couette15.f90 using the contravariant deformation tensor.
+
+v2.0.0 (September 29, 2018; changes compared to version of September 13, 2018):
+
+  - Alternative formulation for FENE-P model (model=20) has been
+    implemented. This model formulation obeys the rule eta_0=G \lambda.
+
+    (Mick Carrozza)
+
+  - The viscoelastic models: Maxwell (nr 2), Giesekus (nr 3), FENE-P (nr 20)
+    have been implemented using the contravariant deformation tensor b.
+
+    (Mick Carrozza)
+
+  - Examples startup11 and startup12 for showing how to use the contravariant
+    deformation tensor models.
+
+  - Contravariant deformation tensor models in viscoelastic elements.
+
+  - Examples cylinder1.f90 and cylinder2.f90 (in confined_cylinder_b)
+    using the contravariant deformation tensor (CDT) formulation.
+
+    (Mick Carrozza)
+
+  - Re-introduce the CHANGES file for documenting changes between tagged
+    versions.
+
+
+Start tagging and summarizing changes between tags in this CHANGES file
+because git commits (and documentation thereof) are mostly small incremental
+changes.
+
+Version x.y.z means:
+  x: Major version number: increments when major new features have been
+     implemented and/or incompatible changes have been necessary.
+  y: Minor version number: increments when minor new features have been
+     implemented and changes are backward compatible.
+  z: Patch version number: backward compatible bug fixes and/or minor
+     changes, such as new examples.
+
+Note: we start with version 2.0.0 to signify the maturity of tfem and that
+"1.0" has been reached years ago.
+
+
+HISTORY:
+
+- Moved from svn to git on 28 August 2018. The svn checkins are imported
+  as separate git commits.
+
+- Started using svn on 15 October 2004.
+
+- Changelog before the move to svn:
+
+15-10-2004
+
+imported tree into svn: use svn log from now on.
+
+10-10-2004
+
+get_vector_curve, get_sysvector_curve
+
+08-10-2004
+
+finished example stokes
+
+06-10-2004
+
+points: mesh, define_essential, fill_sysvector, fill_vector
+
+05-10-2004
+
+finished example poisson
+
+03-10-2004
+
+refcoor_nodal_points
+
+29-09-2004
+
+default integer_storage in hsl.f90 = 1.2
+
+24-09-2004
+
+types from sysvector_m and vector_m to separate modules
+vector: fill_vector
+
+23-09-2004
+
+the vector_m module
+system: get_sysvector, fill_sysvector_elem
+
+21-09-2004
+
+elemmatzeros logical matrix to reduce nnz of matrix for DG
+
+20-09-2004
+
+some error corrections in DG implementation (now works)
+
+17-09-2004
+
+assembling of DG in the system matrix
+
+15-09-2004
+
+included DG structure in the system matrix
+
+13-09-2004
+
+fix: mesh%nelem in problem.f90
+
+08-09-2004
+
+fill_mesh_parts_sidelem: elements connected to the sides of elements.
+
+07-09-2004
+
+add type element_t to mesh.f90
+add element part to mesh: contains info on element
+
+06-09-2004
+
+getsrc script
+
+12-08-2004
+
+Add to fmm: additional tags sources
+new script: vit for source viewing
+
+06-08-2004:
+
+Extension of fmm: .f source files
+Include build of HSL library routines in tree.
+automate testing
+
+05-08-2004
+
+Introduced a directory tree structure.
+Extension of fmm: library builds and Mdefs.mk include file
+getmdefs: script to get a local Mdefs.mk file
+
+02-08-2004:
+
+Ordering of physical quantities/degrees on element level (order).
+
+01-08-2004:
+
+Physical quantities in system build: physqrow, physqcol
+
+July 2004:
+
+Physical quantities in initialization and boundary conditions
+
+May, June 2004:
+
+Implementation of basic FEM structure.
+9 node quads.
+mesh generation for quadrilateral domain+blending
+HSL MA41 solver
+Poisson equation
+
+02-05-2004:
+
+Start of project

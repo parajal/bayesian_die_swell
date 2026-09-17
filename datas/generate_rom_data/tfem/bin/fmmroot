@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# fmmroot is a simple shell script to create a master Makefile in the root
+# directory of a project tree which contains subdirectories that contain
+# there own Makefile
+#
+# Usage:
+#
+#       fmmroot [subdirectories] >Makefile
+#
+# Note that:
+#   - all subdirectories that contain a Makefile are included if directories are
+#     absent.
+#   - the target name is the directory name extended with the string "dir"
+#   - dependencies between the various subdirectories are not accounted for
+#     and should be added manually
+
+# functions
+
+function helptext ()
+{
+  echo "Usage: fmmroot [OPTIONS] [subdirectories] [>Makefile]"
+  echo "Generate a master project makefile on standard output"
+  echo
+  echo "Options:   (Description)"
+  echo "   -h      this text is shown (on standard error)"
+}
+
+# get options
+
+while getopts h optvar; do
+  case "$optvar"
+  in
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+
+if [ `uname -s` = xxxx ] ; then  # for traditional Unix echo command
+   opt=
+else
+   opt=-e
+fi
+
+if [ $# -eq 0 ] ; then
+  files=`find . -name Makefile`
+else
+  for dir in $* ; do
+    files=$files" `find $dir -name Makefile`"
+  done
+fi
+
+for file in $files ; do
+  dir=`dirname $file`
+  if [ "$dir" != . ]; then
+    dires=$dires" $dir"
+    basedir=`basename $dir`
+    all=$all" $basedir"dir
+    clean=$clean" $basedir"clean
+  fi
+done
+
+if [ -z "$dires" ]; then
+  echo "Error: no source files" >/dev/stderr
+  exit 1
+fi
+
+all=$all" tags"
+clean=$clean" libclean"
+
+echo ""
+echo all: $all
+echo ""
+echo clean: $clean
+
+for dir in $dires ; do
+  basedir=`basename $dir`
+  tags=$tags" $basedir/*.f90"
+done
+echo ""
+echo "tags:"
+echo $opt "\tctags --fortran-kinds=+i$tags"
+
+for dir in $dires ; do
+  basedir=`basename $dir`
+  echo ""
+  echo $basedir"dir:"
+  echo $opt "\t( cd $dir; make )"
+  echo ""
+  echo $basedir"clean:"
+  echo $opt "\t( cd $dir; make clean )"
+done
+
+echo ""
+echo "libclean:"
+echo $opt "\t\$(RM) modfiles/*.mod lib/libproject.a tags"
+

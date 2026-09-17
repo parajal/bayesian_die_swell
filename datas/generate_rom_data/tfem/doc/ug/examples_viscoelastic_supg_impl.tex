@@ -1,0 +1,588 @@
+% !TEX root = userguide.tex
+
+\def\headdate{14th February 2021}
+
+\section{Viscoelastic fluid flow using SUPG (implicit stress formulation)}
+\label{sec:implicitstress}
+
+In this section some examples using the equations for viscoelastic fluid flow
+in the implicit stress formulation
+will be given after the theory in the next section.
+All examples use streamline upwind Petrov-Galerkin (SUPG)
+which has been developed by Brooks \& Hughes \cite{Brooks82}.
+A detailed description of the transient schemes in this section can be found in
+D'Avino \& Hulsen \cite{DAvino10}.
+
+\subsection{Basic formulation for DEVSS-G/SUPG}
+
+Recall the explicit stress formulation of Sec.~\ref{sec:explicitstress}:
+\begin{align}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +\nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)
+&=\nabla\cdot\ten \tau(\ten c^{n+1})
+        + \rho\vek b \\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0
+\end{align}
+where $\ten c^{n+1}$ has already been computed from a time step update of
+the constitutive equation. For $\eta_s=0$ this system becomes
+singular\footnote{Remember that $\ten G^T=\nabla\vek u$ and thus the left-hand
+side of the momentum balance basically only contains the term $\nabla p$.} and
+we are unable to obtain a new velocity field $\vek u^{n+1}$. A possible
+solution is to consider a fully implicit coupled
+scheme for $(\vek u,p,\ten G,\ten c)$. This is however very expensive,
+especially if multiple modes are involved. A less expensive way out is to find
+an expression for $\ten \tau(\ten c^{n+1})$ which involves still unknown terms
+for the velocity $\vek u^{n+1}$.
+
+Recall the explicit-Euler formulation of the constitutive equation:
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t} = \frac{\ten c^{n}}{\Delta t}
+-\vek u^n\cdot\nabla\ten c^n+\ten L^n\cdot\ten c^n+\ten c^n\cdot\ten L^n{}^T
+ -\ten f(\ten c^n)
+\end{equation}
+which gives an expression for $\ten c^{n+1}$ but it depends only on $\vek u^n$
+and not on $\vek u^{n+1}$. We can however achieve dependence on
+$\vek u^{n+1}$ by taking the convection term and the bilinear terms implicit
+(semi-implicit Euler scheme):
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t} = \frac{\ten c^{n}}{\Delta t}
+-\vek u^{n+1}\cdot\nabla\ten c^{n+1}+\ten L^{n+1}\cdot\ten c^{n+1}+
+   \ten c^{n+1}\cdot\ten L^{n+1}{}^T -\ten f(\ten c^n)
+\end{equation}
+which is now implicit in $\ten c^{n+1}$ as well. This would require a solve
+step, solving all unknowns at the same time (fully coupled). Therefore, we use
+a first-order prediction (consistent with the error in the time discretization)
+$\ten c^{n+1}=\ten c^{n}$ for the right-hand side. This leads to:
+\begin{equation}
+ \frac{\ten c^*{}^{n+1}}{\Delta t} = \frac{\ten c^{n}}{\Delta t}
+-\vek u^{n+1}\cdot\nabla\ten c^n+\ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten
+L^{n+1}{}^T
+ -\ten f(\ten c^n)
+ \label{eq:semiimpliceuler}
+\end{equation}
+where $\ten L^{n+1}$ can be either taken to be $\ten G^{n+1}$ or 
+$(\nabla\vek u^{n+1})^T$. We have added the $^{}*$ superscript to $\ten
+c^{n+1}$ to distinguish this value from the final $\ten c^{n+1}$ we compute
+later using the (upwind) discretization of the constitutive equation.
+With Eq.~\eqref{eq:semiimpliceuler} we can compute the stress tensor at the new time level as
+\begin{equation}
+  \begin{split}
+   \ten \tau(\ten c^*{}^{n+1})&=
+ \ten \tau\Big(\Delta t(-\vek u^{n+1}\cdot\nabla\ten c^n+
+           \ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten L^{n+1}{}^T)
++\ten c^{n}-\Delta t\ten f(\ten c^n)\Big)\\
+ &=\ten \tau\Big(\Delta t(-\vek u^{n+1}\cdot\nabla\ten c^n+
+                  \ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten L^{n+1}{}^T)
++\ten h(\ten c^n,\Delta t)\Big)
+  \end{split}
+\end{equation}
+where 
+\begin{equation}
+ \ten h(\ten c, \Delta t)= \ten c-\Delta t\ten f(\ten c)
+\end{equation}
+In case of a linear stress expression:
+\begin{equation}
+     \ten\tau=G(\ten c - \ten 1)
+\end{equation}
+we find
+\begin{equation}
+   \ten \tau(\ten c^*{}^{n+1})=
+   G\Delta t(-\vek u^{n+1}\cdot\nabla\ten c^n+
+       \ten L^{n+1}\cdot\ten c^n+\ten c^n\cdot\ten L^{n+1}{}^T)
++G\ten h(\ten c^n,\Delta t) -G\ten 1
+  \label{eq:stress_IS}
+\end{equation}
+Substituting this stress expression into the momentum equation leads to the
+\emph{implicit stress} formulation (for simplicity we set $\eta_s=0$):
+\begin{align}
+      \nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)
+  -\nabla\cdot\big(G\Delta t(&-\vek u^{n+1}\cdot\nabla\ten c^n+
+        \ten L^{n+1}\cdot\ten c^n+
+      \ten c^n\cdot\ten L^{n+1}{}^T)\big)\notag\\
+&=\nabla\cdot( G\ten h(\ten c^n,\Delta t) -G\ten 1)
+        + \rho\vek b\label{eq:mombal_IS}\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0
+\end{align}
+which is a generalized Stokes problem for
+$(\ten G^{n+1},\vek u^{n+1},p^{n+1})$. We can find
+a weak form by partial integration in the standard way. After the solution of
+$(\ten G^{n+1},\vek u^{n+1},p^{n+1})$ we can find 
+the value of $\ten c^{n+1}$ similar to
+the explicit stress formulation, for example:\\
+a combined Euler forward/backward (first-order)
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t}+\vek u^{n+1}\cdot\nabla\ten c^{n+1}=
+    \frac{\ten c^{n}}{\Delta t} +\ten g(\ten G^{n+1},\ten c^n)
+   \label{eq:Eulerimp}
+\end{equation}
+semi-implicit Crank-Nicolson (second-order) with conformation prediction
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t}+\frac12{\vek u}^{n+1}\cdot\nabla\ten c^{n+1}=
+ \frac{\ten c^{n}}{\Delta t}
+-\frac12\vek u^n\cdot\nabla\ten c^n
++\frac12\ten g(\ten G^{n+1},\hat{\ten c}^{n+1})
+ +\frac12\ten g(\ten G^{n},\ten c^{n})
+   \label{eq:CNimp}
+\end{equation}
+where $\hat{\ten c}^{n+1}=2\ten c^n-\ten c^{n-1}$.\\
+Semi-implicit Gear (second-order) with conformation prediction
+\begin{equation}
+\frac32 \frac{\ten c^{n+1}}{\Delta t}+{\vek u}^{n+1}\cdot\nabla\ten c^{n+1}=
+ \frac{2\ten c^{n}-\frac12\ten c^{n-1}}{\Delta t} +
+\ten g(\ten G^{n+1},\hat{\ten c}^{n+1})
+   \label{eq:Gearimp}
+\end{equation}
+where $\hat{\ten c}^{n+1}=2\ten c^n-\ten c^{n-1}$. 
+Note, that we now use $\vek u^{n+1}$ and $\ten G^{n+1}$ instead of $\vek u^{n}$
+and $\ten G^{n}$ as used in the explicit stress formulation.
+All the methods above for the CE can be discretized using SUPG.
+
+Remarks:
+\begin{enumerate}
+   \item Although we use a first-order Euler prediction $\ten c^{*n+1}$ for
+$\ten c^{n+1}$ in
+the momentum balance, the actual error $\ten c^{n+1}-\ten c^{*n+1}$ is 
+    $\mathcal{O}(\Delta t^2)$. Therefore the implicit stress formulation 
+combined with a second-order in time discretization of the constitutive equation
+leads to a second-order method for the complete decoupled scheme. If a
+first-order scheme is used for the constitutive equation, the whole scheme will
+be first order as well.
+   \item We could opt for the fully implicit Euler, Crank-Nicolson and Gear
+schemes in Eqs.~\eqref{eq:Eulerimp}-\eqref{eq:Gearimp} instead of the semi-implicit
+ones. This would increase the time step limit, but the cost for each time step
+would also increase. First, all components of $\ten c$ are now coupled in the
+solve and furthermore, the nonlinearity of the relaxation term requires an
+iteration scheme, such as Newton-Raphson.
+   \item The variant using $\ten L^{n+1}=(\nabla\vek u^{n+1})^T$ gives smoother
+         velocities and velocity gradients and is more stable in the sphere
+         problem (see Sec.~\ref{sec:sphereimplicit}) than the variant using 
+         $\ten L^{n+1}=\ten G^{n+1}$. Therefore the default implicit stress 
+         formulation in \tfem\ is:
+\begin{align}
+      \nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)
+  &-\nabla\cdot\big(G\Delta t(-\vek u^{n+1}\cdot\nabla\ten c^n+\notag\\
+        &\qquad\qquad\qquad\nabla\vek u^{n+1}{}^T\cdot\ten c^n+
+      \ten c^n\cdot\nabla \vek u^{n+1})\big)\notag\\
+&=\nabla\cdot( G\ten h(\ten c^n,\Delta t) -G\ten 1)
+        + \rho\vek b\label{eq:implicitmomb}\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0
+\end{align}
+   \item 
+If open boundary conditions are applied (see Sec.~\ref{sec:stokesobc} for Newtonian flow),
+the boundary integrals due to partial integration are
+left unspecified. This means that
+in the weak form of Eq.~\eqref{eq:implicitmomb} the following boundary
+integrals need to be added for the open boundary $\Gamma_\text{open}$:
+\begin{multline}
+   \ldots + \Big(\vek v,p\vec n-\vek n\cdot\big(G\Delta t(-\vek u^{n+1}\cdot\nabla\ten c^n+
+        \nabla\vek u^{n+1}{}^T\cdot\ten c^n+
+      \ten c^n\cdot\nabla \vek u^{n+1})\big)\Big)_{\Gamma_\text{open}}=\\
+        \big(\vek v,\vek n\cdot( G\ten h(\ten c^n,\Delta t) -G\ten 1)\big)_{\Gamma_\text{open}} + \dots
+\end{multline}
+where $\vek n$ is the outwardly directed normal on $\Gamma_\text{open}$.
+   \item The term $\vek u\cdot\nabla\ten c$ could also be taken in an explicit
+         way by $\vek u^n\cdot\nabla\ten c^n$. In this case the term end up on
+         the right-hand side of the momentum balance in a modified function 
+         term $\ten h(\vek u^n,\ten c^n, \Delta t)$ with
+\begin{equation}
+ \ten h(\vek u,\ten c, \Delta t)=
+\ten c+\Delta t(-\vek u\cdot\nabla\ten c+\ten f(\ten c))
+\end{equation}
+         However, this formulation is much less stable in the sphere problem
+         (see Sec.~\ref{sec:sphereimplicit}): the solution becomes unstable
+         beyond $\text{Wi}=0.6$.
+%        The explicit variant is available through an add-on (see
+%        Sec.~\ref{sec:oldsources}) and seems to be more stable for the driven
+%cavity problem (see Sec.~\ref{sec:driven_cavity_IS}).
+   \item The term $\vek u\cdot\nabla\ten c$ in the weak form of
+         the momentum equation is well defined for continuous interpolation of
+         $\ten c$ (no variational crimes).
+   \item If the flow becomes steady an additional error in the
+         momentum equation will remain of the form
+         \begin{equation}
+            \mathcal{E}(\Delta t,\Delta x)=\Delta tE(\Delta x)
+         \end{equation}
+         with $E(\Delta x))$ a spatial error in the constitutive equation.
+         Although the error $\mathcal{E}(\Delta t,\Delta x)$ will be small 
+         for smooth
+         solutions and sufficiently small $\Delta t$ and $\Delta x$, it will
+         depend on $\Delta t$. Hence, the steady state solution will in general
+         depend slightly on the time step, which is somewhat of an unusual
+         property.
+   \item Although the severe time step limitations related to
+         small $\eta_s$ have been
+         lifted, the implicit stress formulation still has time step
+         limitations depending on the solution.
+   \item For computing the implicit terms in the momentum balance we
+         must use the standard (non-log) formulation.
+         The log-conformation scheme
+         can still be applied as before for integrating the constitutive
+         equation where it is most effective. However, there is the additional
+         problem of obtaining $\ten c$ from the log-conformation $\ten s$, which
+         are related by $\ten c=\exp(\ten s)$. Especially for computing the
+         term $\vek u^{n+1}\cdot\nabla\ten c^n$ in Eq.~\eqref{eq:implicitmomb},
+         it is quite sensitive for stability how this term is computed in the
+         integration points. We use an $L^2$-projection of $\exp(\ten{s}_h)$ on
+         the discretized space given by Eq.~\eqref{eq:theta} to define 
+         $\ten{c}_h$:
+\begin{equation}
+          \big(\ten{d}_h,\ten{c}_h-\exp(\ten{s}_h)\big)=0
+          \label{eq:expsprojection}
+\end{equation}
+         A term like $\vek u_h\cdot\nabla\ten c_h$ can now easily be
+         computed in any point\footnote{A less clean method is defining
+         $\ten{c}_k=\exp(\ten{s}_k)$ in all nodal points $k$ and use
+         Eq.~\eqref{eq:theta} to define $\ten{c}_h$. This method has
+         historically been used in most examples in
+         \tfem. The projection method turns out to be more
+         stable and is the preferred method, but it is slightly more expensive.}. 
+   \item Historically, in \tfem\ the 
+         projected $\ten c$ given by Eq.~\eqref{eq:expsprojection}
+         has been used for the other terms in Eq.~\eqref{eq:implicitmomb} as well. 
+         However this can lead to problems, since
+         the projected $\ten c$ is not necessarily positive definite in the integration points. 
+         For example, in the single equation XPP model (see Sec.~\ref{sec:XPPmodel}) the 
+         stretch $\sqrt{\tr\ten c/3}$ can become invalid.
+         In recent versions
+         of \tfem\ it is now possible to compute $\ten c$ directly from $\ten{c}=\exp(\ten{s})$ in the integration
+         points and use the projected $\ten c$ for $\vek u\cdot\nabla\ten c$ only. Note, that this requires more 
+         evaluations of $\exp(\ten{s})$ and is more expensive. Therefore, it is not the default and needs to be 
+         set by the user in the coefficients.
+   \item In each time step first the solution vector for
+         $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$ is computed and
+         subsequently the solution
+         vector for $\ten c^{n+1}$. This is different from the explicit stress
+         formulation where first $\ten c^{n+1}$ is computed and subsequently
+         $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$.
+   \item The system matrix for $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$ is not a
+         constant and needs to be assembled again at each time step.
+   \item The system matrix for $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$ is
+         \emph{unsymmetric} and we cannot use symmetric matrix
+         storage schemes and symmetric solvers like we could for the explicit 
+         DEVSS-G system.
+   \item In case of multiple modes the stress expression
+         Eq.~\eqref{eq:stress_IS} is a sum of all the modes. Note, that both
+the system matrix and the right-hand side in Eq.~\eqref{eq:mombal_IS} are
+affected by multiple modes.
+\end{enumerate}
+
+\subsection{Driven-cavity flow of a Giesekus fluid for a Weissenberg number of
+1: implicit stress formulation}
+\label{sec:driven_cavity_IS}
+
+We again consider a Giesekus fluid for a driven cavity problem on a unit square
+as in Section~\ref{sec:driven_cavity} but now with an implicit stress
+formulation.
+
+The example files are \texttt{driven\_cavity3.f90} (first-order semi-implicit
+scheme) and \newline
+\texttt{driven\_cavity4.f90}  (second-order semi-implicit
+scheme, not yet available) and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample driven\_cavity}
+\end{quote}
+The post-processing part is again done by the two separate programs
+\texttt{driven\_cavity\_post.f90} and \texttt{streamfunction.f90}.
+
+The examples are rather straightforward and can be studied by examining the
+source files. The main differences with the explicit stress formulation are
+\begin{enumerate}
+   \item The sequence of computation 
+          (first $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$ then $\ten c^{n+1}$).
+   \item The rebuilding and decomposition of the system matrix for 
+         $(\ten G^{n+1},\vek u^{n+1},p^{n+1})$ at each time step.
+   \item The addition of an extra matrix to 
+ the system matrix for $(\ten G,\vek u, p)$. The system matrix looks like
+\[
+   \begin{pmatrix}
+      D  &  B^T &  0 \\
+      B  &  S +A &  L^T \\
+      0  &  L    &  0  
+   \end{pmatrix}
+\]
+where $A$ is the new \emph{unsymmetric} block representing the implicit
+part in the momentum
+balance and contributes to the velocity-velocity diagonal block.
+Also the right-hand side is different from the explicit stress
+formulation. Both $A$ and the new right-hand side are build and added
+at the lines:
+\begin{listing}{248}
+
+!   build implicit terms
+
+    call build_system ( mesh, problem, sysmatrix, rhsd, &
+      elemsub=divtau_implicit_ce_elem_c, &
+      oldvectors=oldvectors_ve, physqrow=[2], physqcol=[2], &
+      addmatvec=.true., coefficients=coefficients )
+
+\end{listing}
+Note that \texttt{physqrow} and \texttt{physqcol} are used to limit the matrix
+to the correct partition ($u$-rows and $u$-columns).
+\end{enumerate}
+
+The example can be run by
+\begin{quote}
+   \texttt{driven\_cavity3 < input\_driven\_cavity3.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{driven\_cavity\_post}\\
+   \texttt{streamfunction}
+\end{quote}
+
+Note, that this is \red{very difficult problem} and time steps are limited by
+the severe singularity.
+
+\subsection{Driven-cavity flow of a Giesekus fluid having two modes: implicit
+stress formulation} 
+\label{sec:driven_cavity2_IS}
+
+We again consider a Giesekus fluid for a driven cavity problem on a unit square
+as in Sec.~\ref{sec:driven_cavity_IS} but now the model has two modes.
+
+The example file is \texttt{driven\_cavity6.f90}
+and is a modification of the file
+\texttt{driven\_cavity3.f90}. Use the Unix \texttt{diff} program to see where
+the changes are. The file can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample driven\_cavity}
+\end{quote}
+The post-processing part is done again by the two separate programs
+\texttt{driven\_cavity\_post.f90} and \texttt{streamfunction.f90}, however the
+first has not yet been adapted for multiple modes.
+
+The example can be run by
+\begin{quote}
+   \texttt{driven\_cavity6 < input\_driven\_cavity6.txt}
+\end{quote}
+which might again take a while.
+
+\subsection{Planar Couette flow of a UCM fluid for a
+ Weissenberg number (Wi) of 10: implicit stress formulation}
+\label{sec:couette_IS}
+
+We consider a UCM fluid for a planar Couette problem on a unit square.
+The problem is similar to the problem for an Oldroyd-B fluid in
+Sec.~\ref{sec:couette} but now with an implicit stress formulation and
+zero solvent. There are three problems \texttt{couette3.f90} (first-order time
+integration), \texttt{couette4.f90} (second-order time integration) and
+\texttt{couette9.f90} (second-order time integration and
+$L^2$-projection according to Eq.~\eqref{eq:expsprojection}).
+
+
+\subsection{Planar Couette flow of a UCM fluid having two modes: implicit stress formulation}
+Similar to Section~\ref{sec:couette_IS}, the example \texttt{couette3.f90}
+has been modified to use two modes. This is the file \texttt{couette6.f90}.
+The input file is \texttt{input\_couette6.txt}.
+
+\subsection{Axi-symmetric problem: flow around a sphere in
+ a cylindrical tube filled with a UCM fluid: implicit stress formulation}
+\label{sec:sphereimplicit}
+
+The file \texttt{sphere3.f90} in the example `sphere' is a problem similar to 
+Sec.~\ref{sec:sphere2}, but now for the UCM model and the implicit stress
+formulation with first-order time integration.
+The input file is \texttt{input\_sphere3.txt}.
+
+The file \texttt{sphere21.f90} in the example `sphere' is similar to
+\texttt{sphere3.f90}, but now second-order time integration.
+The input file is \texttt{input\_sphere21.txt}.
+The file \texttt{sphere22.f90} in the example `sphere' is similar to
+\texttt{sphere21.f90}, but now using the projection method
+Eq.~\eqref{eq:expsprojection}. The input file is \texttt{input\_sphere22.txt}.
+
+The examples are for $\text{Wi}=2.0$. In Fig.~\ref{fig:czz_UCM_Wi=2} we show
+$c_{zz}$ after 60 relaxation times for the example \texttt{sphere22.f90}.
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.7]{czz_UCM_Wi=2}
+   \end{center}
+   \caption{Conformation tensor component $c_{zz}$ for problem
+       \texttt{sphere22.f90} at $\text{Wi}=2$ after 60 relaxation times.}
+    \label{fig:czz_UCM_Wi=2}
+\end{figure}
+
+\subsection{Axi-symmetric problem: flow around a sphere in
+ a cylindrical tube filled with an XPP fluid: implicit stress formulation}
+\label{sec:sphereimplicitXPP}
+
+The file \texttt{sphere26.f90} in the example `sphere' is similar to
+\texttt{sphere22.f90} (see Sec.~\ref{sec:sphereimplicit}, but now using the single equation
+XPP model (Sec.~\ref{sec:XPPmodel}). The input file is
+\texttt{input\_sphere26.txt}.
+This example uses the projection method Eq.~\eqref{eq:expsprojection}, but uses the projection only to
+compute $\vek u\cdot\nabla\ten c$ in Eq.~\eqref{eq:implicitmomb}. In the other terms,
+$\ten c=\exp(\ten s)$ is used directly to avoid the stretch $\sqrt{\tr\ten c/3}$ becoming invalid.
+
+\subsection{3D channel with a square cross section:
+developed flow of an upper-convected Maxwell fluid}
+
+This problem is an extension to viscoelastic flow of the Stokes problem in
+Sec.~\ref{sec:stokes3Dchannel}.
+                                                                                
+The example file is \texttt{channel3.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+The post-processing part is done by a separate program
+\texttt{channel\_post.f90}.
+
+For a UCM model the secondary flow is absent and the velocity profile is
+basically like a Newtonian fluid.
+                                                                                
+\subsection{A viscoelastic problem on a square with a disk at the center in a shear flow.
+ Computation of integral quantities}
+\label{sec:exampleintegration_ve}
+
+(This example has been developed by Gaetano d'Avino of the University of Naples).
+
+We consider the same problem as described in Sec.~\ref{sec:exampleintegration} for a Stokes fluid, but now
+the fluid is viscoelastic.
+
+The example file is \texttt{bulkstress2.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample bulkstress}
+\end{quote} 
+The problem uses a Gmsh generated mesh 
+(see Sec.~\ref{sec:readgmshmesh}).
+
+
+\subsection{Axi-symmetric viscoelastic problem: stick-slip}
+\label{sec:stick_slip_impl}
+
+The examples here related to the examples in Sec.~\ref{sec:stick_slip}, but now for a 
+stress-implicit formulation.
+
+The first example file is \texttt{stick\_slip4.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stick\_slip}
+\end{quote}
+The example uses an open boundary condition at the inflow boundary,
+similar to \cite{Papanastasiou96} for the 1D fibre-spinning model. The boundary terms
+are left unspecified at the inflow boundary.
+Again we assume zero traction at the exit.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+The time integration is second-order implicit Gear with conformation prediction
+(Equation~\eqref{eq:Gearimp}).
+The mesh
+consists of two submeshes (one between $\Gamma_1$ and
+$z=0$ with a refinement
+towards the
+stick-slip point and one between $z=0$
+and the exit, also with a refined towards the stick-slip points.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput3.txt}\\
+   \texttt{stick\_slip4 < input\_stick\_slip4.txt}\\
+   \texttt{post\_stick\_slip3}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+\subsection{Start-up of Poiseuille flow for a viscoelastic fluid}
+\label{sec:poiseuille}
+
+The example file is \texttt{poiseuille1.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample poiseuille}
+\end{quote}
+The example uses a unit square domain with two elements in $x$-direction and
+periodical boundary conditions between in and outflow.
+The flow is generated by imposing a constant flow rate using a constraint.
+The time integration is second-order implicit Gear with conformation prediction
+(Eq.~\eqref{eq:Gearimp}).
+The model is a multi-mode Oldroyd-B/UCM, Giesekus, PTT-linear or
+PTT-exponential model.
+Optionally, transient inertia terms (see Sec.~\ref{sec:navierstokes})
+can be included. For the time-discretization of the transient inertia terms we
+use the BDF2 (Gear) scheme (See~Eq.\eqref{eq:NS_Kar2}).
+You can run the example by
+\begin{quote}
+   \texttt{poiseuille1 < input\_poiseuille1.txt}\\
+   \texttt{poiseuille\_post}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+\subsection{Flow in channel with a square cross section using a 2D domain with three velocity components: 
+developed flow with secondary eddies for a Giesekus fluid}
+\label{sec:Dooley2Dimpl}
+
+This problem is an extension to viscoelastic flow of the Stokes problem in
+Sec.~\ref{sec:stokes2D3D}. 
+                                                                                
+The example file is \texttt{channel10.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+
+\subsection{Flow in curved channel with a square cross section using a 2D domain with 
+three velocity components (axisymmetric with swirl): Dean flow with secondary eddies for a Giesekus fluid}
+\label{sec:Dean2Dimpl}
+
+This problem is an extension of the straight channel problem of Sec.~\ref{sec:Dooley2Dimpl} to a curved channel.
+This called a Dean flow. The flow is axisymmetric and generated by an imposed flow rate through the curved channel (square torus).
+
+In a cylindrical coordinate system, axi-symmetry means that the velocity components $(u_z,u_r,u_\theta)$, pressure $p$ and stress-tensor components are only a function of $(z,r)$ (independent from $\theta$). In most cases we additionally assume that $u_\theta=0$, however it can be quite useful to include $u_\theta$ (swirl). Important examples are the analysis of plate-plate and cone-plate rotational rheometers. Note, that we now have to solve three velocity components, pressure and six stress components on a 2D domain,
+                                                                                
+The example file is \texttt{channel11.f90} and can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+
+In Figure~\ref{fig:secondaryflow2axi}, the secondary flow in the $(z,r)$ cross section is shown.
+\begin{figure}[htpb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{deanflow}
+   \end{center}
+   \caption{The velocity
+component in the $(z,r)$ cross section in a square `donut' with inner radius of 2 and outer radius of 3.
+The Giesekus model is used and the flow rate through the `donut' is imposed.}
+\label{fig:secondaryflow2axi}
+\end{figure}
+
+\subsection{Flow between two concentric cilinders with swirl component. Axisymmetric. A viscoelastic problem on a 2D domain with three velocity components}            
+\label{sec:viscoelastic2D3Dswirlimpl}
+
+We consider the flow between two concentric cylinders. The $(u_z,u_r)$ components
+ are determined by imposing a flow rate in $z$-direction (periodical flow conditions) and the swirl component $u_\theta$ is determined by rotating the outer cilinder. 
+This problem is an extension to viscoelastic of the Stokes problem in \ref{sec:stokes2D3Dswirl}.
+The source code is given in \texttt{concentric\_cylinder4.f90}.
+
+\subsection{Cone-plate (axisymmetric with swirl)}
+\label{sec:cone-plate_ve_si}
+
+(This example has been contributed by Michelle Spanjaards of the TU/e)
+
+The problem is an extension to viscoelastic flow of the Stokes problem in Sec.~\ref{sec:cone-plate_stokes}.
+The geometry is depicted in Figure~\ref{fig:coneplategeom}. The plate (curve 1) is stationary ($\vek u=\vek 0$). The cone (curve 2) is rotating around the $z$-axis ($\vek u=\omega r \vek e_\theta$). Curve 3 is a traction free surface ($\vek t_\text{N}=\vek 0$) and is of a circular shape having point 1 as its center. The angle between the cone and plate $\theta_\text{cp}$ is 0.1~rad in the figure, but can be adjusted. The shear rate is approximately constant and is given by $\omega/\theta_\text{cp}$. 
+
+At the free surface on curve 3 a minor inflow is generated due to secondary flows. In theory, the conformation tensor should be imposed on an inflow section. However, this is not done in this example. Therefore, it is possible that for other situations and/or higher Weissenberg numbers this can become a problem, such as the appearance of numerical instabilities. In that case, the boundary condition on curve 3 needs to be changed, like a moving material boundary or imposing the normal velocity to be zero.
+
+The source of the example is in the file \texttt{coneplate3.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample coneplate}
+\end{quote}
+
+
+
+

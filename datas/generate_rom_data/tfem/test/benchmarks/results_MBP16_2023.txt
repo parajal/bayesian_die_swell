@@ -1,0 +1,63 @@
+Apple M3 Max (MacBook Pro 16 inch, Nov 2023, 48GB).
+
+Output of "system_profiler SPSoftwareDataType SPHardwareDataType":
+
+Software:
+
+    System Software Overview:
+
+      System Version: macOS 14.2.1 (23C71)
+      Kernel Version: Darwin 23.2.0
+
+Hardware:
+
+    Hardware Overview:
+
+      Model Name: MacBook Pro
+      Model Identifier: Mac15,9
+      Chip: Apple M3 Max
+      Total Number of Cores: 16 (12 performance and 4 efficiency)
+      Memory: 48 GB
+
+GNU Fortran (Homebrew GCC 13.2.0) 13.2.0
+gfortran 13.2.0, -O3 -march=native -funroll-loops -fstack-arrays
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+Apple Framework Accelerate (-framework accelerate)
+Threading with VECLIB_MAXIMUM_THREADS
+
+Solver: MA57, HSL2002
+threads build   solve     real      user      sys
+   1     .74884  46.10346 0m47.341s 0m46.506s 0m0.467s
+   2     .75782  46.11362 0m40.364s 0m46.354s 0m0.618s
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1     .80078 46.32013  0m47.669s 0m46.344s 0m0.907s
+   2     .80470 50.48032  0m29.396s 0m49.244s 0m2.169s
+
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1     .80162 12.35638  0m14.846s 0m14.093s 0m0.480s  1.28091
+   2     .80541 13.95368  0m11.812s 0m14.936s 0m1.233s  1.28909
+
+Solver: sparskit2, metis5
+threads build   precond   matvec  real      user      sys       renumber
+   1     .83552  96.90885 7.00164 1m45.848s 1m45.370s 0m0.230s  .74105
+
+
+GNU Fortran (Homebrew GCC 14.2.0) 14.2.0
+gfortran 14.2.0, -O3 -march=native -funroll-loops -fstack-arrays
+
+Settling2
+=========
+
+Apple Framework Accelerate (-framework accelerate)
+Threading with VECLIB_MAXIMUM_THREADS
+
+Solver: MA41, HSL2002
+threads build   solve     real      user      sys
+   1    8.085    9.343    0m17.764s 0m16.265s 0m1.270s
+   2    7.923   10.769    0m16.653s 0m17.039s 0m1.762s

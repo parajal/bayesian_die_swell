@@ -1,0 +1,33 @@
+&comppar
+  meshfile = 'confined_cylinder1.msh'  ! mesh file to be used
+  metisnodes = T        ! renumber nodes with metis5
+  metisdegrees = T      ! renumber degrees of freedom with metis5
+  inrestartfile = 'data.out'      ! file to the restart from
+  outrestartfile = 'data.out'     ! output file for restart
+  timer = F     ! output timer data T/F
+  timeint1 = 8  ! first time step time-integration scheme. 
+  timeint2 = 10 ! time-integration scheme for time step 2 and beyond
+  restart=0     ! restart=0: no restart
+                ! restart=1: normal restart
+                ! restart=2: read restart file + post processing
+                ! restart=3: read soln only and set solnm1=soln.
+                !            this is for reading a steady state solution
+  ctime = T     ! continue with the time read from restart file.
+  restart_every = 1     ! write restart file every restart_every steps.
+                        ! -1: means none
+  model = 2             ! model number 2: Oldroyd-B 3: Giesekus
+  G = 1.0               ! modulus
+  lambda = 1.0          ! relaxation time
+  beta_s = 0.59         ! beta viscosity parameter = eta_s/(eta_s+eta_p)
+  mobility = 0.1        ! mobility parameter of the Giesekus model
+  deltat = 1.0          ! time step
+  thetapar = 0.55       ! theta parameter in the theta method
+  epsdconf = 1e-8       ! Newton-Raphson convergence threshold difference
+  epsrconf = 1e-12      ! Newton-Raphson convergence threshold residual
+  maxnumnriter = 20     ! maximum number of Newton-Raphson iterations
+  numtimesteps = 10     ! number of time steps
+  U = 0.1               ! average velocity in the channel
+  postprocess = T       ! perform postprocessing T/F, set to T for restart=2
+  rs = 1.2              ! real_storage for LU (HSL)
+  is = 1.6              ! integer_storage for LU (HSL)
+/

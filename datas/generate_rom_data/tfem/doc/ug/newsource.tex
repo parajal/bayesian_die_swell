@@ -1,0 +1,1303 @@
+% !TEX root = userguide.tex
+
+\chapter{Writing new source code for \tfem}
+\pgst{tfemch}
+
+\def\chaptertitle{Writing new source code for \tfem}
+\def\headdate{14th December 2025}
+
+In this chapter we will describe some tools and techniques for writing new
+source code, including some info on how to write new elements and some special topics for writing main programs.
+
+\section{Some tools for writing new code}
+\subsection{The command \texttt{fmm}: make a makefile}
+\label{sec:fmm}
+
+The command \texttt{fmm} (fortran make makefile) is a simple shell script
+to create a Makefile 
+for all Fortran files
+in the current directory to deal with module dependencies. Two modes of
+operation are available:
+\begin{quote}
+       \texttt{fmm >Makefile}
+\end{quote}
+which produces a makefile for building main programs (when present) and
+compiling the source files in the current directory, and
+\begin{quote}
+       \texttt{fmm -l >Makefile}
+\end{quote}
+which produces a makefile for producing a library (archive)
+and thus no main programs are build.
+Type \texttt{fmm -h} to see all the options available.
+
+There are some restrictions on the use of \texttt{fmm}:
+\begin{itemize}
+   
+   \item Several macros in the makefile are undefined. Although some are optional, they need to be defined 
+    by the user. In \tfem\ the include file \texttt{Mdefs.mk} is used for that.
+   \item Main programs must have an \texttt{end program} statement, otherwise 
+      main programs are undetected and even might end up in a library.
+   \item A module must be in a separate file or part of the main program file.
+     The filename (without the extension) must be identical to the module name
+     or the module name without the \texttt{\_m} extension. This
+     convention is used throughout \tfem, i.e.\ all modules have a \texttt{\_m}
+     extension and defined in separate files.
+   \item Only object (\texttt{.o}) files produced by the Makefile are linked.
+     So just adding an object file to the current directory will not work.
+%     Note, that this is different from \sep, where all object files
+%     in the current directory are linked into the executable.
+   \item The main programs are linked to \emph{all} object (\texttt{.o})
+     files produced by the Makefile.
+
+\end{itemize}
+A command \texttt{fmme} is available that removes the restriction
+on modules (separate files with filename equal to the module name) and can be
+used for a wider range of projects. However, it is several times slower than
+\texttt{fmm} because of the searching for module definitions in the source
+files.
+
+The commands \texttt{fmm} and \texttt{fmme} are for development of source code
+\emph{outside} the \tfem-tree. A special version of \texttt{fmm}, called
+\texttt{mm}, is available for use \emph{inside} the \tfem-tree. It is not
+available by default and can be created by making a symbolic link in the
+\texttt{bin} subdirectory of the \tfem-tree:
+\begin{quote}
+   \texttt{ln -s fmm mm}
+\end{quote}
+
+\subsection{The command \texttt{showmodules}: show contents of modules}
+
+The command \texttt{showmodules} will give for each module available a list of
+the derived types and the subroutines it contains to the standard output.
+Typing
+\begin{quote}
+       \texttt{showmodules >list}
+\end{quote}
+and editing the file \texttt{list} will give an easy access to the source using
+the tags mechanism.
+
+The command \texttt{showmodules} can also be used for individual source files
+as follows
+\begin{quote}
+       \texttt{showmodules file(s)}
+\end{quote}
+
+\subsection{The \texttt{tags} file}
+
+If all goes well and your source compiles/links, a file \texttt{tags} will be
+produced for easy jumping around in the your own source and \tfem\ source. If
+you do not have your own source files yet (or even an empty directory)
+this will also work, so
+\begin{quote}
+   \texttt{getmdefs >Mdefs.mk}\\
+   \texttt{fmm >Makefile}\\
+   \texttt{make}
+\end{quote}
+will produce a \texttt{tags} file containing tags to the source of \tfem.
+
+If your files do not compile/link no \texttt{tags} file is produced. Typing
+\begin{quote}
+   \texttt{make tags}
+\end{quote}
+will always make a new \texttt{tags} file.
+
+\subsection{The command \texttt{tfgrep}: \texttt{grep} in source files}
+
+The command \texttt{tfgrep} will do a `grep' on all \tfem\ source files. For example, type
+\begin{quote}
+   \texttt{tfgrep PATTERN}
+\end{quote}
+to search for the string \texttt{PATTERN} in the source files of
+\texttt{src/core} and \texttt{src/addons}. Type
+\begin{quote}
+   \texttt{tfgrep -h}
+\end{quote}
+to show all the options available.
+
+\subsection{The command \texttt{getsrc}: get source files}
+
+The command \texttt{getsrc} will copy \tfem\ source files to the current
+directory, for example
+\begin{quote}
+   \texttt{getsrc system.f90 vector.f90}
+\end{quote}
+will copy the two specified source files.
+
+\subsection{The commands \texttt{tfdiff} and \texttt{tfvimdiff}: difference with \tfem\ files}
+\label{sec:tfdiff}
+
+The command \texttt{tfdiff} will show the difference between the
+\tfem\ source files to files in the current
+directory, for example
+\begin{quote}
+   \texttt{tfdiff system.f90 vector.f90}
+\end{quote}
+will show the difference of these files in the `unified diff' format.
+
+The command \texttt{tfvimdiff} will show the difference between the
+\tfem\ source files to files in the current
+directory using the \texttt{vimdiff} utility, for example
+\begin{quote}
+   \texttt{tfvimdiff system.f90 vector.f90}
+\end{quote}
+will show the difference of these files.
+Adding the option \texttt{-g}, i.e.\ \texttt{tfvimdiff -g},
+will use the GUI-based \texttt{gvimdiff} instead of 
+the text based \texttt{vimdiff}. Similarly, the option \texttt{-m} will use the
+MacVim based \texttt{mvimdiff}.
+
+For both \texttt{tfdiff} and \texttt{tfvimdiff} adding the option \texttt{-r} will 
+reverse the comparison.
+
+\section{Changing \tfem-files}
+
+Sometimes you would like to change files in the \tfem-tree.
+For example,
+if you find a bug\footnote{Please report bugs to \texttt{m.a.hulsen@tue.nl}. If you know how to fix it, please send a patch with a
+ fix (see Sec.~\ref{sec:patches}).}, want to change a subroutine of an element module or add a
+new subroutine to it.
+There are basically two ways to change or add files in \tfem:
+\begin{itemize}
+   \item Change or add the files in the \tfem-tree directly, optionally using a branch in git.
+         This is only recommended for minor changes such as temporary bug fixes. Remember that in the \tfem\ tree \texttt{mm} should be used instead of \texttt{fmm} (see Sec.~\ref{sec:fmm}).
+   \item Make a new module\footnote{Use a name for the module that does not yet exist in \tfem.} in your own working directory and `use' the
+         \tfem-modules and add or change routines. This is typically used for
+         research code that is not (yet) scheduled to be included in \tfem.
+         For example, you want to add your own routines to the
+         \texttt{stokes\_elements\_m} module (see
+         Sec.~\ref{sec:stokesaddon}) and want also to change 
+         the routine \texttt{stokes\_elem}. Now make a new module file
+         containing:  
+\begin{verbatim}
+    module my_stokes_elements_m
+      use stokes_elements_m
+    contains              
+       <your element routines including a new routine my_stokes_elem>       
+    end module my_stokes_elements_m
+\end{verbatim}
+         Now you can use your own \texttt{my\_stokes\_elem} as a replacement for
+         \texttt{stokes\_elem}. The latter is still available. If you want to keep the name
+         \texttt{stokes\_elem} for your new routine, use
+\begin{verbatim}
+    module my_stokes_elements_m
+      use stokes_elements_m, stokes_elem_tfem => stokes_elem
+    contains              
+      <your element routines including a new routine stokes_elem>   
+    end module my_stokes_elements_m
+\end{verbatim}
+    where the routine \texttt{stokes\_elem} in \tfem\
+         has been renamed to \texttt{stokes\_elem\_tfem} and you can use \texttt{stokes\_elem} yourself.
+         
+    If you now put the line 
+\begin{verbatim}
+      use my_stokes_elements_m
+\end{verbatim}
+    in your main program, the stokes routines in \tfem\ and your own
+         routines will be available. 
+    If your own project becomes too unwieldy with lots of files, you might want to have a look at Appendix~\ref{chap:projecttree} to make your own project tree with subdirectories.
+ 
+\end{itemize}
+\newpage
+\section{Contributing to \tfem}
+
+If you want to contribute code to \tfem, such as a fix for a bug or a new example or add-on, you can do that by 
+either making a patch or by creating a branch and ask for a merge request on gitlab. 
+
+\subsection{Making a patch}
+\label{sec:patches}
+
+You make a patch by cloning a fresh \tfem-tree and modify the tree to represent the changes you want to make. Go to the root of the \tfem-tree and type
+\begin{quote}
+   \texttt{git diff >mypatch.diff}
+\end{quote}
+or if you want to create a patch only for a subdirectory of the \tfem-tree type
+\begin{quote}
+   \texttt{git diff subdir >mypatch.diff}
+\end{quote}
+Compress the patch before sending it as an attachment by email:
+\begin{quote}
+   \texttt{gzip mypatch.diff}
+\end{quote}
+Please send the patch to \texttt{m.a.hulsen@tue.nl} with a short description of the changes.
+
+\subsection{Creating a branch}
+\label{sec:branch}
+
+In order to contribute via a branch you need to be a member of the \texttt{tfem\_develop} project on the GitLab server \texttt{https://gitlab.tue.nl}.
+Also, make sure you have configured your name and email correctly by using \texttt{git config}:
+\begin{verbatim}
+   git config --global user.name "John Doe"
+   git config --global user.email johndoe@example.com
+\end{verbatim}
+To create a new branch, first pull a fresh \tfem-tree from \texttt{tfem\_develop} to your local computer.
+Create a branch, edit the branch, make commits, push the branch to the server when you are finished and make a merge request on GitLab. Please follow the commit guidelines (in Chapter ``Distributed Git'') from the Pro Git book on the Git website \texttt{https://git-scm.com}. In particular, the commit message should have a single line with a maximum of around 50 characters. More detailed info can be written after an empty line following the first line. Each line in the detailed info should be wrapped at roughly 72 characters.
+
+\newpage
+\section{Programming new elements}
+
+As already seen in the examples in Chap.~\ref{ch:examples} element routines are
+treated by \tfem\ as if they are function routines that need to be written
+outside the scope of the \tfem\ routines. The only thing the user has to do is
+supply the name of the element routine via the \texttt{elemsub} or
+\texttt{elemsub1} dummy heading parameter. The element routine must, of course,
+conform to the \texttt{interface}
+statement given in the heading definition of the \tfem\ routine that is called,
+but otherwise the user is completely free in designing the elements.
+Nevertheless, some guidelines and routines available for writing elements are
+given here. The examples in the \tfem-tree should get you going after that.
+
+\subsection{A general outline of an element routine}
+
+A general outline of an element for \texttt{build\_system} that is properly
+embedded in a module with the proper \texttt{use} statements, is for example
+
+\begin{listing}{1}
+module elements_m
+
+  use tfem_elem_m
+
+  implicit none
+
+\end{listing}
+\begin{quote}
+   \emph{global definitions of this module}
+\end{quote}
+\begin{listingcont}
+
+contains
+
+  subroutine elemsub ( mesh, problem, elgrp, elem, matrix, vector, &
+    first, last, coefficients, oldvectors, elemmat, elemvec )
+    type(mesh_t), intent(in) :: mesh
+    type(problem_t), intent(in) :: problem
+    integer, intent(in) :: elgrp, elem
+    logical, intent(in) :: matrix, vector, first, last
+    type(coefficients_t), intent(in) :: coefficients
+    type(oldvectors_t), intent(in) :: oldvectors
+    real(dp), intent(out), dimension(:,:) :: elemmat
+    real(dp), intent(out), dimension(:) :: elemvec
+
+\end{listingcont}
+\begin{quote}
+   \quad\emph{Local definitions}
+\end{quote}
+\begin{listingcont}
+
+    if ( first ) then
+   
+\end{listingcont}
+\begin{quote}
+   \qquad\parbox{10cm}{\emph{Allocate memory. Compute variables that are 
+     constant for all elements in this group, for example shape functions.}}
+\end{quote}
+\begin{listingcont}
+
+    end if
+   
+\end{listingcont}
+\begin{quote}
+   \quad\emph{Find coordinates and deformed shape of the element.}
+\end{quote}
+\begin{listingcont}
+
+    if ( vector ) then
+   
+\end{listingcont}
+\begin{quote}
+   \qquad\emph{compute element right-hand side vector}
+\end{quote}
+\begin{listingcont}
+
+    end if
+   
+    if ( matrix ) then
+   
+\end{listingcont}
+\begin{quote}
+   \qquad\emph{compute element matrix}
+\end{quote}
+\begin{listingcont}
+
+    end if
+   
+\end{listingcont}
+\begin{listingcont}
+
+    if ( last ) then
+   
+\end{listingcont}
+\begin{quote}
+   \qquad\emph{deallocate memory for this group.}
+\end{quote}
+\begin{listingcont}
+
+    end if
+   
+  end subroutine elemsub
+
+end module elements_m
+\end{listingcont}
+\bigskip
+Some notes:
+\begin{description}
+   \item[line 3] types and routines from other modules are `included'
+   here and available everywhere in the module.
+  \item[line 10-19] the heading can be copied from the \texttt{interface}
+    definition of \texttt{elemsub} in the heading of \texttt{build\_system}.
+    The subroutine name \texttt{elemsub} should preferable
+    be changed to something else. If there is more than one routine you have
+    to change it.
+  \item[line 14] the integers \texttt{elgrp} (element group number)
+   and \texttt{elem} (element number within this group) determine the 
+   element\footnote{A new element interface \texttt{elemsub1} is 
+   available that uses a structure to supply element information. This new
+interface give more possibilities, such as building a system on objects.}.
+  There is no global element number like in \sep.
+  \item[15, 22 and 39] the logicals \texttt{first} and \texttt{last} are
+   \texttt{.true.}\ when the current element is the first or the last element in
+      this element group, respectively.
+  \item[15, 28 and 33] the logicals \texttt{matrix} and \texttt{vector} are
+    determined by the heading parameters \texttt{buildmatrix} and
+    \texttt{buildvector}, respectively.
+   \item[line 16] \texttt{coefficients} is a structure of type
+    \texttt{coefficient\_t} for supplying parameters and coefficients to the
+     element subroutine. The structure contains only data when the structure is 
+     part of the heading of \texttt{build\_system}.
+   \item[line 17] \texttt{oldvectors} is a structure of type
+    \texttt{oldvectors\_t} for supplying already available vectors of type
+     \texttt{sysvector\_t} and \texttt{vector\_t} to the
+     element subroutine. The structure contains only data when the structure is 
+     part of the heading of \texttt{build\_system}.
+\end{description}
+
+\subsection{Transferring data between element routines:
+a vector defined per element} 
+\label{sec:elvector}
+
+Suppose we have to solve a diffusion problem where the diffusion coefficient
+is not constant and depends on the position in a complicated way, possibly
+depending on the solution of other problems. We can of course build a cathedral
+and make a complicated diffusion element with all the bells and whistles needed
+by the user. Another approach is to make a relatively simple diffusion element
+with varying coefficients, where the latter needs to be entered by the user.
+For this we need to have a transfer mechanism (a new type of vector) that can
+transfer element data arrays. In this way the user can write an element routine
+that handles the complicated dependencies of the diffusion coefficient and
+stores the result in the vector element by element and is later used by the
+diffusion element.
+
+The vector defined per element is of type \texttt{elvector\_t} and can
+(currently) store
+any number of one-dimensional integer arrays and one-, two- and 
+three-dimensional real arrays. The sizes of the arrays can be different for
+each element.
+
+The vector needs to be created first, for example:
+\begin{listing}{1}
+   
+  call create_elvector ( mesh, elvector, nint1d=1, nreal3d=2 )
+
+\end{listing}
+which creates the vector \texttt{elvector} of type \texttt{elvector\_t} having
+one one-dimensional integer array and two three-dimensional real arrays for each
+element. Contrary to the creation of sysvectors and vectors during creation of
+elvectors no memory is allocated for the data yet. The actual data will be
+allocated at the call of the routine \texttt{put\_elvector}:
+\begin{listing}{1}
+
+  call put_elvector ( mesh, elvector, elgrp, elem, i1=iarray )
+
+\end{listing}
+where the one-dimensional integer array \texttt{iarray} will be stored for
+element \texttt{elem} of element group \texttt{elgrp}. The array can be
+recovered by
+\begin{listing}{1}
+
+  call get_elvector ( mesh, elvector, elgrp, elem, i1=iarray )
+
+\end{listing}
+If more than one array of the same data type and dimension has been defined,
+the sequence number (if different from 1) needs to be given as well,
+for example:
+\begin{listing}{1}
+
+  call put_elvector ( mesh, elvector, elgrp, elem, nr=2, r3=array )
+
+\end{listing}
+where the three-dimensional real array \texttt{array} will be stored as the
+second array. The keyword \texttt{nr} needs to be used for
+\texttt{get\_elvector} as well.
+
+If a new array is stored at a position where already an array has been
+stored previously, it
+depends on the shape of the new array what will happen. If the shape is the
+same as the old array, the data is just overwritten. If the shape is different
+the old array will be deallocated and the
+new one with the new shape will be allocated and stored.
+
+The following statement
+\begin{listing}{1}
+
+   call delete ( elvector )
+
+\end{listing}
+will delete both all the data arrays and the structure of the array.
+The following statement
+\begin{listing}{1}
+
+   call delete ( elvector, deletestructure=.false. )
+
+\end{listing}
+will delete only the data arrays and leaves the structure intact, as if a fresh
+elvector has been created.
+
+Examples of the use of vectors of type \texttt{elvector\_t} are 
+\texttt{diffusion2.f90} and 
+\texttt{diffusion3.f90} in Sec.\ref{sec:diffusion1}.
+
+\subsection{Subroutines for writing elements that are available in \tfem}
+\label{sec:elemsub}
+
+Some subroutines are available in \tfem\ that can help in writing elements. Use
+the command \texttt{showmodules} to get an overview of all routines.
+
+At the time of writing routines are available for: getting the coordinates
+of the element (in module \texttt{mesh\_m}):
+
+\begin{verbatim}
+   get_coordinates
+   get_coordinates_sides
+   get_coordinates_side
+   get_coordinates_geometry
+   get_coordinates_object
+\end{verbatim}
+getting the components and/or positions on element level of
+a system vector (in module \texttt{system\_m}):
+
+\begin{verbatim}
+   get_sysvector
+   get_sysvector_geometry
+   get_sysvector_constraint
+\end{verbatim}
+and vector (in module \texttt{vector\_m}):
+
+\begin{verbatim}
+   get_vector
+   get_vector_geometry
+\end{verbatim}
+getting and storing the components of a vector defined per element
+for a single element (in module \texttt{elvector\_m}):
+\begin{verbatim}
+   get_elvector
+   put_elvector
+\end{verbatim}
+Furthermore, there are various routines for shape functions and isoparametric
+mapping (in module \texttt{shapefunc\_m}) and for Gauss integration (in module
+\texttt{gauss\_m})
+
+\subsection{The structure coefficients}
+\label{sec:coefficients}
+
+If the structure coefficients is part of the heading of \texttt{build\_system} (and several other routines),
+this structure is passed through to the element subroutine. The structure
+coefficients is of type \texttt{coefficients\_t} and must be created with 
+the routine \texttt{create\_coefficients}, for example:
+\begin{listing}{1}
+   
+   call create_coefficients ( coefficients, ncoefi=10, ncoefr=20 )
+
+\end{listing}
+which creates the structure coefficients having two arrays of length 10 and 20,
+respectively.
+\begin{verbatim}
+   coefficients%i
+   coefficients%r
+\end{verbatim}
+The first is an integer array and the latter is a real array. After filling the
+arrays the user can use the data on element level to set model parameters.
+
+Additionally multiple integer and real arrays can be created as follows:
+\begin{listing}{1}
+   
+   call create_coefficients ( coefficients, ncoefi=10, ncoefr=20, &
+     ncoefia=[30,40], ncoefra=[15] )
+
+\end{listing}
+which creates the structure coefficients having additionally the arrays 
+\begin{verbatim}
+   coefficients%ia(1)%a
+   coefficients%ia(2)%a
+   coefficients%ra(1)%a
+\end{verbatim}
+which are of size 30, 40 and 15, respectively. 
+
+Furthermore, multiple 2D integer and real arrays can be created as follows:
+\begin{listing}{1}
+   
+   call create_coefficients ( coefficients, ncoefi=10, ncoefr=20, &
+     ncoefia2=[10,4], ncoefra2=[15,6,20,7] )
+
+\end{listing}
+which creates the structure coefficients having additionally the 2D arrays 
+\begin{verbatim}
+   coefficients%ia2(1)%a
+   coefficients%ra2(1)%a
+   coefficients%ra2(2)%a
+\end{verbatim}
+which have shapes (10,4), (15,6) and (20,7), respectively. Note, that the shapes are defined by pairs and that
+the number of 2D integer and real arrays created are \texttt{size(ncoefia2)/2} and \texttt{size(ncoefra2)/2}, respectively.
+
+The structure coefficients also contain ``procedure pointers'' for assigning user functions
+that need to be used on element level. Available are pointers to scalar (\texttt{func}),
+vector (\texttt{vfunc}) and tensor functions (\texttt{tfunc}).
+for example:
+\begin{verbatim}
+   coefficients%func => scalar_func
+   coefficients%vfunc => vector_func
+   coefficients%tfunc => tensor_func
+\end{verbatim}
+There are also arrays of these pointers, for example
+\begin{verbatim}
+   coefficients%func1(1)%p => scalar_func
+\end{verbatim}
+will assign the function \texttt{scalar\_func} to the first pointer in the
+array of pointers \texttt{func1}. The dimension of the arrays is set by
+the variable \texttt{MAXFUNCTIONS} in the module \texttt{limits\_m}.
+There are more procedure pointers available for special purposes (discussed in the examples).
+
+It is planned to extend the type \texttt{coefficients\_t} to easily provide
+different coefficients for different element groups and/or individual elements
+in a standardized and general way.
+An intermediate mechanism has been implemented for now to
+provide different coefficients for different element groups\footnote{Of course,
+the same result can be achieved by calling \texttt{build\_system}, \ldots for
+different groups separately with different input for the coefficients. However, this
+leads to many more statements in your code.}. For example,
+assume that there are two elements groups needing different coefficients. Then, define
+the following in your main program:
+\begin{listing}{1}
+  type(coefficients_t) :: mcoefficients(2)
+
+  ! create coefficients
+
+  call create_coefficients ( coefficients(1), ncoefi=100, ncoefr=100 )
+  call create_coefficients ( coefficients(2), ncoefi=100, ncoefr=100 )
+
+\end{listing}
+Note,
+ that the dimension of the array of coefficients \texttt{mcoefficients} should
+be equal to the number of element groups.
+In the call to the routines \texttt{coefficients} need to be replace with \texttt{mcoefficients}, for example:
+\begin{listing}{1}
+! stokes velocity/pressure
+  call build_system ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=stokes_elem, physqrow=[2,3], physqcol=[2,3], &
+    mcoefficients=mcoefficients )
+\end{listing}
+Note, that \texttt{mcoefficients} is a different (optional) heading parameter.
+Various routines have been adapted to accept the \texttt{mcoefficients} parameter.
+However, only where it makes sense or where the element group number is unique. For example, for curves or surfaces
+the group number is not unique and dealing with different coefficients will only be possible after the more
+general implementation.
+
+\subsection{The structure oldvectors}
+\label{sec:oldvectors}
+
+If the structure oldvectors is part of the heading of \texttt{build\_system},
+this structure is passed through to the element subroutine. The structure
+oldvectors is of type \texttt{oldvectors\_t} and must be created with 
+the routine \texttt{create\_oldvectors}, for example:
+\begin{listing}{1}
+   
+   call create_oldvectors ( oldvectors, nvec=3 )
+
+\end{listing}
+This will 
+create in the structure oldvectors a component \texttt{v} that
+is an array of pointers of length 3. 
+Each pointer in the array \texttt{v} can point to a structure of 
+type \texttt{vector\_t}. A pointer is encapsulated into a type with a
+single component \texttt{p}, hence
+\begin{verbatim}
+   oldvectors%v(1)%p
+   oldvectors%v(2)%p
+   oldvectors%v(3)%p
+\end{verbatim}
+are all pointers to a structure of type \texttt{vector\_t}.
+
+In order to associate a pointer with a target a fortran pointer assignment
+statement needs to be performed. For example:
+\begin{verbatim}
+   oldvectors%v(1)%p => vector
+\end{verbatim}
+will associate \texttt{oldvectors\%v(1)\%p} with \texttt{vector}. So 
+\texttt{oldvectors\%v(1)\%p} can be used as an alias for \texttt{vector}.
+In fortran the target (\texttt{vector}) will need to have the \texttt{target}
+attribute in the definition:
+\begin{verbatim}
+   type(vector_t), target :: vector
+\end{verbatim}
+
+Similarly, the component \texttt{s} in the structure oldvectors represents an
+array of pointers to system vectors (of type \texttt{sysvector\_t}).
+If some of
+the vectors or system vectors belong to a different problem, the problem
+structures can be included in the structure oldvectors:
+\begin{listing}{1}
+   
+   call create_oldvectors ( oldvectors, nsysvec=3, nvec=2, nelvec=1, nprob=2 )
+
+\end{listing}
+Here a structure oldvectors is created to store three system vectors
+ (in \texttt{oldvectors\%s(1:3)}),
+ two vectors
+ (in \texttt{oldvectors\%v(1:2)}),
+ one vector defined per element
+ (in \texttt{oldvectors\%e(1)})
+ and two problem structures
+ (in \texttt{oldvectors\%p(1:2)}).
+Note, that each element of the arrays is of a type that contains a pointer
+component \texttt{p}. For example, \texttt{oldvectors\%p(1)\%p} is the
+actual (pointer to a) structure of type \texttt{problem\_t}.
+Note also that all structures put into oldvectors need to have the
+\texttt{target} attribute at its definition.
+When dealing with multiple problems it is advised
+\begin{itemize}
+   \item to number all problems explicitly by setting
+      \texttt{input\_probdef\%probnr} to a unique number before the call to
+      \texttt{problem\_definition},
+   \item to store \emph{all}
+        problems in \texttt{oldvectors\%p} in the sequence as you
+        have given them numbers. This means that the current problem structure
+        is available twice (via the structure \texttt{problem} and
+        \texttt{oldvectors\%p}) and not all problem structures might be
+        needed on element level, but is much easier and less error prone.
+\end{itemize}
+
+Additional storage facilities exist for vectors and
+system vectors in the oldvectors type. For example,
+\texttt{s1} is a
+pointer array where each pointer has a \emph{one-dimensional array of system
+vectors} as its target. Similarly \texttt{v1} contains pointers
+to one-dimensional arrays of vectors. Also available are the components
+\texttt{s2} and \texttt{s3} which consist of pointers to two- and
+three-dimensional arrays of system vectors. Example:
+\begin{listing}{1}
+ 
+   type(sysvector_t), target :: sol, solv(3), solc(6,3)
+
+   call create_oldvectors ( oldvectors, nsysvec=1, nsysvec1=1, nsysvec2=1 )
+
+   oldvectors%s(1)%p => sol
+   oldvectors%s1(1)%p => solv
+   oldvectors%s2(1)%p => solc
+
+\end{listing}
+
+Additional storage facilities exist for meshes in the oldvectors type:
+component \texttt{m} 
+is a one-dimensional array of pointers to the type \texttt{mesh\_t}
+For example,
+\begin{listing}{1}
+   
+   call create_oldvectors ( oldvectors, nmesh=1 )
+
+\end{listing}
+where now a mesh can be associated with \texttt{oldvectors\%m(1)\%p}.
+The mesh needs to have a \texttt{target} attribute at its definition.
+
+Additional storage facilities exist for eltree arrays in the oldvectors type:
+component \texttt{ea} 
+is a one-dimensional array of pointers to the type \texttt{eltree\_array\_t}
+For example,
+\begin{listing}{1}
+   
+   call create_oldvectors ( oldvectors, nelta=1 )
+
+\end{listing}
+where now an eltree array can be associated with \texttt{oldvectors\%ea(1)\%p}.
+The eltree array needs to have a \texttt{target} attribute at its definition.
+
+\subsection{Subdividing elements for subintegration}
+\label{sec:subdivide}
+
+The module eltree provides routines for dividing a simple domain into
+smaller subdomains.
+The smaller subdomains can also be used to define a new Gauss
+integration scheme on (part) of the original simple domain. It uses a levelset function to
+separate domains. It is also possible to reconstruct the levelset=0 surface and define
+a surface integration scheme on it.
+
+\subsubsection{Eltrees}
+\label{sec:eltree}
+
+The module \texttt{eltree\_m} provides routines to divide a
+reference element (1D: $[-1,1]$, 2D: $[-1,1]\times[-1,1]$ or
+3D: $[-1,1]\times[-1,1]\times[-1,1]$ and similarly for triangle and tetrahedrons)
+into subdomains using binary trees
+(1D), quadtrees (2D) and octrees (3D). The main purpose is to integrate on
+parts of a reference element.
+The interface between the parts of a reference element
+is defined by a zero levelset function.
+If the domain is different from the reference element a mapping function
+(\texttt{mapcoor}) needs to be defined.
+The smallest subdomains near the interface can be further subdivided using
+\texttt{submesh} (see below) into
+line elements, triangles or tetrahedrons that are aligned along the zero
+levelset.
+It is also possible to reconstruct the levelset=0 surface using
+\texttt{intmesh} (see below).
+Composite Gauss integration schemes can be defined on both the volume and the
+zero levelset surface.
+
+Examples are given in Sec.~\ref{sec:exampleeltree}.
+
+\subsubsection{Submesh}
+\label{sec:submesh}
+
+The module \texttt{submesh\_m} provides routines to divide a simple
+domain into a small number of subdomains consisting
+of line elements, triangles or tetrahedrons. 
+
+The main purpose of the module submesh is to divide a simple domain (an
+interval, triangle, quadrilateral, tetrahedron or hexahedron) into
+subdomains to easily integrate on
+parts of the domain. The subdomains are line intervals, triangles or
+tetrahedrons.
+It uses the subdivision into triangles or tetrahedrons
+as described in \cite{Min07}.
+A part of the domain is defined by a levelset function and
+the subdomains are aligned with the zero levelset.
+The number of subdomains is minimal and the interface defined by the
+levelset consists of a minimal number of flat surfaces (lines or triangles).
+A typical use is in the subdivision of elements for integration in \xfem\ (see
+Sec.~\ref{sec:xfem}). If the description of the interface by a flat surface
+(or a small number of flat surfaces) is not accurate enough, the module submesh
+can be combined with an eltree (see Sec~\ref{sec:exampleeltree}. 
+
+The module is used in some
+examples of \texttt{eltree} in Sec.~\ref{sec:exampleeltree}.
+
+\subsubsection{Intmesh}
+\label{sec:intmesh}
+
+The module \texttt{intmesh\_m} provides routines to divide a simple
+domain into a small number of subdomains consisting
+of line elements, triangles or tetrahedrons. It uses the subdivision into triangles or tetrahedrons
+as described in \cite{Min07}. The difference with \texttt{submesh} is that
+\texttt{intmesh} reconstructs the levelset=0 surface.
+The main purpose is to integrate on the levelset=0 surface.
+The module is used in some
+examples of \texttt{eltree} in Sec.~\ref{sec:exampleeltree}.
+
+\newpage
+\section{Programming the main program: special topics}
+
+\tfem\ is run from a main program. In this section some special topics related
+to writing main programs will be presented.
+
+\subsection{Essential boundary conditions for nodesets}
+\label{sec:essnodeset}
+
+Setting essential conditions for nodesets (see Sec.~\ref{sec:nodesets} for
+adding nodesets to the mesh) is similar to curves, \ldots.
+Example:
+\begin{listing}{1}
+
+  call define_essential ( mesh, input_probdef, nodeset1=2, nodeset2=4, physq=1 )
+
+  ...
+
+  call fill_sysvector ( mesh, problem, sol, &
+    physq=1, nodeset1=1, nodeset2=4, func=func, funcnr=3 )
+
+\end{listing}
+
+\subsection{Changing the definition of essential boundary conditions}
+
+In some problems you might want to change
+the definition of the essential boundary
+conditions. For example, in a time-dependent flow at a particular point in time
+you would like to change a certain curve from an essential boundary to a
+free boundary. Assume that the following essential boundary conditions are
+defined before the change:
+\begin{listing}{1}
+
+  call define_essential ( mesh, input_probdef, point=1, physq=2 )
+  call define_essential ( mesh, input_probdef, curve1=2, curve2=4, physq=1, &
+    degfd=[0,1] )
+  call define_essential ( mesh, input_probdef, curve1=1, physq=1 )
+
+\end{listing}
+and that we want to change the essential conditions on curve 1 from fully
+essential to only essential in $x$ direction and free (natural) in the $y$
+direction. This can be achieved by
+\begin{listing}{1}
+   
+  call change_essential ( mesh, input_probdef, bctype='curves', nr=2, &
+    degfd=[1,0] )
+
+\end{listing}
+Here \texttt{bctype='curves'} means we want to change the definition for
+curves and \texttt{nr=2} means we want to change the second definition
+for a curve (note
+the first call of \texttt{define\_essential} is for a point not a curve).
+The parameters \texttt{degfd=[1,0]} means we want to change from fully
+essential to only essential in the $x$-direction.
+Note, that a call to \texttt{change\_essential} only makes changes to what is
+in the heading (no default changes).
+Other examples:
+\begin{listing}{1}
+   
+  call change_essential ( mesh, input_probdef, bctype='curves', nr=2, &
+    degfd=[0] )
+
+\end{listing}
+removes all essential boundary conditions on curve 1,
+\begin{listing}{1}
+   
+  call change_essential ( mesh, input_probdef, bctype='curves', nr=1, &
+    degfd=[] )
+
+\end{listing}
+makes all degrees (of \texttt{physq=1}) on curve 2 to 4 essential,
+\begin{listing}{1}
+   
+  call change_essential ( mesh, input_probdef, bctype='point', nr=1, &
+    physq=3 )
+
+\end{listing}
+shifts the essential boundary condition in point 1 from \texttt{physq=2} to
+\texttt{physq=3}.
+
+In order to apply the new essential boundary conditions we need to define a new
+problem:
+\begin{listing}{1}
+
+  call delete( problem )
+
+  call problem_definition ( input_probdef, mesh, problem )
+   
+\end{listing}
+or:
+\begin{listing}{1}
+
+  call problem_definition ( input_probdef, mesh, problem2 )
+   
+\end{listing}
+where \texttt{problem2} is new.
+
+The change in essential boundary conditions leads to a new numbering of the
+unknowns in \texttt{sysvector}. If solution vectors from previous
+time-steps need to
+be used after the change in boundary conditions
+the old sysvectors need to be transferred to the new
+numbering. This can be done as follows:
+\begin{listing}{1}
+
+!  system numbering -> nodal numbering
+
+   sysvector%u = sysvector%u( problem%degfdperm(:,2) )
+
+   < change essential and redefine the problem >
+
+!  nodal numbering -> system numbering
+
+   sysvector%u = sysvector%u( problem%degfdperm(:,1) )
+   
+\end{listing}
+
+\subsection{Boundary conditions}
+
+\label{sec:bounc}
+
+In previous sections we have seen boundary conditions of either
+the Dirichlet type or Neumann type. It is also rather common to have a relation
+between the normal flux and the solution value (Robin boundary condition),
+periodical or  other constrained boundary conditions, boundary conditions in a
+rotated coordinate system or
+boundary conditions of a special type. In this section we describe how to
+handle these boundary condition in \tfem.
+
+\subsubsection{Robin boundary conditions}
+
+As an example we use the Poisson equation \eqref{eq:poisson}. 
+Assume the following relation on a part of the boundary ($\Gamma_\text{R}$,
+with $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}\cup\Gamma_{\text{R}}$):
+\begin{equation}
+   -\pderiv{u}{n} = \sigma u + h_\text{R}\text{ on } \Gamma_\text{R}
+\end{equation}
+where $\sigma\geq0$.
+This is called a Robin boundary condition.
+We now get the following weak form: Find $u\in S$ such that
+\begin{equation}
+   (\nabla v,\nabla u) +(v,\sigma u)_{\Gamma_{\text{R}}}+
+(v,h_{\text{R}})_{\Gamma_{\text{R}}}+
+(v,h_{\text{N}})_{\Gamma_{\text{N}}}=(v,f)
+   \label{eq:weakformpoissonRobin}
+\end{equation}
+for all $v\in V$, where $S$ and $V$ are suitable functional spaces for $u$ and
+$v$, respectively. We see that a Robin boundary condition adds a
+contribution to both the system matrix and system vector. In \tfem\ there are
+basically two ways to achieve this\footnote{A third possibility is to add a
+new group of line
+or surface elements that connect to the boundary, but this is somewhat
+cumbersome.}:
+\begin{enumerate}
+   \item Using the routine \texttt{add\_boundary\_elements} for building the
+system matrix and vector on curves and/or
+ surfaces.
+   \item Add an object to the mesh (see Sec.~\ref{sec:objects}) using the curve
+or surface defining $\Gamma_R$ and use \texttt{build\_system} on this object
+to add both the element matrix/vector to the system matrix/vector.
+\end{enumerate}
+
+\subsubsection{Periodical or other constrained boundary conditions}
+
+The standard way of treating periodical boundary conditions is using
+constraints (see Ch.~\ref{ch:constraints}).
+
+\subsubsection{Boundary conditions in a rotated coordinate system}
+
+The standard way of treating 
+boundary conditions in a rotated coordinate system
+is using constraints (see Ch.~\ref{ch:constraints}).
+
+\subsubsection{Boundary conditions of a special type}
+
+Sometimes special boundary conditions are required, for example the so-called 
+`open boundary condition' used as an outflow boundary condition in the
+Navier-Stokes equation. Such boundary conditions can mostly
+be handled using objects
+(see Sec.~\ref{sec:objects}):  add an object to the mesh and
+use \texttt{build\_system} on this object
+to add both the element matrix/vector to the system matrix/vector. The
+advantage of objects over curves/surfaces is that in addition to the primary
+unknowns, also the derivatives in \emph{all} coordinate directions are
+available. Also objects can be positioned everywhere in the mesh, not just at
+the boundaries.
+
+\subsection{Working with degrees of freedom}
+
+Degrees of freedom are defined in the nodes of the mesh\footnote{Constraints
+introduce additional degrees of freedom, the Lagrange multipliers (see
+Chapter~\ref{ch:constraints}). The Lagrange multipliers are usually not
+defined in the nodes of the mesh and are not considered here.} by the element
+degrees of freedom:
+\texttt{input\_probdef\%elementdof} for the system vector and 
+\texttt{input\_probdef\%vec\_elementdof} for the vectors. If physical
+quantities have been defined, \texttt{input\_probdef\%elementdof} does not have
+to be specified since it is generated
+internally by summing the element degrees of the physical quantities in 
+\texttt{input\_probdef\%vec\_elementdof}. See Sec.~\ref{sec:driven_cavity2D}
+an example.
+   
+If no physical quantities have been defined,
+the actual storage of the degrees in a node is easy: all degrees one after the
+other. This ordering is denoted simply by \textsc{d}.
+If physical quantities have been defined, the actual storage for the system
+vector of the degrees in
+a node is the physical quantities one after the other.
+Hence, first all degrees of physical quantity 1 then all degrees of physical
+quantity 2, etc. This is denoted by \textsc{pd}, which should be read as two
+nested do/for loops:
+\begin{verbatim}
+  pos = 0
+  do physq = 1, nphysq
+    do degree = 1, ndegrees(physq)
+      pos = pos + 1
+    end do
+  end do
+\end{verbatim}
+where \texttt{ndegrees(physq)} are the number of degrees if physical quantity
+\texttt{physq} and \texttt{pos} is index/position in the local array of degrees
+of freedom. The ordering of the degrees in a node of a vector is of course
+still \textsc{d}, since physical quantities only affect the system vector.
+
+The full system vector and the vectors consist of storing the degrees 
+node for node\footnote{For the system vector there is an additional
+renumbering. For example, essential boundary conditions lead to renumbering, but
+there can be more reasons for renumbering.},
+thus first all degrees in node 1, then node 2 etc.
+For the system vector with physical quantities this is denoted by
+the nested loop notation as \textsc{npd},
+ i.e.\ the nodes are the `outer loop'. If physical degrees are absent or in the
+case of vectors, the ordering of the degrees is \textsc{nd}.
+
+Presenting the element degrees of freedom to the element routines in the
+order \textsc{npd} is not optimal. For example, see the element shown in
+Fig.~\ref{fig:element}.
+\begin{figure}
+  \begin{center}
+   \includegraphics{element}
+  \end{center}
+\label{fig:element}
+\caption{Degrees in the six-node Taylor-Hood velocity-pressure element.}
+\end{figure}
+The physical degree 1 is the velocity $(u,v)$ and physical degree 2 is the
+pressure $p$. The element vector in the order \textsc{npd} is given by
+\[
+   (u_1,v_1,p_1,u_2,v_2,u_3,v_3,p_3,u_4,v_4,u_5,v_5,p_5,u_6,v_6)
+\]
+It is much easier to handle if the physical quantities velocity and pressure are
+separated by putting the physical quantities \textsc{p} in the `outer loop'.
+For the order \textsc{pnd} this gives
+\[
+   (u_1,v_1,u_2,v_2,u_3,v_3,u_4,v_4,u_5,v_5,u_6,v_6,p_1,p_3,p_5)
+\]
+It might also be preferable to separate the $u$ and $v$ components of the
+velocities by putting the nodes in the `inner loop'.
+For the order \textsc{pdn} this gives
+\[
+   (u_1,u_2,u_3,u_4,u_5,u_6,v_1,v_2,v_3,v_4,v_5,v_6,p_1,p_3,p_5)
+\]
+This is the default in \tfem. In fact, physical quantities are always in the
+`outer loop'. It is only possible to change the order of the degrees and the
+nodes in \tfem\ by the \texttt{order} keyword with the two possibilities
+\texttt{'ND'} or \texttt{'DN'}, with an obvious meaning.
+
+To make things even more complicated, in \tfem\ it is possible to define layers
+of degrees of freedom (see Sec.~\ref{sec:layers}). 
+Denoting 
+the layers by \textsc{l}, the actual nodal storage order is \textsc{pld}. Since
+the outer loop is \textsc{p}, the physical quantities are separated in
+actual storage, even if there exist multiple layers in a node. The actual
+storage for multiple nodes is of course \textsc{npld}. In the example above
+assuming both layers present in all nodes would lead to the following element
+vector for the ordering \textsc{npld}
+\begin{multline*}
+   (u^1_1,v^1_1,u^2_1,v^2_1,p^1_1,p^2_1,\,
+    u^1_2,v^1_2,u^2_2,v^2_2,\,
+    u^1_3,v^1_3,u^2_3,v^2_3,p^1_3,p^2_3,\\
+    u^1_4,v^1_4,u^2_4,v^2_4,\,
+    u^1_5,v^1_5,u^2_5,v^2_5,p^1_5,p^2_5,\,
+    u^1_6,v^1_6,u^2_6,v^2_6)
+\end{multline*}
+where the superscript denotes the layer and the subscript the node. This
+ordering is not actually available for the element subroutines. Currently,
+there are only two possibilities \textsc{pnld} and \textsc{pldn} as given by
+the keyword \texttt{order='ND'} and \texttt{order='DN'}, respectively.
+For \textsc{pnld} the example becomes
+\begin{multline*}
+   (u^1_1,v^1_1,u^2_1,v^2_1,\,
+    u^1_2,v^1_2,u^2_2,v^2_2,\,
+    u^1_3,v^1_3,u^2_3,v^2_3,,\\
+    u^1_4,v^1_4,u^2_4,v^2_4,\,
+    u^1_5,v^1_5,u^2_5,v^2_5,\,
+    u^1_6,v^1_6,u^2_6,v^2_6,\,\\
+    p^1_1,p^2_1,
+    p^1_3,p^2_3,
+    p^1_5,p^2_5)
+\end{multline*}
+which separates the physical quantities.
+For \textsc{pldn} the example becomes
+\begin{multline*}
+   (u^1_1,u^1_2,u^1_3,u^1_4,u^1_5,u^1_6,\,
+    v^1_1,v^1_2,v^1_3,v^1_4,v^1_5,v^1_6,\\
+    u^2_1,u^2_2,u^2_3,u^2_4,u^2_5,u^2_6,\,
+    v^2_1,v^2_2,v^2_3,v^2_4,v^2_5,v^2_6,\\
+    p^1_1,p^1_3,p^1_5,
+    p^2_1,p^2_3,p^2_5)
+\end{multline*}
+which separates the layers. A third possibility, \textsc{pdln}, separating the 
+the $u$ and $v$ components of the velocities leads to
+\begin{multline*}
+   (u^1_1,u^1_2,u^1_3,u^1_4,u^1_5,u^1_6,\,
+    u^2_1,u^2_2,u^2_3,u^2_4,u^2_5,u^2_6,\\
+    v^1_1,v^1_2,v^1_3,v^1_4,v^1_5,v^1_6,\,
+    v^2_1,v^2_2,v^2_3,v^2_4,v^2_5,v^2_6,\\
+    p^1_1,p^1_3,p^1_5,
+    p^2_1,p^2_3,p^2_5)
+\end{multline*}
+would be nice to have, but is not yet available.
+
+If layers are missing from some nodes in the element, the element vector
+is reduced accordingly by eliminating the corresponding components from the
+previously given element vectors. Similarly rows and columns are eliminated
+from the matrix. Therefore the element vectors/matrices change in size from
+element to element. This can be rather complicated and other options maybe be
+available in a future version of \tfem.
+
+\subsection{Layers}
+\label{sec:layers}
+
+In \tfem\ it is possible to define layers of degrees of freedom. For example:
+\begin{verbatim}
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=3, nphysq=2, &
+    numlayers=2 )
+
+  input_probdef%vec_elementdof(1)%a =   &
+      reshape ( [2,2,2,2,2,2,    &  ! velocity
+                 1,0,1,0,1,0,    &  ! pressure
+                 1,1,1,1,1,1, ], &  ! scalar, such as vorticity
+                 [6,3] )
+
+  input_probdef%physq = [1,2] ! set elementdof to consist of two physq
+
+  input_probdef%layers = [2,5]  ! nodeset 2 and 5 define the two layers
+
+  ......
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+\end{verbatim}
+defines two layers, where layer 1 is present in the nodes given by
+nodeset 2 and layer 2 is present in the nodes given by nodeset 5. Each layer
+defines a set of nodal degrees as specified by the
+element degrees of freedom given by 
+\texttt{input\_probdef\%elementdof} for the system vector and
+\texttt{input\_probdef\%vec\_elementdof} for the vectors. However, for
+\emph{each separate node} there is the choice for a layer being present or
+not. So, in the example above we can have four possibilities for a node: no
+degrees, only layer 1, only layer 2 or both layer 1 and 2 present. Note, that
+a physical quantity is defined by all layers, not just one. 
+
+The usual connections in the \fem\ remain valid, i.e.\ \emph{all} degrees in
+a node connect to \emph{all} degrees in \emph{all} nodes of \emph{all}
+elements connected to the node. From the element assembly perspective
+the full elements connecting all degrees of freedom in an element need to be
+assembled.
+If the system matrix is build only partially, for example
+in a single layer only, this can lead to unexpected/missing
+connections between degrees of freedom.
+With varying number of layers in the nodes of an element 
+the full element vectors/matrices also change in size from
+element to element.
+
+There are various possibilities to deal with layers in \tfem, such as:
+\begin{itemize}
+   \item Essential boundary conditions for a single layer only.
+   \item Perform the assembly (\texttt{build\_system}) for a single layer only.
+         Use \texttt{derive\_vector} for a single layer only.
+         Natural boundary conditions for a single layer only.
+         In this way, standard elements can be used.
+   \item Define/build constraints (see Sec.~\ref{ch:constraints})
+         and connections (see Sec.~\ref{ch:connections}) between layers.
+   \item Fill vectors with respect to a single layer only.
+   \item Plot a single layer with \texttt{figplot} (Sec~\ref{sec:figplot}).
+   \item Sample only a single layer.
+\end{itemize}
+
+The primary reason for introducing layers is to deal with material interfaces
+in \xfem\ (See Sec.~\ref{sec:xfem}).
+The different materials are represented by a single layer and can be build by
+standard elements. In the elements at the material interface multiple layers
+will be present. The different layers can be coupled at the interface using
+either constraints (for weak discontinuities) or connections (for cohesive zone
+type interfacing). If no coupling takes place, there is a jump in the field
+variable, modeling an internal free surface.
+
+It is also possible to use layers for implementation of the conventional \xfem\
+using enrichment. The standard degrees can be in a single layer defined in
+all nodes, whereas other layers are only defined in the enriched nodes near the
+interface.
+
+For the use of layers we refer to the examples in the section on \xfem\
+(Sec.~\ref{sec:xfem}).
+
+\subsection{Limits}
+\label{sec:limits}
+
+In the module \texttt{limits\_m} some defaults are set. These are defined as
+variables and can be reset at the start of a program. For example, in
+\texttt{limits\_m} we have:
+   \begin{verbatim}
+
+! limits build in for the coefficients
+
+  integer :: &
+    MAXFUNCTIONS = 10  ! default maximum number of pointers to functions
+   \end{verbatim}
+By setting at the start of program:
+   \begin{verbatim}
+
+  MAXFUNCTIONS = 20 
+   \end{verbatim}
+the number of pointers to functions is increased from 10 to 20.
+
+See the source
+file of \texttt{limits\_m} to find out which defaults are set and can be
+changed by the user at run time.
+
+\subsection{Excluding partitions with just zeros (zero blocks) from the system matrix}
+\label{sec:excludezeroblocks}
+
+Mixed elements usually contain large partitions consisting of just the value zero. Examples are the mixed velocity-pressure Stokes elements, which contain a pressure-pressure zero block (see Sec.~\ref{sec:stokesweak}). Also in implicit time-discretization schemes with multiple physical quantities often not all are coupled to each other, leading to partitions containing the value zero. Although the finite element structure leads to sparse systems, it is assumed that all degrees of freedom are coupled with each other. This results in large parts of the sparse system matrix actually being filled with zeros. Therefore, the storage of the system matrix requires more memory than it could be. Reducing the memory footprint of the matrix is the primary goal of this section, but it could possibly reduce the CPU time for solving the system as well\footnote{For direct solvers the amount of fill-in is important for the time needed to solve the system. Although the matrix storage is smaller, the amount of fill-in might not be or actually might be worse. It is advised to experiment first to see whether excluding zero blocks is useful for the problem at hand. Iterative solvers have not been tested at the time of writing.}.
+
+Zero blocks can be excluded from the system matrix by setting the logical matrix \texttt{input\_probdef\%physqmask}
+before the call to \texttt{problem\_definition}. The matrix has a shape of \texttt{(nphysq,nphysq)} and the value of the \texttt{(i,j)} entry of the matrix indicates whether the partition with \texttt{physqrow=i}, \texttt{physqcol=j} should be part of the system matrix. For example, assume \texttt{nphysq=3}. 
+Setting \texttt{input\_probdef\%physqmask} as follows\footnote{The matrix entries in \texttt{input\_probdef\%physqmask} are initialized to \texttt{.true.}. Hence, it is not needed to set the whole matrix and only the \texttt{.false.} entries need to be set.}
+\begin{verbatim}
+
+  input_probdef%physqmask = reshape ( &
+       [ .true.,  .true., . true., &
+         .true., .false., .false., &
+         .true., .false.,  .true. ], [3,3], order=[2,1] )
+         
+\end{verbatim}
+will indicate that the partitions \texttt{(2,2)}, \texttt{(2,3)} and \texttt{(3,2)} are zero blocks and can be excluded from the system matrix.
+
+The matrix\footnote{The matrix \texttt{input\_probdef\%physqmask} is copied to 
+\texttt{problem\%physqmask} in \texttt{problem\_definition}.} 
+\texttt{physqmask} affects:
+\begin{enumerate}
+ \item[a.] the reservation of space in the sparse system matrix,
+ \item[b.] the assembling of the sparse system matrix.
+\end{enumerate}
+   Both a.\ and b.\ are off by default and need to be invoked by the user with an optional
+   argument \texttt{usephysqmask=.true.} in \texttt{create\_sysmatrix\_structure} (or 
+   \texttt{create\_sysmatrix\_structure\_base}) and
+   \texttt{build\_system}, respectively. 
+    In this way the user has full control
+   when and where \texttt{physqmask} is used. If the assembling
+   is partition based (each partition assembled with a separate call), the zero block only needs to be excluded from
+   the system matrix (by invoking a.) and is not assembled at all (no call to \texttt{build\_system}):
+   \medskip
+\begin{verbatim}
+
+! create system matrix
+
+  call create_sysmatrix_structure ( sysmatrix, mesh, problem, &
+    usephysqmask=.true. )
+
+\end{verbatim}
+   However, if the zero block is part of the element matrix (like the
+   pressure-pressure diagonal zero block in the stokes elements), both space reservation and
+   the assembling is affected by \texttt{physqmask} and both
+   a.\ and b.\ needs to be invoked:
+   \medskip
+\begin{verbatim}
+
+  input_probdef%physqmask = reshape ( &
+       [ .true., .true., &
+         .true., .false. ], [2,2], order=[2,1] )
+         
+  call problem_definition ( input_probdef, mesh, problem )
+
+...
+
+! create system matrix
+
+  call create_sysmatrix_structure ( sysmatrix, mesh, problem, &
+    symmetric=.true., usephysqmask=.true. )
+
+...
+
+! build (assemble) matrix and vector from elements 
+
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+    coefficients=coefficients, usephysqmask=.true. )
+
+\end{verbatim}
+assuming velocity is \texttt{physq=1} and pressure is \texttt{physq=2}. 
+
+Examples \texttt{stokes1b.f90} and \texttt{stokes11a.f90} are available, showing how optionally the zero pressure-pressure block is excluded from the system matrix.
+
+
+
+
+
+
+

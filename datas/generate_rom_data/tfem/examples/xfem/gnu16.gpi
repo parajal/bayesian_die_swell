@@ -1,0 +1,36 @@
+#set output "plots.eps"
+#set term postscript enhanced eps color solid 20
+c1 = 0.045
+c2 = 1.010
+set xlabel "theta"
+set ylabel "pressure"
+#set nokey
+set xrange [-pi:pi]
+plot "sample_p_out_xf16.out" us (atan2($2-c2,$1-c1)):3 w l
+replot "sample_p_in_xf16.out" us (atan2($2-c2,$1-c1)):3 w l
+pause -1
+
+set xlabel "theta"
+set ylabel "vx"
+#set nokey
+set xrange [-pi:pi]
+plot "sample_v_out_xf16.out" us (atan2($2-c2,$1-c1)):3 w l
+replot "sample_v_in_xf16.out" us (atan2($2-c2,$1-c1)):3 w l
+pause -1
+
+set xlabel "theta"
+set ylabel "v4"
+#set nokey
+set xrange [-pi:pi]
+plot "sample_v_out_xf16.out" us (atan2($2-c2,$1-c1)):4 w l
+replot "sample_v_in_xf16.out" us (atan2($2-c2,$1-c1)):4 w l
+pause -1
+
+set xlabel "theta"
+set ylabel "vorticity"
+#set nokey
+set xrange [-pi:pi]
+plot "sample_vort_out_xf16.out" us (atan2($2-c2,$1-c1)):3 w l
+replot "sample_vort_in_xf16.out" us (atan2($2-c2,$1-c1)):3 w l
+pause -1
+

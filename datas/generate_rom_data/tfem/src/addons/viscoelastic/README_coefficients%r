@@ -1,0 +1,82 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+1-7 USED by/SHARED with the stokes add-on
+
+8   deltat: timestep
+
+9   beta: the upwinding parameter in SUPG
+
+10  The global scaling velocity Uglobal for U in tau parameter for SUPG;
+    only needed for Uscaling=coefficients%i(31)=4
+
+11-27 USED by/SHARED with the stokes add-on
+
+28  theta: the parameter in the theta method for time integration
+
+29  Compression modulus K for computing the relative change in volume J
+    from the pressure p:
+
+      J = exp[-(p-p0)/K]
+
+    NOTE: Only applies to models that are are "compressible", i.e. dependent
+          on J, such as the compressible EGP model.
+    NOTE: The value of K can be set independently from the value of K in the
+          compressible fluid add-on. This means, that "compressible" CEs can
+          be used together with incompressible fluids. However, if the
+          compressible fluid add-on is used, the two values of K should
+          have the same value for physical reasons.
+
+30  Reference pressure p0, where the relative change in volume J=1, for
+    computing the relative change in volume J from the pressure p:
+
+      J = exp[-(p-p0)/K]
+
+    NOTE: Only applies to models that are are "compressible", i.e. dependent
+          on J, such as the compressible EGP model.
+    NOTE: The value of p0 can be set independently from the value of p0 in the
+          compressible fluid add-on. This means, that "compressible" CEs can
+          be used together with incompressible fluids. However, if the
+          compressible fluid add-on is used, the two values of p0 should
+          have the same value for physical reasons.
+
+
+31-100 reserved for future use
+
+
+Storage of material data for the viscoelastic model
+---------------------------------------------------
+
+if coefficients%i(20) > 0 then:
+
+    The material data of the viscoelastic model is stored in the real array
+    coefficients%ra starting at index coefficient%i(20) for in the following
+    sequence:
+    ( G_i, lambda_i, (p^j_i, j=1,np), (q^j_i, j=1,nq), (r^j_i, j=1,nr),
+                     (s^j_i, j=1,ns),  i=1,nmodes )
+    where
+      p^j_i are the np nonlinear parameters per mode and
+      q^j_i are the nq adapted lambda parameters per mode.
+      r^j_i are the nr adapted lambda parameters for the h(J) factor per mode.
+      s^j_i are the ns adapted lambda parameters for the g(gammap) factor per
+            mode.
+    Example1: a two-mode PTT model with a xsi parameter:
+       G1, lambda1, eps1, xsi1, G2, lambda2, eps2, xsi2
+    Example2: a two-mode Giesekus model with Saramito (2009) plasticity
+       G1, lambda1, alpha1, tau_y1, K1, n1, G2, lambda2, alpha2, tau_y2, K2, n2
+    Example3: a two-mode EGP model with Eyring and pressure (J) dependence
+       G1, lambda1, tau_ref1, beta1, G2, lambda2, tau_ref2, beta2
+    Example4: a two-mode EGP model with Eyring and plastic strain dependence
+       G1, lambda1, tau_ref1, Sa1, r0_1, r1_1, r2_1, G2, lambda2, tau_ref2,
+       Sa2, r0_2, r1_2, r2_2
+
+else if coefficients%i(20) < 0 then:
+
+    The material data of the viscoelastic model is stored in the 2D real array
+    coefficients%ra2(m)%a(1:np,1:nmodes) with index m=-coefficient%i(20) and
+    np the number of parameters per mode.
+
+    Example: a two-mode EGP model with Eyring and pressure (J) dependence
+       coefficients%ra2(m)%a(1,:) = [ G1, lambda1, tau_ref1, beta1 ]
+       coefficients%ra2(m)%a(2,:) = [ G2, lambda2, tau_ref2, beta2 ]
+

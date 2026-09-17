@@ -1,0 +1,6 @@
+901a902
+>       integer, parameter :: si=selected_int_kind(r=9)  ! integer*4
+909c910
+<          j = mod(irand(0),n) + 1
+---
+>          j = mod(irand(0_si),n) + 1

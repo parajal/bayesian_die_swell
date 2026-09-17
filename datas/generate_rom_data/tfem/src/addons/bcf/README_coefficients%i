@@ -1,0 +1,73 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+Interpolations >=8 cannot yet be used for BCF.
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%qinflow => qinflow    ! function for inflow boundary values of Q
+  coefficients%brownian_vector => brownian_vector
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+  1-150: all relevant integer coefficients from the stokes & viscoelastic add-on
+151-200: reserved for diffuse-interface add-on
+201-250: reserved for inertia add-on
+251-300: reserved for generalized Stokes add-on
+301-350: reserved for compressible fluid add-on
+351-400: reserved for deformation fields add-on
+451-450: reserved for convection-diffusion-reaction using SUPG add-on
+
+451: Q-vector tensor interpolation
+    for a triangle
+      2: P1
+    for a quadrilateral
+      4: Q1 
+
+452: stochastic fluid model
+
+453: start index in coefficient%r of the stochastic model material data
+     The value must be at least 451.
+
+454 log conformation transformation:
+    0: no
+    1: yes
+
+455 Number of Q-fields
+
+456 Time integration scheme for the Q-equation:
+    1: explicit Euler
+    2: backward Euler (implicit) for the force part 
+    3: Crank-Nicolson (implicit) for the force part (only available for FENE)
+
+457 numerical integration rule for boundary integrals in the DG method
+    for curves:
+      n: number of Gauss-Legendre integration points. 1<=n<=5. For example
+         with n=3 a three-point Gauss-Legendre integration is used.
+    for surfaces with quadrilaterals:
+      n: number of Gauss-Legendre integration points in _one_ coordinate
+         direction. 1<=n<=5. For example with n=3 a 3x3 Gauss integration is
+         used for quads
+    similar to coefficients%i(24) for macroscopic models using DG.
+
+458-500 Reserved for future use. Set to zero for future compatibility.
+

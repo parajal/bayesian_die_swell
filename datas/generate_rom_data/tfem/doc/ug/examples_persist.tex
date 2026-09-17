@@ -1,0 +1,205 @@
+% !TEX root = userguide.tex
+
+\def\headdate{14th October 2021}
+
+\section{Persistence-of-straining}
+
+(This section and the examples have been contributed by Jang Min Park of the Yeungnam University.)\medskip
+
+In this section the persistence-of-straining concept
+developed by Thompson and Souza Mendes \cite{Thompson2005}
+is introduced briefly,
+and some examples of its computation are presented.
+
+\subsection{Basics}
+\label{sec:persist_basic}
+The rate-of-strain and the rate-of-rotation tensors are
+defined as 
+$\ten{D} = \dfrac{1}{2} \left( \ten{L} + \ten{L}^T \right)$ and
+$\ten{W} = \dfrac{1}{2} \left( \ten{L} - \ten{L}^T \right)$, respectively,
+where
+$\ten{L}= \left( \nabla \vec{u} \right)^T$ is the velocity gradient tensor.
+
+Since $\ten{D}$ is symmetric, 
+its eigenvalues, namely $\lambda^{(p)}, \, p=1, 2, 3,$ are real
+and an orthonormal set of eigenvectors 
+$\vec{e}^{(p)}, \, p = 1, 2, 3,$ can be obtained such that
+\begin{equation}
+\ten{D} \cdot \vec{e}^{(p)} =
+\lambda^{(p)} \vec{e}^{(p)}
+\quad \,
+\left( p = 1, 2, 3 \right)
+\end{equation}
+
+A tensor $\ten{\Omega}$ representing the rate-of-rotation of 
+the principal axis (eigenvectors) of $\ten{D}$,
+is defined in such a way that
+\begin{equation}
+\dot{\vec{e}}^{(p)}
+=
+\ten{\Omega}
+\cdot
+\vec{e}^{(p)}
+\end{equation}
+where overdot ($\dot{\quad}$) represents the material time derivative of its argument.
+%
+Since $\vec{e}^{(p)} \cdot \vec{e}^{(q)} = \delta_{pq}$, 
+one can find that $\ten{\Omega}$ is antisymmetric.
+%
+Let us write the tensor $\ten{\Omega}$ in the basis defined by eigenvectors of $\ten{D}$ as
+\begin{equation}
+\ten{\Omega} =
+\sum_{p=1}^3 \sum_{q=1}^3
+{\Omega}_{pq}^{*}
+\vec{e}^{(p)} \otimes \vec{e}^{(q)}
+\end{equation}
+In the followings, asterisk symbol ($^*$) in the matrix representation means
+the basis is the eigenvectors of $\ten{D}$,
+while no symbol means the basis is of a fixed reference coordinate system.
+%
+An explicit expression for ${\Omega}_{pq}^{*}$ can be
+written as
+\begin{equation}
+\begin{split}
+{\Omega}_{pq}^{*}
+&=
+\vec{e}^{(p)}
+\cdot
+\ten{\Omega}
+\cdot
+\vec{e}^{(q)}
+=
+-
+\frac
+{\vec{e}^{(p)} \cdot \dot{\ten{D}} \cdot \vec{e}^{(q)}}
+{\lambda^{(p)} - \lambda^{(q)}}
+=
+-
+\frac
+{\dot{D}_{pq}^{*}} 
+{\lambda^{(p)} - \lambda^{(q)}}
+, \quad 
+(p \ne q)
+\\
+{\Omega}_{pq}^{*}
+&= 0, \quad
+(p = q)
+\end{split}
+\end{equation}
+It should be noted that the above equation assumes 
+$\lambda^{(p)} \ne \lambda^{(q)}$.
+%
+In the degenerate case of 
+$\lambda^{(p)} = \lambda^{(q)}$ which are different from the third eigenvalue,
+${\Omega}_{pq}^{*}$ is not uniquely defined.
+
+The persistence-of-straining tensor $\ten{P}$ is defined as
+\begin{equation}
+\ten{P} =
+\ten{D} \cdot \ten{\overline{W}} 
+-
+\ten{\overline{W}} \cdot \ten{D}  
+\end{equation}
+where
+$\ten{\overline{W}} = \ten{W} - \ten{\Omega}$ represents
+the relative rate of rotation with respect to the principal axis
+of $\ten{D}$.
+%
+In the basis of eigenvectors of $\ten{D}$,
+the matrix of $\ten{P}$
+can be written as
+\begin{equation}
+\begin{split}
+\mat{\ten{P}}^{*} 
+& =
+\left[
+\begin{matrix}
+0 & 
+\left(\lambda^{(1)}-\lambda^{(2)}\right) W_{12}^* & 
+\left(\lambda^{(1)}-\lambda^{(3)}\right) W_{13}^* \\
+\left(\lambda^{(1)}-\lambda^{(2)}\right) W_{12}^* & 
+0 &
+\left(\lambda^{(2)}-\lambda^{(3)}\right) W_{23}^* \\
+\left(\lambda^{(1)}-\lambda^{(3)}\right) W_{13}^* & 
+\left(\lambda^{(2)}-\lambda^{(3)}\right) W_{23}^* &
+0
+\end{matrix}
+\right]
+\\
+& +
+\left[
+\begin{matrix}
+0 & 
+\dot{D}_{12}^* & 
+\dot{D}_{13}^* \\
+\dot{D}_{12}^* & 
+0 &
+\dot{D}_{23}^* \\
+\dot{D}_{13}^* & 
+\dot{D}_{23}^* &
+0
+\end{matrix}
+\right]
+\end{split}
+\end{equation}
+Therefore,
+$\ten{P}$ is well defined even if two eigenvalues are equal so $\ten{\Omega}$
+is not uniquely defined.
+It might be mentioned that diagonal part of matrix $\mat{\ten{D}}^*$ is not involved in 
+matrix $\mat{\ten{P}}^*$.
+
+The flow classification parameter $R$ based on 
+the persistence-of-straining is defined as
+\begin{equation}
+R = \dfrac{\sqrt{\dfrac{1}{2} \tr {\ten{P}^2}} }{\tr {\ten{D}^2}}
+\end{equation}
+This parameter represents the strength of \emph{non}-persistence of the straining such that
+$R = 0$ corresponds to the complete persistence of straining (extensional flows), 
+while $R \to \infty $ corresponds to the minimum persistence of straining (nearly rigid body motion).
+For a viscometric flow such as a simple shear flow, $R = 1$.
+
+Some more details regarding the above equations are available in \cite{Park2020}
+
+\subsection{Shear and shearfree flows in a cubic domain}
+This program does not solve any problem but it only computes
+the flow classification parameter for a given velocity field on a cubic domain.
+Either shear or shearfree flow can be applied depending on the
+choice of the function number defined in the program.
+For shear flow, the flow classification parameter should be unity,
+while it should be zero for extensional flow, as mentioned in \ref{sec:persist_basic}.
+
+The example file can be obtained by typing:
+\begin{quote}
+  \texttt{getexample persist\_strain}
+\end{quote}
+and you can run the example by typing:
+\begin{quote}
+  \texttt{persist1}
+\end{quote}
+
+\subsection{2D Taylor-Couette flow}
+\label{sec:persist_taylorcouette}
+This program first solves the Stokes problem in a segment of a Taylor-Couette flow,
+and then it computes the flow classification parameter.
+When the angular velocities of inner and outer cylinders are set to be different,
+the flow is a simple viscometric flow and therefore the flow classification parameter
+should be unity.
+On the other hand, if the inner and outer cylinders have the same angular velocity, 
+the fluid motion is obviously a rigid body motion, 
+and the flow classification parameter should approach infinity.
+
+The example file can be obtained by typing at the command line:
+\begin{quote}
+  \texttt{getexample taylor\_couette}
+\end{quote}
+and you can run the example by typing:
+\begin{quote}
+  \texttt{taylor\_couette2 < input\_taylor\_couette2.txt}
+\end{quote}
+Note, Gmsh needs to be installed on the system
+since the program executes gmsh from the command line
+to generate a mesh file (\texttt{mesh2.msh})
+using the geometry file (\texttt{mesh2.geo}).
+The program will create a directory \texttt{taylor\_couette2\_files}
+where the result file will be written.
+

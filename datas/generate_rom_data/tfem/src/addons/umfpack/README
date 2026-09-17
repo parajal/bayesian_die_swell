@@ -1,0 +1,53 @@
+This add-on gives types, routines, for solving the system of equations using
+the direct solver UMFPACK from the SuiteSparse library:
+https://people.engr.tamu.edu/davis/suitesparse.html
+
+UMFPACK is free software.
+
+This add-on assumes UMFPACK is available and installed.
+
+USAGE::
+======
+
+- Build tfem using:
+
+    make all umfpack
+
+  for a usual build + umfpack.
+
+- Use like:
+
+  program myprog
+
+    ...
+
+    use umfpack_m
+
+    ...
+
+    call solve_system_umfpack ( sysmatrix, rhsd, sol )
+
+    ...
+
+  end program myprog
+
+Remarks:
+=======
+
+- The matrix must be real unsymmetric. As a result, the routine
+  create_sysmatrix_structure must NOT be called with symmetric=.true., even if
+  the matrix happens to be symmetric.
+
+- See the type solver_options_umfpack_t in umfpack.f90 to see which non-default
+  options can be set. See the userguide of UMFPACK for more info about the
+  options.
+
+- By default, 32bit integers are used. To change to 64bit integers, edit
+  the root Mdefs.mk as follows:
+
+   1. Change the compiler options such that the default integer type is 64bit
+      (8 bytes).
+   2. Set the preprocessor option I8 by adding -DI8 to the macro FPPFLAGS.
+   3. Make sure you link to an umfpack library with 64bit integer BLAS/Lapack.
+
+  Then do a FULL rebuild of tfem, including all possible extras (libhsl, ...).

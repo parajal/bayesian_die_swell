@@ -1,0 +1,20 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+taylor_couette1:
+
+ Stokes problem:
+ Taylor-Couette flow with a spherical rigid particle subjected to a force.
+ Only a segment of angle theta of the flow is considered and periodical
+ boundary conditions at the cuts are assumed.
+ The velocities are imposed on the inner and outer cylinder.
+ At the upper and lower surfaces the vertical velocity is set to zero and
+ the tangential tractions are assumed to be zero.
+
+taylor_couette2:
+
+  A segment of 2D Taylor-couette flow where
+  periodic boundary condition at the cuts is imposed
+  by using local transformation.

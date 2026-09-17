@@ -1,0 +1,38 @@
+Numerical integration
+---------------------
+
+The integration rule depends on the type of integration (inttype), the shape
+of the element (globalshape) and the integration rule (intrule and intrule2).
+
+The meaning of intrule depends on inttype and globalshape, as follows:
+  inttype=0: standard Gauss-Legendre (using analytical expressions)
+     - triangle/tetrahedron/prism: number of Gauss points
+       (prism: base triangle only).
+       possibilities: triangle: 1, 3, 6, 7, 12
+                      tetrahedron: 1, 4, 8, 15, 24
+     - line/quadrilateral/hexahedron: number of Gauss points in one dimension
+       (maximum: 5)
+  inttype=1: Gauss-Legendre-Lobatto
+     - line/quadrilateral/hexahedron: number of Gauss points in one dimension
+  inttype=2: mapped Gauss (from quad->triangle, hexahedron->pyramid)
+     - triangle: number of Gauss points in one dimension
+     - pyramid: number of Gauss points in one dimension (quad base only)
+  inttype=3: standard Gauss-Legendre (using tabulated or numerical results)
+     - triangle/tetrahedron/prism/pyramid: maximum polynomial order p for exact
+       integration (prism: base triangle only).
+       (maximum: 21 (triangle), 14 (tetrahedron), 10 (pyramid)).
+     - line/quadrilateral/hexahedron: number of Gauss points in one dimension
+       (maximum: 20).
+
+For the following cases:
+  - prisms
+  - pyramids with mapped Gauss (inttype=2)
+a secondary integration rule (intrule2) needs to be given, specifying the
+number of Gauss points in height direction.
+
+NOTE: inttype can be set directly (default) or indirectly by specification
+      of the integration order.
+NOTE: alternative integration rules are available by setting the variable
+      GAUSS_RULE in the module limits_m. See the source file src/limits.f90.
+NOTE: All values of inttype can be used in a composite integration rule
+      with nsubint>1.

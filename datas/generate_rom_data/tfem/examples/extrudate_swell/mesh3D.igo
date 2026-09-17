@@ -1,0 +1,100 @@
+Mesh.Algorithm = 6; // Frontal for surfaces
+Mesh.Algorithm3D = 1; //Delaunay
+Mesh.ElementOrder = 2; // Second-order elements
+
+Mesh.Optimize = 1; // Optimize to improve the quality of tetrahedral elements
+Mesh.OptimizeNetgen = 1; // Optimize using Netgen
+
+// Create domain vertices
+
+Point(1) = {-ox, Ho, Ho, dx_box};
+Point(2) = {-ox, -Ho, Ho, dx_box};
+Point(3) = {-ox, -Ho, -Ho, dx_box};
+Point(4) = {-ox, Ho, -Ho, dx_box};
+
+For i In {1:4}
+   Physical Point(i) = {i};
+EndFor
+
+Line(1) = {1,2};
+Line(2) = {2,3};
+Line(3) = {3,4};
+Line(4) = {4,1};
+
+Point(6) = {0.0, Ho, Ho, dx_wall};
+Point(7) = {0.0, -Ho, Ho, dx_wall};
+Point(8) = {0.0, -Ho, -Ho, dx_wall};
+Point(9) = {0.0, Ho, -Ho, dx_wall};
+
+For i In {6:9}
+  Physical Point(i) = {i};
+EndFor
+
+Line(5) = {6,7};
+Line(6) = {7,8};
+Line(7) = {8,9};
+Line(8) = {9,6};
+
+Point(11) = {L2, Ho, Ho, dx_box};
+Point(12) = {L2, -Ho, Ho, dx_box};
+Point(13) = {L2, -Ho, -Ho, dx_box};
+Point(14) = {L2, Ho, -Ho, dx_box};
+
+For i In {11:14}
+  Physical Point(i) = {i};
+EndFor
+
+Line(9) = {11,12};
+Line(10) = {12,13};
+Line(11) = {13,14};
+Line(12) = {14,11};
+
+Line(13) = {1,6};
+Line(14) = {2,7};
+Line(15) = {3,8};
+Line(16) = {4,9};
+
+Line(17) = {6,11};
+Line(18) = {7,12};
+Line(19) = {8,13};
+Line(20) = {9,14};
+
+For i In {1:20}
+  Physical Line(i) = {i};
+EndFor
+
+Line Loop(1) = {2,3,4,1};
+Line Loop(2) = {5,6,7,8};
+Line Loop(3) = {3,16,-7,-15};
+Line Loop(4) = {4,13,-8,-16};
+Line Loop(5) = {1,14,-5,-13};
+Line Loop(6) = {2,15,-6,-14};
+Line Loop(7) = {9,10,11,12};
+Line Loop(8) = {7,20,-11,-19};
+Line Loop(9) = {8,17,-12,-20};
+Line Loop(10) = {5,18,-9,-17};
+Line Loop(11) = {6,19,-10,-18};
+
+For i In {1:11}
+  Ruled Surface(i) = {i};
+  Physical Surface(i) = {i};
+EndFor
+
+// Create outer boundary
+
+surf_loop[0] = newsl;
+Surface Loop(surf_loop[0]) = {1,2,3,4,5,6};
+
+surf_loop[1] = newsl;
+Surface Loop(surf_loop[1]) = {7,8,9,10,11,2};
+
+// Create volume mesh  
+Volume(1) = {surf_loop[0]};
+Volume(2) = {surf_loop[1]};
+ 
+Physical Volume(1) = {1};
+Physical Volume(2) = {2};
+
+// vim: set filetype=gmsh :  //
+
+

@@ -1,0 +1,707 @@
+% !TEX root = userguide.tex
+
+\def\headdate{26th June 2018}
+
+\section{\fem-based interface tracking}
+\label{sec:interface_tracking}
+
+The boundary of a single phase or the sharp interface between two phases can
+be described \emph{explicitly} (for example by discrete particles or by a
+surface mesh) or \emph{implicitly} (for example by a levelset function).
+Following the motion of the interface is called \emph{interface tracking}
+for an explicit interface and \emph{interface capturing}
+for an implicit interface. In case of an explicit interface described by a
+surface mesh, we might as well use a \fem-based approach. This is the subject
+of this section. The method has been implemented in the add-on
+\texttt{interface\_tracking} and published in Villone et al.\ \cite{Villone2014}.
+
+\subsection{Basics}
+\label{sec:interface_tracking_basics}
+
+An interface in 3D (a surface) can be described by
+a moving curvilinear coordinate system given by
+\begin{equation}
+   \vek x = \bar{\vek x}(\col\xi,t)
+    \label{eq:mappingxi_i}
+\end{equation}
+where $\col\xi=(\xi^1,\xi^2)$ are the curvilinear coordinates and
+$\bar{\vek x}$ is the function that maps the coordinates $\col\xi$ onto the
+spatial coordinates $\vek x$. Note, that the mapping is a function of time
+(moving coordinates). 
+In the following we will call $\col\xi$ the grid coordinates, or simply the
+grid. Note, that in 2D we will have curves instead of surfaces and are
+described by a single curvilinear coordinate $\xi$.
+
+We are only considering material interfaces, i.e.\ the velocity of the
+interface $\dot{\vek x}$ must be such that:
+\begin{equation}
+   \dot{\vek x}\cdot\vek n=\vek u\cdot\vek n
+\end{equation}
+where $\vek u$ is the material velocity at the interface and 
+$\vek n$ is the normal vector of the surface. We have used
+the following notation here:
+\[
+   \dot{\vek x}=\pderiv{\bar{\vek x}}{t}|_\text{$\col\xi$ is constant}
+\]
+Note, that $\dot{\vek x}$ is equal the velocity of the material in the normal
+direction only. In the tangential direction the grid can move arbitrarily,
+similar to the ALE formulation (see Sec.~\ref{sec:ale}).
+
+In the add-on \texttt{interface\_tracking} the following equation for the
+motion of an interface has been implemented:
+\begin{equation}
+   \dot{\vek x} = (\vek u - \vek u_\text{m})\cdot\vek n\vek n + \vek u_\text{m}
+          + \vek u_\text{t} \equiv \vek g(\vek x,t)
+  \label{eq:dotx}
+\end{equation}
+where $\vek u_\text{m}$ is an arbitrary vector field and $\vek u_\text{t}$ is a
+vector field tangential to the interface and proportional to the
+surface gradient of a scalar field defined on the interface:
+\begin{equation}
+   \vek u_\text{t} = k \nabla_\text{s} c \label{eq:tang_motion}
+\end{equation}
+with $k$ a factor specified by the user. In the add-on
+\texttt{interface\_tracking} a routine is available for solving the Poisson
+problem:
+\begin{equation}
+   -\nabla_\text{s}^2 c = \dfrac1f-\dfrac1g \label{eq:poisson_surface}
+\end{equation}
+ where $f$ is a monitor function representing the requested area of the elements
+ and $g$ is the element area function. The right-hand side has been
+ scaled such that
+ $\int_\Gamma 1/f\,dS=\int_\Gamma 1/g\,dS=\text{area of $\Gamma$}$.
+The function $f$ needs to be 
+specified by the user. Setting $f=1$ will lead to
+approximately equal sized elements on the surface.
+Notes:
+\begin{enumerate}
+   \item The tangential motion of the interface is given by
+\[
+     ( \ten I - \vek n\vek n ) \cdot \vek u_\text{m}  +\vek u_\text{t}
+\]
+which contributes only to the redistribution of the nodes of the mesh.
+   \item The main purpose for introducing the field $\vek u_\text{m}$ is to
+make the movement of the nodes on the interface Galilean frame independent. For
+example, by taking $\vek u_\text{m}$ equal to the velocity of the
+mass center of a droplet (and setting $\vek u_\text{t}=\vek 0$, for simplicity),
+the motion of the nodes on the droplet surface are
+identical to the motion of the nodes as when solving 
+\begin{equation}
+   \dot{\vek x}=(\vek u\cdot\vek n)\vek n
+\end{equation}
+in a frame relative to the motion of the mass center.
+\item The form of the tangential interface velocity $\vek u_\text{t}$ has been
+inspired by the grid deformation technique  (see
+Sec.~\ref{sec:addon_grid_deformation}).
+   \item If $\vek u_\text{m}=\vek u$
+the interface movement is Lagrange based:
+\begin{equation}
+   \dot{\vek x} = \vek u + \vek u_\text{t}
+  \label{eq:xdot_lagr}
+\end{equation}
+If in addition $\vek u_\text{t}=\vek 0$,
+ the interface moves in a Lagrangian way.
+It is up to the user which tracking scheme (normal velocity or 
+Lagrange based) is preferred. Notes:
+\begin{itemize}
+   \item The normal velocity based scheme gets rid of the tank-treading motion
+     whereas the Lagrange based does not.
+   \item The normal velocity based scheme needs to be stabilized with SUPG
+     whereas the Lagrange based does not.
+   \item The normal velocity based scheme cannot handle non-smooth interfaces
+         very well whereas the Lagrangian scheme can.
+\end{itemize}
+\end{enumerate}
+
+\subsection{Explicit time integration}
+\label{sec:interface_tracking_explicit}
+
+Equation Eq.~\eqref{eq:dotx} can be discretized in space using a standard finite
+element on the surface:
+\begin{equation}
+ (\phi_i,\phi_j)\dot{\vek x}_j=(\phi_i,\vek g(\vek x,t))
+\end{equation}
+where the surface position has been interpolated using the shape function
+$\phi_i$: $\vek x=\sum_i\phi_i\vek x_i$. Inverting gives:
+\begin{equation}
+ \dot{\vek x}_i=m_{ij}^{-1}(\phi_j,\vek g(\vek x,t))\equiv\vek h(\vek x,t)
+  \label{eq:dotx2}
+\end{equation}
+with mass matrix
+\begin{equation}
+ m_{ij}=(\phi_i,\phi_j)
+\end{equation}
+Note, that the surface changes in time, leading to a mass matrix that depends
+on time as well. In fact, the right-hand side of Eq.~\eqref{eq:dotx2} depends
+on $\vek x$ in a complicated way. A possible approach is an explicit
+time discretization that
+uses a $(k-1)^\text{th}$-order prediction $\hat{\vek x}(t_{n+1})$ based on
+values at $k$ previous time
+steps to evaluate the right-hand side and discretize $\dot{\vek x}_i$ using
+BDF$k$ discretization (Gear):
+\begin{align*}
+\intertext{$k=1$}
+  \hat{\vek x}_{n+1}&= \vek x_n\\
+  \vek x_{n+1}&= \vek x_n+\Delta t \vek h(\hat{\vek x}_{n+1},t_{n+1})
+\intertext{$k=2$}
+  \hat{\vek x}_{n+1}&= 2\vek x_n-\vek x_{n-1}\\
+  \vek x_{n+1}&=\frac23\big(2\vek x_n-\tfrac12\vek x_{n-1}
+                +\Delta t \vek h(\hat{\vek x}_{n+1},t_{n+1})\big)
+\intertext{$k=3$}
+  \hat{\vek x}_{n+1}&= 3\vek x_n-3\vek x_{n-1}+\vek x_{n-2}\\
+  \vek x_{n+1}&=\frac6{11}\big(3\vek x_n-\tfrac32\vek x_{n-1}
+                   +\tfrac13\vek x_{n-2}
+                +\Delta t \vek h(\hat{\vek x}_{n+1},t_{n+1})\big)
+\intertext{$k=4$}
+  \hat{\vek x}_{n+1}&= 4\vek x_n-6\vek x_{n-1}+4\vek x_{n-2}-\vek x_{n-3}\\
+  \vek x_{n+1}&=\frac{12}{25}\big(4\vek x_n-3\vek x_{n-1}+\tfrac43\vek x_{n-2}
+                   -\tfrac14\vek x_{n-3}
+                +\Delta t \vek h(\hat{\vek x}_{n+1},t_{n+1})\big)
+\end{align*}
+Since these are multi-step schemes, they must be ``started''. For example, the
+first three steps of a fourth-order scheme ($k=4$) uses the $k=1,2,3$ scheme in
+the first, second and third step, respectively. Note, that the schemes are
+formally of $k^\text{th}$-order accuracy in time. 
+
+For the accuracy in space we usually use quadratic elements ($P_2$) and might
+expect third-order convergence in space. However, in practice one order
+is lost due to the nonlinearity in $\vek n$, which itself is only
+second-order accurate.
+
+Notes:
+\begin{enumerate}
+  \item The system matrix is symmetric.
+  \item For the normal velocity based approach, the explicit schemes require
+        a rather low time step in order for them to be stable. 
+        Also at rather curved surfaces wiggles appear and stabilization seems
+        to be required.
+\end{enumerate}
+
+We need a better method for the normal velocity based scheme, obviously.
+In the next section we describe a semi-implicit scheme that with 
+stabilization that allows higher time steps and is more robust, however the
+system matrix is non-symmetric.
+
+\subsection{A semi-implicit time integration scheme with SUPG stabilization}
+\label{sec:interface_tracking_SUPG}
+
+In order to apply stabilization of convection using SUPG we need to identify
+the convection term in Eq.~\eqref{eq:dotx}. For this, we rewrite the equation
+as follows:
+\[
+   \dot{\vek x} + (\vek u - \vek u_\text{m})\cdot(\ten I -\vek n\vek n) =
+          \vek u + \vek u_\text{t} 
+\]
+Substituting $\ten I -\vek n\vek n=\vek g^i\vek g_i$ (surface
+identity tensor), where $\vek g_i=\plderiv{\vek x}{\xi^i}$, $i=1,2$ are the 
+(covariant) base vectors and $\vek g^i$, $i=1,2$ the dual base vectors, we get
+\[
+   \dot{\vek x} + (\vek u - \vek u_\text{m})\cdot\vek g^i\pderiv{\vek x}{\xi^i}
+        = \vek u + \vek u_\text{t} 
+\]
+or 
+\begin{equation}
+   \dot{\vek x} + (\vek u - \vek u_\text{m})\cdot\nabla_\text{s}\vek x
+        = \vek u + \vek u_\text{t} 
+   \label{eq:generalized_height}
+\end{equation}
+with $\nabla_\text{s}=\vek g_i\pderiv{}{\xi^i}$ the surface gradient operator.
+This is a non-linear unsteady convection equation on the surface for the
+position $\vek x$ of the surface. This is, more or less, a generalization of the
+height-function equation as implemented in the surface-advection add-on 
+(see Sec.~\ref{sec:surfaceadvection} and also \cite{Choi11c,Choi11b} and the
+references therein for details on the height-function equation). 
+
+Similarly to the height function equation we apply SUPG to stabilize the
+convection and use implicit time integration. A complication here is that the
+surface gradient operator $\nabla_\text{s}$ depends on the position of the
+surface $\vek x$. Therefore, we use a prediction of $\vek x$ for determining
+$\nabla_\text{s}$. The first and second-order schemes based on backwards
+differencing (Gear) now become:
+\begin{align*}
+\intertext{first order}
+  \hat{\vek x}_{n+1}&= \vek x_n\\
+ \big(\ten{w}+&\tau(\vek u - \vek u_\text{m})\cdot\hat\nabla_\text{s}\vek w,
+  \frac{\vek x_{n+1}-\vek x_n}{\Delta t} 
++(\vek u - \vek u_\text{m})\cdot\hat\nabla_\text{s}\vek x_{n+1}-\vek u - \vek
+u_\text{t}\big)= 0\\
+\intertext{second order}
+  \hat{\vek x}_{n+1}&= 2\vek x_n-\vek x_{n-1}\\
+ \big(\ten{w}+&\tau(\vek u - \vek u_\text{m})\cdot\hat\nabla_\text{s}\vek w,
+  \frac{\tfrac32\vek x_{n+1}-2\vek x_n+\tfrac12\vek x_{n-1}}{\Delta t} 
++(\vek u - \vek u_\text{m})\cdot\hat\nabla_\text{s}\vek x_{n+1}-\vek u - \vek
+u_\text{t}\big)= 0
+\end{align*}
+where $\vek w$ is the test function of $\vek x$, $\tau$ is the SUPG parameter,
+ $\hat\nabla_\text{s}$ is evaluated using
+$\hat{\vek x}_{n+1}$ and $\vek u$, $\vek u_\text{m}$, $\vek u_\text{t}$ need to
+be evaluated at time $t_{n+1}$.
+
+Remarks:
+\begin{enumerate}
+\item
+For the SUPG parameter we take
+\[
+    \tau=\frac{\beta h}{2U_\text{t}}
+\]
+where $h$ is a characteristic element length, $\beta$ is a scalar between 0 and
+1 and $U_\text{t}=|(\vek u - \vek u_\text{m})\cdot(\ten I -\vek n \vek n)|$,
+the length of the tangential velocity. Note, that $U_\text{t}$ is evaluated in
+each integration point separately. In the current code we use 
+$h=\sqrt{A_\text{e}}$ for a surface and adjust $\beta$ to get the best results,
+usually around $1.0$ for linear elements and $0.5$ for quadratic elements.
+This could be improved, for example by applying
+the techniques of Appendix~\ref{chap:tausupg}.
+\item The time-discretization is semi-implicit and
+based on the Gear schemes. The
+second-order scheme is a two-step scheme which needs to be started by the
+first-order scheme in the first time step.
+\item The system matrix is non-symmetric.
+\item The semi-implicit scheme is more robust than the explicit scheme of
+Sec.~\ref{sec:interface_tracking_explicit} and, based on stability,
+time steps can be taken roughly
+ten times larger than for the explicit scheme.
+\item Another variant is obtained by rewriting
+Eq.~\eqref{eq:generalized_height} to
+\begin{equation}
+   \dot{\vek x} +
+   (\vek u - \vek u_\text{m}-\vek u_\text{t})\cdot\nabla_\text{s}\vek x
+        = \vek u 
+   \label{eq:generalized_height2}
+\end{equation}
+since $\vek u_\text{t}$ is a vector in tangential direction only. However,
+initial results were worse with this variant and we did not further explore
+this one.
+\end{enumerate}
+
+
+\subsection{Motion of an initially circular (2D) or spherical (3D) interface 
+in a velocity field given by a function. Normal velocity based approach.}
+\label{sec:interface_function}
+
+(These examples have been developed by Massimiliano Villone of the University of
+Naples)
+
+Examples\footnote{The examples use the semi-implicit scheme with SUPG.
+The same examples using the explicit scheme are still available as
+ \texttt{interface\_tracking1e.f90} etc.}
+ \texttt{interface\_tracking1.f90} and \texttt{interface\_tracking2.f90}
+involve the tracking of an initially circular (2D) and spherical (3D)
+interface, respectively, 
+in a flow given by a function. The interface moves in normal direction only
+($\vek u_\text{m}=\vek u_\text{t}=\vek 0$).
+
+Examples \texttt{interface\_tracking3.f90} and \texttt{interface\_tracking4.f90}
+involve the tracking of an initially circular (2D) and spherical (3D)
+interface, respectively, 
+in a flow given by a function. The interface moves both
+in normal direction and tangential direction
+($\vek u_\text{m}=\vek 0$, $\vek u_\text{t}\neq\vek 0$).
+
+\subsection{Motion of an initially circular (2D) or spherical (3D) interface 
+in a velocity field given by a function. Lagrange based approach.}
+\label{sec:interface_function_lagr}
+
+Examples\footnote{The examples use the Lagrange scheme with explicit
+second-order time integration performed on element level.
+The same examples using the higher-order explicit schemes
+performed on the main program level are still available as
+ \texttt{interface\_tracking5e.f90} etc.}
+ \texttt{interface\_tracking5.f90} and \texttt{interface\_tracking6.f90}
+involve the tracking of an initially circular (2D) and spherical (3D)
+interface, respectively, 
+in a flow given by a function. The interface moves in a Lagrangian way
+according to Eq.~\eqref{eq:xdot_lagr} with $\vek u_\text{t}\neq\vek 0$.
+
+Examples \texttt{interface\_tracking9.f90} and \texttt{interface\_tracking10.f90}
+involve the tracking of an initially circular (2D) and spherical (3D)
+interface, respectively, 
+in a flow given by a function. The interface moves in a true Lagrangian way
+according to Eq.~\eqref{eq:xdot_lagr} with $\vek u_\text{t}=\vek 0$.
+
+\subsection{Motion of an initially square (2D) interface 
+in a velocity field given by a function.}
+\label{sec:interface_function_lagr2}
+
+Examples
+ \texttt{interface\_tracking7.f90} and \texttt{interface\_tracking8.f90}
+involve the tracking of an initially square (2D) 
+interface
+in a flow given by a function.
+For \texttt{interface\_tracking7.f90} the
+interface moves in the normal direction
+according to Eq.~\eqref{eq:dotx} with $\vek u_\text{m}=\vek 0$ and
+$\vek u_\text{t}=\vek 0$, stabilized by SUPG.
+For \texttt{interface\_tracking8.f90} the
+interface moves in a Lagrangian way
+according to Eq.~\eqref{eq:xdot_lagr} with $\vek u_\text{t}=\vek 0$. In
+Figure~\ref{fig:square} the results in an elongational flow are shown. It is
+clear that the SUPG method smoothes sharp corners. Also note that nodal points
+move through the ``sharp corner'', since the interval between last and first
+point of the interface is not plotted.
+\begin{figure}[htbp!]
+   \begin{center}
+   \hspace*{-1cm}\includegraphics[scale=1.2]{supg_tracking}
+   \hspace*{-1cm}\includegraphics[scale=1.2]{lagrange_tracking}
+   \end{center}
+   \caption{A initially square interface moves in an elongational flow. In the
+upper figure the motion is in normal direction (stabilized with SUPG) and in
+the lower figure the motion is Lagrangian.}
+    \label{fig:square}
+\end{figure}
+
+\subsection{Motion of an initially circular interface 
+in a velocity field given by a function (elongational flow). Solving only the upper half of the domain using symmetry conditions.}
+\label{sec:interface_function_symmetry}
+
+Examples \texttt{interface\_tracking11.f90} (normal motion with SUPG), \texttt{interface\_tracking12.f90} (normal and tangential motion with SUPG) and \texttt{interface\_tracking13.f90} (Lagrangian, no tangential motion)
+involve the tracking of an initially circular interface,
+in a flow given by a function (elongational flow). The examples are similar to
+\texttt{interface\_tracking1.f90}, \texttt{interface\_tracking3.f90} and
+\texttt{interface\_tracking9.f90}, respectively, however now solving only the upper
+ half of the domain.
+
+\subsection{Motion of an initially circular (2D) or spherical (3D) drop in
+a matrix fluid} 
+\label{sec:drop}
+
+(These examples have been developed by Massimiliano Villone of the University of
+Naples)
+
+Examples\footnote{The examples use the semi-implicit scheme with SUPG.
+The same examples using the explicit scheme are still available as
+ \texttt{drop1e.f90} etc.}
+\texttt{drop1.f90} and \texttt{drop2.f90} involve two Newtonian
+fluids, whereas for \texttt{drop3.f90} and \texttt{drop4.f90} the drop is
+viscoelastic. Both a 2D and 3D example are given\footnote{The 2D problems \texttt{drop1.f90} and
+\texttt{drop3.f90} should be used with care, since 2D drops are unphysical in
+most cases. Hence, use them only for testing, as a template for
+other problems such as axisymmetric flow, 2D free surface flows or
+for special cases which make physical sense (highly confined flow between
+two plates, drop is considered to be a solid, \dots).}. Each example
+\texttt{drop\textit{i}.f90} has a corresponding input file
+\texttt{input\_drop\textit{i}.txt} (read from standard input), which must be
+used to set the various options for the example.
+
+In Figure~\ref{fig:drop} the result of the deformation of an
+off-center ``2D drop'' in a Poiseuille flow is shown.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{drop}
+   \end{center}
+   \caption{A ``2D drop'' in a Poiseuille flow using the example
+\texttt{drop1.f90}.}
+    \label{fig:drop}
+\end{figure}
+
+Remarks:
+\begin{itemize}
+   \item Inertia has not been included.
+   \item A constant surface tension coefficient is assumed.
+The implementation is
+based on a membrane with an isotropic surface stress $\gamma$. This means,
+we add to the right-hand side of the weak form:
+\begin{equation}
+  -\int_S(\nabla_\text{s}\vek v)^T:\gamma(\ten I-\vek n\vek n)\,dS
+\end{equation}
+where $\vek n$ is the unit normal vector on the surface $S$,
+$\nabla_\text{s}$ is the surface gradient operator and $\vek v$ is the test
+function of the velocity (on the interface).
+   \item The mesh is generated using \texttt{gmsh} (see
+         Sec.~\ref{sec:readgmshmesh}). First a conforming mesh is generated
+         that includes both the matrix and drop domain. Then it is splitted
+         into two separate meshes, which are again merged to a single mesh, but
+         the overlapping interfaces remain separate. In this way, the element
+         distribution at the interface is identical\footnote{Generating
+separate meshes for the drop and matrix using \texttt{gmsh} leads to
+different meshes at the interface on both sides.}, but the nodes are
+         separate for the drop and the matrix fluid. This allows some
+         quantities to jump across the interface (stress and pressure) and
+         others to be continuous (velocity). The continuity is imposed using a
+         Lagrangian multiplier (collocated).
+   \item The drop is initially circular (2D) or spherical (3D).
+   \item The flow is imposed by a function on the boundary and optionally
+         periodical boundary conditions (in $x$ or both in $x$ and $z$)
+         with an optional imposed flow rate in $x$-direction.
+   \item The 3D problems use the following points and surfaces for
+         imposing boundary conditions:
+     \begin{center}
+     \hspace*{-2cm}\includegraphics[scale=0.3]{box}
+     \end{center}
+   \item Optionally, the area/volume $V$ and the position of the center of
+         volume of the drop $\vek x_\text{c}$ is computed from integrals on
+         the surface:
+\begin{align*}
+   V&=\int_V1\,dx=\frac1d\int_V\nabla\cdot\vek x\,dx=
+          \frac1d\int_S\vek n\cdot\vek x\,ds \\
+   \vek Q&=\int_V\vek x\,dx=\frac12\int_V\nabla|\vek x|^2\,dx=
+          \frac12\int_S\vek n|\vek x|^2\,ds
+\end{align*}
+     where $d$ is the dimension of space, $\vek Q$ is the first (linear)
+     moment of area/volume, and $\vek n$ 
+     is the outwardly directed unit normal on the interface $S$. The center
+     of volume of the drop can be computed from $\vek x_\text{c}=\vek Q/V$.
+   \item By setting the relaxation time of the viscoelastic fluid to $\infty$ 
+         the drop can be turned into a neo-Hookean solid.
+   \item At each time step the interface position is first predicted from
+         previous time steps. Then the displacement of the fluid mesh is
+         computed from the displacement of the interface using
+         a Laplace equation, like Eq.~\eqref{eq:laplace_ale2}, for both the drop
+         and the matrix. Then the velocity, pressure and conformation is solved
+         for the new time using ALE. Finally the position of the interface is
+         corrected using the time integration from
+         Sec.~\ref{sec:interface_tracking_SUPG}
+   \item Optionally, the mesh can perform an additional global displacement 
+         in $x$-direction such that the $x$-position of center of volume of the
+         drop is stationary with respect to the (outer boundaries) of the mesh.
+   \item Remeshing has not yet been implemented in these examples. Therefore the deformation and
+         the displacement of the center of volume of the drop with respect to
+         the original mesh is limited. In Sec.~\ref{sec:drop_remesh} examples \texttt{drop1.f90} and
+         \texttt{drop2.f90} are extended with remeshing based on the current interface mesh.
+    \item Examples \texttt{drop1a.f90} and \texttt{drop2a.f90} are similar to
+          \texttt{drop1.f90} and \texttt{drop2.f90} but have been extended
+          with the option to output the area tensor
+\begin{equation}
+  \int_S(\vek n\vek n-\alpha\ten I)\,dS
+\end{equation}
+where $\alpha=0$, 1 or $\frac1n$, with $n$ the space dimension.
+    \item Examples \texttt{drop1b.f90} and \texttt{drop2b.f90} are similar to
+          \texttt{drop1.f90} and \texttt{drop2.f90}, but now the position of the interface uses $P_1$ shape functions
+          instead of $P_2$. Note, that for this particular problem there is no need to use a different  
+          discretization for the interface position. In fact, the result is even worse, especially for the 
+          pressure and velocity gradients near the interface. The possibility to use a shape function for the position different from the velocity has been implemented for possible stability improvement for certain viscoelastic problems.
+  \item Examples \texttt{drop1c.f90} and \texttt{drop2c.f90} are similar to
+          \texttt{drop1.f90} and \texttt{drop2.f90}, but now the position of the interface and the velocity
+          uses $P_1\text{-iso-}P_2$ shape functions
+          instead of $P_2$. Note, that for this particular problem there is no need to use a different  
+          discretization. However, using the $P_1\text{-iso-}P_2$ shape functions might improve stability for certain viscoelastic problems. Also, since the interface now has a piecewise flat (polygonal) shape,
+           problems with multiple drops may be more easy to handle. For example, finding the distance between interfaces is easier. 
+          
+\end{itemize}
+
+\subsection{Motion of an initially circular (2D) or spherical (3D) drop in
+a matrix fluid. Remeshing based on the interface mesh using gmsh. Optional monitor function $f\neq1$.} 
+\label{sec:drop_remesh}
+
+(These examples have been based on the codes developed by Christos Mitrias of the TU/e. Example drop11 has been developed by Caroline Balemans of the TU/e. Example drop15 has been developed by Mick Carrozza of the TU/e.)
+
+Examples \texttt{drop5.f90} (2D problem) and \texttt{drop6.f90} (3D problem) involve two Newtonian
+fluids, separated by an interface with surface tension. In examples \texttt{drop11.f90} (2D problem) and \texttt{drop15.f90} (3D problem) the drop is viscoelastic.
+Each example \texttt{drop\textit{i}.f90} has a corresponding input file
+\texttt{input\_drop\textit{i}.txt} (read from standard input), which must be
+used to set the various options for the example. The examples \texttt{drop5.f90}, \texttt{drop6.f90}, \texttt{drop11.f90} and \texttt{drop15.f90} have been developed by extending \texttt{drop1.f90}, \texttt{drop2.f90},  \texttt{drop3.f90} respectively, with remeshing.
+
+In Figure~\ref{fig:drop_remesh} the result of the deformation of an
+ ``2D drop'' in shear is shown, both without and with remeshing.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.2]{drop1}\vspace*{1mm}
+   \includegraphics[scale=0.2]{drop5}
+   \end{center}
+   \caption{A ``2D drop'' in a shear flow using the examples
+\texttt{drop1.f90} (without remeshing, left) and \texttt{drop5.f90} (with remeshing, right).}
+    \label{fig:drop_remesh}
+\end{figure}
+
+In Figures~\ref{fig:drop_mon} and \ref{fig:drop_mon3D} the results of the deformation of a
+ ``2D drop'' and 3D drop in shear are shown, where the monitor function $f\neq1$ is used to move surface elements to the highly curved regions. This is an optional setting and is off by default, because it requires careful setting of the factor
+ $k$ in Eq.~\eqref{eq:tang_motion}, the time step $\Delta t$, the monitor
+function $f$ (\texttt{fac\_min} and \texttt{fac\_max}) and the number of
+elements on the surface. It is quite tricky to get it stable, especially in 3D.
+Long-time stability in 3D is a problem and needs further investigation. Example
+input files \texttt{input\_drop\textit{i}\_mon.txt} are supplied that can be used as a start.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.2]{drop5_mon}
+   \end{center}
+   \caption{A ``2D drop'' in a shear flow using the example
+\texttt{drop5.f90} utilising the monitor function based on the curvature.}
+    \label{fig:drop_mon}
+\end{figure}
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.2]{drop6_mon}
+   \end{center}
+   \caption{A 3D drop in a shear flow using the example
+\texttt{drop6.f90} utilising the monitor function based on the curvature.}
+    \label{fig:drop_mon3D}
+\end{figure}
+
+Remarks:
+\begin{itemize}
+      \item The mesh deformation in 2D is measured by 
+\[
+   f^e_1 = |\log(A^e/A^e_0)| \quad\text{ and } \quad
+   f^e_2 = |\log(S^e/S^e_0)|
+\]
+where $A^e$ and $S^e$ are the area and 
+the aspect ratio of an element $e$, respectively.
+The subindex 0 means the initial value.
+The aspect ratio of an element $S^e$ is defined by
+\[ 
+   S^e=(L_\text{max}^e)^2/A^e
+\]
+where $L^e_\text{max}$ is the maximum length of the sides. 
+   \item   The mesh deformation in 3D is measured by 
+\[
+   f^e_1 = |\log(V^e/V^e_0)| \quad\text{ and } \quad
+   f^e_2 = |\log(S^e/S^e_0)|
+\]
+where $V^e$ and $S^e$ are the volume and 
+the aspect ratio of an element $e$, respectively.
+The subindex 0 means the initial value.
+The aspect ratio of an element $S^e$ is defined by
+\[ 
+   S^e=(L_\text{max}^e)^3/V^e
+\]
+where $L^e_\text{max}$ is the maximum length of the edges. 
+\item
+Remeshing is performed if either of
+\[
+  f_1=\max_e f^e_1 \quad \text{ or } \quad 
+  f_2=\max_e f^e_2 
+\]
+exceed a certain
+threshold. This mesh quality criterion is identical to the one used
+in \cite{Hu2001}, where a threshold of 1.39 is used. This corresponds to the
+area/volume or aspect ratio allowing to become four times larger or smaller than
+initially before remeshing. In the examples we use a
+threshold value of 0.2 (factor of approximately 1.22).
+\item If remeshing is invoked, all geometries (curves, surfaces) are written to a gmsh mesh file. This include the bounding box and the interface between the fluids. Then, a gmsh geo file is constructed that merges the mesh file and uses that to define the curves and surfaces for remeshing. Then gmsh is invoked to make a new volume mesh.
+\item The interface between the fluids is not affected by the remeshing, however in practise it turns out that gmsh ``flattens'' the higher order interpolation. Therefore, the original coordinates of the interface nodes needs to be restored.
+\item In 3D, the topology and nodal numbering of the interface in the new mesh has been changed by gmsh. Therefore, it needs to be restored for which \texttt{add\_to\_mesh} with the \texttt{matchingsurface} and \texttt{mindistance=.true.} arguments is used (see Sec.~\ref{sec:addcurves}).
+\item Note, that the remeshing described here is about making a new better volume mesh and not about local mesh refinement.
+\item The examples have optionally the possibility to create inhomogeously distributed elements by 
+specifying the monitor function $f$ in \eqref{eq:poisson_surface} to be dependent on position. 
+It should be noted here, that $f$ represents the required length (1D) or area (2D) of the elements. However in
+\eqref{eq:poisson_surface} it is a dimensionless quantity scaled to 1, or more precisely the average of $1/f$ is 1:
+\begin{equation}
+        \dfrac 1 S \int_\Gamma\dfrac 1 f d\,S=1\label{eq:scaling}
+\end{equation}
+Thus, the value $f$ represents more or less the size of elements relative to the size if distributed homogeneously. 
+It is inconvenient to specify $f$ directly, therefore the monitor function \texttt{f\_monitor} in the heading of the routine \texttt{poisson\_gd\_ma57} is the unscaled one. Therefore, we can specify \texttt{f\_monitor} using the actually required element sizes.
+\item In the 2D example \texttt{drop5.f90} the curvature $\kappa=|1/R|$ is used to specify the unscaled monitor function \texttt{f\_monitor}:
+\[
+    \texttt{f\_monitor}=  \texttt{dx\_part}/(R_0\kappa) 
+\]
+where \texttt{dx\_part} is the original equidistant size of the elements on the original undeformed circle. In order to limit the minimum and maximum element size, we apply the statement
+\begin{quote}
+    \texttt{f\_monitor = min ( dx\_max, max(f\_monitor,dx\_min) )}
+\end{quote}
+where
+\begin{quote}
+   \texttt{dx\_min = fac\_min * dx\_part}\\
+   \texttt{dx\_max = fac\_max * dx\_part}
+\end{quote}
+with \texttt{fac\_min} and \texttt{fac\_max} being specified by the user. Note, that  the value of \texttt{dx\_part} does not have an influence on the element size distribution, since it is removed by the scaling to unity in Eq.~\eqref{eq:scaling}. However, it becomes important if other element size criteria are combined, for example
+\begin{quote}
+    \texttt{f\_monitor = min ( h, f\_monitor )}
+\end{quote}
+where \texttt{h} is a local length scale independent from the curvature, such as the gap size of a lubrication layer.
+
+\item In the 3D example \texttt{drop6.f90} the curvature $\kappa=|1/R_1+1/R_2|$ is used to specify the unscaled monitor function \texttt{f\_monitor}:
+\[
+    \texttt{f\_monitor}=  \texttt{dx\_part}^2/(R_0\kappa/2)^2=4\cdot\texttt{dx\_part}^2/(R_0\kappa)^2
+\]
+where \texttt{dx\_part} is the original equidistant size of the elements on the original undeformed circle. In order to limit the minimum and maximum element size, we apply the statement
+\begin{quote}
+    \texttt{f\_monitor = min ( dx\_max$^2$, max(f\_monitor,dx\_min$^2$) )}
+\end{quote}
+where
+\begin{quote}
+   \texttt{dx\_min = fac\_min * dx\_part}\\
+   \texttt{dx\_max = fac\_max * dx\_part}
+\end{quote}
+with \texttt{fac\_min} and \texttt{fac\_max} being specified by the user. Note, that  the value of \texttt{dx\_part} does not have an influence on the element size distribution, since it is removed by the scaling to unity in Eq.~\eqref{eq:scaling}. However, it becomes important if other element size criteria are combined, for example
+\begin{quote}
+    \texttt{f\_monitor = min ( h$^2$, f\_monitor )}
+\end{quote}
+where \texttt{h} is a local length scale independent from the curvature, such as the gap size of a lubrication layer.
+\item The curvature $\kappa=|\nabla_\text{s}\cdot\vek n|$ is determined from the (length of the) vector
+$\vek\kappa$, which is given by the vector equation
+\[
+    \vek\kappa = (\nabla_\text{s}\cdot \vek n )\vek n 
+\]
+Multiplying this equation with a test function $\vek v$, integrating over the surface and applying the surface divergence theorem, we get the weak form
+\[
+    (\vek v,\vek\kappa) = -\big((\nabla_\text{s}\vek v)^T,\ten I-\vek n\vek n\big)
+\]
+After discretizing this equation we find $\vek\kappa$ in the nodes.
+
+\item The examples \texttt{drop6.f90} and \texttt{drop15.f90} include an option to use tri-periodic boundary conditions, similar to the \texttt{foam4.f90} example of Sec.~\ref{sec:foam2}. Don't forget to set \texttt{move\_mesh\_x~=~T} in the input file to keep the center of volume of the drop at the same position with respect to the mesh.
+
+\item The example \texttt{drop15.f90} outputs the bulkstress and particle stress for the case of solid elastic particles. Also \texttt{metis5} (see Sec.~\ref{sec:metis5}) has been used to speed up the solver. See also \cite{Carrozza2017}. 
+
+\end{itemize}
+
+\subsection{Motion of multiple initially circular (2D) or spherical (3D) drops in
+a matrix fluid. Remeshing based on the interface mesh using gmsh.} 
+\label{sec:drop_remesh_mul}
+
+(These examples have been based on the codes developed by Christos Mitrias of the TU/e)
+
+Examples \texttt{drop7.f90} (2D problem) and \texttt{drop8.f90} (3D problem) involve two Newtonian
+fluids, separated by interfaces with surface tension (drops). The number of drops is adjustable by setting the parameter \texttt{nobj} in the main program. Note, that all drops carry the same fluid and have an identical initial radius. 
+Each example \texttt{drop\textit{i}.f90} has a corresponding input file
+\texttt{input\_drop\textit{i}.txt} (read from standard input), which must be
+used to set the various options for the example. Note, that the initial coordinates of the center of the drops
+are given in the input files and need to be adjusted to the
+number of drops used. The examples \texttt{drop7.f90} and \texttt{drop8.f90} have been developed by extending \texttt{drop5.f90} and \texttt{drop6.f90}, respectively, to multiple drops.
+
+In Figure~\ref{fig:drop_remesh_two} the result of the deformation of two drops
+in shear is shown. Note, that properly resolving the lubrication layer in between the drops requires adaptive local mesh refinement of the interface. This is not yet available in \tfem.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{two_drops}
+   \end{center}
+   \caption{Two drops in a shear flow using the example
+\texttt{drop8.f90}}
+    \label{fig:drop_remesh_two}
+\end{figure}
+
+\subsection{Motion of an initially circular (2D) or spherical (3D) drop in
+a matrix fluid. Inertia is included. Remeshing based on the interface mesh using gmsh.} 
+\label{sec:drop_remesh_inertia}
+
+(These examples have been based on the codes developed by Caroline Balemans of the TU/e)
+
+Examples \texttt{drop9.f90} (2D problem) and \texttt{drop10.f90} (3D problem) involve two Newtonian
+fluids, separated by an interface with surface tension (a drop). Each example \texttt{drop\textit{i}.f90} has a corresponding input file
+\texttt{input\_drop\textit{i}.txt} (read from standard input), which must be
+used to set the various options for the example. The examples \texttt{drop9.f90} and \texttt{drop10.f90} have been developed by extending \texttt{drop3.f90} and \texttt{drop4.f90}, respectively, to include inertia. Since also remeshing is performed, the velocities and positions of the grid at previous time steps need to projected on the new grid using the projection scheme of Sec.~\ref{sec:projection}.
+
+\subsection{Motion of an initially spherical (axisymmetric) drop in
+a matrix fluid. Remeshing based on the interface mesh using gmsh.} 
+\label{sec:drop_remesh_axisymmetric}
+
+(This example has been developed by Christos Mitrias of the TU/e)
+
+The example \texttt{drop13.f90} involves two Newtonian
+fluids, separated by an interface with surface tension (a drop). The
+corresponding input file is \texttt{input\_drop13.txt}.
+The points and curves used in the example (after reading and splitting the internal an external mesh) is given in Figure~\ref{fig:curves_drop13}.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.8]{curves_drop13}
+   \end{center}
+   \caption{Points and curves for the \texttt{drop13.f90} example.}
+    \label{fig:curves_drop13}
+\end{figure}
+The symmetry condition $u_r=0$ at the axis $r=0$ needs special care. The internal and external fluid are coupled via a constraint on the curves C2 and C7. This means that the condition $u_r=0$ should be excluded from the points P7 and P8.
+Also, the motion in $r$-direction of the interface at these points is imposed to be exactly zero. If not, 
+a very small drift in $r$-direction of the end points of the interface can happen for large extensions of the drop.
+
+The default input file solves a drop in uniaxial extension flow. A result is shown in Figure~\ref{fig:drop13}. 
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{drop13}
+   \end{center}
+   \caption{Pressure distribution for a drop in uniaxial extensional flow.}
+    \label{fig:drop13}
+\end{figure}
+% Each example \texttt{drop\textit{i}.f90} has a corresponding input file
+%\texttt{input\_drop\textit{i}.txt} (read from standard input), which must be
+%used to set the various options for the example. 
+
+
+

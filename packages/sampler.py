@@ -1,96 +1,71 @@
 """Simple MCMC sampling with emcee."""
 
-import numpy as np
 import emcee
+import numpy as np
 from sklearn.cluster import KMeans
+
 
 class Sampler:
     """Run MCMC and compute basic diagnostics."""
 
     @staticmethod
     def gelman_rubin(chain):
-        """chain: (ndim, nwalkers, nsamples)"""
-        _, _, n = chain.shape
-        W = np.mean(np.var(chain, axis=2, ddof=1), axis=1)
-        B = n * np.var(np.mean(chain, axis=2), axis=1, ddof=1)
-        var_hat = ((n - 1) / n) * W + B / n
-        return np.sqrt(var_hat / W)
+        """R-hat per dimension; chain has emcee's shape (nsteps, nwalkers, ndim)."""
+        n = chain.shape[0]
+        W = chain.var(axis=0, ddof=1).mean(axis=0)
+        B = n * chain.mean(axis=0).var(axis=0, ddof=1)
+        return np.sqrt(((n - 1) / n * W + B / n) / W)
 
-    def run_mcmc(self, nwalkers=10, nsteps=5000, burn_fraction=0.3):
-        np.random.seed(self.seed)
-        rng = np.random.default_rng(self.seed)
-        # p0 = self._log_prior(rng, nwalkers)
-        # KMeans initialization
-        p0 = self.sample_starting_points(nwalkers)
-        
-        nburn = int(burn_fraction * nsteps)
-
+    def run_mcmc(self, nwalkers=10, nsteps=5000, burn_fraction=0.3,
+                 warmup_fraction=0.1, ball_scale=1e-3):
+        np.random.seed(self.seed) 
         sampler = emcee.EnsembleSampler(nwalkers, self._get_ndim(), self.log_posterior)
-        sampler.run_mcmc(p0, nsteps, progress=True)
+        p0 = self.sample_starting_points(nwalkers)
 
+        nwarm, nburn = int(warmup_fraction * nsteps), int(burn_fraction * nsteps)
+        if nwarm:
+            state = sampler.run_mcmc(p0, nwarm, progress=True)
+            best = state.coords[np.argmax(state.log_prob)]
+            sampler.reset()
+            p0 = self.sample_starting_points(nwalkers, center=best, scale=ball_scale)
+
+        sampler.run_mcmc(p0, nsteps, progress=True)
         self.chain = sampler.get_chain()
         self.log_prob = sampler.get_log_prob(discard=nburn, flat=True)
-
         flat = sampler.get_chain(discard=nburn, flat=True)
         self.samples = self._to_physical(flat)
         self.map_theta = self._to_physical(flat[np.argmax(self.log_prob)])
-
-        self.print_inference_results(nburn)
+        self.results = self.print_inference_results(nburn)
         return self.samples
 
-    def sample_starting_points(self, nwalkers, pool_factor=20):
-        """
-        Generate a large pool from the prior and use KMeans
-        centers as initial walker locations.
-        """
-
+    def sample_starting_points(self, nwalkers, center=None, scale=1e-3, pool_factor=20):
+        """Walker starts: KMeans centers of prior draws, or a Gaussian ball around center."""
         rng = np.random.default_rng(self.seed)
-
-        pool = self._log_prior(rng, pool_factor * nwalkers)
-
-        # keep only finite posterior points
-        mask = np.array(
-            [np.isfinite(self.log_posterior(p)) for p in pool]
-        )
-        pool = pool[mask]
-
+        n = pool_factor * nwalkers
+        if center is None:
+            pool = self._log_prior(rng, n)
+        else:
+            pool = center + scale * rng.standard_normal((n, len(center)))
+        pool = pool[[np.isfinite(self.log_posterior(p)) for p in pool]]
         if len(pool) < nwalkers:
-            raise RuntimeError(
-                "Not enough valid prior samples to initialize walkers."
-            )
-
-        kmeans = KMeans(
-            n_clusters=nwalkers,
-            n_init=10,
-            random_state=self.seed,
-        )
-
-        centers = kmeans.fit(pool).cluster_centers_
-
-        return centers
+            raise RuntimeError("not enough valid starting points to initialize walkers")
+        if center is not None:
+            return pool[:nwalkers]
+        return KMeans(nwalkers, n_init=10, random_state=self.seed).fit(pool).cluster_centers_
 
     def print_inference_results(self, nburn):
-        """Print posterior mean, std, 95% CI and R-hat."""
-        rhat = self.gelman_rubin(self.chain[nburn:].transpose(2, 1, 0))
-        flat = self.samples
-        names = self._get_parameter_labels(latex=False)
+        """Print and return posterior mean, std, R-hat and 95% CI per parameter."""
+        x = self.samples
+        stats = dict(mean=x.mean(0), std=x.std(0, ddof=1),
+                     rhat=self.gelman_rubin(self.chain[nburn:]),
+                     ci_low=np.percentile(x, 2.5, axis=0),
+                     ci_high=np.percentile(x, 97.5, axis=0))
 
-        header = ("Parameter", "Mean", "Std", "Rhat", "95% CI Low", "95% CI High")
-        print(f"{header[0]:<15}{header[1]:>12}{header[2]:>12}"
-              f"{header[3]:>10}{header[4]:>15}{header[5]:>15}")
-
+        print(f"{'Parameter':<15}{'Mean':>12}{'Std':>12}{'Rhat':>10}"
+              f"{'95% CI Low':>15}{'95% CI High':>15}")
         results = {}
-        for i, name in enumerate(names):
-            x = flat[:, i]
-            r = {
-                "mean": float(np.mean(x)),
-                "std": float(np.std(x, ddof=1)),
-                "rhat": float(rhat[i]),
-                "ci_low": float(np.percentile(x, 2.5)),
-                "ci_high": float(np.percentile(x, 97.5)),
-            }
-            print(f"{name:<15}{r['mean']:>12.4e}{r['std']:>12.4e}"
-                  f"{r['rhat']:>10.3f}{r['ci_low']:>15.4e}{r['ci_high']:>15.4e}")
-            results[name] = r
-
+        for i, name in enumerate(self._get_parameter_labels(latex=False)):
+            r = results[name] = {k: float(v[i]) for k, v in stats.items()}
+            print(f"{name:<15}{r['mean']:>12.4e}{r['std']:>12.4e}{r['rhat']:>10.3f}"
+                  f"{r['ci_low']:>15.4e}{r['ci_high']:>15.4e}")
         return results

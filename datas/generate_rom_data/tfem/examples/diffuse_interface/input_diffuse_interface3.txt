@@ -1,0 +1,30 @@
+&comppar
+  nx = 40             ! number of elements in x-direction
+  ny = 40             ! number of elements in y-direction
+  numtimesteps = 200  ! number of time steps
+  rho = 250.0         ! density
+  eta = 1.0           ! viscosity
+  deltat= 1e-3        ! time step
+  alpha = 1           ! alpha parameter in di model
+  beta = 1            ! beta parameter in di model
+  Mcoef = 4e-2        ! M parameter in di model
+  kappa = 16e-4       ! kappa parameter in di model
+  U = 1               ! velocity difference upper-lower wall
+  epsdi = 1e-3        ! accuracy in Picard iteration
+  itermax = 20        ! maximum number of iterations in Picard iteration
+  rs_up = 1.0         ! real_storage gradient-velocity-pressure LU (HSL)
+  is_up = 1.0         ! integer_storage gradient-velocity-pressure LU (HSL)
+  rs_di = 1.0         ! real_storage for the conformation LU (HSL)
+  is_di = 1.0         ! integer_storage for conformation LU (HSL)
+/
+
+! definition of dimensionless groups
+! C : Cahn                      rho   = 1/(C*Ca)
+! Ca: Capillary number          kappa = C*C
+! Pe: Peclet number             Mcoef = 1/Pe = C
+!
+! base case: C=0.04; Ca=0.1; Pe=1/C=25
+!            rho = 250
+!            kappa = 16e-4
+!            Mcoef = 4e-2
+

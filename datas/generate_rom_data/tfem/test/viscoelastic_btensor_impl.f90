@@ -1,0 +1,564 @@
+! Startup of flow around a cylinder for a b-representation differential Giesekus model.
+! Problem 1: Flow around a confined cylinder.
+!   Periodical boundary conditions.
+!   Stress-implicit formulation of the momentum balance.
+! Problem 2: Contravariant deformation tensor
+! Problem 3: b*b^T projection
+
+program cylinder2
+
+  use tfem_m
+  use viscoelastic_elements_m
+  use hsl_ma57_m
+  use hsl_ma41_m
+  use io_utils_m
+  !use figplot_m
+  !use timer_m
+
+  implicit none
+
+! constants
+
+  integer, parameter :: &
+    uintpl = 6,         & ! P2 velocities
+    pintpl = 2,         & ! P1 pressures
+    gintpl = 2,         & ! P1 gradients
+    bintpl = 2,         & ! P1 contravariant deformation
+    physqgrad = 1,      & ! physical quantity nr of the gradients
+    physqvel = 2,       & ! physical quantity nr of the velocities
+    physqpress = 3,     & ! physical quantity nr of the pressures
+    gauss = 6,          & ! 6 point integration of triangles
+    gaussb = 3,         & ! 3 point integration of boundary elements
+    timeint1 = 1,       & ! (first-order) time integration (first step)
+    timeint2 = 7,       & ! (second-order) time integration
+    numtimesteps = 3, & ! number of time steps
+    ncompb = 4,         & ! number of contravariant deformation tensor components
+    nmodes = 1,         & ! number of modes
+    startm = 501,       & ! start of material model data
+    model = 3             ! Giesekus
+
+  real(dp), parameter :: &
+    G     = 1.0_dp,    & ! modulus
+    lambda = 1.0_dp,   & ! relaxation time
+    eta_s = 0.59_dp/0.41_dp*lambda*G,    & ! solvent viscosity
+    mobility = 0.01_dp,   & ! mobility parameter
+    H = 2._dp,         & ! (half-) height of the channel (must match mesh)
+    U = 0.5_dp,        & ! average velocity in the channel
+    flowrate = H*U       ! flow rate in (half) the channel
+
+  real(dp), parameter :: &
+    deltat = 1.e-2_dp,   & ! time step
+    critval_reinit = 1.0_dp,  & ! criterion for reinitializing b
+    beta = 1,            & ! SUPG factor
+    rs_gup = 1.0_dp,     & ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0_dp,     & ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_b  = 1.0_dp,  & ! real_storage for the contravariant deformation LU (HSL)
+    is_b  = 1.6_dp     ! integer_storage for contravariant deformation LU (HSL)
+
+  logical :: &
+    cproj = .true.         ! projection of c=b*b^T for cn in momentum balance
+
+! definitions
+
+  type(mesh_t) :: mesh, mesh1
+  type(input_probdef_t) :: input_probdef
+  type(problem_t), target :: problem
+  type(sysmatrix_t) :: sysmatrix
+  type(sysvector_t), target :: sol, solm1
+  type(sysvector_t) :: rhsd
+  !type(oldvectors_t) :: oldvectors
+  type(coefficients_t) :: coefficients
+  type(solver_options_ma41_t) :: solver_options_u
+
+  type(input_probdef_t) :: input_probdefb
+  type(problem_t), target :: problemb
+  type(sysmatrix_t) :: sysmatrixb
+  type(oldvectors_t) :: oldvectors_ve
+  type(subscript_t) :: bval
+  type(subscriptvec_t) :: cxx, cxy, cyy
+  type(sysvector_t), dimension(ncompb,nmodes), target :: solb, solbm1
+  type(sysvector_t), dimension(ncompb,nmodes) :: rhsb
+  type(vector_t) :: ctensor, btensor
+  type(lu_ma41_t) :: lub
+  type(solver_options_ma41_t) :: solver_options_b
+
+  type(input_probdef_t) :: input_probdef_proj
+  type(problem_t), target :: problem_proj
+  type(sysmatrix_t) :: sysmatrix_proj
+  type(sysvector_t), dimension(ncompb-1,nmodes), target :: solc_proj
+  type(sysvector_t), dimension(ncompb-1,nmodes) :: rhsc_proj
+  type(lu_ma57_t) :: lu_proj
+
+  integer :: icomp, step, i
+  integer :: vertices(3) = [1,3,5]
+  real(dp) :: alpha
+
+
+! set some parameters
+
+  alpha = G * lambda   ! DEVSS parameter
+
+! fill coefficients
+
+  call create_coefficients ( coefficients, ncoefi=150, ncoefr=500+3*nmodes )
+
+  coefficients%i = &
+    [ uintpl,   pintpl,     0,     0,         gintpl, &
+       physqvel, physqpress, 0,     physqgrad, gauss,  &
+       gaussb,   bintpl,     0,     0,         0,      &
+       0,        0,          model, nmodes,    startm, &
+       0,     timeint1,   ( 0, i = 23, 150 )  &
+    ]
+
+  coefficients%i(71) = 1  ! use b-formulation
+  if ( cproj ) coefficients%i(72) = 1  ! use c projection in momentum balance
+
+  coefficients%r = &
+    [ eta_s,    0._dp,   0._dp,   alpha, 0._dp, &
+       flowrate, 0._dp,  deltat,   beta,  0._dp, &
+       ( 0._dp, i = 11, 500 ), &
+       G,     lambda, mobility &
+    ]
+
+! read mesh
+
+  call read_mesh_gmsh ( mesh1, filename='confined_cylinder1.msh', ndim=2 )
+  call mesh_convert ( mesh1, mesh, remove_isolated_nodes=.true. )
+  call delete ( mesh1 )
+
+! cylinder
+  call add_to_mesh ( mesh, curve=[-2] ) ! curve 9
+! top
+  call add_to_mesh ( mesh, curve=[5,6,7] ) ! curve 10
+! centerline+cylinder
+  call add_to_mesh ( mesh, curve=[1,-2,3] ) ! curve 11
+! connect curves for periodical bc in DG
+  call add_to_mesh ( mesh, curve=[-8] )     ! curve 12
+
+  call fill_mesh_parts ( mesh )
+
+  call printinfo ( mesh, printlevel=1 )
+
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=4, nphysq=3 )
+
+  input_probdef%vec_elementdof(1)%a(:,1) = 0
+  input_probdef%vec_elementdof(1)%a(vertices,1) = 4  ! G
+  input_probdef%vec_elementdof(1)%a(:,2) = 2         ! velocity
+  input_probdef%vec_elementdof(1)%a(:,3) = 0
+  input_probdef%vec_elementdof(1)%a(vertices,3) = 1  ! pressure
+  input_probdef%vec_elementdof(1)%a(:,4) = 1  ! scalar, such as vorticity
+
+  input_probdef%physq = [1,2,3]
+  input_probdef%probnr = 1
+
+! define essential boundaries
+
+! cylinder
+  call define_essential ( mesh, input_probdef, curve1=9, physq=physqvel )
+! top (wall)
+  call define_essential ( mesh, input_probdef, curve1=10, physq=physqvel )
+! bottom (center line)
+  call define_essential ( mesh, input_probdef, curve1=1, &
+    physq=physqvel, degfd=[0,1] )
+  call define_essential ( mesh, input_probdef, curve1=3, &
+    physq=physqvel, degfd=[0,1] )
+! pressure level
+  call define_essential ( mesh, input_probdef, point=1, physq=physqpress )
+
+! constraint for flow rate
+
+  call define_constraint ( mesh, input_probdef, &
+    physq=physqvel, curve1=12, nglobalc=1 )
+
+! constraints for periodical boundary conditions
+
+! velocities (use weak connection)
+  call define_constraint ( mesh, input_probdef, &
+    physq=physqvel, curve1=4, curve2=12, discretization='weak', &
+    elementdof=[2,0,2] )
+
+! gradients (use collocation)
+  call define_constraint ( mesh, input_probdef, &
+    physq=physqgrad, curve1=4, curve2=12, discretization='collocation' )
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+! create system vectors (solution and right-hand side)
+
+  call create_sysvector ( problem, sol )
+  call create_sysvector ( problem, rhsd )
+
+! fill solution vector with essential boundary conditions
+
+  sol%u = 0
+
+! create system matrix
+
+  call create_sysmatrix_structure_base ( sysmatrix, mesh, problem )
+  call create_sysmatrix_structure_constraint ( sysmatrix, mesh, problem )
+  call finalize_sysmatrix_structure ( sysmatrix )
+
+  call create_sysmatrix_data ( sysmatrix )
+
+
+! problem definition contravariant deformation tensor
+
+  call create_input_probdef ( mesh, input_probdefb, nvec=4, nphysq=1 )
+
+  input_probdefb%vec_elementdof(1)%a(vertices,1) = 1 ! c
+  input_probdefb%vec_elementdof(1)%a(:,2) = 1 ! scalar for plotting
+  input_probdefb%vec_elementdof(1)%a(:,3) = 3 ! tensor for plotting
+  input_probdefb%vec_elementdof(1)%a(:,4) = 4 ! tensor for plotting
+
+  input_probdefb%physq = [1]
+  input_probdefb%probnr = 2
+
+! constraint for periodical boundary conditions of the contravariant deformation
+  call define_constraint ( mesh, input_probdefb, curve1=4, curve2=12, &
+    discretization='collocation' )
+
+  call problem_definition ( input_probdefb, mesh, problemb )
+
+
+! create a vector subscript for the conformation and contravariant deformation
+! tensor without Lagr. multipl. for post processing the data
+
+  call create_subscript ( mesh, problemb, bval, physqarr=[1] )
+  call create_subscript ( mesh, problemb, cxx, degfd=1, vec=3 )
+  call create_subscript ( mesh, problemb, cxy, degfd=2, vec=3 )
+  call create_subscript ( mesh, problemb, cyy, degfd=3, vec=3 )
+
+! create a vector for conformation and contravariant deformation
+! tensor for post processing
+
+  call create_vector ( problemb, ctensor, vec=3 )
+  call create_vector ( problemb, btensor, vec=4 )
+
+! create system vectors (solution and right-hand side) for contravariant deformation and
+! initialize vectors.
+
+  call create ( problemb, solb, solbm1, rhsb )
+
+! initial solution
+
+  solb(1,1)%u = 1 ! initial bxx
+  solb(2,1)%u = 0 ! initial bxy
+  solb(3,1)%u = 0 ! initial byx
+  solb(4,1)%u = 1 ! initial byy
+
+! create system matrix for contravariant deformation problem
+
+  call create_sysmatrix_structure_base ( sysmatrixb, mesh, problemb )
+  call create_sysmatrix_structure_constraint ( sysmatrixb, mesh, problemb )
+  call finalize_sysmatrix_structure ( sysmatrixb )
+
+  call create_sysmatrix_data ( sysmatrixb )
+
+! create the structure oldvectors_ve
+
+  call create_oldvectors ( oldvectors_ve, nsysvec=2, nsysvec2=4, nprob=3 )
+
+! store solution vectors and problem structures
+
+  oldvectors_ve%s(1)%p => sol
+  oldvectors_ve%s(2)%p => solm1
+  oldvectors_ve%s2(1)%p => solb
+  oldvectors_ve%s2(2)%p => solbm1
+  oldvectors_ve%p(1)%p => problem
+  oldvectors_ve%p(2)%p => problemb
+
+
+! problem definition for projected "c=b*b^T" of the contravariant deformation b
+
+  call create_input_probdef ( mesh, input_probdef_proj, nvec=1, nphysq=1 )
+
+  input_probdef_proj%vec_elementdof(1)%a = &
+      reshape ( [ 1,0,1,0,1,0 ], &
+                   [6,1] )
+
+  input_probdef_proj%physq = [1]
+  input_probdef_proj%probnr = 3
+
+  call problem_definition ( input_probdef_proj, mesh, problem_proj )
+
+  call create ( problem_proj, solc_proj, rhsc_proj )
+
+  solc_proj(1,1)%u = 1   ! initial cxx
+  solc_proj(2,1)%u = 0   ! initial cxy
+  solc_proj(3,1)%u = 1   ! initial cyy
+
+! store solution vectors and problem structures
+
+  oldvectors_ve%s2(3)%p => solc_proj
+  oldvectors_ve%p(3)%p => problem_proj
+
+! create and build system matrix for projection problem
+! NOTE matrix remains constant and needs to be build once.
+
+  call create_sysmatrix_structure ( sysmatrix_proj, mesh, problem_proj, &
+    symmetric=.true. )
+  call create_sysmatrix_data ( sysmatrix_proj )
+
+  call build_system ( mesh, problem_proj, sysmatrix_proj, &
+    m2sysvector=rhsc_proj, elemsub=c_projection_elem, &
+    oldvectors=oldvectors_ve, coefficients=coefficients, &
+    buildvector=.false. )
+
+  call check ( sysmatrix_proj )
+
+
+! time stepping
+
+  !call tic
+
+  do step = 1, numtimesteps
+
+    if ( step >= 2 ) then
+      coefficients%i(22) = timeint2
+    end if
+
+!   build (assemble) matrix/vector for gradient/velocity/pressure problem
+
+    call build_vpG
+
+!   c=b*b^T projection for cn in momentum balance
+
+    if ( cproj ) &
+             call solve_projection ( solc_proj, rhsc_proj, c_projection_elem )
+
+!   build implicit terms of CE with rhs in momentum balance
+
+    call build_system ( mesh, problem, sysmatrix, rhsd, &
+      elemsub=divtau_implicit_ce_elem_c, &
+      oldvectors=oldvectors_ve, physqrow=[2], physqcol=[2], &
+      addmatvec=.true., coefficients=coefficients )
+
+    call add_effect_of_essential_to_rhs ( problem, sysmatrix, sol, rhsd )
+
+
+!   solve gradient/velocity/pressure problem
+
+    solver_options_u%real_storage=rs_gup
+    solver_options_u%integer_storage=is_gup
+
+    call solve_system_ma41 ( sysmatrix, rhsd, sol, &
+      solver_options=solver_options_u  )
+
+    call copy ( sol, solm1 )
+
+
+!   build (assemble) matrix and vector for contravariant deformation problem
+
+    if ( coefficients%i(22) == timeint1 ) then
+
+      call build_system ( mesh, problemb, sysmatrixb, m2sysvector=rhsb, &
+        elemsub=ce_supg_elem, oldvectors=oldvectors_ve, &
+        coefficients=coefficients )
+
+    else
+
+      call build_system ( mesh, problemb, sysmatrixb, m2sysvector=rhsb, &
+        elemsub=ce_supg_elem_implicit_2nd_order, oldvectors=oldvectors_ve, &
+        coefficients=coefficients )
+
+    end if
+
+
+!   periodical condition on contravariant deformation tensor
+    call build_system_constraint ( mesh, problemb, sysmatrixb, &
+      m2sysvector=rhsb, elemsub=stokes_constr_node_conn, &
+      addmatvec=.true. )
+
+    call check ( sysmatrixb )
+
+    call copy ( solb, solbm1 )
+
+
+!   solve contravariant deformation and keep LU decomposition in
+!   the loop over components
+
+    solver_options_b%real_storage=rs_b
+    solver_options_b%integer_storage=is_b
+
+    do icomp = 1, ncompb
+      call solve_system_ma41 ( sysmatrixb, rhsb(icomp,1), solb(icomp,1), lub, &
+        solver_options=solver_options_b  )
+    end do
+
+    call delete ( lub )  ! remove LU decomposition and rebuild next time step
+
+
+!   reinitialize b to b' = sqrt(c)
+
+    call reinitialize_b
+
+
+!   write max and mean values of conformation and contravariant deformation
+!   tensor to a file
+
+    call derive_vector ( mesh, problemb, ctensor, &
+      elemsub=deriv_conformation_tensor, &
+      coefficients=coefficients, oldvectors=oldvectors_ve )
+
+    write(*, fmt=*) step * deltat, maxval(ctensor%u(cxx%s)), &
+                                    maxval(ctensor%u(cxy%s)), &
+                                    maxval(ctensor%u(cyy%s)), &
+                                    sum(ctensor%u(cxx%s))/size(cxx%s), &
+                                    sum(ctensor%u(cxy%s))/size(cxy%s), &
+                                    sum(ctensor%u(cyy%s))/size(cyy%s)
+    !call toc ( 'one step' )
+
+  end do
+
+  !call toc ( 'all steps' )
+
+! delete all data including all allocated memory
+
+contains
+
+  subroutine build_vpG
+
+!   build (assemble) matrix and vector for gradient/velocity/pressure problem
+
+!   stokes velocity/pressure
+    call build_system ( mesh, problem, sysmatrix, rhsd, &
+      elemsub=stokes_elem, coefficients=coefficients, &
+      physqrow=[physqvel,physqpress], physqcol=[physqvel,physqpress] )
+
+!   DEVSS-G
+    call build_system ( mesh, problem, sysmatrix, rhsd, &
+      elemsub=devssg_elem, coefficients=coefficients, addmatvec=.true., &
+      physqrow=[physqgrad,physqvel], physqcol=[physqgrad,physqvel] )
+
+!   set to zero off-diagonal blocks gradient-pressure
+    call build_system ( mesh, problem, sysmatrix, rhsd, addmatvec=.true., &
+      buildvector=.false., physqrow=[physqgrad], physqcol=[physqpress], &
+      zeromatvec=.true. )
+    call build_system ( mesh, problem, sysmatrix, rhsd, addmatvec=.true., &
+      buildvector=.false., physqrow=[physqpress], physqcol=[physqgrad], &
+      zeromatvec=.true. )
+
+!   flow rate
+
+    call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+      constraint1=1, elemsub=stokes_constr_flowr, addmatvec=.true., &
+      coefficients=coefficients )
+
+!   periodical condition on velocities
+
+    call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+      constraint1=2, elemsub=stokes_constr_elem_conn, addmatvec=.true., &
+      coefficients=coefficients )
+
+!   periodical condition on gradients
+
+    call build_system_constraint ( mesh, problem, sysmatrix, rhsd, &
+      constraint1=3, elemsub=stokes_constr_node_conn, addmatvec=.true., &
+      coefficients=coefficients )
+
+  end subroutine build_vpG
+
+
+  subroutine solve_projection ( sol_proj, rhs_proj, elemsub_proj )
+
+    type(sysvector_t), dimension(:,:), intent(inout) :: sol_proj
+
+    type(sysvector_t), dimension(:,:), intent(inout) :: rhs_proj
+
+    interface
+      subroutine elemsub_proj ( mesh, problem, elgrp, elem, matrix, vector, &
+        first, last, coefficients, oldvectors, elemmat, elemvec )
+        use kind_defs_m
+        use mesh_m, only: mesh_t
+        use problem_defs_m, only: problem_t
+        use element_defs_m, only: coefficients_t, oldvectors_t
+        implicit none
+        type(mesh_t), intent(in) :: mesh
+        type(problem_t), intent(in) :: problem
+        integer, intent(in) :: elgrp, elem
+        logical, intent(in) :: matrix, vector, first, last
+        type(coefficients_t), intent(in) :: coefficients
+        type(oldvectors_t), intent(in) :: oldvectors
+        real(dp), intent(out), dimension(:,:) :: elemmat
+        real(dp), intent(out), dimension(:) :: elemvec
+      end subroutine elemsub_proj
+    end interface
+
+    type(solver_options_ma57_t) :: solver_options_ma57
+
+    integer :: i, m
+
+!   build vector only (matrix is constant)
+
+    call build_system ( mesh, problem_proj, sysmatrix_proj, &
+      m2sysvector=rhs_proj, elemsub=elemsub_proj, &
+      oldvectors=oldvectors_ve, coefficients=coefficients, &
+      buildmatrix=.false. )
+
+    ! MA57 solver storage
+    solver_options_ma57%integer_storage = 1.3
+    solver_options_ma57%real_storage    = 1.3
+
+!   LU decomposition is done in the first call only
+
+    do m = 1, nmodes
+      do i = 1, ncompb-1
+
+        call add_effect_of_essential_to_rhs ( problem_proj, sysmatrix_proj, &
+           sol_proj(i,m), rhs_proj(i,m) )
+
+        call solve_system_ma57 ( sysmatrix_proj, rhs_proj(i,m), &
+           sol_proj(i,m), lu_proj, solver_options=solver_options_ma57 )
+
+      end do
+    end do
+
+  end subroutine solve_projection
+
+
+! reinitialize b to b = sqrt(c)
+
+  subroutine reinitialize_b
+
+    real(dp) :: b(size(bval%s),ncompb), bm1(size(bval%s),ncompb)
+    real(dp) :: RT(size(bval%s),2,2)
+    integer :: i
+
+!   obtain the solution of b at current time step
+
+    do i = 1,ncompb
+      b(:,i) = solb(i,1)%u(bval%s)
+    end do
+
+!   check skew norm and perform reinitialization if exceeded
+
+    if ( any ( skew_norm_2D_b(b) >= critval_reinit ) ) then
+
+!     determine the square root of b*b^T
+
+      call sqrtc_2D_b ( b, RT=RT )
+
+!     obtain the solution bn-1 at previous time step
+
+      do i = 1,ncompb
+        bm1(:,i) = solbm1(i,1)%u(bval%s)
+      end do
+
+!     rotate bn-1 according to b
+
+      call rotate_2D_b ( bm1, RT )
+
+!     store b and bn-1 in solution vectors
+
+      do i = 1,ncompb
+        solb(i,1)%u(bval%s) = b(:,i)
+        solbm1(i,1)%u(bval%s) = bm1(:,i)
+      end do
+
+    end if
+
+  end subroutine reinitialize_b
+
+end program cylinder2

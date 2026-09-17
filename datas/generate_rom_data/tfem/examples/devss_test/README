@@ -1,0 +1,29 @@
+The examples in this directory are NOT described in the userguide. They are
+just for testing the devss elements in 3D for both the E and G version.
+
+stokese:
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ Test problem for DEVSS-E
+
+stokesg:
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ Test problem for DEVSS-G
+
+stokesg1:
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ Test problem for DEVSS-G
+ Plot G from the solution vector and as determined from G=grad u^T
+
+stokesg2
+
+ Stokes problem on a unit square with 3D velocities (developed flow).
+ Lid-driven cavity flow in (x,y).
+ Imposed flow rate in z-direction.
+ Test problem for DEVSS-G
+ Plot G from the solution vector and as determined from G=grad u^T

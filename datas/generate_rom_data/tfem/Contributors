@@ -1,0 +1,118 @@
+Martien Hulsen: tfemcore, ...
+
+Michiel Baltussen:
+  - XPP models, Rolie-Poly model
+  - Inertia elements including examples
+  - general "bug fixer"
+  - an early version of read_mesh_gmsh with correct physical entities.
+
+Tae Gon Kang:
+  - elements for drag on particles
+  - tec_utils
+  - ideas_utils
+  - open boundary conditions
+  - integral pressure constraint on surfaces
+
+Patrick Anderson:
+  - examples diffuse interface
+  - three phase diffuse interface elements
+
+Gaetano d'Avino:
+  - NEU2SEP program, which is the basis of the gbt_utils_m module for reading
+    Gambit generated meshes in the neutral format.
+  - modules stokes_integration and viscoelastic_integration including examples
+  - mkl_gmres: an interface to the MKL iterative solvers.
+  - second-order implicit stress time integration schemes.
+  - ALE examples
+  - wall slip elements and examples
+
+Young Joon Choi:
+  - navier stokes examples with particles
+  - implicit-stress open boundary conditions
+  - surface advection add-on
+  - extrudate swell examples (ALE and xfem)
+  - (most of the) example spinning of a viscoelastic fluid
+  - example for viscoelastic fluid flow around a cylinder using xfem
+  - Temporary ALE scheme for xfem.
+  - L2-projection of exp(s) on c.
+  - metis5 add-on.
+
+Claude Mangoubi:
+  - implicit stochastic models for Hookean, FENE and FENE-P dumbbells
+
+Anna Catharina Verkaik:
+  - Gauss-Legendre-Lobatto points and weights
+  - spectral shape functions in 1D and 2D
+  - 1D and 2D meshing for spectral elements
+
+Arash Sarhangi Fard:
+  - generalized Newtonian fluids and xfem
+  - example for generalized Newtonian fluids and xfem
+
+Ioannis Dimakopoulos:
+  - examples elastic4 and elastic5
+
+Massimiliano Villone:
+  - fem-based interface tracking
+  - drop examples are based on Massimiliano's code
+
+Nick Jaensson:
+  - eltree for triangles and tetrahedra
+  - examples for eltree using triangles and tetrahedra
+  - Appendix on subdivision of triangles and tetrahedra.
+  - perfecting the INSTALL_TFEM_ON_WINDOWS.txt file for students.
+  - second-order time discretization of diffuse interface.
+  - ALE and tALE for diffuse interface.
+  - examples for ALE with remeshing/projection for viscoelastic fluid flow.
+  - Code/userguide for small relaxation times.
+  - Newton_Raphson and static contact angle for diffuse interface.
+  - Adaptive meshing with gmsh.
+  - tic_w/toc_w
+  - fully implicit diffuse-interface method
+  - convection-diffusion with SUPG
+  - viscoelastic with material parameters varying in space
+  - energy examples.
+
+Oleksandr Gorodetskyi
+  - addon mapping_method with examples
+
+Christos Mitrias
+  - adaptive remeshing with gmsh based on the interface mesh.
+  - examples drop5 until drop8 are based on Christos' code.
+  - multi-level elements.
+  - surface_convection_diffusion module and corresponding example drop12.
+  - axisymmetric drop example.
+
+Jang Min Park
+  - diffuse interface examples prj2, prj3, prj4 (in experimental).
+  - Persistence of straining (stokes_D_tensor,stokes_P_tensor,examples)
+
+Caroline Balemans
+  - drop examples with inertia.
+  - convection-diffusion with SUPG
+  - energy examples.
+
+Tim Smit
+  - PTT-XPP model.
+
+Marco de Corato
+  - Example fh3 with predictor-corrector time integration scheme to account
+    for the divergence of the mobility.
+
+Giovanna Grosso
+  - convection-diffusion with SUPG
+  - energy examples.
+
+Michelle Spanjaards
+  - Taylor-Couette example
+  - Corner-line method and corresponding extrudate-swell examples.
+  - Cone-plate examples
+
+Mick Carrozza
+  - Implementation of the contravariant deformation tensor formulation.
+  - Example cylinder1 and cylinder2 in confined_cylinder_b.
+  - Add-on Interfacial Rheology with two drop examples.
+
+Frank van Berlo
+  - Effective shear rate in sample routines.
+  - Bug fixes.

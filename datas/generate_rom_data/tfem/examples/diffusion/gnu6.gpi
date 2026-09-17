@@ -1,0 +1,8 @@
+plot "sample_c_df6.out" us 1:($4-1) w lp
+pause -1
+plot "sample_gradc_df6.out" us 1:4 w l
+pause -1
+plot "sample_gradc_df6.out" us 1:5 w l
+pause -1
+plot "sample_gradc_df6.out" us 1:6 w l
+pause -1

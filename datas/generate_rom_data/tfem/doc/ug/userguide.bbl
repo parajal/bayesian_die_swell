@@ -1,0 +1,758 @@
+\begin{thebibliography}{100}
+
+\bibitem{HSL}
+{HSL. A collection of Fortran codes for large scale scientific computation.
+  http://www.hsl.rl.ac.uk/}.
+
+\bibitem{Segal93}
+A.~Segal.
+\newblock {\em Sepran Users manual}.
+\newblock Sepra Analysis, Leidschendam, The Netherlands, 1993.
+
+\bibitem{Brainerd2015}
+W.S. Brainerd.
+\newblock {\em Guide to Fortran 2008 Programming}.
+\newblock Springer, New-York, 2015.
+
+\bibitem{metcalf_modern_2024}
+Michael Metcalf, John~Ker Reid, Malcolm Cohen, and Reinhold Bader.
+\newblock {\em Modern {Fortran} explained: Incorporating {Fortran} 2023}.
+\newblock Numerical mathematics and scientific computation. Oxford University
+  Press, Oxford, UK, 2024.
+
+\bibitem{Szabo91}
+B.~Szab{\'o} and I.~Babu{\v{s}}ka.
+\newblock {\em Finite Element Analysis}.
+\newblock John Wiley, New York, 1991.
+
+\bibitem{Min07}
+C.~Min and F.~Gibou.
+\newblock Geometric integration over irregular domains with application to
+  level-set methods.
+\newblock {\em J.\ Comput.\ Phys.}, 226:1432--1443, 2007.
+
+\bibitem{Papanastasiou87}
+Tasos~C. Papanastasiou.
+\newblock Flows of materials with yield.
+\newblock {\em J.\ Rheology}, 31:385--404, 1987.
+
+\bibitem{Wan07}
+D.~Wan and S.~Turek.
+\newblock Fictitious boundary and moving mesh methods for the numerical
+  simulation of rigid particulate flows.
+\newblock {\em J.\ Comput.\ Phys.}, 222:28--56, 2007.
+
+\bibitem{Grajewski09}
+M.~Kester M.~Grajewski and S.~Turek.
+\newblock Mathematical and numerical analysis of a robust and efficient grid
+  deformation method in the finite element context.
+\newblock {\em SIAM J. Sci. Comp.}, 31:1539--1557, 2009.
+
+\bibitem{Choi11b}
+Y.J. Choi.
+\newblock {\em Modeling particulate complex flows using XFEM}.
+\newblock PhD thesis, Eindhoven University of Technology, Eindhoven, The
+  Netherlands, 2011.
+\newblock PDF available
+  \href{http://www.mate.tue.nl/mate/pdfs/12992.pdf}{here}.
+
+\bibitem{Doyle07}
+J.~Boyle, M.~D. Mihajlovi\'c, and J.~A. Scott.
+\newblock \texttt{HSL MI20}: an efficient amg preconditioner.
+\newblock Technical Report RAL-TR-2007-021, SFTC Rutherford Appleton
+  Laboratory, 2007.
+\newblock PDF available
+  \href{http://www.numerical.rl.ac.uk/reports/reports.html}{here}.
+
+\bibitem{Geuzaine09}
+C.~Geuzaine and J.-F. Remacle.
+\newblock {Gmsh: A 3-D} finite element mesh generator with built-in pre- and
+  post-processing facilities.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 79:1309–1331, 2009.
+
+\bibitem{Galaktionov00}
+O.S. Galaktionov, P.D. Anderson, G.W.M. Peters, and F.N. van~de Vosse.
+\newblock An adaptive front tracking technique for three-dimensional transient
+  flows.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Fluids}, 32:201--218, 2000.
+
+\bibitem{Hulsen05a}
+M.A. Hulsen and P.D. Anderson.
+\newblock Chaotic mixing in a rectangular cavity: theoretical background.
+\newblock PDF available \href{http://www.mate.tue.nl/~hulsen/scf95.html}{here}.
+
+\bibitem{Choi11c}
+Y.J. Choi and M.A. Hulsen.
+\newblock Simulation of extrudate swell using an extended finite element
+  method.
+\newblock {\em Korea-Australia Rheol. J.}, 23:147--154, 2011.
+
+\bibitem{Hulsen05}
+M.A. Hulsen, R.~Fattal, and R.~Kupferman.
+\newblock Flow of viscoelastic fluids past a cylinder at high {W}eissenberg
+  number: stabilized simulations using matrix logarithms.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 127:27--39, 2005.
+
+\bibitem{Press92}
+W.H. Press, S.A. Teukolsky, W.T. Vetterling, and B.P. Flannery.
+\newblock {\em Numerical Recipes in Fortran 77}.
+\newblock Cambridge University Press, Cambridge, 2 edition, 1992.
+
+\bibitem{Press96}
+W.H. Press, S.A. Teukolsky, Vetterling W.T., and Flannery B.P.
+\newblock {\em Numerical Recipes in Fortran 90: the art of parallel scientific
+  computing}.
+\newblock Cambridge University Press, Cambridge, second edition, 1996.
+
+\bibitem{SeSu00}
+P.~Seshaiyer and M.~Suri.
+\newblock hp submeshing via non-conforming finite element methods.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 189:1011--1030, 2000.
+
+\bibitem{Brooks82}
+A.N. Brooks and T.J.R. Hughes.
+\newblock Streamline upwind/{Petrov-Galerkin} formulations for convection
+  dominated flows with particular emphasis on the incompressible navier-stokes
+  equations.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 32:199--259, 1982.
+
+\bibitem{Hulsen96}
+M.A. Hulsen.
+\newblock Stability of the implicit/explicit extension of the stiffly-stable
+  schemes of {Gear}.
+\newblock Technical Report MEAH138, Lab.\ for Aero \& Hydrodynamics, Delft
+  University of Technology, 1996.
+\newblock PDF available \href{http://www.mate.tue.nl/~hulsen}{here}.
+
+\bibitem{Dantzig2001}
+J.A. Dantzig and C.L.~Tucker III.
+\newblock {\em Modeling in Materials Processing}.
+\newblock Cambridge University Press, Cambridge, 2001.
+
+\bibitem{Papanastasiou92}
+T.C. Papanastasiou, N.~Malamataris, and K.~Ellwood.
+\newblock A new outflow boundary condition.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Fluids}, 14:587--608, 1992.
+
+\bibitem{Gresho00}
+P.M. Gresho and R.L. Sani.
+\newblock {\em Incompressible Flow and the Finite Element Method.}, volume 1
+  and 2.
+\newblock John Wiley, New York, 2000.
+
+\bibitem{Arnold2002}
+Douglas~N. Arnold, Daniele Boffi, and Richard~S. Falk.
+\newblock {Approximation by quadrilateral finite elements}.
+\newblock {\em Mathematics of Computation}, 71(239):909--922, 2002.
+
+\bibitem{Boffi2002}
+D~Boffi and L~Gastaldi.
+\newblock {On the quadrilateral $Q_2-P_1$ element for the Stokes problem}.
+\newblock {\em Int. J. Numer. Meth. Fluids}, 39(11):1001--1011, 2002.
+
+\bibitem{Matthies2001}
+Gunar Matthies.
+\newblock {Mapped finite elements on hexahedra. Necessary and sufficient
+  conditions for optimal interpolation errors}.
+\newblock {\em Numerical Algorithms}, 27(4):317--327, 2001.
+
+\bibitem{Karniadakis91}
+G.E. Karniadakis, M.~Israeli, and S.A. Orszag.
+\newblock High-order splitting methods for incompressible {N}avier-{S}tokes
+  equations.
+\newblock {\em J.\ Comput.\ Phys.}, 97:414--443, 1991.
+
+\bibitem{Heath02}
+M.T. Heath.
+\newblock {\em Scientific Computing: An Introductory Survey}.
+\newblock McGraw-Hill, London, second edition, 2002.
+
+\bibitem{Steinberg85}
+S.~Steinberg and P.J. Roache.
+\newblock Symbolic manipulation and computational fluid dynamics.
+\newblock {\em J.\ Comput.\ Phys.}, 57:251--284, 1985.
+
+\bibitem{Jaensson2015}
+N.O. Jaensson, M.A. Hulsen, and P.D. Anderson.
+\newblock {Stokes-Cahn-Hilliard formulations and simulations of two-phase flows
+  with suspended rigid particles}.
+\newblock {\em Computers and Fluids}, 111:1--17, 2014.
+
+\bibitem{Hwang04}
+W.R. Hwang, M.A. Hulsen, and H.E.H. Meijer.
+\newblock Direct simulation of particle suspensions in sliding bi-periodic
+  frames.
+\newblock {\em J. Comput. Phys.}, 194:742, 2004.
+
+\bibitem{Anderson06}
+P.D. Anderson, B.J. Keestra, and M.A. Hulsen.
+\newblock On the streamfunction-vorticity formulation in sliding bi-periodic
+  frames: Application to bulk behavior for polymer blends.
+\newblock {\em J.\ Comput.\ Phys.}, 212:268--287, 2006.
+
+\bibitem{Boyer2006}
+Franck Boyer and Céline Lapuerta.
+\newblock Study of a three component cahn-hilliard flow model.
+\newblock {\em Mathematical Modelling and Numerical Analysis}, 40:653--687,
+  2006.
+
+\bibitem{Khatavkar2007}
+V.~Khatavkar, P.D. Anderson, and H.E.H. Meijer.
+\newblock Capillary spreading of a droplet in the partially wetting regime
+  using a diffuse-interface model.
+\newblock {\em J.\ Fluid Mech.}, 90:367--387, 2007.
+
+\bibitem{Beveridge1970}
+G.S.G. Beveridg and R.S. Schechter.
+\newblock {\em Optimization: Theory and Practice}.
+\newblock McGraw-Hill, London, 1970.
+
+\bibitem{Jacqmin2000}
+D.~Jacqmin.
+\newblock Contact line dynamics of a diffuse fluid interface.
+\newblock {\em J.\ Fluid Mech.}, 402:57--88, 2000.
+
+\bibitem{Yue2006}
+P.~Yue, C.~Zhou, J.J. Feng, C.F. Ollivier-Gooch, and H.H. Hu.
+\newblock Phase-field simulations of interfacial dynamics in viscoelastic
+  fluids using finite elements with adaptive meshing.
+\newblock {\em J.\ Comput.\ Phys.}, 219:47--67, 2006.
+
+\bibitem{Aland2014}
+S.~Aland.
+\newblock Time integration for diffuse interface models for two-phase flow.
+\newblock {\em Journal of Computational Physics}, 262:58--71, 2014.
+
+\bibitem{Guenette95}
+R.~Gu\'enette and M.~Fortin.
+\newblock A new mixed finite element method for computing viscoelastic flows.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 60:27--52, 1995.
+
+\bibitem{Bogaerds02}
+A.C.B. Bogaerds, A.M. Grillet, G.W.M. Peters, and F.P.T. Baaijens.
+\newblock Stability analysis of polymer shear flows using the extended pom-pom
+  constitutive equations.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 108:187--208, 2002.
+
+\bibitem{Donea03}
+J.~Donea and A.~Huerto.
+\newblock {\em Finite Element Methods for Flow Problems}.
+\newblock John Wiley \& Sons, Chichester, 2003.
+
+\bibitem{Bogaerds00}
+A.C.B. Bogaerds, G.W.M. Peters, and F.P.T. Baaijens.
+\newblock Temporal stability of low-order continuous and discontinuous mixed
+  finite element techniques for viscoelastic fluid mechanics.
+\newblock In {\em Proceedings of the XIIIth International Congress on
+  Rheology}, pages 187--208, Cambridge, UK, 2000.
+
+\bibitem{Kupferman05}
+R.~Kupferman.
+\newblock {On the linear stability of plane Couette flow for an Oldroyd-B fluid
+  and its numerical approximation}.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 127:169--190, 2005.
+
+\bibitem{Gorodtsov67}
+V.A. Gorodtsov and A.I. Leonov.
+\newblock On a linear instability of a plane parallel couette flow of a
+  viscoelastic fluid.
+\newblock {\em J. Appl. Math. Mech.}, 31:310--319, 1967.
+
+\bibitem{Bogaerds04}
+G.W.M.~Peters A.C.B.~Bogaerds, M.A.~Hulsen and F.P.T. Baaijens.
+\newblock Stability analysis of injection molding flows.
+\newblock {\em J.\ Rheology}, 48:765--785, 2004.
+
+\bibitem{Papanastasiou96}
+L.E.~Scriven T.C.~Papanastasiou, V.D.~Dimitriadis and C.W. Macosko.
+\newblock On the inlet stress condition and admissibility of solution of
+  fiber-spinning.
+\newblock {\em Advances in Polymer Technology}, 15:237--244, 1996.
+
+\bibitem{DAvino10}
+G.~D'Avino and M.A. Hulsen.
+\newblock Decoupled second-order transient schemes for the flow of viscoelastic
+  fluids without a viscous solvent contribution.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 165:1602--1612, 2010.
+
+\bibitem{Baltussen2010}
+M.G.H.M. Baltussen, M.A. Hulsen, and G.W.M. Peters.
+\newblock Numerical simulation of the fountain flow instability in injection
+  molding.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 165:631--640, 2010.
+
+\bibitem{Johnson87}
+C.~Johnson.
+\newblock {\em Numerical Solution of Partial Differential Equations by the
+  Finite Element Method}.
+\newblock Cambridge University Press, Cambridge, 1987.
+
+\bibitem{Baumann99}
+C.E. Baumann and J.T. Oden.
+\newblock A discontinuous hp finite element method for convection-diffusion
+  problems.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 175:311--341, 1999.
+
+\bibitem{Hulsen91}
+M.A. Hulsen.
+\newblock {The discontinuous Galerkin method with explicit Runge-Kutta time
+  integration for hyperbolic and parabolic systems with source terms}.
+\newblock Technical Report MEMT019, ISBN90-370-0061-4, Lab.\ for Aero \&
+  Hydrodynamics, Delft University of Technology, 1991.
+\newblock PDF available \href{http://www.mate.tue.nl/~hulsen}{here}.
+
+\bibitem{Hulsen01}
+M.A. Hulsen, E.A.J.F. Peters, and B.H.A.A. van~den Brule.
+\newblock A new approach to the deformation fields method for solving complex
+  flows using integral constitutive equations.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 98:201--221, 2001.
+
+\bibitem{Hulsen97}
+M.A.\ Hulsen, A.P.G.\ van Heel, and B.H.A.A. van~den Brule.
+\newblock Simulation of viscoelastic flows using {Brownian} configuration
+  fields.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 70:79--101, 1997.
+
+\bibitem{Bercovier79}
+M.~Bercovier and O.~Pironneau.
+\newblock Error estimates for finite element method solution of the stokes
+  problem in the primitive variables.
+\newblock {\em Numer.\ Math.}, 33:211--224, 1979.
+
+\bibitem{Landau59}
+L.D Landau and E.M. Lifshitz.
+\newblock {\em Fluid Mechanics}.
+\newblock Pergamon Press, London, 1959.
+
+\bibitem{DeCorato2016}
+M.~{De Corato}, J.J.M. Slot, M.~H{\"{u}}tter, G.~D'Avino, P.L. Maffettone, and
+  M.A. Hulsen.
+\newblock {Finite element formulation of fluctuating hydrodynamics for fluids
+  filled with rigid particles using boundary fitted meshes}.
+\newblock {\em Journal of Computational Physics}, 316:632--651, 2016.
+
+\bibitem{Sengers06}
+J.M.~Ortiz de~Z\'arate and J.V. Sengers.
+\newblock {\em Hydrodynamic fluctuations in fluids and fluid mixtures}.
+\newblock Elsevier, Amsterdam, 2006.
+
+\bibitem{Gardiner85}
+C.W. Gardiner.
+\newblock {\em Handbook of Stochastic Methods}.
+\newblock Springer Verlag, New York, 1985.
+
+\bibitem{Weisstein1}
+E.W. Weisstein.
+\newblock Normal distribution.
+\newblock From \emph{Mathworld}-A Wolfram Web Resource.
+  \href{http://mathworld.wolfram.com/NormalDistribution.html}{
+  http://mathworld.wolfram.com/NormalDistribution.html}.
+
+\bibitem{Babuska97}
+I.~Babu{\v{s}}ka and J.M. Melenk.
+\newblock The partition of unity method.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 40:717--758, 1997.
+
+\bibitem{Melenk06}
+J.M. Melenk and I.~Babu{\v{s}}ka.
+\newblock The partition of unity method finite element method: Basic theory and
+  applications.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 139:289--314, 1996.
+
+\bibitem{Strouboulis00a}
+T.~Strouboulis, I.~Babu{\v{s}}ka, and K.~Copps.
+\newblock Design and analysis of the generalized finite element method.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 181:43--69, 2000.
+
+\bibitem{Strouboulis00b}
+T.~Strouboulis, K.~Copps, and I.~Babu{\v{s}}ka.
+\newblock The generalized finite element method: an example of its
+  implementation and illustration of its performance.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 47:1401--1417, 2000.
+
+\bibitem{Strouboulis01}
+T.~Strouboulis, K.~Copps, and I.~Babu{\v{s}}ka.
+\newblock The generalized finite element method.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 190:4081--4193, 2001.
+
+\bibitem{Belytschko99}
+T.~Belytschko and T.~Black.
+\newblock Elastic crack growth in finite elements with minimal remeshing.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 45:601--620, 1999.
+
+\bibitem{Moes99}
+N.~Mo\"es, J.~Dolbow, and T.~Belytschko.
+\newblock A finite element method for crack growth without remeshing.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 46:131--150, 1999.
+
+\bibitem{Gerstenberger08}
+A.~Gerstenberger and W.A. Wall.
+\newblock An extended finite element method/{L}agrangian multiplier based
+  approach for fluid-structure interaction.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 197:1699--1714, 2008.
+
+\bibitem{Choi11}
+M.G.H.M. Baltussen, Y.J. Choi, M.A. Hulsen, and P.D. Anderson.
+\newblock Weakly-imposed {D}irichlet boundary conditions for non-{N}ewtonian
+  fluid flow.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 166:993--1003, 2011.
+
+\bibitem{Gerstenberger10}
+A.~Gerstenberger and W.A. Wall.
+\newblock An embedded {Dirichlet} formulation for {3D} continua.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 82:537--563, 2010.
+
+\bibitem{choi_alignment_2012}
+Young~Joon Choi and Martien~A. Hulsen.
+\newblock Alignment of particles in a confined shear flow of a viscoelastic
+  fluid.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 175-176:89--103,
+  2012.
+
+\bibitem{Arnold02}
+D.N. Arnold, F.~Brezzi, B.~Cockburn, and L.D. Marini.
+\newblock Unified analysis of discontinuous {G}alerkin methods for ellliptic
+  problems.
+\newblock {\em SIAM J. Numer. Anal.}, 39:1749--1779, 2002.
+
+\bibitem{Nitsche71}
+J.~Nitsche.
+\newblock {\"Uber ein Variationsprinzip zur L\"osung von Dirichlet-Problemen
+  bei Verwendung von Teilr\"aumen, die keinen Randbedingungen unterworfen
+  sind}.
+\newblock {\em Abhandlungen aus dem Mathematischen Seminar der Universit\"at
+  Hamburg}, 36:9--15, 1971.
+
+\bibitem{dolbow2009}
+J.~Dolbow and I.~Harari.
+\newblock An efficient finite element method for embedded interface problems.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Engrg.}, 78:229--252, 2009.
+
+\bibitem{dolbow2010}
+I.~Harari and J.~Dolbow.
+\newblock Analysis of an efficient finite element method for embedded interface
+  problems.
+\newblock {\em Comput. Mech.}, 46:205--211, 2010.
+
+\bibitem{Osher03}
+S~Osher and S~Fedkiw.
+\newblock {\em Level Set Methods and Dynamic Implicit Surfaces}.
+\newblock Springer-Verlag, New York, 2003.
+
+\bibitem{Choi10}
+Y.J. Choi, M.A. Hulsen, and H.E.H. Meijer.
+\newblock An extended finite element method for the simulation of particulate
+  viscoelastic flows.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 165:607--624, 2010.
+
+\bibitem{Elman05}
+H.~Elman, D.~Silvester, and A.~Wathen.
+\newblock {\em Finite Elements and Fast Iterative Solvers}.
+\newblock Oxford University Press, Oxford, 2005.
+
+\bibitem{Kay08}
+D.A. Kay, D.F.~Griffiths P.M.~Gresho, and D.J. Silvester.
+\newblock Adaptive time-stepping for incompressible flow part ii: Navier-stokes
+  equations.
+\newblock Technical Report MIMS EPrint: 2008.61, The University of Manchester,
+  2008.
+\newblock PDF available
+  \href{http://eprints.ma.man.ac.uk/1110/01/covered/MIMS_ep2008_61.pdf}{here}.
+
+\bibitem{Hu2001}
+H.H. Hu, N.A. Patankar, and M.Y. Zhu.
+\newblock Direct numerical simulations of fluid-solid systems using the
+  arbitrary lagrangian-eulerian technique.
+\newblock {\em J.\ Comput.\ Phys.}, 169:427--462, 2001.
+
+\bibitem{DAvino10a}
+G.~d'Avino, T.~Tucillo, P.L. Maffettone, F.~Greco, and M.A. Hulsen.
+\newblock Numerical simulations of particle migration in a viscoelastic fluid
+  subjected to shear flow.
+\newblock {\em Computers \& Fluids}, 39:709–721, 2010.
+
+\bibitem{Huang97}
+H.H.~Hu P.Y.~Huang, J.~Feng and D.D. Joseph.
+\newblock Direct simulation of the motion of solid particles in couette and
+  poiseuille flows of viscoelastic fluids.
+\newblock {\em J.\ Fluid Mech.}, 343:73--94, 1997.
+
+\bibitem{spanjaards_transient_2019}
+M.~M.~A. Spanjaards, M.~A. Hulsen, and P.~D. Anderson.
+\newblock Transient {3D} finite element method for predicting extrudate swell
+  of domains containing sharp edges.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 270:79--95, 2019.
+
+\bibitem{kuo_use_1974}
+Y~Kuo and B~I Tanner.
+\newblock On the use of open-channel flows to measure the second normal stress
+  difference.
+\newblock {\em Rheologica Acta}, 13(3):14, 1974.
+
+\bibitem{bogaerds_stability_2004}
+Arjen~C.B. Bogaerds, Martien~A. Hulsen, Gerrit~W.M. Peters, and Frank~P.T.
+  Baaijens.
+\newblock Stability analysis of injection molding flows.
+\newblock {\em Journal of Rheology}, 48(4):765--765, 2004.
+
+\bibitem{Dohrmann04}
+C.R. Dohrmann and P.B. Bochev.
+\newblock A stabilized finite element method for the stokes problem based on
+  polynomial pressure projections.
+\newblock {\em Internat.\ J.\ Numer.\ Methods Fluids}, 46:183--201, 2004.
+
+\bibitem{Villone2014}
+M.M. Villone, M.A. Hulsen, P.D. Anderson, and P.L. Maffettone.
+\newblock Simulations of deformable systems in fluids under shear flow using an
+  arbitrary {Lagrangian Eulerian} technique.
+\newblock {\em Computers \& Fluids}, 90:88--100, 2014.
+
+\bibitem{Carrozza2017}
+Mick~A. Carrozza.
+\newblock {Numerical modelling of the rheology of elastic particles in a
+  Newtonian fluid under simple shear flow}.
+\newblock Technical report, Eindhoven University of Technology, 2017.
+\newblock MSc Internship.
+
+\bibitem{TruesdellC.1966}
+{Truesdell C.}
+\newblock {\em {Elements of continuum mechanics}}.
+\newblock Springer-Verlag, Berlin, Heidelberg, 1966.
+
+\bibitem{Peters2000b}
+E.A.J.F. Peters, Martien~A. Hulsen, and Ben~H.A.A. van~den Brule.
+\newblock {Instationary Eulerian viscoelastic flow simulations using time
+  separable Rivlin-Sawyers constitutive equations}.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 89(1-2):209--228,
+  2000.
+
+\bibitem{Mangoubi2009}
+Claude Mangoubi, Martien~A. Hulsen, and Raz Kupferman.
+\newblock {Numerical stability of the method of Brownian configuration fields}.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 157(3):188--196,
+  2009.
+
+\bibitem{Lesaint1974}
+P.~Lesaint and P.-A. Raviart.
+\newblock {On a finite element method for solving the neutron transport
+  equation.}
+\newblock {\em Mathematical aspects of finite elements in partial differential
+  equations}, 33:89--123, 1974.
+
+\bibitem{Jaishankar2014}
+Aditya Jaishankar and Gareth~H. McKinley.
+\newblock {A fractional K-BKZ constitutive formulation for describing the
+  nonlinear rheology of multiscale complex fluids}.
+\newblock {\em Journal of Rheology}, 58(6):1751--1788, 2014.
+
+\bibitem{Brown1993}
+Robert~A. Brown, M.J. Szady, P.~J. Northey, and Robert~C. Armstrong.
+\newblock {On the numerical stability of mixed finite-element methods for
+  viscoelastic flows governed by differential constitutive equations}.
+\newblock {\em Theoretical and Computational Fluid Dynamics}, 5(2-3):77--106,
+  1993.
+
+\bibitem{hutter_fluctuating_2018}
+Markus H\"utter, Martien~A. Hulsen, and Patrick~D. Anderson.
+\newblock Fluctuating {Viscoelasticity}.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 256(42-56), 2018.
+
+\bibitem{carrozza_viscoelastic_2019}
+Mick~A. Carrozza, Martien~A. Hulsen, Markus Hütter, and Patrick~D. Anderson.
+\newblock Viscoelastic fluid flow simulation using the contravariant
+  deformation formulation.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 270:23--35, 2019.
+
+\bibitem{balci_symmetric_2011}
+Nusret Balci, Becca Thomases, Michael Renardy, and Charles~R. Doering.
+\newblock Symmetric factorization of the conformation tensor in viscoelastic
+  fluid models.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 166(11):546--553,
+  2011.
+
+\bibitem{vaithianathan_numerical_2003}
+T.~Vaithianathan and Lance~R. Collins.
+\newblock Numerical approach to simulating turbulent flow of a viscoelastic
+  polymer solution.
+\newblock {\em Journal of Computational Physics}, 187(1):1--21, 2003.
+
+\bibitem{hulsen_numerical_2021}
+Martien~A. Hulsen, Michelle~M.A. Spanjaards, and Patrick~D. Anderson.
+\newblock Numerical stability of four positive (semi-)definite reformulations
+  for viscoelastic fluid models in benchmark flows.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, page 104666, 2021.
+
+\bibitem{Hughes2000}
+Thomas~J.R. Hughes.
+\newblock {\em {The Finite Element Method: Linear Static and Dynamic Finite
+  Element Analysis}}.
+\newblock Dover Publications, New York, 2000.
+\newblock {Corrected reprint of the 1987 original [Prentice Hall, Englewood
+  Cliffs, NJ]}.
+
+\bibitem{Carrozza2020}
+M.A. Carrozza, M.A. Hulsen, and P.D. Anderson.
+\newblock Benchmark solutions for flows with rheologically complex interfaces.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 286:104436, 2020.
+
+\bibitem{saramito_new_2007}
+Pierre Saramito.
+\newblock A new constitutive equation for elastoviscoplastic fluid flows.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 145(1):1--14, August
+  2007.
+
+\bibitem{saramito_new_2009}
+Pierre Saramito.
+\newblock A new elastoviscoplastic model based on the {Herschel}–{Bulkley}
+  viscoplastic model.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 158(1-3):154--161,
+  May 2009.
+
+\bibitem{saramito_new_2021}
+Pierre Saramito.
+\newblock A new brittle-elastoviscoplastic fluid based on the
+  {Drucker}–{Prager} plasticity.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 294:104584, August
+  2021.
+
+\bibitem{Hulsennote500}
+M.A. Hulsen.
+\newblock note500: Some analytical results for {SRM3}.
+\newblock \emph{Unpublished}, July 2022.
+
+\bibitem{canuto_spectral_2007}
+C.~Canuto, M.~Y. Hussaini, Alfio Quarteroni, and T.A. Zang.
+\newblock {\em Spectral methods: {Evolution} to {Complex} {Geometries} and
+  {Applications} to {Fluid} {Dynamics}}.
+\newblock Springer-Verlag, Berlin, Heidelberg, 2007.
+
+\bibitem{szabo_finite_1991}
+B.~A. Szabo and Ivo Babuška.
+\newblock {\em Finite element analysis}.
+\newblock Wiley, New York, 1991.
+
+\bibitem{cottrell_isogeometric_2009}
+J.~Austin Cottrell, Thomas~J.R. Hughes, and Yuri Bazilevs.
+\newblock {\em Isogeometric {Analysis}. {Towards} integration of {CAD} and
+  {FEA}}.
+\newblock John Wiley and Sons, Chichester, 2009.
+
+\bibitem{verkaik_overlapping_2014}
+Anna~Catharina Verkaik, Martien~A. Hulsen, Arjen~C.B. Bogaerds, and Frans~N.
+  van~de Vosse.
+\newblock An overlapping domain technique coupling spectral and finite elements
+  for fluid flow.
+\newblock {\em Computers and Fluids}, 100:336--346, 2014.
+
+\bibitem{verkaik_coupling_2015}
+Anna~Catharina Verkaik.
+\newblock {\em Coupling spectral and finite elements for fluid-structure
+  interaction}.
+\newblock PhD thesis, Eindhoven University of Technology, 2015.
+
+\bibitem{warburton_explicit_2007}
+T.~Warburton.
+\newblock An explicit construction of interpolation nodes on the simplex.
+\newblock {\em Journal of Engineering Mathematics}, 56(3):247--262, January
+  2007.
+
+\bibitem{Thompson2005}
+Roney~L. Thompson and Paulo R.~Souza Mendes.
+\newblock Persistence of straining and flow classification.
+\newblock {\em International Journal of Engineering Science}, 43:79--105, 2005.
+
+\bibitem{Park2020}
+Jang~Min Park.
+\newblock Flow classification of radial and squeeze flows between parallel
+  disks.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 286:104416, 2020.
+
+\bibitem{baranger_finite_1992}
+J.~Baranger and D.~Sandri.
+\newblock Finite element approximation of viscoelastic fluid flow: {Existence}
+  of approximate solutions and error bounds.
+\newblock {\em Numerische Mathematik}, 63(1):13--27, December 1992.
+
+\bibitem{fortin_convergence_1989}
+Michel Fortin and R.~Pierre.
+\newblock On the convergence of the mixed method of {Crochet} and {Marchal} for
+  viscoelastic flows.
+\newblock {\em Computer Methods in Applied Mechanics and Engineering},
+  73(3):341--350, 1989.
+
+\bibitem{marchal_new_1987}
+J.M. Marchal and Marcel~J. Crochet.
+\newblock A new mixed finite element for calculating viscoelastic flow.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 26:77--114, 1987.
+
+\bibitem{JaenssonHulsen2024}
+Nick~O. Jaensson and Martien~A. Hulsen.
+\newblock A fully-coupled implementation of the contravariant deformation
+  tensor formulation for viscoelastic flows.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 334:105345, 2024.
+
+\bibitem{verbeeten2004numerical}
+Wilco~MH Verbeeten, Gerrit~WM Peters, and Frank~PT Baaijens.
+\newblock Numerical simulations of the planar contraction flow for a
+  polyethylene melt using the xpp model.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 117(2):73--84, 2004.
+
+\bibitem{tanner2003simple}
+Roger~I Tanner and Simin Nasseri.
+\newblock Simple constitutive models for linear and branched polymers.
+\newblock {\em Journal of Non-Newtonian Fluid Mechanics}, 116(1):1--17, 2003.
+
+\bibitem{wapperom_thermodynamics_1998}
+Peter Wapperom and Martien~A. Hulsen.
+\newblock Thermodynamics of viscoelastic fluids: {The} temperature equation.
+\newblock {\em Journal of Rheology}, 42(5):999--1019, 1998.
+
+\bibitem{pagani_no_2024}
+G.~Pagani, M.~Hofmann, L.~E. Govaert, T.~A. Tervoort, and J.~Vermant.
+\newblock No yield stress required: {Stress}-activated flow in simple
+  yield-stress fluids.
+\newblock {\em Journal of Rheology}, 68(2):155--170, March 2024.
+
+\bibitem{saramito_complex_2016}
+Pierre Saramito.
+\newblock {\em Complex fluids: {Modeling} and {Algorithms}}, volume~79 of {\em
+  Mathématiques et {Applications}}.
+\newblock Springer International Publishing, Cham, 2016.
+
+\bibitem{saramito_progress_2017}
+Pierre Saramito and Anthony Wachs.
+\newblock Progress in numerical simulation of yield stress fluid flows.
+\newblock {\em Rheologica Acta}, 56(3):211--230, March 2017.
+
+\bibitem{van_breemen_rate_2012}
+Lambert C.~A. Van~Breemen, Tom A.~P. Engels, Edwin T.~J. Klompen, Dirk J.~A.
+  Senden, and Leon~E. Govaert.
+\newblock Rate‐ and temperature‐dependent strain softening in solid
+  polymers.
+\newblock {\em Journal of Polymer Science Part B: Polymer Physics},
+  50(24):1757--1771, December 2012.
+
+\bibitem{Hughes86}
+T.J.R. Hughes, M.~Mallet, and A.~Mizukami.
+\newblock A new finite element formulation for computational fluid dynamics ii:
+  beyond {SUPG}.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 54:341--355, 1986.
+
+\bibitem{Fan97}
+Y.~Fan.
+\newblock A comparative study of the discontinuous {Galerkin} and continuous
+  {SUPG} finite element methods for computation of viscoelastic flows.
+\newblock {\em Comp.\ Meth.\ Appl.\ Mech.\ Eng.}, 141:47--65, 1997.
+
+\bibitem{Lunsmann93}
+W.J. Lunsmann, L.~Genieser, R.C. Armstrong, and R.A. Brown.
+\newblock Finite element analysis of steady viscoelastic flow around a sphere
+  in a tube: calculations with constant viscosity models.
+\newblock {\em J.\ Non-Newtonian Fluid Mech.}, 48:63--99, 1993.
+
+\bibitem{matousek2011}
+J.~Matou\v{s}ek and Zuzana Safernov\'a.
+\newblock On the nonexistence of k-reptile tetrahedra.
+\newblock {\em Discrete Comput. Geom.}, 46:599--609, 2011.
+
+\end{thebibliography}

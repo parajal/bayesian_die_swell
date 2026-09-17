@@ -1,0 +1,96 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+moving_boundary1
+
+ Moving boundary due to capillary forces. Perfect slip on the walls.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Newtonian fluid (Stokes).
+
+moving_boundary2
+
+ Moving boundary due to inertia and gravity forces.
+ 2D domain, axisymmetric with 3D velocities.
+ Wall(s) and bottom rotate with an angular velocities omega.
+ Perfect slip (in plane) on the walls.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Newtonian fluid.
+
+moving_boundary3
+
+ Moving boundary due to viscoelastic normal stresses and gravity forces.
+ 2D domain, axisymmetric with 3D velocities.
+ Wall(s) and bottom rotate with an angular velocities omega.
+ Perfect slip (in plane) on the walls.
+ Perfect slip (in r and theta) on the bottom.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Viscoelastic fluid.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady state
+
+moving_boundary3a
+
+ Moving boundary due to viscoelastic normal stresses and gravity forces.
+ 2D domain, axisymmetric with 3D velocities.
+ Wall(s) and bottom rotate with an angular velocities omega.
+ Perfect slip (in plane) on the walls.
+ Perfect slip (in r and theta) on the bottom.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Viscoelastic fluid.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady state
+
+ Similar to moving_boundary3, but with changes:
+      P1 line elements for height function.
+      Note, this is only for illustration. The standard case works best!
+
+moving_boundary3b
+
+ Moving boundary due to viscoelastic normal stresses and gravity forces.
+ 2D domain, axisymmetric with 3D velocities.
+ Wall(s) and bottom rotate with an angular velocities omega.
+ Perfect slip (in plane) on the walls.
+ Perfect slip (in r and theta) on the bottom.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Viscoelastic fluid.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady state
+
+ Similar to moving_boundary3, but now includes:
+ Optional: Q1isoQ2 for velocities and/or
+           P1isoP2 line elements for height function.
+           Note, this is only for illustration. The standard case works best!
+
+moving_boundary4
+
+ Moving boundary due to second normal stresses.
+ 2D domain, with 3D velocities.
+ Perfect slip (in plane) on the walls.
+ Dirichlet on the bottom.
+ Imposed flow rate in third direction.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Viscoelastic fluid.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady state
+
+moving_boundary5
+
+ Fluid column between two plates loaded under gravity forces.
+ Surface tension on fluid-air interface and fluid-wall interface.
+ Perfect slip on the walls. Axisymmetric. Newtonian fluid (Stokes).
+
+

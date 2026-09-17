@@ -1,0 +1,1540 @@
+% !TEX root = userguide.tex
+
+\chapter{Some examples using Galerkin \fem: the Poisson and Stokes equations}
+\pgst{tfemch}
+
+\label{ch:examples}
+
+\def\chaptertitle{Some examples}
+\def\headdate{4th December 2025}
+
+In this chapter some examples for the Poisson and Stokes equations using
+Galerkin \fem\ will be given.
+The first example will be fully
+explained line by line in order to get a good introduction to \tfem\
+and `learn by example'. The succeeding examples
+will be explained more briefly.
+
+\section{The Poisson equation}
+
+In this section some examples using the Poisson equation will be given, but
+first some theory.
+
+\subsection{Weak form of the Poisson equation. Galerkin \fem}
+\label{sec:poissonweak}
+
+We consider the Poisson equation in a region $\Omega$:
+\begin{equation}
+     -\nabla^2 u = f\text{ on }\Omega
+   \label{eq:poisson}
+\end{equation}
+with boundary conditions
+\begin{gather}
+    u = u_D\text{ on }\Gamma_D\\
+    -\pderiv{u}{n}=-\vec n\cdot\nabla u=h_{\text{N}}\text{ on
+}\Gamma_{\text{N}}
+\end{gather}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part.
+
+The weak form can be obtained by multiplying Eq.~\eqref{eq:poisson}
+with a test function $v$:
+\[
+   (v,-\nabla^2 u-f)=0\qquad\text{for all }v
+\]
+where the standard inner product on $L^2(\Omega)$ is
+\[
+    (a,b)=\int_\Omega ab \D x
+   \label{eq:innerproduct}
+\]
+With
+\[
+   \nabla\cdot\big(\nabla u\big)v=\nabla\cdot\big((\nabla u)v)\big)-\nabla
+u\cdot\nabla v
+\]
+and the divergence theorem (Gauss):
+\[
+    \int_\Omega\nabla\cdot\vek a\D x=\int_\Gamma\vek n\cdot\vek a\D s
+\]
+we get the weak form: Find $u\in S$ such that
+\begin{equation}
+   (\nabla v,\nabla u) +(v,h_{\text{N}})_{\Gamma_{\text{N}}}=(v,f)
+   \label{eq:weakformpoisson}
+\end{equation}
+for all $v\in V$, where $S$ and $V$ are suitable functional spaces for $u$ and
+$v$, respectively. Notes:
+\begin{itemize}
+  \itemsep -1ex
+   \item $v=0$ on $\Gamma_D$, $u=u_D$ on $\Gamma_D$
+   \item we have silently introduced:
+\begin{align*}
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\\
+   (a,b)_{\Gamma}&=\int_\Gamma a b\D s
+\end{align*}
+\end{itemize}
+
+The weak form can be used to obtain an approximate solution using the Galerkin \fem\
+technique. For this we define approximating 
+spaces $S_h$ and $V_h$, or in other words, we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $u$ and $v$ by
+polynomials on each element (approximation denoted by $u_h$ and $v_h$):
+\begin{align*}
+    u_h(\vek x,t)&=\tsum_i u_i(t)\phi_i(\vek x)=\col\phi^T(\vek x)\col u(t)
+\\
+    v_h(\vek x,t)&=\tsum_i v_i(t)\phi_i(\vek x)=\col\phi^T(\vek x)\col v(t)
+\end{align*}
+where $\col\phi(\vek x)$ are global shape functions.  Substituting into the
+weak form leads to
+\[
+ \col v^T\mat K\col u=
+        \col v^T\col f \quad\text{for all }\col v
+\]
+or
+\[
+ \mat K\col u= \col f
+\]
+where the `stiffness matrix' $\mat K$ and
+the right-hand side $\col f$ are given by
+\begin{alignat*}{2}
+ \mat K&=(\nabla{\col\phi},\nabla{\col\phi^T})\qquad\qquad\qquad\text{  or}&\qquad\qquad
+K_{ij}&=(\nabla{\phi_i}, \nabla{\phi_j}) \\[2ex]
+\col f&= (\col\phi,f)-(\col\phi,h_{\text{N}})_{\Gamma_{\text{N}}} &
+f_i&= (\phi_i,f)-(\phi_i,h_{\text{N}})_{\Gamma_{\text{N}}}
+\end{alignat*}
+where the left column is in matrix notation and the right column in index
+notation.
+
+
+
+\subsection{A Poisson problem on a unit square with Dirichlet boundary 
+            conditions}
+\label{sec:poisson1}
+
+We consider a Poisson problem:
+\begin{equation}
+     -\nabla^2 u = f
+\end{equation}
+on a unit square $(x,y)\in(0,1)\times(0,1)$ (see figure~\ref{fig:unitsquare}).
+We substitute the following solution for $u$:
+\begin{equation}
+     u=1+\cos(\pi x)\cos(\pi y)
+     \label{eq:exactu}
+\end{equation}
+and find the corresponding $f$:
+\begin{equation}
+     f=2\pi^2\cos(\pi x)\cos(\pi y)
+     \label{eq:exactf}
+\end{equation}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{unitsquare}
+   \end{center}
+   \caption{Unit square and the points and curves defined by the meshgenerator
+      \texttt{quadrilateral2d}. Note the default directions of the curves.}
+    \label{fig:unitsquare}
+\end{figure}
+
+ In the following we assume
+that, as suggested in Sec~\ref{sec:gettingstarted}, the user performed the command 
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+and all the necessary steps before the
+\texttt{make}-command step.
+
+The functions given by Eq.~\eqref{eq:exactu} and Eq.~\eqref{eq:exactf}
+need to be programmed in a module. The first part of the file
+\texttt{poisson\_functions.f90} might look something like:
+
+\begin{listing}{1}
+module poisson_functions_m
+                                                                                
+  use kind_defs_m
+                                                                                
+  implicit none
+                                                                                
+contains
+
+  function func ( nr, x )
+    integer, intent(in) :: nr
+    real(dp), intent(in), dimension(:) :: x
+    real(dp) :: func
+
+    real(dp) :: pi
+
+    pi = 4 * atan(1._dp)
+
+    select case(nr)
+      case(1)
+        func = 0
+      case(2)
+        func = 1
+      case(3)
+        func = 1 + cos(pi*x(1))*cos(pi*x(2))
+      case(4)
+        func = 2*pi**2*cos(pi*x(1))*cos(pi*x(2))
+      case(5)
+        func = -pi*sin(pi*x(1))*cos(pi*x(2))
+      case(6)
+        func = -pi*cos(pi*x(1))*sin(pi*x(2))
+      case default
+        write(*,'[a,i0]') 'Error func: wrong function number: ', nr
+        stop
+    end select
+
+  end function func
+
+  ...
+
+end module poisson_functions_m
+
+\end{listing}
+
+Some explanations:
+\begin{description}
+   \item [line 1] In \tfem, modules must be in separate files or be stuffed in
+front of the main program (not recommended). Furthermore, the filename must be
+\texttt{<basename>.f90}, where \texttt{<basename>} is either the module name or
+the module name without the \texttt{\_m}. These are requirements for the script
+\texttt{fmm} to work properly\footnote{In \texttt{fmm} it is allowed to use
+\texttt{<basename>.f} (fixed format source), but this should be limited to
+source code which is copy/pasted mostly from old style Fortran.}. Throughout
+\tfem\ the convention of extending a module name with \texttt{\_m} is used.
+
+   \item [line 3] The module \texttt{kind\_defs\_m} defines the kind parameters
+    for precision, among which \texttt{dp}: the precision that used to be
+    `double precision' in old-style Fortran. 
+
+    \item [lines 23--26] For \texttt{nr=3} we have $u$ and for \texttt{nr=4} we have
+    $f$.
+\end{description}
+
+Now we have to write a main program in \ftn\ to solve the problem. A global
+overview of a typical main program is depicted in Fig.~\ref{fig:mainprogram}.
+The main program doesn't have to be sequential and all
+the programming facilities of \ftn\
+are available. For example, in Fig.~\ref{fig:mainprogram} two possible loops
+are illustrated: (1) time-stepping scheme, (2) an adaptive mesh scheme.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{main}
+   \end{center}
+   \caption{Schematic overview of a main program}
+    \label{fig:mainprogram}
+\end{figure}
+
+
+The main program of the first Poisson
+problem is in the file \texttt{poisson1.f90}.
+
+The Poisson element routines
+in the add-on `convection diffusion' (see Sec.~\ref{sec:convdiff_elements}) are used for
+the building of the system. 
+
+We will give an explanation of the main program line by line.
+
+\begin{listing}{1}
+! Poisson problem on a unit square with Dirichlet boundary conditions
+
+program poisson1
+
+  use kind_defs_m
+  use mesh_m
+  use meshgen_m
+  use problem_m
+  use system_m
+  use hsl_ma57_m
+  use poisson_elements_m
+  use poisson_functions_m
+  use figplot_m
+
+\end{listing}
+Here all modules needed are included using the \texttt{use} statement:
+\begin{description}
+   \item[line 6] this defines the mesh type (\texttt{mesh\_t}) and more.
+   \item[line 7] this is the mesh generation module, which includes a simple
+                 mesh generator and various other routines for mesh generation.
+   \item[line 8] this defines the problem type (\texttt{problem\_t}) and more.
+   \item[line 9] this defines the type of the
+                 vectors and matrices for the system and many
+                 routines, such as for building the system.
+   \item[line 10] this defines the types and associated routines to run the HSL
+                  sparse direct solver MA57.
+   \item[line 11] this defines the element routines for the Poisson equation.
+                  These routines are defined in a module, which can be found in
+                  the source file 
+                  \texttt{poisson\_elements.f90}. It is
+                  not part of the core of \tfem but part of the add-on 
+                  `convection diffusion' (see Sec.~\ref{sec:convdiff_elements},
+                   which must
+                  have already been compiled into to the \tfem-library.
+   \item[line 12] this includes the user function \texttt{func} for use in the main program.
+   \item[line 13] this includes some plot routines.
+                  This module is part of an add-on
+                  (see Sec.~\ref{sec:figplot}), which must
+                  have already been compiled into to the \tfem-library.
+\end{description}
+The first five use statements appear in almost every \tfem-program. Therefore
+these modules (and other standard modules) have been included in a module
+\texttt{tfem\_m}. Therefore the statements above could have been replaced by
+\begin{verbatim}
+  program poisson1
+
+  use tfem_m
+  use hsl_ma57_m
+  use poisson_elements_m
+  use poisson_functions_m
+  use figplot_m
+ 
+\end{verbatim}
+which is what we did in all subsequent examples.
+
+\begin{listing}{14}
+  implicit none
+
+
+! constants
+
+  integer, parameter :: &
+    uintpl = 8,         & ! scalar interpolation
+    gauss = 3,          & ! 3x3 integration of quads
+    gaussb = 3,         & ! 3 point integration of boundary elements
+    nx=20,              & ! number of elements in x
+    ny=20,              & ! number of elements in y
+    funcnr=4              ! function number for the right-hand side
+
+  real(dp), parameter :: &
+    alpha = 1._dp     ! diffusion coefficient
+
+
+! definitions
+
+  type(meshgen_options_t) :: meshgen_options
+  type(mesh_t) :: mesh
+  type(input_probdef_t) :: input_probdef
+  type(problem_t) :: problem
+  type(sysmatrix_t) :: sysmatrix
+  type(sysvector_t) :: sol, rhsd, solexact
+  type(plot_options_t) :: plot_options
+  type(coefficients_t) :: coefficients
+
+\end{listing}
+Here all the variables are defined that are part of the main program:
+\begin{description}
+   \item[line 14] every \ftn\ program should contain this statement, which
+       ensures that all variables are explicitly defined.
+   \item[line 19-28] defines some constants used in the main program
+   \item[line 33] here the structure \texttt{meshgen\_options}
+     of type
+      \texttt{meshgen\_options\_t} is declared.
+ This structure is used to fill in all kinds
+ of options for mesh generation. Throughout \tfem\ the convention is used
+ that all derived types have an extension \texttt{\_t} added. 
+   \item[line 34 and 36] here the main structures are defined that are used
+throughout \tfem: \texttt{mesh} and \texttt{problem}, which are of type
+\texttt{mesh\_t} and \texttt{problem\_t}, respectively. The mesh structure
+contains everything related to the mesh (topology, coordinates, \ldots) and the
+problem structure contains everything related to the problem (number of
+unknowns in the nodes, nodes with essential boundary conditions, \ldots).
+
+\item[line 35] like \texttt{meshgen\_options}, \texttt{input\_probdef} is used
+to fill in various data concerning the problem before entering the problem
+definition routine that finally fills the structure \texttt{problem}.
+
+\item[line 37] this line defines the system matrix \texttt{sysmatrix}. It is a
+structure of type \texttt{sysmatrix\_t}.
+
+\item[line 38] this line defines all system vectors: the solution vector, the
+right-hand side and the exact solution.  They are all
+structures of type \texttt{sysvector\_t}.
+
+\item[line 39] here the structure \texttt{plot\_options} of type
+\texttt{plot\_options\_t} is declared.
+ This structure is used to fill in all kinds
+ of options for plotting with figplot. 
+
+\item[line 40] here the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} is declared.
+ This structure is used to transfer parameters to the element routines, such
+ as order of interpolation, material parameters etc.
+
+\end{description}
+
+
+\begin{listingcont}
+   
+! fill coefficients
+
+  call create_coefficients ( coefficients, ncoefi=100, ncoefr=50 )
+
+  coefficients%i = 0
+  coefficients%i(1) = uintpl
+  coefficients%i(10:12) = [ gauss, gaussb, funcnr ]
+
+  coefficients%r(1) = alpha
+  coefficients%r(2:) = 0
+
+  coefficients%func => func
+
+\end{listingcont}
+
+Here the `coefficients' are filled for the Poisson problem. The coefficients
+are defined using a structure of type \texttt{coefficients\_t} and are split
+into an array for integer parameters \texttt{coefficients\%i} and real ('double
+precision') parameters \texttt{coefficients\%r}. Furthermore, functions need to be
+assigned to ``procedure pointers'' in structure \texttt{coefficients} in order to
+make them available on element level, as
+shown above for the user scalar function \texttt{func} on line 54..
+See Sec.~\ref{sec:convdiff_elements} how the coefficients are defined for the
+Poisson add-on.
+
+\begin{listing}{54}
+
+! create mesh
+                                                                                
+  meshgen_options%elshape = 6
+  meshgen_options%nx = nx
+  meshgen_options%ny = ny
+
+  call quadrilateral2d ( mesh, meshgen_options )
+
+  call fill_mesh_parts ( mesh ) 
+
+\end{listing}
+Here the mesh is created:
+\begin{description}
+   \item[line 61] this is the call to the routine 
+\texttt{quadrilateral2d}, which is a simple mesh generator for quadrilateral
+domains. The default is to use a unit square.
+   \item[line 57] \texttt{elshape=6} defines a nine node quad element.
+ The shape numbers of \sep\ are used as much as possible here.
+   \item[line 58 and 59] \texttt{nx} and \texttt{ny} are the number of elements
+in $x$ and $y$ direction respectively.
+   \item[line 63] this routine computes other parts of \texttt{mesh} from the
+     topology produced by the mesh generator. These parts include, for example,
+     an array that gives the nodes that are connected to a certain node. That
+means that if you produce the topology by an external mesh generator, you
+still have to call this routine to fill the various parts of the mesh
+structure.
+\end{description}
+
+\begin{listingcont}
+! problem definition
+                                                                                
+  call create_input_probdef ( mesh, input_probdef )
+
+  input_probdef%elementdof(1)%a = [1,1,1,1,1,1,1,1,1]
+
+  call define_essential ( mesh, input_probdef, curve1=1, curve2=4 )
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+\end{listingcont}
+Here the structure \texttt{problem} is filled:
+\begin{description}
+   \item[line 73] on this line the structure \texttt{problem} is actually
+filled from the structure \texttt{input\_probdef}. Before we can do that we have
+to create and fill the structure \texttt{input\_probdef} with some data.
+   \item[line 67] here the structure \texttt{input\_probdef} is created,
+      which includes allocation of some memory. On line 67 the structure
+     \texttt{input\_probdef} is defined, in a sense created, but it is still
+     very empty.
+   \item[line 69] here the degrees of freedom of the element are defined, in
+     this case one unknown in each nodal point. This means we use a bi-quadratic
+     interpolation ($Q_2$). Some explanation here: the
+component \texttt{elementdof} is an array of size equal to the number of
+element groups, which explains the \texttt{(1)}, since we have only one element
+group. Furthermore, in \ftn\ it is not possible to define arrays of arrays. To
+circumvent that problem we use arrays of a derived type, where the latter has a
+single component: an array. We adopted the convention to call that component
+\texttt{a}, which explains the \texttt{\%a}.
+   \item[line 71] here we define where we have essential (Dirichlet)
+boundary conditions. The mesh generator \texttt{quadrilateral2d} defines four
+curves as depicted in Fig.~\ref{fig:unitsquare}. On all curves, that is from
+\texttt{curve1=1} until \texttt{curve2=4} we define essential boundary
+conditions. All degrees of freedom are made essential, by default, but there is
+only one here in each node.
+\end{description}
+
+\begin{listingcont}
+! create system vectors (solution and right-hand side)
+                                                                                
+  call create_sysvector ( problem, sol )
+  call create_sysvector ( problem, rhsd )
+                                                                                
+! fill solution vector with essential boundary conditions
+                                                                                
+  call fill_sysvector ( mesh, problem, sol, &
+    curve1=1, curve2=4, func=func, funcnr=3 )
+
+\end{listingcont}
+Here the system vectors are created and filled:
+\begin{description}
+   \item[line 77 and 78] the system vectors of type \texttt{sysvector\_t} are
+created here. This means that by this routine the data is actually allocated.
+It is however not initialized (it might contain rubbish). If the user wants a
+vector to be initialized to zero, say \texttt{sol}, just add a statement
+\texttt{sol\%u=0} after the creation of the vector. The component of the
+structure \texttt{sol} containing the data is \texttt{u}.
+Here we come to a basic
+principle in the design of \tfem: each routine is as elementary as possible and
+basically performs a single task which is well defined. This has the advantage
+that the user has full control as much as possible and nothing happens behind
+his/her back. A disadvantage is of course that main programs can be quite long.
+   \item[line 82 and 83] here the solution vector \texttt{sol} is filled with
+  the values generated by the function \texttt{func}
+  specified using a function number of 3 
+ along curves \texttt{C1} to \texttt{C4}. Note that \texttt{sol} needs to be
+created first before the fill routine is called, otherwise an error message is
+given. This conforms with our basic design principle discussed above.
+\end{description}
+
+\begin{listingcont}
+! create system matrix
+                                                                                
+  call create_sysmatrix_structure ( sysmatrix, mesh, problem, symmetric=.true. )
+                                                                                
+  call create_sysmatrix_data ( sysmatrix )
+                                                                                
+\end{listingcont}
+Here the system matrix of type \texttt{sysmatrix\_t} is created:
+\begin{description}
+   \item[line 87] here the structure of the system matrix is created, i.e.\ the
+     number of non-zeros in each row of the sparse matrix. The matrix is
+defined to be symmetric so that only the upper diagonal needs to be stored.
+   \item[line 89] here the actual matrix elements are allocated. 
+\end{description}
+
+\begin{listingcont}
+! build (assemble) matrix and vector from elements
+                                                                                
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=poisson_elem, &
+    coefficients=coefficients )
+                                                                                
+  call add_effect_of_essential_to_rhs ( problem, sysmatrix, sol, rhsd )
+                                                                                
+  call solve_system_ma57 ( sysmatrix, rhsd, sol )
+                                                                                
+\end{listingcont}
+Here the system matrix and vector is build and the system is solved:
+\begin{description}
+   \item[line 93] here the matrix and vector is assembled from
+ the element
+ subroutine \texttt{poisson\_elem} and the function \texttt{func} from the
+module \texttt{poisson\_functions\_m}. 
+Note, that
+\texttt{build\_system} is really a dumb routine that just calls \texttt{elemsub}
+and doesn't know anything what goes on in there. 
+   In the element subroutine \texttt{poisson\_elem} of the
+     module \texttt{poisson\_elements\_m} a 
+     variable \texttt{funcnr} has been defined that is used as function number
+     to the scalar function routine \texttt{func}. The actual value of
+     \texttt{funcnr} will be set to the value in \texttt{coefficients\%i(12)}.
+     The right-hand side $f$ will be set to outcome of the function.
+     Here we see our first
+     example of communicating with the element routines via coefficients.
+   \item[line 96] the system of equations
+\begin{equation}
+   Su=f
+\end{equation}
+has been partitioned as follows
+\begin{equation}
+   \begin{pmatrix}
+      S_{\text{uu}} & S_{\text{up}} \\
+      S_{\text{pu}} & S_{\text{pp}} 
+   \end{pmatrix} 
+   \begin{pmatrix}
+      u_\text{u} \\
+      u_\text{p}
+   \end{pmatrix}=
+   \begin{pmatrix}
+      f_\text{u} \\
+      f_\text{p}
+   \end{pmatrix}
+   \label{eq:partitionedsystem}
+\end{equation}
+where subscript $_\text{u}$ and $_\text{p}$ means ``unknown'' and ``prescribed'',
+respectively. The prescribed part represents the essential boundary conditions.
+The components of the vectors of type \texttt{sysvector\_t} are renumbered and
+stored accordingly to
+represent this partitioning\footnote{Note that this is different from \sep\,
+where the solution vectors retain there original mesh numbering storage.}. Also
+the system matrix contains all four sub-matrices. From
+Eq.~\eqref{eq:partitionedsystem} we find the equation to solve:
+\begin{equation}
+   S_{\text{uu}}u_\text{u}=f_{\text{u}}-S_{\text{up}}u_\text{p}
+  \label{eq:systemtosolve}
+\end{equation}
+The subroutine \texttt{add\_effect\_of\_essential\_to\_rhs} computes the last
+term and adds it to $f_{\text{u}}$.
+
+\item[line 98] here the system Eq.~\eqref{eq:systemtosolve} is solved using the
+sparse direct solver MA57 for a symmetric matrix 
+ (see Sec.~\ref{sec:hslsparse}) \cite{HSL}. At the end of the routine the
+$LU$-factors are deallocated from memory. It is possible to keep the factors
+for a back-substitution only, the next time. We refer to the comments in the
+source to learn how to do that. 
+\end{description}
+
+\begin{listingcont}
+! create exact solution
+
+  call create_sysvector ( problem, solexact )
+
+  call fill_sysvector ( mesh, problem, solexact, &
+    node1=1, node2=mesh%nnodes, func=func, funcnr=3 )
+
+! print maximum difference of sol-solexact to standard output
+
+  print *, maxval( abs(sol%u -solexact%u) )
+                                                                                
+\end{listingcont}
+Here an exact solution in the nodal points is created and the maximum
+absolute difference is printed between the numerical solution and the exact
+one:
+\begin{description}
+   \item[line 104 and 105] \texttt{mesh\%nnodes} is the number of nodal points.
+Note that the heading of \texttt{fill\_sysvector} has different parameters than
+the call on line 82--83. This is possible due to a very nice feature of \ftn:
+ optional parameters.
+   \item[line 109] the array syntax of \ftn\ comes in handy here.
+\end{description}
+
+\begin{listingcont}
+! plot solution
+
+  call plot_color_contour ( plot_options, mesh, problem, filename='sol.fig', &
+    sysvector=sol ) 
+
+\end{listingcont}
+This is an output section that prints plotting data to a file. Use
+\texttt{.fig} as extension for plots made with figplot.
+
+\begin{listingcont}
+! delete all data including all allocated memory
+                                                                                
+  call delete ( problem )
+  call delete ( input_probdef )
+  call delete ( mesh )
+  call delete ( sol, solexact, rhsd )
+  call delete ( sysmatrix )
+  call delete ( coefficients )
+
+end program poisson1
+\end{listingcont}
+Here all allocated data is deleted again to end with a clean state.
+In this case the deleting is just
+clean programming and since the program stops after that, it is not absolutely
+necessary. However it is recommended to always do this.
+Usually programs are much more complicated
+and it is important to keep track of the memory allocated to make the memory
+footprint as small as possible. For example, if you would rewrite the program
+to do a mesh refinement study by adding a loop, you must deallocate the memory
+at the end of each cycle to avoid an `out of memory'.
+
+The procedure \texttt{delete} is a so-called \emph{generic name} which
+represents calls to other procedures (like \texttt{delete\_mesh},
+\texttt{delete\_problem} etc.) depending on the type of the
+arguments\footnote{There is a similar generic name \texttt{create}
+for the routines beginning
+with \texttt{create\_}, except for the routines that involve the system matrix.
+However use this only if you are very experienced with \tfem, because the
+various underlying \texttt{create\_} routine have a varying number and type of
+arguments. Using only \texttt{create} it is less easy to jump to the source of
+the routine using tags to check the required arguments.}
+The number of arguments allowed has a maximum (at the time of writing five),
+but all arguments must be of the same type.
+
+Now compile/link the program \texttt{poisson1} by typing
+\begin{quote}
+   \texttt{make poisson1}
+\end{quote}
+or just
+\begin{quote}
+   \texttt{make}
+\end{quote}
+which compile/links all main programs in the current directory. Run the program
+by
+\begin{quote}
+   \texttt{poisson1}
+\end{quote}
+and if all goes well you see a line on your screen similar to
+\begin{quote}
+\texttt{4.071378136849546E-07}
+\end{quote}
+The file \texttt{sol.fig} can be plotted by typing
+\begin{quote}
+   \texttt{viewfig sol.fig}
+\end{quote}
+which will show something like Fig.~\ref{fig:poisson1_sol.fig}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{poisson1_sol}
+   \end{center}
+   \caption{Plot of \texttt{sol.fig} for \texttt{poisson1}}
+    \label{fig:poisson1_sol.fig}
+\end{figure}
+
+\subsection{A Poisson problem on a unit square with Dirichlet
+            and Neumann boundary conditions}
+
+\label{sec:poisson2}
+We consider the Poisson problem on a unit square, like in the previous section. 
+We change the boundary condition on curve \texttt{C2} to a natural boundary,
+meaning that we have to specify $h_N=-\plderiv{u}{n}$. 
+We substitute the following exact solution for $u$:
+\begin{equation}
+     u=\cos(\pi x)\cos(\pi y) + x^3y^3
+\end{equation}
+and find the corresponding $f$:
+\begin{equation}
+     f=2\pi^2\cos(\pi x)\cos(\pi y) - 6(xy^3+x^3y)
+\end{equation}
+Specifying $-\plderiv{u}{n}$ is easy for the square domain, but for a
+curvilinear domain it is very difficult. In that case, it is much easier to
+specify $-\nabla u$ by a function
+and let the boundary element compute $h_N=-\plderiv{u}{n}=-\vec n\cdot\nabla u$.
+This is what we do here as well and specify $-\nabla u$ by a vector function
+\texttt{vfunc}. The exact value for $\nabla u$ is given by
+\begin{equation}
+   \nabla u=
+\begin{pmatrix}
+     -\pi\sin(\pi x)\cos(\pi y) + 3x^2y^3 \\
+     -\pi\cos(\pi x)\sin(\pi y) + 3x^3y^2 
+\end{pmatrix}
+\end{equation}
+The source is in the file \texttt{poisson2.f90} and the difference with respect
+to \texttt{poisson1.f90} will be discussed. The changes/added lines are:
+\begin{listing}{22}
+    funcnr=8,           & ! function number for the right-hand side
+    vfuncnr=1             ! function number for the flux vector
+\end{listing}
+\bigskip
+\begin{listing}{47}
+  coefficients%i(6) = 2  ! use a vector function for h_N
+\end{listing}
+\bigskip
+\begin{listing}{49}
+  coefficients%i(16) = vfuncnr
+\end{listing}
+\bigskip
+\begin{listing}{55}
+  coefficients%vfunc => vfunc
+\end{listing}
+\bigskip
+\begin{listing}{74}
+  call define_essential ( mesh, input_probdef, curve1=1 )
+  call define_essential ( mesh, input_probdef, curve1=3, curve2=4 )
+
+\end{listing}
+\bigskip
+\begin{listing}{84}
+! fill solution vector with essential boundary conditions
+                                                                                
+  call fill_sysvector ( mesh, problem, sol, &
+    curve1=1, func=func, funcnr=7 )
+  call fill_sysvector ( mesh, problem, sol, &
+    curve1=3, curve2=4, func=func, funcnr=7 )
+
+\end{listing}
+\bigskip
+\begin{listing}{102}
+  call add_boundary_elements ( mesh, problem, rhsd, curve=2, &
+    elemsub=poisson_natboun, coefficients=coefficients )
+
+\end{listing}
+\bigskip
+\begin{listing}{113}
+  call fill_sysvector ( mesh, problem, solexact, &
+    node1=1, node2=mesh%nnodes, func=func, funcnr=7 )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 22 and 23] changed \texttt{funcnr} and added \texttt{vfuncnr}.
+   \item[line 47 and 49] set for vector function (line 47) and
+     add \texttt{vfuncnr} to the coefficients. Note, that the
+vector function needs to specify the flux vector $-\nabla u$.
+   \item[line 55] the vector function \texttt{vfunc} is assigned to
+      the procedure pointer \texttt{coefficients\%vfunc}.
+   \item[line 74 and 75] we have split the essential boundaries into two parts:
+\texttt{C1} and \texttt{C3--C4}.
+   \item[lines 84--90] the filling has been split in the same way.
+Note, that this
+is not really necessary here, it is just clean programming.
+Filling the values on
+curve \texttt{C2} would have done no harm here, since the function is
+defined on curve \texttt{C2} and the unknowns are recomputed by the
+solve step (they are unknowns now!). In general this practice is not
+recommended, since functions might not be defined.
+   \item[line 102 and 103]here the natural boundary integral is added using the
+element subroutine
+\texttt{poisson\_natboun}
+and using the vector function \texttt{vfunc}. The function number
+is supplied via the coefficients.
+    \item[line 113 and 114]
+      the exact solution must now be build with \texttt{funcnr=7}.
+\end{description}
+
+Typing at the command line 
+\begin{quote}
+    \texttt{poisson2}
+\end{quote}
+will show something like
+\begin{quote}
+  \texttt{4.444285222060529E-07}
+\end{quote}
+on your screen and typing
+\begin{quote}
+  \texttt{viewfig sol.fig}
+\end{quote}
+will show something like Fig.~\ref{fig:poisson2_sol.out}.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{poisson2_sol}
+   \end{center}
+   \caption{Plot of data in \texttt{sol.fig} for \texttt{poisson2}}
+    \label{fig:poisson2_sol.out}
+\end{figure}
+
+\subsection{A Poisson problem on a curved quadrilateral region with Dirichlet 
+            and Neumann boundary conditions} 
+\label{sec:poisson3}
+
+We again consider the Poisson equation as in the previous example, but now we
+consider a quadrilateral domain with curved boundaries.
+We substitute the following exact solution for $u$:
+\begin{equation}
+     u=1+\cos(\pi x)\cos(\pi y)
+\end{equation}
+and find the corresponding $f$:
+\begin{equation}
+     f=2\pi^2\cos(\pi x)\cos(\pi y)
+\end{equation}
+and $\nabla u$:
+\begin{equation}
+   \nabla u=
+\begin{pmatrix}
+     -\pi\sin(\pi x)\cos(\pi y) \\
+     -\pi\cos(\pi x)\sin(\pi y) 
+\end{pmatrix}
+\end{equation}
+The source of the problem is in the file \texttt{poisson3.f90} and the
+difference with respect to \texttt{poisson2.f90} will be discussed. 
+The function numbers need to be changed again and the main change in the
+source is
+\begin{listing}{59}
+  meshgen_options%regionshape = 3
+  meshgen_options%x2d = &
+    reshape ( [ 0.0_dp, 2.0_dp, 2.0_dp, -1.0_dp,    &
+                0.0_dp, 0.0_dp, 2.0_dp,  3.0_dp ], &
+              [4,2] )
+  meshgen_options%curved(1:4) = .true.
+  meshgen_options%funcnr(1:4) = [ 1, 2, 3, 4 ]
+                                                                                
+  call quadrilateral2d ( mesh, meshgen_options, func=cfunc )
+   
+\end{listing}
+\begin{description}
+   \item[line 59] \texttt{regionshape=3} is a curved quadrilateral
+     (1: rectangle, 
+     2: quadrilateral with straight boundaries)
+   \item[line 60--63] here the four corner points are specified: $(0,0)$,
+         $(2,0)$, $(2,2)$, $(-1,3)$. Note that \texttt{x2d} is a 4$\times$2
+        matrix.
+   \item[line 64] here it is specified that all four curves are curved. It is
+      of course also possible to define only one, two or three curves curved.
+   \item[line 65] here the function numbers for the $(x(s),y(s))$
+       coordinates of the four curved boundaries as a function of a curve
+       coordinate $s\in[0,1]$. The curve coordinate $s$ increases in the
+       positive direction of a curve, as given in Fig.~\ref{fig:unitsquare}.
+       The start point ($s=0$) and end point
+       ($s=1$) of a curve 
+       need to coincide with the corner coordinates \texttt{x2d}, otherwise
+       weird results can be expected.
+   \item[line 67] an extra parameter specifying the function for the curved
+       boundaries is present.
+       \texttt{cfunc} is part of the module \texttt{functions\_m}.
+\end{description}
+
+Typing at the command line 
+\begin{quote}
+    \texttt{poisson3}
+\end{quote}
+will show something like
+\begin{quote}
+  \texttt{8.482015264414944E-04}
+\end{quote}
+on your screen and typing
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+will show something like
+Figs.~\ref{fig:poisson3_mesh.fig} and \ref{fig:poisson3_sol.fig}. 
+\begin{figure}[ht!]
+   \begin{center}
+     \includegraphics[scale=0.7]{poisson3_mesh}
+   \end{center}
+   \caption{Plot of the mesh for \texttt{poisson3} (20$\times$20 elements).}
+    \label{fig:poisson3_mesh.fig}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{poisson3_sol}
+   \end{center}
+   \caption{Plot \texttt{sol.fig} for \texttt{poisson3}}
+    \label{fig:poisson3_sol.fig}
+\end{figure}
+Note, that all elements are curved and not just the boundary. The mesh is
+computed by a mapping technique called `the blending function method' of Gordon
+\& Hall. This technique is fully described in the book of
+ Szab{\'o} and Babu{\v{s}}ka \cite{Szabo91}. First a mesh is made on the unit
+square $(\xi,\eta)\in[0,1]\times[0,1]$. Then the mesh is mapped on a
+quadrilateral
+with straight sides (bilinear function). Now assume that, for example, curve
+\texttt{C2} is curved. Now all points are shifted in the following way. Say we
+have a particular point denoted by the reference coordinate $(\xi_1,\eta_1)$.
+Now take the point on the boundary \texttt{C2}: $(1,\eta_1)$. The new position
+of that point is computed using the boundary description with $s=\eta_1$. Then
+the difference with the position of the boundary point in the straight
+quadrilateral is computed.
+The new position of the internal point given by reference coordinates
+$(\xi_1,\eta_1)$
+is found by adding the
+same difference but weighted (blended) by $\xi$. Note, that the other sides
+remain straight. The same operation can be performed for all sides that are
+curved.
+
+\subsection{A Poisson problem on a curved quadrilateral region with Dirichlet 
+            and Neumann boundary conditions. Derived quantities.} 
+\label{sec:poisson4}
+
+We again consider the Poisson equation as in the previous example, using the
+same exact solution. However, we want to compute the $\nabla u$ from the
+numerical solution $u$. This is a derived quantity. 
+
+For derived quantities (but also for other purposes) we need a new vector type.
+The type \texttt{sysvector\_t} is exclusively for the system vector:
+\begin{itemize}
+   \item it is governed by the array component \texttt{elementdof} of
+      the structure \texttt{input\_probdef\%elementdof}.
+   \item it is also renumbered to reflect unknown and known entries in the
+      vector.
+\end{itemize}
+Derived quantities usually have a different number of components in the nodal
+points than the system vector and there is no reason to renumber the
+components. Therefore we introduce the new vector type \texttt{vector\_t} and
+a number of associated routines. Vectors of type \texttt{vector\_t} are
+structures like system vectors and can be defined like a system vector without
+the renumbering using \texttt{vec\_elementdof} (see below in the example). An
+additional possibility exists to define the components element-wise. That is,
+the degrees defined by \texttt{vec\_elementdof} are defined per element so that
+each element connected to a particular nodal point has its own set of
+data for the
+vector components at that point. This can come in handy, for example, when the
+user wants to see the `real' derivatives of a \fem\ solution and not just
+a nodal averaged one.
+
+The source of the problem is in the file \texttt{poisson4.f90} and the
+difference with respect to \texttt{poisson3.f90} will be discussed. 
+\bigskip
+\begin{listing}{35}
+  type(sysvector_t), target :: sol
+  type(sysvector_t) :: rhsd
+  type(vector_t) :: grad, gradexact
+  type(plot_options_t) :: plot_options
+  type(oldvectors_t) :: oldvectors
+  type(coefficients_t) :: coefficients
+\end{listing}
+\bigskip
+\begin{listing}{74}
+! problem definition
+                                                                                
+  call create_input_probdef ( mesh, input_probdef, nvec=1 )
+                                                                                
+  input_probdef%elementdof(1)%a = [1,1,1,1,1,1,1,1,1]
+
+  input_probdef%vec_elementdof(1)%a = reshape ( [2,2,2,2,2,2,2,2,2], [9,1])
+\end{listing}
+\bigskip
+\begin{listing}{117}
+! create of grad
+                                                                                
+  call create_vector ( problem, grad, vec=1 )
+
+! create oldvectors
+
+  call create ( oldvectors, nsysvec=1 )
+                                                                                
+  oldvectors%s(1)%p => sol
+
+  call derive_vector ( mesh, problem, grad, elemsub=poisson_deriv, &
+    coefficients=coefficients, oldvectors=oldvectors )
+                                                                                
+! create exact solution of grad
+                                                                                
+  call create_vector ( problem, gradexact, vec=1 )
+                                                                                
+  call fill_vector ( mesh, problem, gradexact, degfd=1, &
+    node1=1, node2=mesh%nnodes, func=func, funcnr=5 )
+  call fill_vector ( mesh, problem, gradexact, degfd=2, &
+    node1=1, node2=mesh%nnodes, func=func, funcnr=6 )
+                                                                                
+! print maximum difference of grad-gradexact to standard output
+                                                                                
+  print *, maxval( abs(grad%u -gradexact%u) )
+                                                                                
+! plot solution
+
+  plot_options%fontsize = 14
+
+  call plot_color_contour ( plot_options, mesh, problem, filename='dudx.fig', &
+    degfd=1, vector=grad )
+  call plot_color_contour ( plot_options, mesh, problem, filename='dudy.fig', &
+    degfd=2, vector=grad )
+
+  plot_options%scalevector = 0.05
+
+  call plot_vector ( plot_options, mesh, problem, filename='gradu.fig', &
+    vector=grad )
+
+\end{listing}
+\bigskip
+\begin{listing}{163}
+  call delete ( grad, gradexact )
+  call delete ( sysmatrix )
+  call delete ( coefficients )
+  call delete ( oldvectors )
+\end{listing}
+
+\begin{description}
+   \item[line 35] the solution vector \texttt{sol} gets the additional
+attribute \texttt{target} so that a `pointer' in
+\texttt{oldvectors} can point to it (see below).
+   \item[line 37] defines two vectors of type \texttt{vector\_t}.
+   \item[line 39] defines the structure \texttt{oldvectors} of
+      type \texttt{oldvectors\_t}. This structure is used to supply sysvectors
+      and vectors to the element routines by using pointers.
+   \item[line 76] additional parameter \texttt{nvec=1} to indicate that there
+     is one subtype of vector defined.
+     Here is not meant \texttt{vector\_t} but
+     the number of vectors with a different number of degrees of freedom in the
+     nodal points. For
+     example, a vector with one degree of freedom in all nodal points and a
+     vector with two degrees of freedom in all nodal points are both of type
+     \texttt{vector\_t} but of different subtype. 
+  \item[line 80] here all subtypes of the vectors are defined. In this case
+     there is only one: a vector with two degrees of freedom in each nodal
+     point. Note, that \texttt{vec\_elementdof} is an array of size the number
+     of element groups. Since we have only one group, only one array
+     component (hence the \texttt{(1)}) needs to be defined. Each component of
+     the array is a \emph{two-dimensional} array, which is denoted by
+     \texttt{\%a}. The first dimension is the number of nodal points in the
+     element and the second dimension is the vector subtype number. We have
+     only one subtype here, but it still needs to be defined as a
+    two-dimensional array, for which we have used the intrinsic function
+      \texttt{reshape}.
+   \item[line 119] here a vector \texttt{grad}
+     of type \texttt{vector\_t} with subtype number 
+     \texttt{vec=1} is created. The subtype number is stored in the component
+     \texttt{grad\%vec}.
+   \item[line 123] here the structure oldvectors is defined (it contains just
+     one sysvector).
+   \item[line 125] here the solution vector \texttt{sol} is communicated to the
+     element routine \texttt{poisson\_deriv} by using a pointer. The
+     assignment statement here does not transfer the data of \texttt{sol} to
+     \texttt{oldvectors\%s(1)\%p}:
+     \emph{only the pointer} \texttt{oldvectors\%s(1)\%p}
+     \emph{will be associated to} the system vector \texttt{sol}.
+     This means that after this line \texttt{oldvectors\%s(1)\%p} points to
+     the same object (including the data) in memory as \texttt{sol}.
+   \item[line 127] the actual values in \texttt{grad} are computed
+     here using the element subroutine \texttt{poisson\_deriv}. The numerical
+     values of $\nabla u$ will be discontinuous across element boundaries.
+     Therefore the values on element boundaries will be averaged values.
+     It is possible to define the vector \texttt{grad} to be defined
+     element-wise, in which case averaging will not take place.
+   \item[line 132--137] here the vector with the exact $\nabla u$ is
+     created and filled.
+   \item[line 141--155] the maximum error in $\nabla u$ is printed to
+     the screen and \texttt{gradu} is plotted to a file.
+   \item[line 163] the vectors are deleted to free the memory.
+   \item[line 166] the structure oldvectors is deleted.
+\end{description}
+     
+Typing at the command line 
+\begin{quote}
+    \texttt{poisson4}
+\end{quote}
+will show something like
+\begin{quote}
+  \texttt{9.612474932170202E-02}
+\end{quote}
+on your screen and typing
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+will show something like
+Figs.~\ref{fig:poisson4_1_sol.fig}, \ref{fig:poisson4_2_sol.fig}, 
+      and \ref{fig:poisson4_3_sol.fig}.
+Note that, compared to the previous problem, we have made curve \texttt{C2}
+a straight line.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{poisson4_1_sol}
+   \end{center}
+   \caption{Plot of $\plderiv{u}{x}$ for \texttt{poisson4}.}
+    \label{fig:poisson4_1_sol.fig}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{poisson4_2_sol}
+   \end{center}
+   \caption{Plot of $\plderiv{u}{y}$ for \texttt{poisson4}.}
+    \label{fig:poisson4_2_sol.fig}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{poisson4_3_sol}
+   \end{center}
+   \caption{Vector plot of $\nabla u$ for \texttt{poisson4}.}
+    \label{fig:poisson4_3_sol.fig}
+\end{figure}
+
+\clearpage
+
+\section{The Stokes equation}
+
+In this section an example using the Stokes equation will be given after
+the theory in the next section.
+
+\subsection{Weak form of the Stokes equation. Galerkin \fem}
+\label{sec:stokesweak}
+
+We consider the Stokes equation in a region $\Omega$:
+\begin{alignat}{3}
+ -&\nabla\cdot(2\eta \ten D)+\nabla p & &=\vek f,&&\qquad\text{in }\Omega
+     \label{eq:stokes1}\\
+   &\nabla\cdot\vek u& &=0&&\qquad\text{in }\Omega
+     \label{eq:stokes2}
+\end{alignat}
+where $\ten D=(\nabla\vek u+\nabla\vek u^T)/2$. The boundary conditions are
+\begin{gather}
+    \vec u = \vec u_D\text{ on }\Gamma_D\\
+    -p\vec n+2\eta \ten D\cdot\vec n=\vec t_{\text{N}}
+\text{ on }\Gamma_{\text{N}}
+\end{gather}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part. The Neumann condition is equivalent
+to an imposed traction of $\vec t_{\text{N}}$.
+                                                                                
+The weak form can be obtained by multiplying
+Eqs.~\eqref{eq:stokes1}--\eqref{eq:stokes2}
+with test functions $\vec v$ and $q$:
+\begin{align*}
+ (\vek v,-\nabla\cdot\ten\sigma -\vek f)&=0,\qquad\text{for all }\vek v\\
+  (q,\nabla\cdot\vek u)& =0,\qquad\text{for all }q
+\end{align*}
+where
+\begin{align*}
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\\
+   (a,b)&=\int_\Omega a b\D x
+\end{align*}
+and $\ten\sigma = -p\ten I+2\eta\ten D$.
+
+Using partial integration and Gauss'
+theorem we obtain the following weak form: 
+Find $\vek u$ and $p$ such that
+\begin{alignat}{3}
+  &\big(\ten D_v,2\eta\ten D\big)
+    -(\nabla\cdot\vek v,p)&&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+&\qquad&\text{for all }\vek v\label{eq:weakst1}\\
+  &\,(q,\nabla\cdot\vek u)&& =0,&\qquad&\text{for all }q\label{eq:weakst2}
+\end{alignat}
+using appropriate spaces for $\vek u$, $p$, $\vek v$ and $q$. In this equation
+$\ten D_v$ is defined by
+\[
+\ten D_v=(\nabla\vek v+\nabla\vek v^T)/2
+\]
+and the bilinear operator $(\,,\,)$ for tensors is given by
+\[
+   (\ten A, \ten B)=\int_\Omega\ten A:\vek B\D x
+\]
+
+The weak form can be used to obtain an approximate solution using the Galerkin \fem\
+technique. For this we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $\vek u$ and $p$ (and similarly $\vek v$ and $q$) by
+polynomials on each element:
+\[
+ \begin{split}
+    \vek u_h&=\tsum_k \phi_k(\vek x)\vek u_k=\col\phi^T(\vek x)\col{\vek u}\\
+    p_h&=\tsum_k \psi_k(\vek x) p_k=\col\psi^T(\vek x)\col{ p}
+ \end{split}
+\]
+where $\col\phi(\vek x)$ and $\col\psi(\vek x)$
+are global shape functions.  Substituting into the
+weak form leads to
+\begin{alignat*}{3}
+   &\col{\vek v}^T\cdot(\mat{\ten S}\cdot\col{\vek u}-\mat{\vek L}^T\col p)&&=
+    \col{\vek v}^T\cdot\col{\vek f}\qquad&&\text{for all }\col{\vek v}\\
+  &\quad\col q^T\mat{\vek L}\cdot\col{\vek u}&&=0\qquad&&\text{for all }\col{q}
+\end{alignat*}
+or
+\[
+ \begin{bmatrix}
+   \mat{\ten S} &-\mat{\vek L}^T \\[1ex]
+   \mat{\vek L} &\quad \mat 0
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{\vek u}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+    \col{\vek f}\\[1ex]
+    \col 0
+ \end{bmatrix}
+\]
+with 
+\begin{align*}
+   \mat{\ten S}&=\int_\Omega\eta[(\nabla\col{\phi}\cdot\nabla\col{\phi}^T)\ten
+I+                            (\nabla\col{\phi}\nabla\col{\phi}^T)^c]\D x,
+\qquad\text{where }\ten A^c\equiv\ten A^T\\
+\mat{\vek L}&=(\col{\psi},\nabla\col\phi^T)\\
+ \col{\vek f}&=(\col{\phi},\vek t_{N})_{\Gamma_{\text{N}}}+(\col{\phi},\vek f)
+\end{align*}
+or in index notation:
+\begin{align*}
+       S_{ij}^{km}&= \tsum_l(\phi_{k,l},\eta\phi_{m,l})\delta_{ij}+
+          (\phi_{m,i},\eta\phi_{k,j})\\
+    L_i^{km}&=(\psi_k,\phi_{m,i})\\
+     f^k_i&=(\phi_k,t_{iN})_{\Gamma_{\text{N}}}+(\phi_k,f_i)
+\end{align*}
+Here $k$ and $m$ denote nodal points and $i$ and $j$ component directions of
+vectors. In practice we multiply the continuity equation by -1 in order to
+obtain a symmetric system matrix:
+\[
+ \begin{bmatrix}
+   \mat{\ten S} &-\mat{\vek L}^T \\[1ex]
+   -\mat{\vek L} &\mat 0
+ \end{bmatrix}
+ \begin{bmatrix}
+    \col{\vek u}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+    \col{\vek f}\\[1ex]
+    \col 0
+ \end{bmatrix}
+\]
+
+Recommended shape functions for velocity and pressure are:
+\begin{itemize}
+ \item from the Taylor-Hood
+family (continuous pressures): $Q_2Q_1$ on quadrilaterals and hexahedra and
+$P_2P_1$ on triangles and tetrahedra\footnote{The shape functions $P_2Q_2/P_1Q_1$ on prisms seem to also work in early testing (see example \texttt{stokes51.f90} in Section~\ref{sec:stokes3Ddrivencavity}).
+However, the shape functions $P_2Q_2\text{r}/P_1Q_1\text{r}$ on pyramids do not seem to work. More research is needed here.}.
+ \item from the Crouzeix-Raviart
+family (discontinuous pressures): $Q_2P_1^{(\text{d})}$ on quadrilaterals
+and hexahedra and $P_2^+P_1^{(\text{d})}$ on triangles and tetrahedra.
+\item spectral elements (discontinuous pressures): $Q_pP_{p-1}^{(\text{d})}$ on
+quadrilaterals.
+\end{itemize}
+
+For plotting streamlines in 2D flows we compute the streamfunction 
+$\psi$ from the
+velocity vector $\vec u=u\vec e_1+v\vec e_2$. The definition of $\psi$ is
+\[
+   \pderiv{\psi}{x} = -v,\qquad
+   \pderiv{\psi}{y} = u
+\]
+which shows that
+\begin{equation}
+  \psi(\vek x_2) - \psi(\vek x_1) = \int_{\Gamma_{12}}
+      \vek n\cdot\vek u\D s
+    \label{eq:streamint}
+\end{equation}
+or in words: the streamfunction difference is the flow rate through a curve
+connecting two points. Eq.~\eqref{eq:streamint} can be used to used to compute 
+$\psi$ in all nodal points, but the procedure is cumbersome and not
+straightforward. Therefore we prefer a procedure that solves 
+the Poisson equation
+\begin{equation}
+   -\nabla^2\psi = \omega
+\label{eq:streamfunction} 
+\end{equation}
+with the vorticity $\omega=\plderiv vx-\plderiv uy$. We use a
+Neumann boundary condition:
+\begin{equation}
+ \begin{split}
+   \pderiv{\psi}{n}=\vec n\cdot\nabla\psi=\vec n\cdot(-v\vec e_1+u\vec e_2)=
+        -vn_1+un_2=-\vec u\cdot\vec t
+ \end{split}
+\label{eq:streamNeum}
+\end{equation}
+where $\vec t$ is the tangential vector (with $\vec n$ to the `right').
+
+For plotting streamlines in an axisymmetrical flow we have
+\begin{equation}
+   \pderiv{\psi}{z} = -2\pi r v,\qquad
+   \pderiv{\psi}{r} = 2\pi r u
+   \label{eq:streamfuncaxi}
+\end{equation}
+where $(z,r)$ are cylindrical coordinates\footnote{We use the convention
+$(z,r)$, i.e.\ $z$ is the first coordinate, to preserve the ordering of the
+coordinates to represent a right-handed system.
+Note that \sep\ uses the convention $(r,z)$.}
+and $u$ is
+the velocity component in axial ($z$) direction and $v$ the velocity component
+in radial ($r$) direction ($\vec u=u\vec e_z+v\vec e_r$).
+We easily find that
+\[
+  \psi(\vek x_2) - \psi(\vek x_1) = \int_{\Gamma_{12}}
+      \vek n\cdot\vek v\,2\pi r\D s
+\]
+or in words: the streamfunction difference is the flow rate through a surface
+consisting of a curve 
+connecting two points that is expanded over the full circumferential ($\theta$)
+direction.
+We find from \eqref{eq:streamfuncaxi} that
+\[
+   -\nabla^2_{zr}\psi=-(\pderiv{^2\psi}{z^2}+\pderiv{^2\psi}{r^2})=
+    = 2\pi ( r\omega+u)
+\]
+with the vorticity $\omega=\plderiv vz-\plderiv ur$. Note that
+$\nabla^2_{zr}$ is the `planar' $(z,r)$ Laplace operator and not the 
+real $\nabla^2$ expressed in a cylindrical coordinate system.
+We use a Neumann boundary condition:
+\begin{equation}
+ \begin{split}
+   \pderiv{\psi}{n}=\vec n\cdot\nabla\psi=
+       2\pi r\vec n\cdot(-v\vec e_z+u\vec e_r)=
+       2\pi r( -vn_z+un_r )=-2\pi r\vec u\cdot\vec t
+ \end{split}
+\label{eq:streamNeumaxi}
+\end{equation}
+where $\vec t$ is the tangential vector (with $\vec n$ to the `right'). Note,
+that the Neumann condition is zero on the center line ($r=0$).
+
+\subsection{A Stokes problem on a unit square with Dirichlet boundary 
+            conditions: driven cavity problem. Physical quantities}
+\label{sec:driven_cavity2D}
+
+We consider the Stokes equation for a driven cavity problem on a unit square
+(see Fig.~\ref{fig:drivencavity}). On the upper boundary a tangential
+velocity of 1 is imposed and on all other walls the velocity components are
+zero. In the lower left corner the pressure value is set to zero (Dirichlet).
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics{driven_cavity}
+   \end{center}
+   \caption{Driven cavity problem}
+    \label{fig:drivencavity}
+\end{figure}
+
+The example file is \texttt{stokes1.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+
+The Stokes element routines
+in the add-on `stokes' (see Sec.~\ref{sec:stokesaddon}) are used for
+the building of the system. 
+
+Some notes on the source:
+\begin{listing}{43}
+
+! fill coefficients
+
+  call create_coefficients ( coefficients, ncoefi=150, ncoefr=100 )
+
+  coefficients%i(1:11) = &
+    [ uintpl,   pintpl,     0,     0,         0,  &
+      physqvel, physqpress, 0,     0,     gauss,  &
+      gauss ]
+  coefficients%i(12:) = 0
+
+  coefficients%r(1) = eta
+  coefficients%r(2:) = 0
+
+\end{listing}
+Here the structure \texttt{coefficients} of type \texttt{coefficients\_t} (see
+Sec.~\ref{sec:coefficients}) is created and filled with various parameters
+needed on element level for the Stokes problem. See Sec.~\ref{sec:stokesaddon}
+on how obtain the definition of the values in \texttt{coefficients} for the
+Stokes system.
+\begin{listing}{76}
+! problem definition
+                                                                                
+  call create_input_probdef ( mesh, input_probdef, nvec=3, nphysq=2 )
+                                                                                
+  input_probdef%vec_elementdof(1)%a =   &
+      reshape ( [2,2,2,2,2,2,2,2,2,    &  ! velocity
+                 1,0,1,0,1,0,1,0,0,    &  ! pressure
+                 1,1,1,1,1,1,1,1,1 ], &  ! scalar, such as vorticity
+                 [9,3] )
+                                                                                
+  input_probdef%physq = [1,2]
+                                                                                
+  call define_essential ( mesh, input_probdef, curve1=1, curve2=4, physq=1 )
+  call define_essential ( mesh, input_probdef, point=1, physq=2 )
+                                                                                
+  call problem_definition ( input_probdef, mesh, problem )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 80--84] here three subtypes of vectors are defined. The first two
+will also be used to define the degrees of freedom of the system vector by
+using physical quantities (see below). We use bi-quadratic ($Q_2$)
+and bilinear interpolation ($Q_1$) for the velocity vector and pressure,
+respectively (Taylor-Hood element).
+   \item[line 78] an extra parameter \texttt{nphysq=2} is added, which means
+that we define two physical quantities (velocity and pressure).
+   \item[line 86] here we define the two physical quantities, The first
+(velocity) is defined by the vector of subtype \texttt{vec=1} and the second by
+\texttt{vec=2}. We have not defined \texttt{input\_probdef\%elementdof}. This
+means
+that the element degrees of freedom for the system vector will automatically be
+defined by the (sum of the) physical vectors.
+   \item[line 88 and 89] essential boundary conditions can also be defined by
+specifying the physical quantity instead of the degree of freedom number in the
+nodes. Note that the pressure boundary condition is defined specifying
+ the point number.
+\end{description}
+\begin{listing}{98}
+! fill solution vector with essential boundary conditions
+                                                                                
+  call fill_sysvector ( mesh, problem, sol, &
+    curves=[1,2,4], physq=1, value=0._dp )
+  call fill_sysvector ( mesh, problem, sol, &
+    curve1=3, physq=1, vvalue=[1._dp,0._dp] )
+  call fill_sysvector ( mesh, problem, sol, &
+    point=1, physq=2, value=0._dp )
+                                                                                
+\end{listing}
+Here the actual values of the essential boundary conditions are filled in. Note
+that in the upper corner nodes the velocity component $u$ has been set to 1. If
+you want to exclude these end points add the parameter \texttt{exclude=3} at
+the filling of curve \texttt{C3}.
+We set $p=0$ in the lower left corner point.
+
+\begin{listing}{113}
+! build (assemble) matrix and vector from elements
+                                                                                
+  call build_system ( mesh, problem, sysmatrix, rhsd, elemsub=stokes_elem, &
+    order = 'DN' )
+                                                                                
+\end{listing}
+Here a new parameter \texttt{order} has been introduced. In the elements for
+the Stokes problem the element degrees of freedom are not ordered node for node
+(like in the global vector) but first all $u$ components, then all $v$
+components and finally all $p$ components. This is reflected in the parameter 
+\texttt{order='DN'}, which means ordering according to physical quantities
+(outer loop) then degrees within physical quantities and finally
+nodes (inner loop). In \texttt{revision 128} of \tfem\ the default has been
+changed to \texttt{order='DN'} for problems with physical unknowns and the
+parameter \texttt{order='DN'} is superfluous here.
+
+\begin{listing}{122}
+! post-processing
+                                                                                
+  call create_vector ( problem, velocity, physq=1 )
+  call create_vector ( problem, pressure, vec=3 )
+  call create_vector ( problem, vorticity, vec=3 )
+                                                                                
+  call extract_physvector ( mesh, problem, sol, velocity )
+
+! create the structure oldvectors
+
+  call create_oldvectors ( oldvectors, nsysvec=1 )
+
+  oldvectors%s(1)%p => sol
+
+  call derive_vector ( mesh, problem, pressure, elemsub=stokes_pressure, &
+    coefficients=coefficients, oldvectors=oldvectors )
+
+  coefficients%i(13)=5
+
+  call derive_vector ( mesh, problem, vorticity, elemsub=stokes_deriv, &
+    coefficients=coefficients, oldvectors=oldvectors )
+                                                                                
+\end{listing}
+\begin{description}
+   \item[line 124] a vector for the velocity is defined using
+     \texttt{physq} instead of \texttt{vec} (both ways are equivalent).
+   \item[line 125] a vector for the pressure is defined using \texttt{vec=3}.
+Note that this vector defines the pressure in all nodes, whereas the pressure
+in the solution vector \texttt{sol} is only defined in the vertices of the
+element. The reason for this is that the plotting routines can only handle
+vectors that have a value in all nodes.
+   \item[line 128] the physical vector is extracted directly from the
+     system vector.
+   \item[line 132] here a structure of type \texttt{oldvectors\_t} is created
+(see Sec.~\ref{sec:oldvectors}) to store the pointers to the solution that can
+be used on element level. Note, that only one system vector is created in
+\texttt{oldvectors}.
+   \item[line 134] the pointer \texttt{oldvectors\%s(1)\%p} now points to
+the solution vector \texttt{sol}.
+   \item[line 136, 137 and 141,142] the pressure and vorticity vectors are
+     computed here from the solution vector \texttt{sol}.
+    The element routine for the
+pressure \texttt{stokes\_pressure} computes the pressure in nine nodal points
+from the four vertex values using the shape functions for the pressure.
+\end{description}
+Run the problem by typing
+\begin{quote}
+   \texttt{stokes1}\\
+   \texttt{streamfunction1}
+\end{quote}
+The program \texttt{stokes1} also writes the velocity vector to a file, which is
+read by the program \texttt{streamfunction1}. The streamfunction is computed by
+solving the Poisson problem Eq~\eqref{eq:streamfunction} with the Neumann
+boundary conditions Eq.~\eqref{eq:streamNeum}. Typing the command
+\begin{quote}
+  \texttt{viewfig}
+\end{quote}
+will show something like
+Figs.~\ref{fig:streamfunction}, \ref{fig:velocity}, \ref{fig:vorticity}, 
+      and \ref{fig:pressure} (and more).
+Note, that due to the non-zero velocity in the
+upper corner nodes we have some inflow and outflow near these nodes in the last
+element. This can
+be avoided by setting a zero velocity in these nodes. Either way, a singularity
+exist in both points, best seen in the vorticity and pressure plots. 
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{streamfunction}
+   \end{center}
+   \caption{Plot of the streamfunction for the driven cavity problem}
+    \label{fig:streamfunction}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{velocity}
+   \end{center}
+   \caption{Plot of the velocity vector for the driven cavity problem}
+    \label{fig:velocity}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{vorticity}
+   \end{center}
+   \caption{Plot of the vorticity for the driven cavity problem}
+    \label{fig:vorticity}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.5]{pressure}
+   \end{center}
+   \caption{Plot of the pressure for the driven cavity problem}
+    \label{fig:pressure}
+\end{figure}
+\clearpage
+

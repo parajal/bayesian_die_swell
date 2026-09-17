@@ -1,0 +1,1627 @@
+% !TEX root = userguide.tex
+
+\chapter{Add-ons}
+\pgst{tfemch}
+
+\label{ch:addons}
+
+\def\chaptertitle{Add-ons}
+\def\headdate{11th September 2025}
+
+In this chapter a short overview of the available add-ons is given in alphabetical order.
+
+\section{bcf}
+\label{sec:bcfaddon}
+
+The add-on `bcf' contains routines for simulation of
+stochastic fluid models in isolation or as part of a flow simulation using
+Brownian configuration fields.
+
+\subsection{Stochastic models}
+
+Currently one module is available, and can be used as follows:
+\begin{quote}
+   \texttt{use stochastic\_models\_2D\_m}
+\end{quote}
+for solving stochastic fluid models in isolation using Brownian dynamics. The
+models available are described in Appendix~\ref{chap:stochasticmodels}
+
+The properties of the model are stored in a structure of type
+\texttt{stmodel\_t}. The structure must first be constructed by calling the
+routine \texttt{create\_stochastic\_model}. Then the material parameters must
+be filled in the components \texttt{modulus}, \texttt{lambda}, \texttt{nonlin}
+of the structure. The structure can be deleted using the generic routine
+\texttt{delete}.
+
+The Langevin equation is solved using Brownian dynamics. The numerical
+parameters for this method should be stored in a structure of type
+\texttt{stnumpar\_t}, with components \texttt{nfield} (number of
+fields/realizations), \texttt{timeint} (type of time integration)
+ and \texttt{tstep} (the time step).
+
+With
+\begin{quote}
+   \texttt{getexample bcf}
+\end{quote}
+several examples, such as startup of shear and elongational flow are available.
+
+\subsection{BCF flows}
+
+The add-on `bcf' also contains routines for flows of
+stochastic fluid models using Brownian configuration fields.
+Currently only elements for 2D flows are available
+ and can be used as follows:
+\begin{quote}
+   \texttt{use bcf\_elements\_m}
+\end{quote}
+The elements use DG for the convection term.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/bcf}.
+
+The theory and examples are described in Sec.~\ref{sec:bcfdg}.
+
+\section{compressible\_fluid}
+\label{sec:addon_compressible}
+
+The add-on `compressible\_fluid' contains routines for adding (weak)
+compressibility to fluids. It not suitable for gases.
+
+The routines can be used as follows:
+\begin{quote}
+   \texttt{use compressible\_fluid\_m}
+\end{quote}
+
+Examples are described in Sec.~\ref{sec:compressible}.
+
+\section{convection\_diffusion}
+\label{sec:convdiff_elements}
+
+The add-on `convection diffusion' contains routines for the Poisson equation
+and the convection-diffusion equation. The routines for the Poisson equation
+can be used as follows:
+\begin{quote}
+   \texttt{use poisson\_elements\_m}
+\end{quote}
+The routines for the convection-diffusion equation can be used as follows:
+\begin{quote}
+   \texttt{use convection\_diffusion\_elements\_m}
+\end{quote}
+Note, that the above statement also `uses' the poisson elements.
+Both 2D and 3D elements can be used.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/convection\_diffusion}.
+
+The theory and examples are described in Sec.~\ref{sec:poissonweak},
+Sec.~\ref{sec:diffusionweak} and subsequent sections.
+
+\section{convection\_diffusion\_supg}
+\label{sec:convdiff_elements_supg}
+
+(This add-on has been developed by Giovanna Grosso, Caroline Balemans and Nick Jaensson of the TU/e)
+
+The add-on `convection\_diffusion\_supg' contains routines for solving
+the convection-diffusion equation. SUPG is optionally applied to stabilize the elements
+for large P\'eclet numbers. Note, that the add-on is separate from the add-on
+described in Sec.~\ref{sec:convdiff_elements}, having incompatible definitions for parameters in
+the structure \texttt{coefficients}. Also, this add-on depends on the Stokes (Sec.~\ref{sec:stokesaddon}) and
+supg utils (Sec.~\ref{sec:supg_utils}) add-ons.
+
+The routines for the convection-diffusion equation can be used as follows:
+\begin{quote}
+   \texttt{use convection\_diffusion\_supg\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/convection\_diffusion\_supg}.
+
+The theory and examples are described in
+Sec.~\ref{sec:convdiffsupg} and subsequent sections.
+
+\section{dfm}
+\label{sec:deformationfields}
+
+The add-on deformation fields method (\texttt{dfm}) contains routines for solving
+deformation fields.
+
+The routines for the deformation fields method can be used as follows:
+\begin{quote}
+   \texttt{use dfm\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/dfm}.
+
+The theory and examples are described in
+Sec.~\ref{sec:dfm} and subsequent sections.
+
+\section{diffuse\_interface}
+\label{sec:diffuse_interface}
+
+The add-on `diffuse interface' contains routines for the diffuse interface
+model.
+The add-on can be used as follows:
+\begin{quote}
+   \texttt{use diffuse\_interface\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+The module uses the module \texttt{stokes\_elements\_m}
+ (see Sec.~\ref{sec:stokesaddon}).
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/diffuse\_interface}.
+
+An example is described in Sec~\ref{sec:couettedi}.
+
+\section{dummylibs}
+\label{sec:dummylibs}
+
+The add-on dummylibs can been used to provide dummy routines for missing
+external libraries.
+
+\section{elastic}
+\label{sec:elastic}
+
+The add-on `elastic' contains routines for nonlinear elastic solids. The routines
+can be used as follows:
+\begin{quote}
+   \texttt{use elastic\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/elastic}.
+
+The theory is described in Sec.~\ref{sec:elasticsolid}.
+An example is described in Sec.~\ref{sec:solidbar}. The add-on is also
+being used in the fluid-solid interaction example in Sec.~\ref{sec:fluidsolid}.
+
+\section{feast}
+\label{sec:feast}
+
+The add-on feast provides an interface to FEAST: a set of routines for solving
+eigenvalue problems. It is free software. See the file \texttt{README} in the
+directory \texttt{src/addons/feast} for some
+directions on using FEAST. At the time of writing the add-on feast only interfaces to the routine in FEAST for solving real generalized eigenvalue problems for sparse matrices.
+
+Examples using FEAST are
+\texttt{couette23.f90}, \texttt{couette24.f90}, \texttt{couette25.f90} and \texttt{couette26.f90} which can be obtained by typing:
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+See Sec.~\ref{sec:linearstabilityCouette} for more info.
+
+\section{figplot}
+\label{sec:figplot}
+
+The add-on figplot provides graphics routines writing a Fig output file. Fig files can be read and
+edited using the xfig program and translated to various other formats.
+
+The add-on figplot can be used by putting
+\begin{quote}
+   \texttt{use figplot\_m}
+\end{quote}
+in your program.
+
+The add-on figplot provides several routines starting with \texttt{plot\_} that
+are useful for producing 2D and projected 3D plots on any system
+without the need for an external commercial plot program.
+Note that figplot provides only basic plotting facilities
+and is not intended to replace a full-blown external graphics program like
+Tecplot or Paraview. In particular it only provides 2D plotting and projected 3D
+plotting, i.e.\ the 3D plots are just simple projections on a 2D plane without
+hidden line removal\footnote{By putting different graphical objects into
+layers in the fig file a poor man's hidden line removal can be obtained.}.
+
+Current possibilities are:
+\begin{itemize}
+   \item Plotting of points, curves and surfaces
+        (routine \texttt{plot\_points\_curves}).
+   \item Plotting of a mesh (routine \texttt{plot\_mesh}).
+   \item Plotting of objects (routine \texttt{plot\_objects}).
+   \item Plotting of data using color fill between contours (routine
+         \texttt{plot\_color\_fill}).
+   \item Plotting of data using colored contour lines (routine
+         \texttt{plot\_color\_contour}).
+   \item Plotting of two or three components with arrows (routine
+         \texttt{plot\_vector}).
+\end{itemize}
+In 3D plotting is basically only possible on the specified surfaces.
+Plotting options are set using a structure of type \texttt{plot\_options\_t}.
+Directly setting plot options in the structure
+\texttt{plot\_options} usually requires
+a lot of lines of code. Also if more than one plot routine is called
+it is more easy to restart from the default values.
+For these reasons a helper routine (\texttt{set\_plot\_options}) has been
+written which sets the structure to default value and the structure values can
+be set by heading parameters. For example
+\begin{listing}{1}
+
+  call set_plot_options ( plot_options, numlevels=21 )
+
+\end{listing}
+Note, that \texttt{plot\_options} is set to default values first, before setting
+the new values in the heading. Use \texttt{keep=.true.} in the heading to skip
+the setting to default values.
+
+A basic assumption underlies the \texttt{plot\_color\_xxx} and
+\texttt{plot\_vector} routines:
+\begin{quote}
+   \emph{All nodes must contain data of the quantity to be plotted.}
+\end{quote}
+If a quantity violates this, a new derived vector should be created (using the
+routine \texttt{derive\_vector}) that defines the quantity in all nodal points.
+Examples are: pressures in velocity/pressure elements, a seven-node triangle
+where the velocities are defined in the six boundary nodes and
+the discontinuous stresses in the center node (node 7). In the latter example
+both the velocities and stresses need derived vectors for plotting.
+
+Each \texttt{plot\_xxx} routine produces a file written in the Fig-format as
+used by the program \texttt{xfig}. The file should be given the extension
+\texttt{.fig} and can be edited using \texttt{xfig}.
+It can also be converted to other formats using the program \texttt{fig2dev}.
+
+Two shell scripts have been written to ease the converting to the \texttt{eps}
+format and to view the fig-files using ghostscript:
+\begin{quote}
+   \texttt{fig2eps [figfile(s)]}
+\end{quote}
+will generate eps-files of the figfiles given or all figfiles if no files are
+given.
+\begin{quote}
+   \texttt{viewfig [figfile(s)]}
+\end{quote}
+shows on the screen the figfiles given or all figfiles if no files are
+given. It uses ghostscript/ghostview.
+
+Several shell scripts are available that convert fig-files to images.
+For example
+\begin{quote}
+   \texttt{fig2tif [figfile(s)]}
+\end{quote}
+will generate tif-files of the figfiles given or all figfiles if no file are
+given. Likewise, \texttt{fig2pcx}, \texttt{fig2gif} and \texttt{fig2png} are
+available.
+
+Many example files use figplot for plotting.
+
+\section{generalized\_stokes}
+\label{sec:generalized_stokes}
+
+The add-on `generalized\_stokes' contains routines for
+\begin{enumerate}
+ \item The generalized Stokes equation, which is defined here as
+a Stokes equation with a varying viscosity coefficient $\eta$. The varying $\eta$
+coefficient needs to be supplied by the user and can
+be specified by a function, a vector defined in the nodes or an element vector
+defined per element (elvector).
+ \item The flow of a generalized Newtonian fluid model, where the viscosity function $\eta(\dot\gamma)$ is
+       according to
+       \begin{alignat*}{3}
+   \eta(\dot\gamma) &= m\dfrac{1}{\dot\gamma^{1-n}} & \quad&\text{Power-law}\\
+   \eta(\dot\gamma) &= \eta_\infty + (\eta_0-\eta_\infty)
+\dfrac{1}{\big(1+(\lambda\dot\gamma)^2\big)^{(1-n)/2}} &
+          \quad&\text{Carreau}\\
+   \eta(\dot\gamma) &= \eta_\infty + (\eta_0-\eta_\infty)
+\dfrac{1}{\big(1+(\lambda\dot\gamma)^a\big)^{(1-n)/a}} &
+          \quad&\text{Carreau-Yasuda}
+\end{alignat*}
+  with $\dot\gamma=\sqrt{2\ten D:\ten D}$.
+
+The viscosity function $\eta(\dot\gamma)$ can be augmented with a yield function
+ according to Papanastasiou \cite{Papanastasiou87}:
+\[
+     \eta(\dot\gamma) = \bar\eta(\dot\gamma) +
+       \dfrac{\tau_\text{y} \left( 1 - \exp(-r \dot\gamma) \right)}{\dot\gamma}
+\]
+where $\bar\eta(\dot\gamma)$ is the viscosity function given by either a constant value (Bingham), a Power-law, Carreau or Carreau-Yasuda model (see above), $\tau_\text{y}$ is the yield stress and $r$ is the regularization parameter.
+
+ \item Fluctuating hydrodynamics as introduced by Landau and Lifshitz.
+ \item Building the stress work vector per element for viscous fluids.
+\end{enumerate}
+The add-on can be used as follows:
+\begin{quote}
+   \texttt{use generalized\_stokes\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+The module uses the module \texttt{stokes\_elements\_m}
+ (see Sec.~\ref{sec:stokesaddon}).
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/generalized\_stokes}.
+
+Examples of varying viscosity are described in Sec~\ref{sec:genstokes}.
+Examples of generalized Newtonian fluids are described in Sec~\ref{sec:gennewtonian}.
+Examples of Brownian forces are described in Sec~\ref{sec:brownian}.
+
+\section{grid\_deformation}
+\label{sec:addon_grid_deformation}
+
+(This add-on has been developed by Young Joon Choi of the TU/e.)
+
+The add-on `grid deformation' contains routines for performing grid deformation
+to change position and size of elements according to a monitor function.
+The method is described in \cite{Wan07,Grajewski09} and used extensively in
+the PhD thesis of Choi \cite{Choi11b}.
+
+The routines can be used as follows:
+\begin{quote}
+   \texttt{use meshgen\_grid\_deformation\_m}\\
+   \texttt{use deform\_mesh\_ma57\_m}
+\end{quote}
+where the first module is generic and the second module is specific for the
+solver MA57 (see Sec.~\ref{sec:hslsparse}).
+
+Examples are described in Sec.~\ref{sec:grid_deformation}.
+
+\section{hsl}
+\label{sec:hsl_addon}
+
+The add-on hsl provides an interface to the direct solvers MA57 (symmetric) and MA41 from the HSL library \cite{HSL}. Furthermore there is an interface to the eigenvectors/value routine EA23 for diagonalizing $3\times3$ symmetric matrices.
+
+See the file \texttt{README} in the directory \texttt{src/addons/hsl}.
+
+\section{hsl\_extra}
+\label{sec:hsl_extra_addon}
+
+The add-on hsl\_extra adds additional interfaces to routines from the HSL library \cite{HSL}.
+See the Sec.~\ref{sec:hsl_external} on how to obtain
+the routines (requires a license, but academics can get a free personal license for each package separately).
+
+The add-on includes the following interfaces \begin{itemize}
+   \item Subroutine \texttt{condition\_number\_system\_mc75}: computes the
+condition number of the system matrix using HSL routine MC75.
+   \item Subroutine \texttt{condition\_number\_mc75}: computes the
+condition number of a sparse matrix using HSL routine MC75.
+   \item Subroutine \texttt{solve\_system\_mi20} solves a linear system using
+an iterative solver combined with an algebraic multigrid (AMG) preconditioner
+(HSL routine \texttt{hsl\_mi20}, see \cite{Doyle07}).
+AMG preconditioners can achieve $\mathcal{O}(N)$ solvers for linear systems.
+   \item Subroutine \texttt{solve\_system\_diag} solves a linear system using
+an iterative solver combined with a diagonal (Jacobi) preconditioner.
+    \item Special iterative solvers for the Stokes system, see Sec.~\ref{sec:iterativestokes}. The routines are
+ \texttt{solve\_system1\_mi20}, \texttt{solve\_system2\_mi20} and \texttt{solve\_system3\_mi20}.
+\end{itemize}
+See the file \texttt{README} in the directory
+\texttt{src/addons/hsl\_extra} for more information.
+
+Examples for using  \texttt{solve\_system\_mi20}
+ (iterative solve with amg
+preconditioner) are
+\texttt{poisson14.F90}, \texttt{poisson15.F90}, \texttt{poisson16.F90}
+and \texttt{poisson17.F90}, which can be obtained by
+typing:
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+The problems are
+the same as \texttt{poisson1.f90} (14) and \texttt{poisson5.f90} (15-17),
+respectively,
+but modified for using \texttt{solve\_system\_mi20}.
+Use \texttt{diff} to see the differences.
+
+Examples for using \texttt{solve\_system\_diag} are \texttt{poisson18.F90} and
+ \texttt{poisson19.F90}.
+
+\section{inertia}
+\label{sec:inertia}
+
+(This add-on has been developed by Michiel Baltussen of the TU/e).
+
+The add-on `inertia' contains element routines for the inertia terms
+in the momentum balance.
+The element routines can be used as follows:
+\begin{quote}
+   \texttt{use inertia\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+The module uses the module \texttt{stokes\_elements\_m}
+(see Sec.~\ref{sec:stokesaddon}).
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/inertia}.
+
+Examples are described in Sec~\ref{sec:navierstokes}.
+
+\section{interface\_tracking}
+\label{sec:interfacetrackingaddon}
+
+(This add-on has been developed by Massimiliano Villone of the University of
+Naples.)
+
+The add-on `interface\_tracking' contains routines for tracking
+sharp interfaces described by a mesh.
+The basic routines can be used as follows:
+\begin{quote}
+   \texttt{use interface\_tracking\_elements\_m}\\
+   \texttt{use poisson\_gd\_ma57\_m}
+\end{quote}
+where the first module contains the elements for tracking and the second module
+a routine for the (optional) tangential motion of the interface. If the curvature is needed, for example for setting
+the monitor function, an additional module needs to be loaded:
+\begin{quote}
+   \texttt{use curvature\_gd\_ma57\_m}
+\end{quote}
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/interface\_tracking}.
+
+Examples are described in Sec.~\ref{sec:interface_tracking}.
+
+\section{interfacial\_rheology}
+\label{sec:int_rheo}
+The add-on `interfacial rheology' provides boundary element routines for
+including interfacial rheology through a Neumann boundary condition in 2D,
+3D, and axisymmetric interfacial or boundary flow problems. Viscous, elastic
+and Kelvin-Voigt interface constitutive models have been implemented.
+Furthermore, routines are available for computing the nodal interfacial
+stresses on a 3D surface mesh.
+The elements can be used as follows:
+\begin{quote}
+   \texttt{use interfacial\_rheology\_elements\_2D\_curve\_m}
+\end{quote}
+for 2D or axisymmetric problems and:
+\begin{quote}
+   \texttt{use interfacial\_rheology\_elements\_3D\_surface\_m}
+\end{quote}
+for 3D problems.
+
+The parameters are supplied to the elements using the structure
+\texttt{coefficients} of type \texttt{coefficients\_t} (see
+Sec.~\ref{sec:coefficients}). The documentation of the coefficients is not
+part of this manual, but is in the text files \texttt{README\_coefficients\%i}
+and \texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/interfacial\_rheology}.
+
+\section{io\_utils}
+\label{sec:io}
+
+The add-on io\_utils supplies
+routines for reading/writing mesh, problem, coefficients, data to
+          and/or from a file. Also the interfacing (read/write) to external
+          packages is in this module.
+
+The add-on io\_utils can be used by putting
+\begin{quote}
+   \texttt{use io\_utils\_m}
+\end{quote}
+in your program.
+
+The add-on io\_utils provides several special I/O routines. It consists of
+several submodules that can also be used separately:
+\begin{listing}{17}
+  use tfem_utils_m  ! I/O for core tfem structures etc.
+  use sep_utils_m   ! I/O utils for sepran
+  use gbt_utils_m   ! I/O utils for Gambit (Neutral file format)
+  use gmsh_utils_m  ! I/O utils for Gmsh (msh and pos file format)
+  use ideas_utils_m ! I/O utils for NX-Ideas (Universal file format)
+  use vtk_utils_m   ! I/O utils for VTK (legacy vtk file format)
+  use tec_utils_m   ! I/O utils for Tecplot
+  use printtofile_m ! Printing of data in vector/sysvectors to a file
+  use printinfo_m   ! Printing of info from mesh, problem,... to standard output
+\end{listing}
+
+\subsection{Writing and reading a mesh to a file}
+\label{sec:iomesh}
+
+The routine \texttt{write\_mesh} can be used to write
+basic mesh information (points, curves, surfaces, topology, coordinates)
+to a binary file.
+The routine \texttt{read\_mesh} can be used to read this information again,
+possibly in a different main program.\\
+Example writing the mesh:
+\begin{listing}{1}
+
+  <generate mesh>
+
+  call write_mesh ( mesh, filename='mesh.out' )
+
+\end{listing}
+Example reading the mesh:
+\begin{listing}{1}
+
+  call read_mesh ( mesh, filename='mesh.out' )
+
+  call fill_mesh_parts ( mesh )
+
+\end{listing}
+Note that only basic information is written and that after reading the mesh the
+routine \texttt{fill\_mesh\_parts} must be called to generate all information of
+a mesh.
+
+\subsection{Writing and reading a structure of type
+     \texttt{input\_probdef\_t} to a file}
+
+In order to use vectors and sysvectors in a separate program for
+post processing, the structure \texttt{problem} of type \texttt{problem\_t}
+is needed. Since it is much easier to regenerate the structure
+\texttt{problem} than the write/read it to/from a file, two routines
+are available that write and read the information in the structure
+\texttt{input\_probdef} of type \texttt{input\_probdef\_t}.
+
+The routine \texttt{write\_input\_probdef} can be used to write
+a structure of type \texttt{input\_probdef\_t} to a binary
+file.
+The routine \texttt{read\_input\_probdef} can be used to read this
+information again, possibly in a different main program.\\
+Example writing \texttt{input\_probdef}:
+\begin{listing}{1}
+
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=4, nphysq=3 )
+
+  <fill input_probdef: element degrees of freedom, physical quantities,
+                       essential degrees of freedom, constraints >
+
+  call write_input_probdef ( mesh, input_probdef, filename='probdef.out' )
+
+  <compute solution>
+
+! write solution to binary file
+
+  open ( unit=13, file='data.out', form='unformatted' )
+  write ( unit=13 ) sol%u
+  close ( unit=13 )
+
+\end{listing}
+Example reading \texttt{input\_probdef}:
+\begin{listing}{1}
+
+! problem definition
+
+  call read_input_probdef ( mesh, input_probdef, filename='probdef.out' )
+
+  call problem_definition ( input_probdef, mesh, problem )
+
+! read solution from binary file
+
+  open ( unit=13, file='data.out', form='unformatted' )
+  read ( unit=13 ) sol%u
+  close ( unit=13 )
+
+  <post-processing sol>
+
+\end{listing}
+
+\subsection{Writing and reading coefficients to a file}
+\label{sec:iocoef}
+
+The routine \texttt{write\_coefficients} can be used to write
+a structure of type \texttt{coefficients\_t} to a binary
+file.
+The routine \texttt{read\_coefficients} can be used to read this
+information again, possibly in a different main program.\\
+Example writing the coefficients:
+\begin{listing}{1}
+
+  <create coefficients and fill it>
+
+  call write_coefficients ( coefficients, filename='coefficients.out' )
+
+\end{listing}
+Example reading the coefficients:
+\begin{listing}{1}
+
+  call read_coefficients ( coefficients, filename='coefficients.out' )
+
+\end{listing}
+
+\subsection{Reading a \sep-generated mesh}
+\label{sec:readsepmesh}
+
+The routine \texttt{read\_sepran\_mesh} reads a mesh from the a \sep-generated
+mesh file \texttt{meshoutput}. See the source file \texttt{sep\_utils.f90} in the directory
+\texttt{src/addons/io\_utils} for more information.
+See the \tfem\ legacy repository for some
+examples using \sep-generated meshes.
+
+
+\subsection{Reading a Gmsh generated mesh (msh file format)}
+\label{sec:readgmshmesh}
+
+The routine \texttt{read\_mesh\_gmsh} reads a mesh from a file using
+the msh format\footnote{Both a mesh in the ASCII and the binary format is
+supported in \tfem.}
+as generated by Gmsh\footnote{Gmsh
+(\href{http://www.geuz.org/gmsh}{http://www.geuz.org/gmsh})
+ \cite{Geuzaine09}, is an open source high quality mesh generator.
+It uses a geometry file quite similar to \sep, but also has a graphical
+interface.}. Some comments:
+\begin{itemize}
+\item The meshes generated are three dimensional. Use the optional argument
+\texttt{ndim=} to create lower-dimensional meshes in \tfem.
+\item Points, curves and/or surfaces are quite naturally generated.
+\item  Physical entities can be used to
+define the curves/surfaces
+ using the optional argument \texttt{physgeom=.true.}. The
+default is \texttt{physgeom=.false.}, which generates curves/surfaces using the
+geometrical entities defined by Gmsh.
+\item Using the optional argument \texttt{domaintype} the user can influence
+which elements will become geometries (curves and surfaces) and which elements become
+element groups.
+\item Multiple element shapes can be used.
+\item Multiple element groups of the same
+element shape can be defined using physical entities.
+\item Meshes with high-order polynomial interpolation can be read. By default, linear and quadratic elements are translated into lower-order elements of \tfem. Use the optional argument \texttt{highorder=.true.} to translate even the linear and quadratic elements to high-order elements in \tfem\footnote{Note, that the nodal topology will be different.}.
+\end{itemize}
+Note, that if physical entities are defined with gmsh,
+only gmsh-elements that are part of physical entities will be in the msh file.
+This means, for example, that if you want points, curves and (groups of)
+elements in a 2D mesh, the required
+points, curves and surfaces in gmsh need to be included in physical entities.
+See the source file \texttt{gmsh\_utils.f90} in the directory
+\texttt{src/addons/io\_utils} for more information.
+
+Various examples (e.g.\ \texttt{poisson23.f90} and \texttt{ale9.f90}) use
+a Gmsh generated mesh.
+
+See also the text file \texttt{README\_gmsh} in the directory
+\texttt{examples} for more information on the convention used
+in \tfem\ regarding gmsh.
+
+\subsection{Reading a Gambit-generated mesh}
+\label{sec:readgbtmesh}
+
+The routine \texttt{read\_mesh\_gambit} reads a mesh from a
+file generated by Gambit\footnote{Gambit is the pre-processor
+for the Fluent/Polyflow package.} in the neutral file format.
+Note that:
+\begin{itemize}
+\item No points are generated.
+\item
+In order to generate nodesets, boundary conditions in nodes
+need to be defined.
+\item In order to generate curves and/or surfaces,
+boundary conditions on element edges and/or faces need to be defined.
+\item
+Multiple element shapes can be used.
+\item Multiple element groups of the same
+element shape can be defined using material groups.
+\end{itemize}
+See the source file \texttt{gbt\_utils.f90} in the directory
+\texttt{src/addons/io\_utils} for more information. No examples are available
+in \tfem\ that use Gambit-generated meshes.
+
+\subsection{Reading an NX-Ideas generated mesh (universal file format)}
+\label{sec:readideasmesh}
+
+(This module has been developed by Tae Gon Kang of the TU/e.)
+
+The routine \texttt{read\_mesh\_ideas} reads a mesh from a file using
+the universal format as
+generated by NX-Ideas\footnote{NX-Ideas is part
+of the UGS package for CAD/CAE/CAM.}.
+See the source file \texttt{ideas\_utils.f90} in the directory
+\texttt{src/addons/io\_utils} for more information.
+See the \tfem\ legacy repository for some
+examples using NX-Ideas-generated meshes.
+
+\subsection{Writing to a VTK datafile}
+\label{sec:vtk}
+
+The Vizualization Toolkit\footnote{See
+\href{http://www.vtk.org}{http://www.vtk.org}}
+ (VTK)
+is a free package for visualization of 2D
+and 3D datasets. Only writing to the legacy format with the file
+extension \texttt{.vtk} is available. Various free
+scientific visualization programs can read
+\texttt{.vtk} files, for example
+Paraview\footnote{See
+\href{http://www.paraview.org}{http://www.paraview.org}. An old userguide
+manual can be downloaded
+\href{http://www.paraview.org/files/v1.6/ParaViewUsersGuide.PDF}{here},
+but a newer one must be bought.} or
+VisIt\footnote{See \href{https://wci.llnl.gov/simulation/computer-codes/visit}{VisIt website}}.
+
+The example file \texttt{stokes13.f90} writes data to the VTK format using the
+two available routines \texttt{write\_scalar\_vtk} for writing a scalar
+quantity, \texttt{write\_vector\_vtk} for writing a 2D or 3D vector quantity
+and \texttt{write\_tensor\_vtk} for writing a 2D or 3D tensor
+quantity\footnote{In the vtk output file a complete 3x3 tensor (9 components)
+is written, whether it is 2D, 3D, symmetric or unsymmetric.
+The file ends up being bigger than writing the individual components as a
+scalar. The reason is the writing of zeros for the components that
+are not actually there (2D) and the double writing of non-diagonal components
+for a symmetric tensor.}.
+The file can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+It is an adaptation of the problem in \texttt{stokes11.f90} (3D driven cavity).
+The writing is done at the lines
+\begin{listing}{157}
+
+! write to a vtk file for further post-processing
+
+  call write_scalar_vtk ( mesh, problem, vector=pressure, dataname='pressure', &
+    filename='cavity.vtk' )
+
+  call write_vector_vtk ( mesh, problem, filename='cavity.vtk', &
+    dataname='velocity_vector', sysvector=sol, append=.true. )
+
+  call write_scalar_vtk ( mesh, problem, vector=dudz, filename='cavity.vtk', &
+    dataname='dudz', append=.true. )
+
+\end{listing}
+In the first call the coordinates of the points and topology of the elements
+are written in addition to the data. Using \texttt{append=.true.} in subsequent
+calls, data can be added to the file for more scalar and vector quantities using
+the existing points and topology. In Fig.~\ref{fig:cavity_dudz} the scalar
+quantity $\plderiv{u}{z}$ is plotted using Paraview.
+\begin{figure}[htb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{cavity_dudz}
+   \end{center}
+   \caption{Isosurface plot of $\plderiv{u}{z}$ for \texttt{stokes13}.}
+   \label{fig:cavity_dudz}
+\end{figure}
+
+The routines \texttt{write\_vector\_vtk}
+and \texttt{write\_tensor\_vtk} assume that the dimension of vectors and tensors is the same as the space dimension (taken from the mesh). To override this default the optional arguments
+\texttt{assume2D} and \texttt{assume3D} can be used.
+To write 2D vectors and tensors on a 1D or 3D domain add the argument \texttt{assume2D=.true.}\ in the call of the routines.
+To write 3D vectors and tensors on a 1D or 2D domain add the argument \texttt{assume3D=.true.}\ in the call of the routines. Note, that alternatively the optional argument \texttt{degfd} can be used. For example, the argument \texttt{assume3D} is equivalent to \texttt{degfd=[1,2,3]} for vectors.
+
+It is also possible to write \tfem-vectors of type \texttt{vector\_t} having
+\texttt{elementwise=.true.}. In this case, the data is written as
+cell data, where in the vtk-file the data is a constant (scalar/vector/tensor)
+value per cell/element. Since, the amount of data per element
+for a vector with \texttt{elementwise=.true.} is usually more, the first data
+available will be used. For a scalar this is usually the value in node 1, for a
+vector the three components of node 1 and for a tensor the six/nine components
+of node 1. However, other data layouts are possible, for example giving a scalar
+value to the three nodes of a triangle is enough to be used as a vector in 3D
+space. If \emph{both} nodal point data and cell data needs to be written,
+don't forget
+to use the \texttt{switch=.true.} parameter when switching from one data
+format to the other. For example:
+\begin{verbatim}
+
+  call write_scalar_vtk ( mesh, problem, filename='sol.vtk', dataname='u', &
+    sysvector=sol )
+  call write_scalar_vtk ( mesh, problem, filename='sol.vtk', dataname='dudx', &
+    degfd=1, append=.true., switch=.true., vector=grad )
+  call write_scalar_vtk ( mesh, problem, filename='sol.vtk', dataname='dudy', &
+    degfd=2, append=.true., vector=grad )
+
+\end{verbatim}
+where the vector \texttt{grad} has been defined as having at least
+two components per element (for example two components in node 1). Note the use
+of \texttt{switch=.true.} in the first call when going from nodal to cell data.
+
+Note, that only constants per element can be written. In order to plot
+higher-order functions per elements use \texttt{gmsh} (see
+Sec.~\ref{sec:gmshwrite}).
+
+Besides the routines \texttt{write\_scalar\_vtk},
+\texttt{write\_vector\_vtk} and
+\texttt{write\_tensor\_vtk} there are also the routines
+\texttt{write\_mesh\_vtk} to write just the mesh with no data and \texttt{write\_geometry\_vtk}
+to write the points/curves/surfaces of a mesh.
+
+The default \emph{precision} for writing floating point data is determined by the value of \texttt{WRITE\_DOUBLE\_VTK} in the \texttt{limits\_m} module (see Sec.~\ref{sec:limits}). The value \texttt{WRITE\_DOUBLE\_VTK=.true.}\
+  writes double precision (8 byte) and
+ \texttt{WRITE\_DOUBLE\_VTK=.false.}\ writes single precision (4 byte).
+ The value set in \texttt{limits\_m} is \texttt{WRITE\_DOUBLE\_VTK=.false.}\ (single precision), hence setting
+\begin{verbatim}
+   WRITE_DOUBLE_VTK = .true.
+\end{verbatim}
+before calls to the \texttt{write\_\ldots\_vtk} routines, will output all floating point data in double precision instead of single precision.
+All \texttt{write\_\ldots\_vtk} routines have an optional \texttt{double} argument to impose the precision for individual calls. Note, that the output files will be 40--50\% larger for double precision as compared to single precision.
+
+The default output \emph{format} for writing floating point data is determined by the value of \texttt{WRITE\_BINARY\_VTK} in the \texttt{limits\_m} module (see Sec.~\ref{sec:limits}). The value \texttt{WRITE\_BINARY\_VTK=.true.}\
+  writes the data in a binary (internal) representation and
+ \texttt{WRITE\_BINARY\_VTK=.false.}\ writes the data in a formatted (ASCII) representation.
+The value set in \texttt{limits\_m} is \texttt{WRITE\_BINARY\_VTK=.true.}\ (binary output), hence setting
+\begin{verbatim}
+   WRITE_BINARY_VTK = .false.
+\end{verbatim}
+before calls to the \texttt{write\_\ldots\_vtk} routines, will output all data in the formatted (ASCII) format.
+All \texttt{write\_\ldots\_vtk} routines have an optional \texttt{binary} argument to impose the format for individual calls. \red{WARNING: Make sure that \emph{all} data in a single file has the \emph{same format} (formatted or binary). Thus, when using the \texttt{append} argument, the value of the \texttt{binary} argument must be the same as for the first data written to the file.}
+The advantages of a binary file are:
+\begin{itemize}
+ \item The data is identical to the internal representation when using double precision output (see above).
+ \item The files are significantly smaller than formatted data files.
+ \item Reading the file might be somewhat faster.
+\end{itemize}
+A disadvantage is, of course, that unformatted/binary files are unreadable by humans. Another possible, less common, disadvantage is the
+incompatibility when transferring data files between computers that use a different internal binary format.
+
+\subsection{Writing to a Tecplot datafile}
+\label{sec:tec}
+
+(This module has been developed by Tae Gon Kang of the TU/e.)
+
+Tecplot is an easy to use commercial
+scientific visualization package.
+The file extension used is \texttt{.plt}. The following routines are available
+\begin{verbatim}
+   write_objects_tecplot
+   write_scalar_tecplot
+   write_mdata_tecplot
+\end{verbatim}
+to write data to a file. The usage is similar to the vtk-routines (see
+Sec.~\ref{sec:vtk}) and the user is referred to the source code for the actual
+heading of the routines.
+
+The example file \texttt{stokes16.f90} writes data to the tecplot
+format. The file can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+It is an adaptation of the problem in \texttt{stokes9.f90}.
+
+\subsection{Writing to a Gmsh datafile or mesh-only file}
+\label{sec:gmshwrite}
+
+Gmsh\footnote{Gmsh
+(\href{http://www.geuz.org/gmsh}{http://www.geuz.org/gmsh})
+ \cite{Geuzaine09}.} is primarily a high quality meshgenerator (see
+Sec.~\ref{sec:readgmshmesh}), but can also be used to postprocess data files.
+The datafiles are mesh files extended with data\footnote{Both the ASCII
+and the binary format is supported in \tfem.}.
+In \tfem\ we prefer to give these data files the file extension
+\texttt{.mso} and reserve \texttt{.msh} for a file with a mesh only as written by gmsh.
+A unique feature of gmsh (compared
+to other external visualization tools) is the
+ability to plot data that is discontinuous across element edges. This
+can be achieved by writing a vector that has been defined with
+\texttt{elementwise=.true.} (similar to
+the internal graphics routines of figplot, see Sec.~\ref{sec:figplot}).
+
+The example file \texttt{cylinder8.f90} (from the example
+\texttt{confined\_cylinder}) writes data to the Gmsh format using the
+routines \texttt{write\_scalar\_gmsh} for writing a scalar
+quantity, \texttt{write\_vector\_gmsh} for writing a vector quantity
+and \texttt{write\_tensor\_vtk} for writing a tensor
+quantity\footnote{In the msh output file a complete 3x3 tensor (9 components)
+is written, whether it is 2D, 3D, symmetric or unsymmetric.
+The file ends up being bigger than writing the individual components as a
+scalar. The reason is the writing of zeros for the components that
+are not actually there (2D) and the double writing of non-diagonal components
+for a symmetric tensor.}.
+
+The routines \texttt{write\_vector\_gmsh}
+and \texttt{write\_tensor\_gmsh} assume that the dimension of vectors and tensors is the same as the space dimension (taken from the mesh). To override this default the optional arguments
+\texttt{assume2D} and \texttt{assume3D} can be used.
+To write 2D vectors and tensors on a 1D or 3D domain add the argument \texttt{assume2D=.true.}\ in the call of the routines.
+To write 3D vectors and tensors on a 1D or 2D domain add the argument \texttt{assume3D=.true.}\ in the call of the routines. Note, that alternatively the optional argument \texttt{degfd} can be used. For example, the argument \texttt{assume3D} is equivalent to \texttt{degfd=[1,2,3]} for vectors.
+
+The file can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder}
+\end{quote}
+It is an adaptation of the problem in \texttt{cylinder5.f90}. The procedure is
+similar to the routines for writing VTK files (see Sec.~\ref{sec:vtk}).
+
+Besides the routines \texttt{write\_scalar\_gmsh},
+\texttt{write\_vector\_gmsh} and
+\texttt{write\_tensor\_gmsh} there are also the routines
+\texttt{write\_mesh\_gmsh}
+ to write just the mesh  with no data and
+\texttt{write\_geometries\_gmsh}
+ to write just the geometries with no data. If the written \texttt{.msh} files
+are used for
+further computations, use \texttt{binary=.true.} in order
+ to preserve the full accuracy
+of the nodal coordinates.
+Since points,
+curves and surfaces are part of the written mesh, visualization with
+gmsh can be used to identify these,
+even for meshes made by other meshgenerators.
+Writing only the geometries can be useful for remeshing with gmsh,
+for example in an ALE computation.
+
+It is also possible to write a scalar field to a so-called parsed format
+(extension \texttt{.pos}) using the routine
+ \texttt{write\_scalar\_gmsh\_parsed}.
+Although the field can be viewed using gmsh, the
+main application is to use the scalar data field as a ``background mesh'' for
+setting target element sizes in adaptive mesh procedures. An example is given
+in \texttt{adaptive\_mesh\_pos.f90}, which can be obtained by
+\begin{quote}
+   \texttt{getexample meshes}
+\end{quote}
+
+See the source file \texttt{gmsh\_utils.f90} in the directory
+\texttt{src/addons/io\_utils} for more information.
+
+\subsection{printtofile}
+\label{sec:printtofile}
+
+The module printtofile provides a routine \texttt{printtofile} to write the data
+in vectors and sysvectors to a file for further processing, for example by
+Matlab or \texttt{gnuplot}. Current possibilities are:
+\begin{itemize}
+   \item write data in the full domain or on curves/surfaces only.
+         Setting global module variable
+         \texttt{include\_node\_number=.false.} will also print the nodal
+         number in the first column.
+         Use one or more of the
+         heading parameters \texttt{xmin}, \texttt{xmax},
+        \texttt{ymin}, \texttt{ymax}, \texttt{zmin} and \texttt{zmax} to
+         limit printing to a window.
+   \item write 2D and 3D grid data. The grid data can only be written for
+         regular grids.
+         Note, that to avoid connecting some data points in gnuplot an
+         empty line is written by default after one `line'.
+         Set global module variable
+         \texttt{blank\_line=.false.}, if this is not needed.
+\end{itemize}
+The output is a simple column structure with, optionally the nodal number,
+the coordinates and the data. No particular format is used
+(`\texttt{*}'-format).
+
+\subsection{printinfo: printing some info of structures
+ (mesh, problem, \ldots) to standard output}
+\label{sec:printinfo}
+
+The module printinfo provides a (generic) routine \texttt{printinfo} to write
+info from structures to standard output. Currently only structures of type
+\texttt{mesh\_t} and \texttt{problem\_t} are supported. For example
+\begin{listing}{1}
+   call printinfo ( mesh )
+\end{listing}
+will print some info of the mesh to standard output. A second optional
+parameter is \texttt{printlevel} to print more or less than default:
+\begin{listing}{1}
+   call printinfo ( problem, printlevel=4 )
+\end{listing}
+will print the current maximum info on the problem.
+
+\section{linear\_elastic}
+\label{sec:linearelasticaddon}
+
+The add-on `linear elastic' contains routines for solving linear elastic problems.
+The elements can be used as follows:
+\begin{quote}
+   \texttt{use linear\_elastic\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used. Elements using displacements only and mixed displacements-pressure elements are available.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/linear\_elastic}.
+
+Examples are described in Sec.~\ref{sec:linear_elastic}.
+
+\section{material\_data}
+\label{sec:materialdata}
+
+The add-on \texttt{material\_data} provides the data for various materials. Currently, it gives the EGP model data for the materials PMMA, iPP, PS and PLLA in \cite{van_breemen_rate_2012}. The filling routines in the module become available after invoking:
+\begin{quote}
+   \texttt{use material\_data\_m}
+\end{quote}
+There are two variants: one that fills the data in a structure of type \texttt{vemodel\_t} and one that fills the data in a structure of type \texttt{coefficients\_t}. In the first case, the structure of type \texttt{vemodel\_t} needs to be created and filled, except for the filling of the actual material data. 
+For example
+\begin{listing}{1}
+   call fill_data ( vemodel, 'PMMA' )
+\end{listing}
+will fill the data of the PMMA model in the structure \texttt{vemodel}. 
+In the second case, the structure of type \texttt{coefficients\_t} needs to have been created and filled at least with the \emph{integer} values.
+The example
+\begin{listing}{1}
+   call fill_data ( coefficients, 'iPP' )
+\end{listing}
+will fill the data of the iPP model in the structure \texttt{coefficients}. An optional argument can give the filled
+data back in a more accessible format using a structure of type \texttt{vemodel\_t}:
+\begin{listing}{1}
+   call fill_data ( coefficients, 'iPP', vemodel )
+\end{listing}
+will fill the data of the iPP model in the structure \texttt{coefficients} and the structure \texttt{vemodel} of type \texttt{vemodel\_t}. However, the latter is only for easy access to the filled data and not for general use, since other data might not be correct.
+
+\section{metis5}
+
+\label{sec:metis5}
+(The add-on for \metis-5 has been developed by Young Joon Choi).
+
+The add-on \texttt{metis5} provides an interface to the library \metis-5, for renumbering to
+reduce fill-in in sparse direct matrix solvers and also supports 64bit integers. The interface becomes available after invoking
+\begin{quote}
+   \texttt{use metis5\_m}
+\end{quote}
+\metis-5 is usually available as a precompiled library or requires a separate package download. See the file \texttt{README} in
+the directory \texttt{src/addons/metis5}.
+
+Most examples using sparskit (see Sec.~\ref{sec:sksolve}) or
+mkl\_gmres (see Sec.~\ref{sec:mklgmres})
+use \mbox{\metis-5}.
+
+\section{mkl\_gmres}
+\label{sec:mklgmres}
+
+(This add-on has been developed by Gaetano d'Avino of the University of
+Naples.)
+
+The add-on mkl\_gmres provides an interface to the iterative solvers in MKL.
+See the file \texttt{README} in the directory \texttt{src/addons/mkl\_gmres}
+for some directions on using mkl\_gmres. Since the use is very similar to
+the module \texttt{sk\_solve} it is recommended to read
+Sec.~\ref{sec:sksolve} as well.
+
+An example for using mkl\_gmres is in
+\texttt{sphere37.F90}, which can be obtained by typing:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+The problem is
+the same as in \texttt{sphere25.F90} (sparskit), but modified for
+mkl\_gmres. Use \texttt{diff} to see the differences.
+
+\section{mumps}
+\label{sec:mumps}
+
+The add-on mumps provides an interface to MUMPS: a freely available
+parallel direct solver using MPI, but can also be used as an alternative
+for MA41 by running a sequential version.
+See the file \texttt{README} in the directory \texttt{src/addons/mumps}.
+
+\section{pardiso}
+\label{sec:pardiso}
+
+The add-on pardiso provides an interface to PARDISO: a
+parallel direct solver using OPENMP.
+See the file \texttt{README} in the directory \texttt{src/addons/pardiso} for some
+directions on using PARDISO.
+
+An example for using PARDISO is in
+\texttt{stokes43.F90} and \texttt{diffuse\_interface16.F90}.
+
+\section{particle\_tracking}
+\label{sec:particletrackingaddon}
+
+The add-on `particle tracking' contains routines for tracking particles or
+sharp interfaces consisting of particles. The number of particles can be
+changed adaptively. The routines can be used as follows:
+\begin{quote}
+   \texttt{use particle\_tracking\_m}
+\end{quote}
+The implementation is based on the theory in \cite{Galaktionov00} (see also
+\cite{Hulsen05a}).
+
+This add-on uses the \texttt{odeint} ODE solver from Numerical Recipes (see Sec.~\ref{sec:nr}).
+
+An example for using this add-on is in
+\texttt{particle\_tracking1.F90},
+which can be obtained by typing:
+\begin{quote}
+   \texttt{getexample particle\_tracking}
+\end{quote}
+An example \texttt{particle\_tracking2.F90} is available that is similar to \texttt{particle\_tracking1.F90}, but
+now outputs data to files that can be read by Matlab to plot `filled blobs' as a function of time. A small Matlab script \texttt{plotparticle.m} is supplied as well.
+
+\section{projection}
+\label{sec:projection_addon}
+
+The add-on `projection' contains routines for
+\begin{enumerate}
+   \item projection of a vector defined on one mesh to a vector defined on
+         another mesh,
+   \item projection of a vector to another vector, both defined on the same
+         mesh, but having a different shape function.
+\end{enumerate}
+
+The routines can be used as follows:
+\begin{quote}
+   \texttt{use projection\_elements\_m}
+\end{quote}
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/projection}.
+
+Examples are described in Sec.~\ref{sec:projection}.
+
+\section{shapefunc\_extra}
+\label{sec:shapefunc_extra}
+
+The add-on `shapefunc extra' contains routines for shape functions.
+Currently two different modules are available, and
+can be used as follows:
+\begin{quote}
+   \texttt{use shapefunc\_gauss\_m}
+\end{quote}
+for shape functions having the nodal points in the Gauss points and
+\begin{quote}
+   \texttt{use shapefunc\_hierarchic\_m}
+\end{quote}
+for hierarchic shape functions.
+
+\section{sk\_solve}
+\label{sec:sksolve}
+
+The add-on sk\_solve provides interfaces to additional iterative solvers
+from the Sparskit2 library. The external library Sparskit2 needs to be installed.
+See the file \texttt{README} in the directory
+\texttt{src/addons/sk\_solve} and Sec.~\ref{sec:sparskit2}.
+
+Renumbering the nodes of the mesh for reduced fill-in
+in sparse direct solvers has a positive effect on the memory used and/or the
+convergence rate.
+The add-on metis5 (see Sec.~\ref{sec:metis5}) can be used to renumber
+the nodes, but a mesh made with an external meshgenerator may already have
+been renumbered in a sufficient way.
+
+Note, that for matrices with zeros on the diagonal (like in a
+velocity-pressure system) a renumbering of the unknowns
+such that the zero diagonal elements end up at the lower right block of the
+system matrix, might help in getting a better preconditioner and faster convergence.
+However, sometimes this has an opposite effect and
+it is recommended to test it before using it for production runs.
+An example for this and the use of the sparskit is in
+\texttt{stokes12.F90}, which can be obtained by typing:
+\begin{quote}
+   \texttt{getexample stokes}
+\end{quote}
+The problem is
+the same as in \texttt{stokes7.f90}, but modified for sparskit.
+In the file we see
+\begin{listing}{200}
+! problem definition
+
+  call create_input_probdef ( mesh, input_probdef, nvec=3, nphysq=2, &
+    nphysqshifted=1 )
+
+  input_probdef%vec_elementdof(1)%a =   &
+      reshape ( [2,2,2,2,2,2,2,2,2,    &  ! velocity
+                 1,0,1,0,1,0,1,0,0,    &  ! pressure
+                 1,1,1,1,1,1,1,1,1 ], &  ! scalar, such as vorticity
+                 [9,3] )
+
+  input_probdef%physq = [1,2]
+  input_probdef%physqshifted = [2]
+
+\end{listing}
+With the parameter \texttt{nphysqshifted} in the heading of
+\texttt{create\_input\_probdef} we indicate the number of physical quantities
+that need to be shifted towards the end of the vector (in this case only one:
+the pressure). On line 212 the array \texttt{input\_probdef\%physqshifted}
+is filled with the actual physical quantities involved in the shifting.
+
+The module contains an input parameter \texttt{maxmvm} (in
+the structure \texttt{solver\_options}) that must be set to the
+maximum number of iterations (matrix-vector multiplies). If the number of
+iterations is exceeded the program stops with an error message. The module
+contains a logical \texttt{stoponmaxmvm} (also in
+the structure \texttt{solver\_options}) to change this behavior: if
+\texttt{stoponmaxmvm} is set to \texttt{.false.}, the solver still obeys the
+maximum number of iterations, but the program continues. To detect whether in
+that case the maximum number of iterations has been reached, there is a logical
+output parameter \texttt{maxmvmreached} (in the heading of
+the routine \texttt{solve\_system\_sk}) to test that. There parameters
+are used in the following example of a
+time-stepping scheme where the matrix changes every time step and we want to
+keep the preconditioner as long as possible:
+\begin{listing}{1}
+  if ( step == 1 ) then
+    solver_options%stoponmaxmvm = .true.
+    call solve_system_sk ( sysmatrix, rhsd, sol, ilu, &
+      solver_options=solver_options )
+  else
+    solver_options%stoponmaxmvm = .false.
+    call solve_system_sk ( sysmatrix, rhsd, sol, ilu, initsol=.true., &
+      solver_options=solver_options )
+    if ( maxmvmreached ) then
+      call delete_ilu_sk ( ilu )
+      solver_options%stoponmaxmvm = .true.
+      call solve_system_sk ( sysmatrix, rhsd, sol, ilu, initsol=.true., &
+        solver_options=solver_options )
+    end if
+  end if
+\end{listing}
+In the first time step a preconditioner is built and kept. The solution is
+required to be obtained within \texttt{maxmvm} iterations. In the following time
+steps first an attempt is made to obtain the solution using the
+old preconditioner. If that fails, the preconditioner is rebuild and a new
+attempt is made with the new preconditioner. If it fails every time step, the
+above procedure should not be used, of course. Note, that we use the solution
+from the previous time step as an initial guess for the next.
+
+In the example \texttt{sphere}:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+the file \texttt{sphere25.F90} is similar to \texttt{sphere36.f90} (see
+Sec.~\ref{sec:sphere2}) but using an iterative solver from the Sparskit2
+library.
+Also
+the file \texttt{sphere13.F90} is similar to \texttt{sphere3.f90} (see
+Sec.~\ref{sec:sphereimplicit}) but using an iterative solver from the Sparskit2
+library.
+
+In Sparskit2, the 2-norm (Euclidian distance to the origin) of the residual is
+used to check for convergence. Sparskit2 allows for the use of both a
+relative criterion $\epsilon_\text{rel}$ and an absolute
+criterion $\epsilon_\text{abs}$ and the iteration will be terminated if the
+following condition is satisfied:
+\[
+ ||\col r_i|| < \epsilon_\text{rel}||\col r_0|| + \epsilon_\text{abs}
+\]
+where $||\col r_i||$ is the 2-norm of the residual at the $i$-th iteration
+step. Using $\epsilon_\text{rel}$, the residual will always be normalized by
+the initial residual of the iteration. However, $||\col r_0||$ depends on the
+initial guess for the solution, which is not always
+preferred. An alternative is to use the 2-norm of the right hand side, $||\col
+f||$, as a normalizing factor (which is equal to the residual
+if the null vector is tried as the solution). An example using this procedure
+is in \texttt{ale14.f90}.
+
+\section{stokes}
+\label{sec:stokesaddon}
+
+The add-on `stokes' contains routines for solving the Stokes equation.
+The elements can be used as follows:
+\begin{quote}
+   \texttt{use stokes\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+
+In this add-on also elements are available for building mixed Stokes problems
+and computing the streamfunction in 2D.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/stokes}.
+
+Many examples make use of this add-on.
+
+The elements also contain routines for computing drag forces. An example is
+given in Sec.~\ref{sec:sphere} for Stokes flow around a sphere.
+
+\section{structures}
+\label{sec:structures_addon}
+
+The add-on `structures' contains routines for solving mechanical truss and beam structures.
+
+The routines can be used as follows:
+\begin{quote}
+   \texttt{use structures\_elements\_m}
+\end{quote}
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/structures}.
+
+Examples can be obtained by
+\begin{quote}
+   \texttt{getexample structures}
+\end{quote}
+but these are only briefly described in Sec.~\ref{sec:structures_examples}.
+
+\section{supg\_utils}
+\label{sec:supg_utils}
+
+The add-on `SUPG utils' contains routines for use with the SUPG method.
+This is an add-on used by some element routines, such as in the add-on
+viscoelastic (see Sec.~\ref{sec:viscoelastic}).
+
+\section{surface\_advection}
+\label{sec:surfaceadvection}
+
+The add-on `surface advection' contains routines for computing the surface
+advection equation. This equation (the kinematic condition)
+is used in free surface problems that can be described by a height function.
+See \cite{Choi11c,Choi11b} and the references therein for the details.
+
+The routines can be used as follows:
+\begin{quote}
+   \texttt{use surface\_advection\_elements\_m}
+\end{quote}
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/surface\_advection}.
+
+Examples are described in Secs.~\ref{sec:swellNewtonian} and
+\ref{sec:swellviscoelastic}. Also some
+test examples for a 2D height function (3D velocity vector) can be obtained by
+\begin{quote}
+   \texttt{getexample surface\_advection}
+\end{quote}
+but these are not further described in this manual.
+
+
+\section{surface\_convection\_diffusion}
+\label{sec:surfaceconvectiondiffusionaddon}
+
+(This add-on has been developed by Christos Mitrias of the TU/e.)
+
+The add-on `surface\_convection\_diffusion' contains routines for calculating the concentration
+of a quantity on an interface.
+The routines can be used as follows::
+\begin{quote}
+   \texttt{use surface\_convection\_diffusion\_m}\\
+\end{quote}
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/surface\_convection\_diffusion}.
+
+Examples are described in Sec.~\ref{sec:surface_convection_diffusion}.
+
+\section{timer}
+\label{sec:timer}
+
+The add-on timer supplies the tic/toc timer routines.
+
+The timer routines can be used after the following use statement:
+\begin{quote}
+   \texttt{use timer\_m}
+\end{quote}
+
+To time the CPU time of a section of the code use
+\begin{listing}{1}
+
+  call tic
+
+  <code to time>
+
+  call toc
+
+\end{listing}
+and the output will be something like
+\begin{quote}
+   \texttt{Elapsed CPU time = 1.7377 seconds}
+\end{quote}
+If \texttt{toc} is given a string argument, such as
+\begin{listing}{1}
+
+  call tic
+
+  <code to time>
+
+  call toc ( 'build_system' )
+
+  <code to time>
+
+  call toc ( 'solve_system' )
+
+\end{listing}
+the output of the last \texttt{toc} will be something like
+\begin{quote}
+\texttt{Elapsed CPU time = 2.12468 incremental and 3.02354 total seconds
+           in solve\_system}
+\end{quote}
+where the incremental time is the time since the last call of \texttt{toc}
+(or since the call of \texttt{tic} if it is the first \texttt{toc} called).
+Note that the routine \texttt{tic} is like starting a stopwatch, whereas
+\texttt{toc} is reading the stopwatch (not stopping it). To reset the stopwatch
+to zero \texttt{tic} should be called again.
+
+There is global logical variable \texttt{timer}
+to turn off the printing of the CPU timings without removing the
+\texttt{tic} and \texttt{toc} calls. Thus
+\begin{listing}{1}
+
+  timer = .false.
+
+  call tic
+
+  <code to time>
+
+  call toc
+
+\end{listing}
+will not print timings.
+
+CPU time is an indication of the amount of work of the CPU (cpu cycles). This does not include the time for I/O. Moreover, in parallel processing the CPU time (the work to be done) usually increases, whereas the real time (wall clock time) should go down. In that case, the routines \texttt{tic\_w} and \texttt{toc\_w}, which print the wall clock time, should be used to find the speedup. If you want to switch between \texttt{tic/toc} and \texttt{tic\_w/toc\_w}, change the use statement to
+\begin{verbatim}
+   use timer_m, ticl => tic, tocl => toc
+\end{verbatim}
+and the actual calls to calls to \texttt{ticl/tocl}. This will give the CPU time. Change the use statement to
+\begin{verbatim}
+   use timer_m, ticl => tic_w, tocl => toc_w
+\end{verbatim}
+to get the wall clock time.
+
+\section{umfpack}
+\label{sec:umfpack}
+
+The add-on umfpack provides an interface to UMFPACK: a set of routines for solving sparse linear systems via LU factorization. It is free software and is part of the SuiteSparse library developed by Tim Davis of Texas A\&M University.
+See the file \texttt{README} in the directory \texttt{src/addons/umfpack} for some
+directions on using UMFPACK.
+
+An example for using UMFPACK is in
+\texttt{sphere33.F90}, which can be obtained by typing:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+The problem is
+the same as in \texttt{sphere3.f90}, but modified for UMFPACK. Use
+\texttt{diff} to see the differences.
+
+\section{viscoelastic}
+\label{sec:viscoelastic}
+
+The add-on `viscoelastic' contains routines for flows of
+viscoelastic and elastoviscoplastic fluids. The elements
+can be used as follows:
+\begin{quote}
+   \texttt{use viscoelastic\_elements\_m}
+\end{quote}
+Both 2D and 3D elements can be used\footnote{The DG elements are
+not available in 3D.}
+
+The viscoelastic add-on depends on the module \texttt{stokes\_elements\_m}
+ (see Sec.~\ref{sec:stokesaddon}).
+
+Also available is the module
+   \texttt{use devss\_elements\_m},
+which can be used for building the DEVSS system matrices,
+
+The add-on also uses (with \texttt{xx=2D} or \texttt{3D})
+\begin{quote}
+   \texttt{use viscoelastic\_models\_xx\_m}\\
+   \texttt{use viscoelastic\_models\_xx\_log\_m}
+\end{quote}
+which are described in Sec.~\ref{sec:vemodels}.
+
+The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/viscoelastic}.
+
+Examples are described in Secs~\ref{sec:driven_cavity}--\ref{sec:couette}.
+
+The elements also contain routines for computing drag forces.
+
+\section{viscoelastic\_fh}
+\label{sec:viscoelastic_fh}
+
+The add-on viscoelastic\_fh for `viscoelastic fluctuating hydrodynamics' contains elements to
+add fluctuating hydrodynamics terms to the constitutive equation.
+
+The element routines can be used as follows:
+\begin{quote}
+   \texttt{use viscoelastic\_fh\_m}
+\end{quote}
+Both 2D and 3D elements can be used.
+
+This add-on uses the viscoelastic and generalized stokes add-ons.
+
+Examples are not yet available.
+
+
+\section{viscoelastic\_models}
+\label{sec:vemodels}
+
+The add-on `viscoelastic models' contains routines for simulation of
+viscoelastic and elastoviscoplastic fluid models. It is almost self-contained and only uses some basic 
+modules from \tfem, such as some math modules and modules for defining the precision. Therefore it can be used without much knowledge of \tfem\ to study material models.
+
+Currently four different modules are available, and
+can be used as follows:
+\begin{quote}
+   \texttt{use viscoelastic\_models\_2D\_m}
+\end{quote}
+for planar and axisymmetrical flow,
+\begin{quote}
+   \texttt{use viscoelastic\_models\_2D\_log\_m}
+\end{quote}
+for planar and axisymmetrical flow in the log formulation \cite{Hulsen05},
+\begin{quote}
+   \texttt{use viscoelastic\_models\_2D\_b\_m}
+\end{quote}
+for planar and axisymmetrical flow in the b-tensor formulation,
+\begin{quote}
+   \texttt{use viscoelastic\_models\_3D\_m}
+\end{quote}
+for 3D flow,
+\begin{quote}
+   \texttt{use viscoelastic\_models\_3D\_log\_m}
+\end{quote}
+for 3D flow in the log formulation \cite{Hulsen05}
+\begin{quote}
+   \texttt{use viscoelastic\_models\_3D\_b\_m}
+\end{quote}
+for 3D flow in the b-tensor formulation.
+
+Note, not all models
+available in the module \texttt{viscoelastic\_models\_2D\_m} are available in
+the other modules. Also, the number of models implemented in the b-tensor formulation is limited. However, setting
+\begin{quote}
+   \texttt{USE\_CONFORMATION\_MODEL=.true.}
+\end{quote}
+in the module \texttt{limits\_m} (see Sec.~\ref{sec:limits}) will transform any model available in the c-tensor formulation to the b-tensor formulation. This means a new model needs to be implemented only in the c-tensor formulation in order to be used in the b-tensor formulation. A drawback is that it takes a little more CPU time. If the model computation is time-critical, it is recommended to implement the model in the b-tensor formulation directly.
+
+The properties of the model are stored in a structure of type
+\texttt{vemodel\_t}. The structure must first be constructed by calling the
+routine \texttt{create\_viscoelastic\_model}. Then the material parameters must
+be filled in the components \texttt{modulus}, \texttt{lambda}, \texttt{nonlin}
+of the structure. For adapted $\lambda$ models, additional material parameters need to be filled in the component \texttt{alam}. The structure can be deleted using the generic routine
+\texttt{delete}.
+
+The models available are described in Appendix~\ref{chap:viscoelasticmodels}.
+
+With
+\begin{quote}
+   \texttt{getexample viscoelastic\_models}
+\end{quote}
+several examples, such as startup of shear and elongational flow, steady state solution obtained using Newton-Raphson iteration and eigenvalues/eigenvectors of the linearized right-hand side of the models are available. See the file \texttt{README} for a description of each example.
+
+\section{ziggurat}
+\label{sec:ziggurat}
+
+The add-on ziggurat provides a fast random number generator for a normal
+distribution.
+
+

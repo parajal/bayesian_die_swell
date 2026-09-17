@@ -1,0 +1,465 @@
+% !TEX root = userguide.tex
+
+\def\headdate{1st July 2015}
+
+\section{The Mooney-Rivlin elastic solid}
+\label{sec:elasticsolid}
+
+In this section an example using the Mooney-Rivlin elastic solid will be
+given, but first the theory must be explained.
+
+\subsection{Weak form. Galerkin \fem}
+
+We consider the momentum and mass balance 
+in a region $\Omega$ (current configuration):
+\begin{alignat}{3}
+ -&\nabla\cdot\ten\tau+\nabla p & &=\vek f,&&\qquad\text{in }\Omega
+       \label{eq:Mooney1} \\
+   &\hspace*{3ex}J& &=1&&\qquad\text{in }\Omega \label{eq:Mooney2}
+\end{alignat}
+where $\ten\tau$ is the extra-stress tensor, $p$ the pressure and $J$ the
+volume ratio between the current and the reference (stress-free)
+configuration $\Omega_0$. Note, that we have assumed that 
+\begin{itemize}
+   \item inertia can be neglected,
+   \item the density is constant, or equivalently, that the volume is constant.
+\end{itemize}
+The constitutive equation for an elastic solid is given by
+\[
+   \ten\tau = \ten g(\ten F)
+\]
+where $\ten F$ is the deformation gradient tensor $\ten F$ between the
+reference configuration
+$\Omega_0$ and the current configuration $\Omega$: 
+\[
+    \ten F=(\nabla_0\vek x)^T
+\]
+Here we have introduced  the current position vector $\vek x$ and
+the operator $\nabla_0$ with respect to the reference
+configuration. The relation between $\nabla$ and $\nabla_0$ is given by
+\begin{equation}
+ \nabla = \ten F^{-T}\cdot\nabla_0 \label{eq:nablamap}   
+\end{equation}
+The primary unknowns of the problem are the position vector $\vek x$ and the
+pressure $p$ as a function of the reference coordinates $\vek x_0$.
+
+The boundary conditions are
+\begin{gather}
+    \vec x = \vec x_D\text{ on }\Gamma_D\\
+    -p\vec n+\ten \tau\cdot\vec n=\vec t_{\text{N}}\text{ on }\Gamma_{\text{N}}
+\end{gather}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part. The Neumann condition is equivalent
+to an imposed traction of $\vec t_{\text{N}}$.
+                                                                                
+The weak form can be obtained by multiplying
+Eqs.~\eqref{eq:Mooney1}--\eqref{eq:Mooney2}
+with test functions $\vec v$ and $q$:
+\begin{align*}
+ (\vek v,-\nabla\cdot\ten\sigma -\vek f)&=0,\qquad\text{for all }\vek v\\
+  (q,(J-1)/J)& =0,\qquad\text{for all }q
+\end{align*}
+where
+\begin{align*}
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\\
+   (a,b)&=\int_\Omega a b\D x
+\end{align*}
+and $\ten\sigma = -p\ten I+\ten\tau$.
+Note, that we have changed the
+mass balance $J-1=0$ to the equivalent form $(J-1)/J=0$, which has some
+advantage in linearization.
+Using partial integration and Gauss'
+theorem we obtain the following weak form: 
+Find $\vek x$ and $p$ such that
+\begin{alignat*}{3}
+  &\big((\nabla\vek v)^T,\ten\tau)
+    -(\nabla\cdot\vek v,p)&&=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+&\qquad&\text{for all }\vek v\\
+  &\,(q,(J-1)/J)&& =0,&\qquad&\text{for all }q
+\end{alignat*}
+using appropriate spaces for $\vek x$, $p$, $\vek v$ and $q$. In this equation
+the bilinear operator $(\,,\,)$ for tensors is given by
+\[
+   (\ten A, \ten B)=\int_\Omega\ten A:\vek B\D x
+\]
+
+The resulting weak form is a nonlinear equation which we want to solve by
+applying the Newton-Raphson iteration scheme. For this we have to linearize the
+weak form by writing:
+\begin{align*}
+   \vek x &= \vek x_n + \delta\vek x \\
+        p &= p_n + \delta p
+\end{align*}
+where $\vek x_n$ and $p_n$ are the approximations to $\vek x$ and $p$ in the
+iteration process. New approximations are found by solving $\delta\vek x$ and
+$\delta p$ from a linear system that is obtained by \emph{linearizing} the
+nonlinear equations around $\vek x_n$ and $p_n$. 
+
+To find the linearized weak form we map all integrals to the fixed volume
+$\Omega_0$:
+\[
+  \int_\Omega \ldots \D x\rightarrow
+  \int_{\Omega_0} \ldots J\D x
+\]
+or
+\[
+   (.,.) = (.,. J)_0
+\]
+We also map the $\nabla$ to $\nabla_0$ by substituting Eq.~\eqref{eq:nablamap}.
+The weak form now becomes:
+\begin{alignat*}{2}
+ \big((\ten F^{-T}\cdot\nabla_0\vek v)^T,\ten\sigma J)_0
+          &=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+         &\qquad&\text{for all }\vek v\\
+  (q,J-1)_0& =0,&\qquad&\text{for all }q
+\end{alignat*}
+
+For the linearization we use that up to first order:
+\begin{align*}
+   \delta\ten F&=(\nabla_0\delta\vek x)^T\\
+   \delta(\ten F^{-1})&=-\ten F^{-1}\cdot\delta\ten F\cdot\ten F^{-1}=
+    -\ten F^{-1}\cdot(\nabla\delta\vek x)^T\\
+    \delta J&=J\nabla\cdot\delta\vek x
+\end{align*}
+and that the contribution of the external forces $\vek t_{\text{N}}$ and $\vek f$ to the
+weak form:
+\[
+          (\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)
+\]
+is independent of $\vek x$. In general, the latter is not true and additional
+terms must be added to the linearization. However, the terms are problem
+dependent and therefore will not be considered here. After linearization, that
+is we substitute $\vek x_n+\delta\vek x$, $p_n+\delta p$,
+$\ten\tau_n+\delta\ten\tau$,
+ $\ten F^{-1}_n+\delta\ten F^{-1}$, $J_n+\delta J$ and leave only first-order
+terms, we obtain the linearized weak form:
+\begin{alignat*}{2}
+ &\big((\nabla\vek v)^T,-(\nabla\delta \vek x)^T\cdot\ten\sigma
+        +\ten\sigma(\nabla\cdot\delta\vek x)+\delta\ten\tau\big)
+    -(\nabla\cdot\vek v,p)
+          &&=-\big((\nabla\vek v)^T,\ten\tau\big)
+           +(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)\\
+  &\hspace*{3cm}(q,\nabla\cdot\delta\vek x)&& =-(q,(J-1)/J) 
+\end{alignat*}
+where $p=p_n+\delta p$, $\ten\sigma=-p_n\ten I+\ten\tau_n$ and all subscripts
+$()_n$ have been dropped. With a linearization of the constitutive equation:
+\[
+   \delta\ten\tau=\mathcal{C}(\ten F):\nabla\delta\vek x
+\]
+we obtain the linearized weak form: Find $\delta\vek x$ and $p$ such that
+\begin{alignat*}{2}
+ &\big((\nabla\vek v)^T,-(\nabla\delta \vek x)^T\cdot\ten\sigma
+        +\ten\sigma(\nabla\cdot\delta\vek x)+\mathcal{C}:\nabla\delta\vek x\big)
+    -(\nabla\cdot\vek v,p)
+          &&=-\big((\nabla\vek v)^T,\ten\tau\big)
+           +(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\vek f)\\
+  &\hspace*{3cm}(q,\nabla\cdot\delta\vek x)&& =-(q,(J-1)/J) 
+\end{alignat*}
+for all $\vek v$ and $q$.
+Note that $\mathcal{C}$ is a fourth-order tensor.
+
+\subsection{Approximate solution}
+
+The weak form can be used to obtain an approximate solution using 
+the Galerkin \fem\ technique. For this we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $\delta\vek x$ and $p$ (and similarly $\vek v$ and $q$) by
+polynomials on each element:
+\[
+ \begin{split}
+    \delta\vek x_h&=\tsum_N \phi_N\delta\vek x_N=
+           \col\phi^T\delta\col{\vek x}\\
+    p_h&=\tsum_N \psi_k p_N=\col\psi^T\col{ p}
+ \end{split}
+\]
+where $\phi_N$ and $\psi_N$ are global shape functions. Substituting into the
+weak form leads to
+\begin{alignat*}{3}
+   &\col{\vek v}^T\cdot(\mat{\ten S}\cdot\delta\col{\vek x}+
+               \mat{\vek L}^T\col p)&&=
+    \col{\vek v}^T\cdot\col{\vek f}\qquad&&\text{for all }\col{\vek v}\\
+   &\quad\col q^T\mat{\vek L}\cdot\delta\col{\vek x}&&=\col q^T\col g,\qquad&&\text{for all
+}\col{q}\end{alignat*}
+or
+\begin{equation}
+ \begin{bmatrix}
+   \mat{\ten S} &-\mat{\vek L}^T \\[1ex]
+  \mat{\vek L} &\quad \mat 0
+ \end{bmatrix}
+ \begin{bmatrix}
+    \delta\col{\vek x}\\[1ex]
+    \col p
+ \end{bmatrix}=
+ \begin{bmatrix}
+    \col{\vek f}\\[1ex]
+    \col g
+ \end{bmatrix}
+  \label{eq:deltax}
+\end{equation}\medskip\\
+with 
+\begin{align*}
+   \mat{\ten S}&= \int_\Omega[
+   -\ten\sigma^T\cdot(\nabla\col\phi\nabla\col\phi^T)^c 
+   +\ten\sigma^T\cdot\nabla\col\phi\nabla\col\phi^T
+   +\nabla\col\phi\cdot\mathcal{C}\cdot\nabla\col\phi^T
+ ]\D x,\\
+\mat{\vek L}&=(\col{\psi},\nabla\col\phi^T)\\
+ \col{\vek f}&=-\int_\Omega \nabla\col\phi\cdot\ten\tau\D x+(\col{\phi},\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\col{\phi},\vek f)\\
+ \col{g}&=-(\col{\psi},(J-1)/J)
+\end{align*}
+where $\ten A^c\equiv\ten A^T$ and $\ten\sigma^T$ can be replaced
+by $\ten\sigma$ due to symmetry.
+Note that $()^T$ denotes both the transpose of
+a tensor and a matrix and that we use only the $()^c$ notation
+when there are multiple possibilities. Making the `nodal points' $N$ and $M$
+explicit we get:
+\begin{align*}
+   \ten S^{N\!M}&= \int_\Omega[
+   -\ten\sigma^T\cdot\nabla\phi_M\nabla\phi_N 
+   +\ten\sigma^T\cdot\nabla\phi_N\nabla\phi_M
+   +\nabla\phi_N\cdot\mathcal{C}\cdot\nabla\phi_M
+ ]\D x,\\
+\vek L^N&=(\psi_N,\nabla\phi_M)\\
+ \vek f^N&=-\int_\Omega \nabla\phi^N\cdot\ten\tau\D x+
+          (\phi_N,\vek t_\text{N})_{\Gamma_{\text{N}}}+(\phi_\text{N},\vek f)\\
+ g^N&=-(\psi^N,(J-1)/J)
+\end{align*}
+In the actual implementation we have not used the equation above
+for $\ten S^{N\!M}$ directly but rather 
+\[
+   \ten S^{N\!M}= \int_\Omega \nabla\phi_N\cdot\mathcal{A}^M\D x,
+\]
+where $\mathcal{A}^M$ is a third-order tensor given by
+\[
+    \mathcal{A}^M=-\vek e_\ell\ten\sigma^T\cdot\nabla\phi_M\vek e_\ell
+                +\ten\sigma\nabla\phi_M+\mathcal{C}\cdot\nabla\phi_M
+\]
+The Newton-Raphson iteration scheme is obtained by starting with an initial
+position vector $\col{\vek x}_1$ and pressure $\col p_1$ and
+perform the following iteration $n=1,\dots$
+\[
+   \col{\vek x}_{n+1} = \col{\vek x}_n + \delta\col{\vek x}_n
+\]
+where $\delta\vek x_n$ is found by solving Eq.~\eqref{eq:deltax} with the
+system build by using $\col{\vek x}_n$ and $\col p_n$ as current position
+and pressure. The pressure $\col p_{n+1}$ is found in the solution of
+Eq.~\eqref{eq:deltax}. In practice
+we will work with displacements $\vek u=\vek x-\vek x_0$ instead of the
+position $\vek x$:
+\[
+   \col{\vek u}_{n+1} = \col{\vek u}_n + \delta\col{\vek x}_n
+\]
+
+\subsection{Mooney-Rivlin constitutive model}
+
+The Mooney-Rivlin constitutive equation is a model for an isotropic
+elastic solid having a constant volume where the stress tensor is derivable
+from an elastic energy function (per unit volume) $W$ given by\footnote{A special case, the neo-Hookean model, is obtained by setting $C_2=0$. Also $C_1=G/2$, with $G$ the modulus, for this special case.}
+\[
+    W=C_1(I_1-3)+C_2(I_2-3)
+\]
+where $I_1$ and $I_2$ are the first and second invariant of 
+the Finger deformation tensor $\ten B$ 
+($=$ left Cauchy-Green deformation tensor) which can be expressed in the
+deformation gradient tensor $\ten F$ between the reference configuration
+$\Omega_0$ and the current configuration $\Omega$ as follows 
+\[
+    \ten B=\ten F\cdot\ten F^T
+\]
+For constant volume the expressions for $I_1$ and $I_2$ are 
+\[
+      I_1=\tr\ten B,\quad I_2=\tr\ten B^{-1}
+\]
+The constitutive equation for the stress $\ten\tau$ is given by
+\[
+   \ten\tau = 2\ten B\cdot\pderiv{W}{\ten B}=
+              2C_1\ten B - 2C_2\ten B^{-1}
+\]
+Now since we like $\ten\tau=\ten 0$, $p=0$ to be the stress free state we
+subtract an isotropic part from the extra-stress tensor expression:
+\[
+   \ten\tau = 2C_1(\ten B -\ten I) - 2C_2(\ten B^{-1}-\ten I)
+\]
+For the Newton-Raphson iteration we need to linearize the CE. For this we will
+use
+\begin{align*}
+   \delta\ten B&=\delta\ten F\cdot\ten F^T+\ten F\cdot\delta\ten F^T=
+        (\nabla\delta\vek x)^T\cdot\ten B+\ten B\cdot\nabla\delta\vek x\\
+   \delta(\ten B^{-1})&=-\ten B^{-1}\cdot\delta\ten B\cdot\ten B^{-1}=
+  -\ten B^{-1}\cdot(\nabla\delta\vek x)^T-(\nabla\delta\vek x)\cdot\ten B^{-1}
+\end{align*}
+and thus
+\[
+   \delta\ten\tau=
+    2C_1\Big((\nabla\delta\vek x)^T\cdot\ten B+
+              \ten B\cdot\nabla\delta\vek x\Big)
+   +2C_2\Big(\ten B^{-1}\cdot(\nabla\delta\vek x)^T+
+              (\nabla\delta\vek x)\cdot\ten B^{-1}\Big)
+\]
+Using $\delta\vek x_h=\tsum_M \phi_M\delta\vek x_M$ we find that
+\[
+   \delta\ten\tau=\mathcal{C}:\nabla\delta\vek x_h=
+                  (\mathcal{C}\cdot\nabla\phi_M)\cdot\delta\vek x_M
+\]
+and thus
+\[
+     \mathcal{C}\cdot\nabla\phi_M = 
+           2C_1(\vek e_\ell\nabla\phi_M\cdot\ten B\vek e_\ell
+                +\ten B\cdot\nabla\phi_M\ten I)
+          +2C_2(\ten B^{-1}\cdot\vek e_\ell\nabla\phi_M\vek e_l
+               +\nabla\phi_M\ten B^{-T})
+\]
+and
+\begin{multline*}
+     \nabla\phi_N\cdot\mathcal{C}\cdot\nabla\phi_M = 
+           2C_1(\ten B\cdot\nabla\phi_M\nabla\phi_N+
+                \nabla\phi_N\cdot\ten B\cdot\nabla\phi_M\ten I)+\\
+          2C_2(\nabla\phi_M\nabla\phi_N\cdot\ten B^{-1}
+               +\nabla\phi_N\cdot\nabla\phi_M\ten B^{-T})
+\end{multline*}
+Note $\ten B^{-T}=\ten B^{-1}$.
+
+Finally we write:
+\[
+    \mathcal{A}^M=A^M_{ijk}\vek e_k\vek e_i\vek e_j
+\]
+(note the $k$-vector is the first vector and contracts with $\nabla\phi_N$)
+and find that:
+\begin{multline*}
+    A^M_{ijk}=\vek e_i\cdot(\vek e_k\cdot\mathcal{A}^M\cdot\vek e_j)=
+  -\tau_{mi}\pderiv{\phi_M}{x_m}\delta_{jk}+p\pderiv{\phi_M}{x_i}\delta_{jk}
+  +\tau_{ki}\pderiv{\phi_M}{x_j}-p\delta_{ik}\pderiv{\phi_M}{x_j}\\
+  +2C_1(B_{mi}\pderiv{\phi_M}{x_m}\delta_{jk}+
+        B_{km}\pderiv{\phi_M}{x_m}\delta_{ij})
+  +2C_2(B^{-1}_{kj}\pderiv{\phi_M}{x_i}+
+        B^{-1}_{ji}\pderiv{\phi_M}{x_k})
+\end{multline*}
+
+\subsection{Stretching a clamped Mooney-Rivlin elastic solid}
+\label{sec:solidbar}
+
+We consider a Mooney-Rivlin elastic solid on a unit square that is stretched
+along the $x$-direction. The vertical sides are clamped and the horizontal
+sides are free surfaces.
+
+The example file is \texttt{elastic1.f90} and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample elastic}
+\end{quote}
+
+The example is rather straightforward and can be studied by examining the
+source file.
+The elastic element routines
+in the add-on `elastic' (see Sec.~\ref{sec:elastic}) are used for
+the building of the system. 
+A feature of \ftn, called \emph{vector subscripts},
+is used to extract and/or update certain parts of the solution vector:
+
+\begin{listing}{53}
+    type(subscript_t) :: disp, pres, ess
+
+\end{listing}
+\medskip
+\begin{listing}{101}
+! define vector subscripts for direct manipulation of sysvector data
+                                                                                
+! all displacements
+  call create_subscript ( mesh, problem, disp, physqarr=[1] )
+! essential degrees
+  call create_subscript ( mesh, problem, ess, physqarr=[1], &
+                          unknownpart=.false. )
+! pressures
+  call create_subscript ( mesh, problem, pres, physqarr=[2] )
+
+\end{listing}
+\medskip
+\begin{listing}{151}
+      if ( iter == 2 ) sol%u(ess%s) = 0  ! set back essential bc to zero
+   
+\end{listing}
+\medskip
+\begin{listing}{164}
+      dd = maxval(abs(sol%u(disp%s))) ! displacement difference
+      pd = maxval(abs(sol%u(pres%s)-soln%u(pres%s)))  ! pressure difference
+                                                                                
+      print *, iter, dd , pd
+                                                                                
+      soln%u(disp%s) = soln%u(disp%s) + sol%u(disp%s)  ! update solution
+      soln%u(pres%s) = sol%u(pres%s) ! copy pressure
+
+\end{listing}
+At line 53 the vector subscripts are defined. On lines 104, 106, 109 the vector
+subscripts are created. On lines 151, 164--170, the vector subscripts
+are to manipulate the data in the system vector.
+
+After running the example the results in Figs.~\ref{fig:mesh_elastic1}--
+\ref{fig:energy_elastic1} are obtained.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{meshelastic1}
+   \end{center}
+   \caption{Deformation of the mesh for the elastic bar problem.}
+    \label{fig:mesh_elastic1}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{pressure_color}
+   \end{center}
+   \caption{Plot of the pressure for the elastic bar problem.}
+    \label{fig:pressure_elastic1}
+\end{figure}
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{energy_color}
+   \end{center}
+   \caption{Plot of the energy function $W$ for the elastic bar problem.}
+   \label{fig:energy_elastic1}
+\end{figure}
+
+A similar example (\texttt{elastic6.f90}) is available using spectral elements.
+
+The same problem, using hexahedral $Q_2/P_1^\mathrm{d}$ elements (Crouzeix-Raviart family), is in the file
+\texttt{elastic7.f90}. Note, that this problem optionally uses global $P_1$ interpolation\footnote{The $P_1$ interpolation space is defined on the initial (undeformed) configuration.}
+for optimal rate of convergence (see Sec.~\ref{sec:stokes47} for further explanation).
+
+\newpage
+\subsection{Stretching a clamped Mooney-Rivlin elastic solid: 3D version}
+\label{sec:solidbar3D}
+
+We consider a Mooney-Rivlin elastic solid in a unit cube that is stretched
+along the $y$-direction. The $x-y$ planes are clamped and the other
+ones are free surfaces.
+It is a 3D extension of the problem in Sec.~\ref{sec:solidbar}.
+
+The example file is \texttt{elastic3.f90} and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample elastic}
+\end{quote}
+
+The example is rather straightforward and can be studied by examining the
+source file.
+The elastic element routines
+in the add-on `elastic' (see Sec.~\ref{sec:elastic}) are used for
+the building of the system. 
+
+After running the example the result in Figure~\ref{fig:energy_elastic3}
+is obtained.
+\begin{figure}[ht!]
+   \begin{center}
+   \includegraphics[scale=0.7]{3Dbar}
+   \end{center}
+   \caption{Plot of the energy function $W$ for the elastic bar problem.}
+   \label{fig:energy_elastic3}
+\end{figure}
+
+The same problem, using hexahedral $Q_2/P_1^\mathrm{d}$ elements (Crouzeix-Raviart family), is in the file
+\texttt{elastic8.f90}. Note, that this problem optionally uses global $P_1$ interpolation\footnote{The $P_1$ interpolation space is defined on the initial (undeformed) configuration.} 
+for optimal rate of convergence (see Sec.~\ref{sec:stokes47} for further explanation).
+

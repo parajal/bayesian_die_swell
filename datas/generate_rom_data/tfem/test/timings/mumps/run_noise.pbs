@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#PBS -S /bin/csh
+
+##PBS -l walltime=0:10:0
+#PBS -l nodes=1
+##PBS -l mem=6000mb
+
+##PBS -M m.a.hulsen@tue.nl
+##PBS -m abe
+
+#PBS -j oe
+
+echo starting
+cd ${PBS_O_WORKDIR}
+echo nodes I run on are:
+cat ${PBS_NODEFILE}
+echo Output of job:
+export P4_GLOBMEMSIZE=100000000
+time mpiexec -verbose stokes
+echo ending
+

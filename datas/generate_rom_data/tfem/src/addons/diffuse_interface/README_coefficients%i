@@ -1,0 +1,35 @@
+Integer coefficients for the element routines in this addon.
+
+List of the coefficients
+------------------------
+
+  1-150: all relevant integer coefficients from the stokes & viscoelastic add-on
+
+151 Time integration scheme:
+    0: default (=1)
+    1: first-order, implicit Euler
+    2: second-order, implicit Gear (BDF2)
+    NOTE: this only applies to the element routine diffuse_interface_elem1
+    and not to the classical routine diffuse_interface_elem, which remains
+    first-order, no ALE and no tALE.
+
+152 Iteration scheme for the nonlinear terms in the diffuse-interface equations
+    0: default (=1)
+    1: Picard
+    2: Newton-Raphson
+    NOTE: if the explicit/implicit time integration scheme is used, this only
+    applies to the element routine diffuse_interface_elem1 and not to the 
+    classical routine diffuse_interface_elem, which remains Picard.
+    NOTE2: if the fully implicit time integration is used, this applies to
+    the routines for the non-linear cross terms as well (surface tension, 
+    convection)
+
+153 velocity to use in the convection term of the DI equation
+    0: default (=1)
+    1: prediction uhat=un (1st order) or uhat=2un-unm1 (2nd order)
+    2: velocity from previous iteration step (u_i)
+    NOTE: this coefficient only applies to diffuse_interface_elem1
+    NOTE2: since the fully implicit time integration scheme is not implemented
+    for tALE, this coefficient has to be 0 or 1 if tALE is used
+
+154-200: Reserved for future use. Set to zero for future compatibility.

@@ -1,0 +1,30 @@
+This file describes some info on howto install tfem on macOS with arm64
+-----------------------------------------------------------------------
+
+Status at date 06-11-2023.
+
+See INSTALL.macos for all info on installing on macOS. This file will only
+describe the peculiarities on the arm64 architecture.
+
+All primary packages/programs needed for tfem run natively on arm64:
+
+- Xcode (from Apple).
+- Command line tools (from Apple).
+- universal-ctags
+- fig2dev
+- ghostscript
+- Nagfor for arm64 (commercial)
+- gfortran
+- gmsh
+- Paraview
+
+For installing the non-Apple programs use Homebrew where possible.
+
+Use framework Accelerate as LIBBLAS. Accelerate uses the AMX modules on the Mx
+processors. Multithreading BLAS is only available if multiple AMX modules
+can be used.
+
+OpenBLAS also works, but is slower. Multithreading is needed to make it
+somewhat competitive to Accelerate, which makes the load on the computer
+much higher.
+

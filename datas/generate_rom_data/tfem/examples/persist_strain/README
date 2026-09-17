@@ -1,0 +1,11 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+persist1
+
+  Persistence-of-straining for a given velocity field 
+  on a cubic domain.
+  Output to vtk file.
+

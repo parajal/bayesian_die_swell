@@ -1,0 +1,54 @@
+dx_part = 2.0*Pi*rp/Nelem_part;
+
+// Create domain vertices
+
+Point(1) = {ox,    oy,    0.0, dx_box};
+Point(2) = {ox+lx, oy,    0.0, dx_box};
+Point(3) = {ox+lx, oy+ly, 0.0, dx_box};
+Point(4) = {ox,    oy+ly, 0.0, dx_box};
+ 
+For i In {1:4}
+  Physical Point(i) = i;
+EndFor
+
+// Create domain sides
+ 
+Line(1) = {1, 2};
+Line(2) = {2, 3};
+Line(3) = {3, 4};
+Line(4) = {4, 1};
+
+For i In {1:4}
+  Physical Line(i) = i;
+EndFor
+
+Periodic Line {2} = {4} Translate{lx,0,0};
+Periodic Line {3} = {1} Translate{0,ly,0};
+
+// Create outer boundary
+
+lin_loop[0] = newll;
+Line Loop(lin_loop[0]) = { 1, 2, 3, 4 };
+
+// Circle
+
+p1 = newp; Point(p1) = {xp,     yp,   0.0,   dx_part};
+p2 = newp; Point(p2) = {xp-rp,  yp,   0.0,   dx_part};
+p3 = newp; Point(p3) = {xp+rp,  yp,   0.0,   dx_part};
+ 
+c1 = newl; Circle(c1) = {p2, p1, p3};
+c2 = newl; Circle(c2) = {p3, p1, p2};
+ 
+lin_loop[1] = newll;
+ 
+Line Loop(lin_loop[1]) = {c1, c2};
+ 
+Physical Line(5) = {c1, c2};
+  
+// Create surface mesh (with holes)
+ 
+Plane Surface(1) = {lin_loop[]};
+ 
+Physical Surface(1) = {1};
+
+// vim: set filetype=gmsh :  //

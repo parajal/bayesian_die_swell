@@ -1,0 +1,4 @@
+&comppar
+!  uintpl = 2, gaussb = 4, meshfile = 'box.msh'
+  uintpl = 6, gaussb = 5, meshfile = 'sphere.msh'
+/

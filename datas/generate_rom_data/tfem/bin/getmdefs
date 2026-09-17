@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+#  getmdefs
+#
+#  Usage:
+#
+#    getmdefs >Mdefs.mk
+#
+#      get the Mdefs.mk from the home directory of tfem and adapt at least
+#      the TFEMPATH, LIBCREATE, MODPATHWRITE, EXTRATAGSSRC macros accordingly
+#
+#    getmdefs -p >Mdefs.mk
+#
+#      in addition defines the PROJECTDIR macro to define a project over
+#      multiple directories. PROJECTNAME macro is set to just project.
+#
+#    getmdefs -d >Mdefs.mk
+#
+#      in addition defines the PROJECTDIR macro to define a project over
+#      multiple directories. PROJECTNAME macro is set to current directory.
+#
+#    getmdefs -n name >Mdefs.mk
+#
+#      in addition defines the PROJECTDIR macro to define a project over
+#      multiple directories. PROJECTNAME macro is set to the name given.
+#
+#
+
+# functions
+
+function helptext ()
+{
+  echo "Usage: getmdefs [OPTIONS] [>Mdefs.mk]"
+  echo "Create a Mdefs.mk file. "
+  echo
+  echo "Options:   (Description)"
+  echo "   -h      this text is shown (on standard error)"
+  echo "   -p      set the PROJECTSDIR macro in the Mdefs.mk file for use"
+  echo "           of the file as the main Mdefs.mk file in the root directory"
+  echo "           of a project tree. Name of the project is project"
+  echo "   -d      similar to -p, but name of the project is name of directory."
+  echo "   -n name similar to -p, but name of the project to name"
+}
+
+function errortext ()
+{
+    echo ""
+    echo "The macro file $tp/Mdefs.mk"
+    echo "should first be updated for use with project directories before "
+    echo "the -p option can be used:"
+    echo " - Update TFEM to a recent version"
+    echo " - Copy Mdefs_distr.mk to Mdefs.mk"
+    echo " - Edit Mdefs.mk to reflect your system (OS,compiler,libraries)."
+    echo ""
+}
+
+. settfemroot
+. testdir
+
+cwd=`pwd`
+
+# get options
+
+project=
+while getopts dn:ph optvar; do
+  case "$optvar"
+  in
+     d) project=1; pname=`basename $cwd` ;;
+     n) project=1; pname=$OPTARG ;;
+     p) project=1; pname=project ;;
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+ esac
+done
+
+shift `expr $OPTIND - 1`
+
+echo "TFEMPATH = $tp"
+if [ $project ] ; then
+  grep PROJECTDIR $tp/Mdefs.mk >/dev/null
+  if [ $? == 1 ]; then
+    errortext >/dev/stderr
+    exit 1
+  fi
+  echo "PROJECTDIR = $cwd"
+  echo "PROJECTNAME = $pname"
+fi
+echo ""
+cat $tp/Mdefs.mk | sed -f $tp/bin/scripts/sedscript_getmdefs

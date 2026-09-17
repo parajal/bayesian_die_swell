@@ -1,0 +1,94 @@
+dx_part = 2.0*Pi*rp/Nelem_part;
+
+// External domain
+
+Point(1) = {ox,    oy,    oz,    dx_box};
+Point(2) = {ox+lx, oy,    oz,    dx_box};
+Point(3) = {ox+lx, oy,    oz+lz, dx_box};
+Point(4) = {ox,    oy,    oz+lz, dx_box};
+Point(5) = {ox,    oy+ly, oz,    dx_box};
+Point(6) = {ox+lx, oy+ly, oz,    dx_box};
+Point(7) = {ox+lx, oy+ly, oz+lz, dx_box};
+Point(8) = {ox,    oy+ly, oz+lz, dx_box};
+
+For i In {1:8}
+  Physical Point(i) = i;
+EndFor
+
+Line(1) = {1, 2};
+Line(2) = {2, 3};
+Line(3) = {3, 4};
+Line(4) = {4, 1};
+Line(5) = {3, 7};
+Line(6) = {7, 6};
+Line(7) = {6, 2};
+Line(8) = {1, 5};
+Line(9) = {5, 8};
+Line(10) = {8, 4};
+Line(11) = {8, 7};
+Line(12) = {6, 5};
+
+Line Loop(1) = {1, 2, 3, 4};
+Line Loop(2) = {2, 5, 6, 7};
+Line Loop(3) = {12, 9, 11, 6};
+Line Loop(4) = {4, 8, 9, 10};
+Line Loop(5) = {3, -10, 11, -5};
+Line Loop(6) = {1, -7, 12, -8};
+
+For i In {1:6}
+  Plane Surface(i) = {i};
+  Physical Surface(i) = i;
+EndFor
+
+surf_loop[0] = newsl;
+
+Surface Loop(surf_loop[0]) = {1, 2, 3, 4, 5, 6};
+
+// Sphere
+
+p1 = newp; Point(p1) = {xp,    yp,    zp,    dx_part} ;
+p2 = newp; Point(p2) = {xp+rp, yp,    zp,    dx_part} ;
+p3 = newp; Point(p3) = {xp,    yp+rp, zp,    dx_part} ;
+p4 = newp; Point(p4) = {xp,    yp,    zp+rp, dx_part} ;
+p5 = newp; Point(p5) = {xp-rp, yp,    zp,    dx_part} ;
+p6 = newp; Point(p6) = {xp,    yp-rp, zp,    dx_part} ;
+p7 = newp; Point(p7) = {xp,    yp,    zp-rp, dx_part} ;
+
+c1 = newl; Circle(c1) = {p2, p1, p7};
+c2 = newl; Circle(c2) = {p7, p1, p5};
+c3 = newl; Circle(c3) = {p5, p1, p4};
+c4 = newl; Circle(c4) = {p4, p1, p2};
+c5 = newl; Circle(c5) = {p2, p1, p3};
+c6 = newl; Circle(c6) = {p3, p1, p5};
+c7 = newl; Circle(c7) = {p5, p1, p6};
+c8 = newl; Circle(c8) = {p6, p1, p2};
+c9 = newl; Circle(c9) = {p7, p1, p3};
+c10 = newl; Circle(c10) = {p3, p1, p4};
+c11 = newl; Circle(c11) = {p4, p1, p6};
+c12 = newl; Circle(c12) = {p6, p1, p7};
+
+// Spherical surface
+
+lin1 = newll; Line Loop(lin1) = {c5, c10, c4};     surf1 = news; Ruled Surface(surf1) = {lin1};
+lin2 = newll; Line Loop(lin2) = {c9, -c5, c1};     surf2 = news; Ruled Surface(surf2) = {lin2};
+lin3 = newll; Line Loop(lin3) = {c12, -c8, -c1};   surf3 = news; Ruled Surface(surf3) = {lin3};
+lin4 = newll; Line Loop(lin4) = {c8, -c4, c11};    surf4 = news; Ruled Surface(surf4) = {lin4};
+lin5 = newll; Line Loop(lin5) = {-c10, c6, c3};    surf5 = news; Ruled Surface(surf5) = {lin5};
+lin6 = newll; Line Loop(lin6) = {-c11, -c3, c7};   surf6 = news; Ruled Surface(surf6) = {lin6};
+lin7 = newll; Line Loop(lin7) = {-c2, -c7, -c12};  surf7 = news; Ruled Surface(surf7) = {lin7};
+lin8 = newll; Line Loop(lin8) = {-c6, -c9, c2};    surf8 = news; Ruled Surface(surf8) = {lin8};
+
+surf_loop[1] = newsl;
+
+Surface Loop(surf_loop[1]) = {surf8, surf5, surf1, surf2, surf3, surf7, surf6, surf4};
+
+Physical Surface(7) = {surf8, surf5, surf1, surf2, surf3, surf7, surf6, surf4};
+
+// Make box with holes (=the spheres)
+
+Volume(1) = {surf_loop[]} ;
+
+Physical Volume(1) = {1};
+
+// vim: set filetype=gmsh :  //
+

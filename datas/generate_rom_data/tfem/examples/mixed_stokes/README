@@ -1,0 +1,24 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+mixed_stokes1
+
+ Mixed Stokes problem for a contraction flow 
+ Q2/Q1 Taylor-Hood for velocity-pressure, using main mesh for interpolation.
+ Qp for stresses using the blend mesh 1 for interpolation.
+ Blended mesh: 
+  main mesh: 9-node quadrilaterals
+  blend mesh 1: (p+1)^2-node high-order quadrilaterals, equidistant nodes
+
+mixed_stokes2
+
+ Mixed Stokes problem for a contraction flow 
+ Q2/Q1 Taylor-Hood for velocity-pressure, using main mesh for interpolation.
+ Q1isoQp for stresses using the blend mesh 1 for interpolation.
+ Blended mesh: 
+  main mesh: 9-node quadrilaterals
+  blend mesh 1: (p+1)^2-node high-order quadrilaterals, equidistant nodes
+ Note: for p=4 this is the famous Marchal-Crochet 4x4 mixed element.
+

@@ -1,0 +1,722 @@
+NOTE: 
+
+The examples in this directory are described in the userguide.
+
+
+Short description
+-----------------
+
+startup1
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Simple shear flow
+ The model is a Giesekus model
+ The integration scheme is explicit Euler
+
+startup2
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Planar extensional flow
+ The model is a Giesekus model
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup3
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. uniaxial extensional flow
+ The model is a Giesekus model
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup4, startup4log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is a Giesekus model, two-modes
+ The integration scheme is second-order Runge Kutta (Heun)
+ Also logc-version for testing.
+
+startup5
+
+ Startup from zero stress of simple shear flow with the xpp model.
+
+startup6
+
+ Startup from zero stress of flow with a constant velocity gradient
+ The model is a multi-mode XPP model.
+ Output is the viscoelastic (polymer) extra-stress.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup7
+
+ Startup from zero stress of flow with a constant velocity gradient
+ The model is a multi-mode PTT-XPP model.
+ Output is the viscoelastic (polymer) extra-stress.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup6, but now the model is a multi-mode PTT-XPP model.
+
+startup8, start8log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ The model is a multi-mode PTT-XPP model.
+ Output is the viscoelastic (polymer) extra-stress.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup7 (multi-mode PTT-XPP model), but now the model is 2D or
+ 2D axisymmetric with model=18 (four components in 2D). 
+ Also logc-version for testing.
+
+startup9, start9log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ The model is a multi-mode PTT-XPP model.
+ Output is the viscoelastic (polymer) extra-stress.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup8 (2D/2D-axi multi-mode PTT-XPP model), but now model=19 
+ (three components in 2D).
+ Also logc-version for testing.
+
+startup10
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Planar extensional flow
+ The model is a FENE-P model
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup11
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Planar extensional flow
+ The model is a FENE-P model
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup10, but now using the contravariant deformation tensor with
+ a choice for all four variants of the b-formulation.
+
+startup12
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. uniaxial extensional flow
+ The model is a Giesekus model
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup3, but now using the contravariant deformation tensor with
+ a choice for all four variants of the b-formulation.
+
+startup13
+
+ Startup from zero stress of flow with a constant velocity gradient
+ Planar extensional or shear flow (or combined)
+ The model is a Chilcott-Rallison model
+ The integration scheme is second-order Runge Kutta (Heun)
+ 
+startup14
+
+ Equilibration or start-up of flow with thermal fluctuations with a constant 
+ velocity gradient using the contravariant deformation formulation.
+ 3D single-point calculations
+ Equilibrium, shear or uniaxial extensional flow
+ The model is a UCM, FENE-P or Giesekus model
+ The integration scheme is forward Euler
+
+startup15, startup15_log, startup15_b 
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D flow. Combined shear and planar extensional flow. 
+ The model is an elastoviscoplastic model (Saramito 2009).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup16, startup16_log, startup16_b 
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D axisymmetric flow. Combined shear and uniaxial extensional flow. 
+ The model is an elastoviscoplastic model (Saramito 2009).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup17
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an elastoviscoplastic model (Saramito 2007).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup18, startup18_log, startup18_b 
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an elastoviscoplastic model (Saramito 2009).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup19, startup19_log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ Elastoviscoplastic model with Drucker-Prager plasticity (Saramito 2021).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup20, startup20_log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D flow. Combined shear and planar extensional flow. 
+ Elastoviscoplastic model with Drucker-Prager plasticity (Saramito 2021).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup21
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D axisymmetric flow. Combined shear and planar extensional flow. 
+ Elastoviscoplastic model with Drucker-Prager plasticity (Saramito 2021).
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup22
+
+ Startup from zero stress of a flow with a constant velocity gradient.
+ Multiple continuation with a different velocity gradient to obtain
+ the steady state values.
+ The model is a multi-mode Giesekus model.
+ Output is the viscoelastic (polymer) extra-stress.
+ Both the time-dependent and the final steady data points are output.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup23
+
+ Startup from zero stress of a flow with a constant velocity gradient.
+ Multiple continuation with a different velocity gradient to obtain
+ the steady state values.
+ The model is a multi-mode PTT linear model.
+ Output is the viscoelastic (polymer) extra-stress.
+ Both the time-dependent and the final steady data points are output.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup22, but now with a multi-mode PTT linear model.
+
+startup24
+
+ Startup from zero stress of a flow with a constant velocity gradient.
+ Multiple continuation with a different velocity gradient to obtain
+ the steady state values.
+ The model is a multi-mode PTT exponential model.
+ Output is the viscoelastic (polymer) extra-stress.
+ Both the time-dependent and the final steady data points are output.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup22, but now with a multi-mode PTT exponential model.
+
+startup25
+
+ Startup from zero stress of a flow with a constant velocity gradient.
+ Multiple continuation with a different velocity gradient to obtain
+ the steady state values.
+ The model is an evp model Drucker-Prager plasticity.
+ Output is the viscoelastic (polymer) extra-stress.
+ Both the time-dependent and the final steady data points are output.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup22, but now with an evp model Drucker-Prager plasticity
+ (Saramito 2021)
+
+startup26
+
+ Startup from zero stress of flow with an imposed shear stress function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is a Giesekus model with two modes. 2D flow.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup27
+
+ Startup from zero stress of flow with an imposed shear stress function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is a an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode.
+ 2D flow. The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup26, but now with an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode.
+
+startup28
+
+ Startup from zero stress of flow with an imposed shear stress function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is a an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode.
+ 3D flow. The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup27, but now with a 3D flow.
+
+startup29
+
+ Startup from zero stress of planar extensional flow with an imposed normal
+ stress difference function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is a Giesekus model with multiple modes. 2D flow.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup30
+
+ Startup from zero stress of planar extensional flow with an imposed normal
+ stress difference function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is but now with an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode. 2D flow.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup29, but now with an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode.
+
+startup31
+
+ Startup from zero stress of planar extensional flow with an imposed normal
+ stress difference function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is but now with an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode. 3D flow.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup30, but now with a 3D flow.
+
+startup32
+
+ Startup from zero stress of uniaxial extensional flow with an imposed normal
+ stress difference function.
+ Instantaneous elasticity has been handled with a finite but fast ramp
+ towards the constant stress value.
+ The model is but now with an elastoviscoplastic model:
+ SRM1 (Saramito 2007) or SRM2 (Saramito 2009). Single mode. 3D flow.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup31, but now with a uniaxial extensional flow
+
+startup33
+
+ Startup from zero stress of flow with an imposed shear stress function.
+ The model is an elastoviscoplastic model: SRM1 (Saramito 2007) or SRM2
+ (Saramito 2009). Single mode. 3D flow. Non-zero solvent viscosity.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup34
+
+ Startup from zero stress of planar extensional flow with an imposed normal
+ stress difference function.
+ The model is an elastoviscoplastic model: SRM1 (Saramito 2007) or SRM2
+ (Saramito 2009). Single mode. 3D flow. Non-zero solvent viscosity.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup35
+
+ Startup from zero stress of uniaxial extensional flow with an imposed normal
+ stress difference function.
+ The model is an elastoviscoplastic model: SRM1 (Saramito 2007) or SRM2
+ (Saramito 2009). Single mode. 3D flow. Non-zero solvent viscosity.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup36
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is a Giesekus model, two-modes
+ The integration scheme is the trapezoidal method.
+
+ Similar to startup4, but now using implicit trapezoidal time integration.
+
+startup37
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is a Maxwell, Giesekus or FENE-P model, two-modes
+ The integration scheme is the trapezoidal method.
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup36, but now using the b-formulation and a Maxwell model
+ Similar to startup12, but now using implicit time integration.
+
+startup38
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D flow. Combined shear and uniaxial extensional flow.
+ The model is a Maxwell, Giesekus or FENE-P model, two-modes
+ The integration scheme is the trapezoidal method.
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup37, but now with 2D flow.
+
+startup39
+
+ Startup from zero stress of flow with a constant velocity gradient
+ axi-symmetric flow. Combined shear and uniaxial extensional flow.
+ The model is a Maxwell, Giesekus or FENE-P model, two-modes
+ The integration scheme is the trapezoidal method.
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup37, but now with axisymmetric flow.
+
+startup40
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is a Maxwell, Giesekus of FENE-P model, possible multiple modes.
+ The time is split into three intervals. The integration scheme in the
+ first interval is either the implicit Euler or the trapezoidal method.
+ In the second and third interval there is an additional choice for BDF2.
+ In this way it is possible to start with small time steps and go to large
+ ones in the third interval to obtain a steady state quickly.
+ Using the contravariant deformation tensor (b).
+
+startup41
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is a Maxwell, Giesekus of FENE-P model, one-modes
+ The integration scheme is the trapezoidal method.
+ Using the contravariant deformation tensor (b).
+ Output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+ Similar to startup37, but now just one mode and computation of eigen problem.
+
+startup42, startup42_log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an EGP elastoviscoplastic model.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup43
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is an EGP elastoviscoplastic model.
+ Implicit trapezoidal time integration
+
+ Similar to startup42, but now using implicit trapezoidal time integration.
+
+startup44
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an EGP elastoviscoplastic model.
+ The integration scheme is second-order Runge Kutta (Heun)
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup42, but now using the b-formulation
+
+startup45
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is an EGP elastoviscoplastic model
+ Implicit trapezoidal time integration
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup43, but now using the b-formulation
+
+startup46, startup46_log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D flow. Combined shear and planar extensional flow. 
+ The model is an EGP elastoviscoplastic model.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+startup47
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 2D flow. Combined shear and planar extensional flow. 
+ The model is an EGP elastoviscoplastic model.
+ The integration scheme is second-order Runge Kutta (Heun)
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup46, but now using the b-formulation
+
+startup48, startup48_log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an EGP elastoviscoplastic model. Multi-mode von Mises stress.
+ The integration scheme is second-order Runge Kutta (Heun)
+
+ Similar to startup42, but now using multiple mode von Mises stress.
+
+startup49
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an EGP elastoviscoplastic model. Multi-mode von Mises stress.
+ The integration scheme is second-order Runge Kutta (Heun)
+ Using the contravariant deformation tensor (b).
+
+ Similar to startup44, but now using multiple mode von Mises stress.
+
+startup50 to startup55
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an EGP elastoviscoplastic model.
+ 13-mode model with 12 viscoelastic modes and one elastic mode for
+ strain hardening. 
+ Data for PMMA from van Breemen et al. (2012) DOI: 10.1002/polb.23199
+ 
+ with
+
+   startup50: 
+     The integration scheme is second-order Runge Kutta (Heun)
+     Using the standard conformation tensor (c)
+   startup51: 
+     The integration scheme is second-order Runge Kutta (Heun)
+     Using the contravariant deformation tensor (b)
+   startup52:
+     Implicit trapezoidal time integration
+     Using the standard conformation tensor (c)
+   startup53:
+     Implicit trapezoidal time integration
+     Using the contravariant deformation tensor (b)
+   startup54:
+     Implicit BDF2 time integration
+     Using the standard conformation tensor (c)
+   startup55:
+     Implicit BDF2 time integration
+     Using the contravariant deformation tensor (b)
+
+startup56 and startup57
+
+ Similar to startup52 and startup53, respectively, but now with:
+
+ 14-mode model with 12 alpha process viscoelastic modes, one elastic mode for
+ strain hardening and one mode for the beta process. 
+ Data for PMMA from van Breemen et al. (2012) DOI: 10.1002/polb.23199
+ 
+startup58, startup58_log
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow. 
+ The model is an EGP elastoviscoplastic model (single mode)
+ Plastic strain softening.
+ The integration scheme is second-order Runge Kutta (Heun)
+ Similar to startup42, but now with plastic strain softening. Single mode only.
+
+startup59
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is an EGP elastoviscoplastic model (single mode)
+ Plastic strain softening.
+ Implicit trapezoidal time integration
+ Similar to startup43, but now with plastic strain softening. Single mode only.
+ Similar to startup57, but now using implicit trapezoidal time integration.
+
+startup60
+
+ Startup from zero stress of flow with a constant velocity gradient
+ 3D flow. Combined shear and uniaxial extensional flow.
+ The model is an EGP elastoviscoplastic model
+ Plastic strain softening.
+ Implicit trapezoidal time integration
+ Using the standard conformation tensor (c).
+ 14-mode model with 12 alpha process viscoelastic modes, one elastic mode for
+ strain hardening and one mode for the beta process. 
+ Data for PMMA from van Breemen et al. (2012) DOI: 10.1002/polb.23199
+ Similar to startup56, but now with plastic strain softening.
+
+startup61
+
+ Similar to startup60, but now using the b-formulation
+
+startup62
+
+ Similar to startup60, but now using a 2D flow
+
+startup63
+
+ Similar to startup61, but now using a 2D flow
+
+startup64, startup64_log
+
+ Similar to startup58, but now using a 2D flow
+
+
+stresstest1
+
+ Test for the derivative of the stress expression using the contravariant
+ deformation tensor (b). 3D flow.
+ The model is a Maxwell, Giesekus or FENE-P model.
+
+stresstest2
+
+ Test for the derivative of the stress expression using the contravariant
+ deformation tensor (b). 2D flow.
+ The model is a Maxwell or Giesekus.
+
+stresstest3
+
+ Test for the derivative of the stress expression using the contravariant
+ deformation tensor (b). axisymmetric.
+ The model is a Maxwell, Giesekus or FENE-P model.
+
+stresstest4
+
+ Test for the derivative of the stress expression using the contravariant
+ deformation tensor (b). 2D flow.
+ The model is a FENE-P model.
+
+steady1
+
+ Steady flow with a constant velocity gradient.
+ Newton-Raphson iteration.
+ The model is an evp model with Drucker-Prager plasticity (Saramito 2021).
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+steady2
+
+ Steady flow with a constant velocity gradient.
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2007, SRM1) with Oldroyd-B or Giesekus
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+steady3
+
+ Steady flow with a constant velocity gradient.
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2009, SRM2) with Oldroyd-B or Giesekus
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+steady4
+
+ Steady flow with a constant velocity gradient.
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2009, SRM2) with Phan-Thien Tanner
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+steady5
+
+ Steady flow with a constant velocity gradient (2D flow)
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2007, SRM1) with Oldroyd-B or Giesekus
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+
+steady6
+
+ Steady flow with a constant velocity gradient (axisymmetric)
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2007, SRM1) with Oldroyd-B or Giesekus
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+
+steady7
+
+ Steady flow with a constant velocity gradient (2D flow)
+ Newton-Raphson iteration.
+ The model is an evp model with Drucker-Prager plasticity (Saramito 2021).
+ Output is the viscoelastic (polymer) extra-stress.
+
+steady8
+
+ Steady flow with a constant velocity gradient (2D flow)
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2007, SRM1) with Oldroyd-B or Giesekus
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+ Contravariant deformation formulation.
+
+ Similar to steady5, however using the b-formulation.
+
+steady9
+
+ Steady flow with a constant velocity gradient.
+ Newton-Raphson iteration.
+ The model is an evp model (Saramito 2007, SRM1) with Oldroyd-B or Giesekus
+ relaxation expression.
+ Output is the viscoelastic (polymer) extra-stress.
+ Contravariant deformation formulation. 3D flow.
+
+ Similar to steady2, however using the b-formulation and no output of
+ eigenvalues and eigenvectors of the Jacobian.
+
+steady10
+
+ Steady flow with a constant velocity gradient. 3D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+steady11
+
+ Steady flow with a constant velocity gradient. 3D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model
+ Output is the viscoelastic (polymer) extra-stress.
+ Contravariant deformation formulation.
+
+steady12
+
+ Steady flow with a constant velocity gradient. 2D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+
+steady13
+
+ Steady flow with a constant velocity gradient. 2D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model
+ Output is the viscoelastic (polymer) extra-stress.
+ Optional output of eigenvalues and eigenvectors of Jacobian of rhs.
+ Contravariant deformation formulation.
+
+steady14
+
+ Steady flow with a constant velocity gradient. 3D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model with multi-mode von Mises stress
+ Output is the viscoelastic (polymer) extra-stress.
+
+steady15
+
+ Steady flow with a constant velocity gradient. 3D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model for incompressible flow with
+ multi-mode von Mises stress
+ Output is the viscoelastic (polymer) extra-stress.
+ Contravariant deformation formulation.
+
+steady16
+
+ Steady flow with a constant velocity gradient. 2D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model for incompressible flow
+ with multi-mode von Mises stress
+ Output is the viscoelastic (polymer) extra-stress.
+
+steady17
+
+ Steady flow with a constant velocity gradient. 2D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model
+ multi-mode von Mises stress
+ Test dependence on J of EGP model
+ Output is the viscoelastic (polymer) extra-stress.
+ Contravariant deformation formulation.
+
+steady18
+
+ Steady flow with a constant velocity gradient. 2D flow.
+ Newton-Raphson iteration.
+ The model is a EGP elastoviscoplastic model
+ multi-mode von Mises stress
+ Test dependence on J of EGP model and factor h(J).
+ Output is the viscoelastic (polymer) extra-stress.
+ Contravariant deformation formulation.
+

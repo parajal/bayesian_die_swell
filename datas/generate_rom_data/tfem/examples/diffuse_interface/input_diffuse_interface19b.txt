@@ -1,0 +1,22 @@
+&comppar
+  nx = 50   ! number of elements in x-direction
+  ny = 50   ! number of elements in y-direction
+  numtimesteps = 3000 ! number of time steps
+  rho = 50  ! density
+  eta = 1.0  ! viscosity
+  deltat= 5e-4  ! time step
+  alpha = 3  ! alpha parameter in di model
+  beta = -1  ! beta parameter in di model
+  gamm = 3  ! gamma parameter in di model
+  omega = 7  ! omega parameter in di model
+  Mcoef = 2e-2  ! M parameter in di model
+  kappa = 12e-4  ! kappa parameter in di model
+  kappa2 = -4e-4 ! kappa2 parameter in di model
+  kappa3 = 12e-4 ! kappa3 parameter in di model
+  epsdi = 1e-3 ! accuracy in Picard iteration
+  itermax = 20 ! maximum number of iterations in Picard iteration
+  rs_up = 1.0 ! real_storage gradient-velocity-pressure LU (HSL)
+  is_up = 1.0 ! integer_storage gradient-velocity-pressure LU (HSL)
+  rs_di = 1.0 ! real_storage for the conformation LU (HSL)
+  is_di = 1.0 ! integer_storage for conformation LU (HSL)
+/

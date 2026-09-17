@@ -1,0 +1,14 @@
+&comppar
+    rho = 0.1,           ! density
+    grv = 1.0,           ! gravity constant g
+    coorsys = 1          ! planar Cartesian (0) or axisymmetric (1) coor. system
+    numtimesteps = 1000  ! number of time steps
+    plot_mesh_every = 10 ! plot mesh every .. steps
+    eta = 1.0            ! viscosity
+    gamma_fa = 0.1       ! surface tension coefficient fluid-air interface
+    dgamma_w = -0.05     ! surface tension difference fluid-air wrt the wall
+    surface_tension = T  ! include surface tension
+    deltat = 2.e-1       ! time step
+    rs_up = 1.5          ! real_storage velocity-pressure LU (HSL)
+    is_up = 1.5          ! integer_storage velocity-pressure LU (HSL)
+/

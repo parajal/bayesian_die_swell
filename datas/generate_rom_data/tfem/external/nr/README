@@ -1,0 +1,16 @@
+Numerical recipes
+=================
+
+The routines are not free. They require a license, which means you have to
+buy the book (see http://www.nr.com/ or buy the source code separately.
+NOTE: the routines have been edited for double precision use.
+
+Install:
+
+   make
+
+in this directory or
+
+   make nr
+
+from the tfem root directory will update your solver lib with the nr routines.

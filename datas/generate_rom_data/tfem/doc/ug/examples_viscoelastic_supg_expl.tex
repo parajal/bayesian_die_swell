@@ -1,0 +1,1086 @@
+% !TEX root = userguide.tex
+
+\def\headdate{14th October 2022}
+
+\section{Viscoelastic fluid flow using SUPG (explicit stress formulation)}
+\label{sec:explicitstress}
+
+In this section some examples using the equations for viscoelastic fluid flow
+in the explicit stress formulation 
+will be given after the theory in the next section.
+All examples use streamline upwind Petrov-Galerkin (SUPG)
+which has been developed by Brooks \& Hughes \cite{Brooks82}.
+
+\subsection{Weak form of the viscoelastic fluid equations. DEVSS-G/SUPG}
+\label{sec:weakviscoelastic}
+
+The equations for the flow of a single-mode viscoelastic fluid
+in a region $\Omega$ are given by
+\begin{alignat}{2}
+  \rho(\pderiv{\vek u}t+\vek u\cdot\nabla\vek u)
+      -\nabla\cdot(2\eta_s\ten D)+\nabla p-\nabla\cdot\ten \tau(\ten c)
+        &=\rho\vek b,\qquad&&\text{in }\Omega\label{eq:ve1}\\
+\nabla\cdot\vek u&=0,\qquad&&\text{in }\Omega\\
+        \pderiv{\ten c}{t}
++\vek u\cdot\nabla\ten c-\ten L\cdot\ten c-\ten c\cdot\ten L^T
+ +\ten f(\ten c)&=\ten 0,\qquad&&\text{in }\Omega\label{eq:ve3}
+\end{alignat}
+where we have assumed that the density of the fluid remains constant
+(`incompressible'). In these equations $\vek u$ is the velocity, $p$ is the
+pressure and $\ten c$ is the conformation tensor, which are the unknowns to be
+solved as a function of position $\vek x$ and time $t$. Furthermore $\rho$ is
+the density of the fluid, $\eta_s$ is the solvent viscosity for which we
+assume it is non zero and
+ $\ten D=(\nabla\vek u+\nabla\vek u^T)/2$, with $\ten L=(\nabla\vek u)^T$ and
+$\vek b$ is a body force per unit mass (e.g.\ gravity).
+The polymer stress tensor $\ten\tau(\ten c)$ and the tensor function 
+$\ten f(\ten c)$ are 
+functions of the conformation tensor and depend on the model (see
+Appendix~\ref{chap:viscoelasticmodels}).
+
+The boundary conditions are similar to the Stokes system
+\begin{gather}
+    \vec u = \vec u_D\text{ on }\Gamma_D\\
+    -p\vec n+2\eta_s \ten D\cdot\vec n+\ten\tau\cdot\vec n=
+         \vec t_{\text{N}}\text{ on }\Gamma_{\text{N}}
+\end{gather}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part. The Neumann condition is equivalent
+to an imposed traction of $\vec t_{\text{N}}$. Due to the hyperbolic character
+of the constitutive equation we also need an additional boundary condition for
+$\vek c$ at the inflow boundary:
+\begin{equation}
+   \ten c = \ten c_\text{in}\text{ on }\Gamma_\text{in}
+    \label{eq:cinflow}
+\end{equation}
+where $\Gamma_\text{in}$ is the inflow boundary, i.e.\ the part of $\Gamma$
+where $\vek u\cdot\vek n<0$, with $\vek n$ the outwardly directed unit normal.
+Note, that if the inertia terms are neglected in the momentum balance
+(when the Reynolds number is small), the initial conditions for the velocity is
+not needed.
+                                                                                
+Since the system is time-dependent we also need initial conditions for $\vek u$
+and $\ten c$ in the whole domain $\Omega$:
+\begin{alignat}{2}
+    \vec u(\vek x,t=0) &= \vec u_0(\vek x)\qquad&&\text{ in }\Omega\\
+    \ten c(\vek x,t=0) &= \ten c_0(\vek x)&&\text{ in }\Omega
+\end{alignat}
+Note, that applying `zero polymer stress' as initial condition can be achieved
+by setting $\ten c_0=\ten I$.
+
+The weak form can be obtained by multiplying
+Eqs.~\eqref{eq:ve1}--\eqref{eq:ve3}
+with test functions $\vec v$, $q$ and $\ten d$:
+\begin{align}
+ \big(\vek v,\rho(\pderiv{\vek u}t+\vek u\cdot\nabla\vek u)
+   -\nabla\cdot\ten\sigma -\rho\vek b \big)&=0,\qquad\text{for all }\vek v\\
+  (q,\nabla\cdot\vek u)& =0,\qquad\text{for all }q\\
+ \big(\ten d,\pderiv{\ten c}{t}
++\vek u\cdot\nabla\ten c-\ten L\cdot\ten c-\ten c\cdot\ten L^T
+ +\ten f(\ten c)\big)&= 0,\qquad\text{for all }\ten d
+\end{align}
+where $\ten\sigma = -p\ten I+2\eta_s\ten D+\ten\tau$ and
+the bilinear operators are given by
+\begin{align}
+   (a,b)&=\int_\Omega a b\D x\text\qquad\text{for scalars}\\
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\qquad
+     \text{for vectors }\\
+   (\ten A, \ten B)&=\int_\Omega\ten A:\vek B\D x\qquad 
+    \text{for tensors}
+\end{align}
+
+Using partial integration and Gauss'
+theorem we obtain the following weak form: 
+Find $\vek u$, $p$ and $\ten c$ such that
+\begin{alignat}{2}
+ \big(\vek v,\rho(\pderiv{\vek u}t+\vek u\cdot\nabla\vek u)\big) +
+  \big((\nabla\vek v)^T,2\eta_s\ten D\big)
+    &-(\nabla\cdot\vek v,p)+\big((\nabla\vek v)^T,\ten\tau(\ten c)\big)\notag\\
+    &=(\vek v,\vek t_{\text{N}})_{\Gamma_{\text{N}}}+(\vek v,\rho\vek b)
+&\qquad&\text{for all }\vek v\label{eq:weakmomentumSUPG}\\
+  \,(q,\nabla\cdot\vek u)&=0,&\qquad&\text{for all }q\\
+ \big(\ten d,\pderiv{\ten c}{t}
++\vek u\cdot\nabla\ten c-\ten g(\ten L,\ten c)\big)&= 0,
+  &\qquad&\text{for all }\ten d\label{eq:weakc}
+\end{alignat}
+using appropriate spaces for $\vek u$, $p$, $\ten c$, $\vek v$, $q$ and $\ten
+d$. The function $\ten g(\ten L,\ten c)$ is given by
+\begin{equation}
+\ten g(\ten L,\ten c)=\ten L\cdot\ten c+\ten c\cdot\ten L^T
+ -\ten f(\ten c)
+\end{equation}
+
+The weak form can be used to obtain an approximate solution using the 
+Galerkin \fem\ technique. For this we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $\vek u$, $p$ and $\ten c$ 
+(and similarly $\vek v$, $q$ and $\ten d$) by
+polynomials on each element:
+\begin{align}
+    \vek u_h&=\tsum_k \phi_k(\vek x)\vek u_k=\col\phi^T(\vek x)\col{\vek u}\\
+    p_h&=\tsum_k \psi_k(\vek x) p_k=\col\psi^T(\vek x)\col{ p} \\
+  \ten c_h&=\tsum_k \theta_k(\vek x)\ten c_k=\col\theta^T(\vek x)\col{\ten c}
+  \label{eq:theta}
+\end{align}
+where $\col\phi(\vek x)$, $\col\psi(\vek x)$, $\col\theta(\vek x)$
+are global shape functions. Note, that most terms in the momentum balance and
+the continuity equation can be build using standard (Navier-) Stokes elements.
+
+Experience has shown that the Galerkin technique is not very useful for
+viscoelastic flow computations. Stabilization techniques are necessary.
+
+\subsubsection{DEVSS}
+
+A basic problem with the Galerkin technique as described above is the
+compatibility between the discretization spaces. Even after using 
+velocity/pressure spaces that are proper for the Stokes problem, there remains
+a compatibility problem between the conformation space and the velocity space.
+This problem can be resolved by the DEVSS scheme \cite{Guenette95}. The DEVSS
+scheme
+basically adds a viscous term to the momentum equation and subtract it again
+using a projection of the (symmetric part of the) velocity gradient:
+\begin{gather}
+  -\nabla\cdot\big(2\alpha ( \ten D(\vek u) - \ten E )\big)
+        + \text{other terms of mom.\ eq.}\\
+   -\ten D(\vek u) + \ten E = \ten 0
+\end{gather}
+or in the weak form
+\begin{gather}
+  \big((\nabla\vek v)^T,2\alpha(\ten D(\vek u) - \ten E)\big)
+          + \text{other terms of mom.\ eq.}\\
+   (\ten F,-\ten D(\vek u) + \ten E) = 0
+\end{gather}
+The tensor variable $\ten E$ is interpolated in a standard way
+\begin{equation}
+  \ten E_h=\tsum_k \zeta_k(\vek x)\ten E_k=\col\zeta^T(\vek x)\col{\ten E}
+\end{equation}
+The stabilization is due the difference in the $\ten D(\vek u_h)$ and
+$\ten E_h$ spaces. In practice the shape function $\zeta$ is taken one order
+lower than $\phi$ and continuously across element boundaries. Using DEVSS it is
+possible to combine for example a (bi-)quadratic velocity interpolation
+with a (bi-)linear conformation tensor implementation.
+
+A slightly different variant, which uses the velocity gradient directly, has
+been proposed by Bogaerds et al.\ \cite{Bogaerds02}:
+\begin{gather}
+  -\nabla\cdot\big(\alpha ( \nabla\vek u - \ten G^T )\big)
+      + \text{other terms of mom.\ eq.}\\
+   -\nabla\vek u + \ten G^T = \ten 0
+\end{gather}
+or in the weak form
+\begin{gather}
+  \big((\nabla\vek v)^T,\alpha(\nabla\vek u - \ten G^T)\big)
+          + \text{other terms of mom.\ eq.}\\
+   (\ten H,-\nabla\vek u + \ten G^T) = 0\label{eq:Gproj}
+\end{gather}
+The only advantage of this variant is simplicity in programming when combined
+with the G-method in solving the constitutive equation (see below). For fully
+coupled equations, the system matrix for solving the momentum
+balance and continuity equation increases, leading to larger CPU times. Hence,
+for efficiency it is better to use the original DEVSS with $\ten E$ and compute
+the non-symmetric part $\ten G-\ten E$ separately when needed.
+
+\subsubsection{SUPG}
+
+The convection term in the constitutive equation needs to be stabilized. A very
+popular technique for that purpose is the SUPG method developed by
+Brooks and Hughes \cite{Brooks82}. The technique uses a modified test function
+that puts more weight to the upwind direction of the streamline. If we denote
+the test functions for the Galerkin scheme by $\ten d_h$ (same space as $\ten
+c_h$ in Eq.~\eqref{eq:theta}), the test function in the SUPG scheme is given by
+\[
+     \hat{\ten d}_h = \ten d_h+\tau\vek u_h\cdot\nabla \ten d_h
+\]
+where $\tau$ is a scalar field of dimension time that needs to be chosen in
+a suitable way. The discrete form of Eq.~\eqref{eq:weakc} now becomes
+\begin{equation}
+ \big(\ten{d}_h+\tau\vek u_h\cdot\nabla \ten d_h,\pderiv{\ten c_h}{t}
++\vek u_h\cdot\nabla\ten c_h-\ten g(\ten L_h,\ten c_h)\big)= 0
+\label{eq:weakcd}
+\end{equation}
+In practice, the field $\tau$ will be chosen as follows 
+\begin{equation}
+       \tau = \frac{\beta h}{2 U}
+    \label{eq:taufactor}
+\end{equation}
+where $\beta$ is a dimensionless constant,
+$h$ is a typical size of the element in the direction of velocity and $U$ is a
+characteristic velocity magnitude.
+For elements of higher-order (order 2 or
+more) the optimum value for $\tau$ is different for each integration point,
+even if $h$ and $U$ are assumed to be constant on an element
+(see also \cite{Donea03}). 
+We refer to Appendix~\ref{chap:tausupg} for a discussion on the
+computation of $h$ and $U$.
+
+In a 1D convection-diffusion problem with constant
+coefficients the value for $\beta$ that generates exact nodal values depends on
+the mesh P\'eclet number $\text{Pe}_h$ (see, for example \cite{Donea03}) and
+tends to $\beta=1$ for large values of $\text{Pe}_h$. Therefore our default
+value will be $\beta=1$ since in our case $\text{Pe}_h=\infty$.
+
+\subsubsection{DEVSS-G/SUPG}
+
+Using a standard velocity-pressure element ($Q_2Q_1$
+quadrilaterals and $P_2P_1$ triangles) the
+stabilization techniques DEVSS and SUPG works well for steady flows. For
+time-dependent flows spurious instabilities can appear even in linear Couette
+flow (see, for example \cite{Bogaerds00} and the references therein). These
+instabilities can be suppressed by replacing Eq.~\eqref{eq:weakcd} with
+\begin{equation}
+ \big(\ten{d}_h+\tau\vek u_h\cdot\nabla \ten d_h,\pderiv{\ten c_h}{t}
++\vek u_h\cdot\nabla\ten c_h-\ten g(\ten G_h,\ten c_h)\big)= 0
+\label{eq:weakcdg}
+\end{equation}
+where $\ten G_h$ is the projected velocity gradient as found from the
+discretization of Eq.~\eqref{eq:Gproj}. In words: in the constitutive
+equation the velocity gradient used is the projected one $\ten G_h$ instead of
+ $\ten L_h=(\nabla\vek u_h)^T)$.
+
+\subsubsection{Log conformation representation}
+
+The log-conformation representation (LCR) \cite{Hulsen05}
+is a transformation of the original
+equation for the conformation tensor $\ten c$ to an equivalent equation for
+$\ten s=\log\ten c$ (and thus $\ten c=\exp(\ten s)$):
+\begin{equation}
+ \pderiv{\ten s}{t} +\vek u\cdot\nabla\ten s-\ten h(\ten L,\ten s)= \ten 0
+  \label{eq:LCR}
+\end{equation}
+Solving the equation for $\ten s$ instead of the equation for $\ten c$ leads to
+major stability improvements.
+
+\subsection{Time discretization for flows without inertia}
+
+For the time-discretization of the constitutive equation standard schemes can
+be employed.
+However, applying standard schemes to Eq.~\eqref{eq:weakcd} or
+Eq.~\eqref{eq:weakcdg} would be rather cumbersome because the test
+function depends on time (since $\vek u_h$ depends on time).
+Therefore we replace the
+test function by a test function that is constant in time
+\begin{equation}
+ \big(\ten{d}_h+\tau\bar{\vek u}_h\cdot\nabla \ten d_h,\pderiv{\ten c_h}{t}
++\vek u_h\cdot\nabla\ten c_h-\ten g(\ten G_h,\ten c_h)\big)= 0
+\label{eq:weakcdgc}
+\end{equation}
+where $\bar{\vek u}_h$ is constant during a time step, for example by taking
+the value at the start of the interval.
+The optimal value for $\bar{\vek u}_h$ may depend
+on the time discretization scheme employed. Since now all test functions do not
+depend on time within a time step we can describe the time integration
+techniques using the original equations.
+Note, that in the following we will 
+use the notation $u^{n}=u(t_n)$, where $t_n$ is the time at the
+end of the $n^\text{th}$ time interval.
+
+Since we do not have inertia the initial condition $\vek u_0$ in the region
+$\Omega$ is not needed. It is however possible to start with non-zero initial
+value for $\vek u$ on the boundary $\Gamma_D$ and traction $\vek t_N$ on the
+boundary $\Gamma_N$. If we assume that we start from zero polymer stress we can
+compute $\vek u^0=\vek u(t_0)$ from the momentum balance and continuity
+equation:
+\begin{alignat}{2}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^0)\big)+\nabla p^0
+        &=\rho\vek b,\qquad&&\text{in }\Omega\\
+\nabla\cdot\vek u^0&=0,\qquad&&\text{in }\Omega
+\end{alignat}
+In fact we solve the system extended with DEVSS so we have
+$\ten G_0$ available as
+well for multi-step schemes and the same 
+system matrix can be used for time-stepping:
+\begin{align}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{0}\big) +\nabla p^{0} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{0} -\ten G^T{}^{0} \big)
+         &= \rho\vek b \\
+     \nabla\cdot\vek u^{0}&=0\\
+   -\nabla\vek u^{0} + \ten G^T{}^{0} &= \ten 0
+\end{align}
+
+There are various ways for time discretization: explicit, semi-implicit and
+implicit with numerous schemes in each category. We give four examples, two
+explicit and three semi-implicit:\\
+Euler forward (first-order)
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t} = \frac{\ten c^{n}}{\Delta t}
+-\vek u^n\cdot\nabla\ten c^n+\ten g(\ten G^n,\ten c^n)
+\end{equation}
+Adams-Bashforth (second-order)
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t} = \frac{\ten c^{n}}{\Delta t}
++\frac32\big(-\vek u^n\cdot\nabla\ten c^n+\ten g(\ten G^n,\ten c^n)\big)
+-\frac12\big( -\vek u^{n-1}\cdot\nabla\ten c^{n-1}+\ten g(\ten G^{n-1},\ten
+c^{n-1})\big)
+\end{equation}
+Combined Euler forward/backward (first-order)
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t}+\vek u^n\cdot\nabla\ten c^{n+1}=
+    \frac{\ten c^{n}}{\Delta t} +\ten g(\ten G^n,\ten c^n)
+\end{equation}
+Combined Crank-Nicolson/Adams-Bashforth (second-order) with velocity prediction
+\begin{equation}
+ \frac{\ten c^{n+1}}{\Delta t}+\frac12\hat{\vek u}^{n+1}\cdot\nabla\ten c^{n+1}=
+ \frac{\ten c^{n}}{\Delta t}
+-\frac12\vek u^n\cdot\nabla\ten c^n
++\frac32\ten g(\ten G^n,\ten c^n) -\frac12\ten g(\ten G^{n-1},\ten c^{n-1})
+\label{eq:explicitCrankAB2}
+\end{equation}
+where $\hat{\vek u}^{n+1}=2\vek u^n-\vek u^{n-1}$.
+Semi-implicit Gear (second-order) \cite{Karniadakis91,Hulsen96}
+with velocity prediction
+\begin{equation}
+\frac32 \frac{\ten c^{n+1}}{\Delta t}+\hat{\vek u}^{n+1}\cdot\nabla\ten c^{n+1}=
+ \frac{2\ten c^{n}-\frac12\ten c^{n-1}}{\Delta t} +
+2\ten g(\ten G^n,\ten c^n) -\ten g(\ten G^{n-1},\ten c^{n-1})
+\end{equation}
+where $\hat{\vek u}^{n+1}=2\vek u^n-\vek u^{n-1}$.
+
+ In the weak form
+Eq.~\eqref{eq:weakcdgc} we take $\bar{\vek u}_h=\vek u^n$ for the first three
+schemes and $\bar{\vek u}_h=\hat{\vek u}^{n+1}$ in the fourth, but this might
+not be optimal. The two second-order schemes are two-step methods and at
+the first time step we have to take one of the first-order schemes to get
+the stepping process going.
+
+After we have computed $\ten c^{n+1}$ we compute $\vek u^{n+1}$, 
+$\vek p^{n+1}$ and $\ten G^{n+1}$from the momentum balance,
+ continuity equation and projection equation at time $t^{n+1}$:
+\begin{align}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +\nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)
+&=\nabla\cdot\ten \tau(\ten c^{n+1})
+        + \rho\vek b \label{eq:mombal}\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0\label{eq:devssg}
+\end{align}
+We call this scheme the \emph{explicit stress} formulation: the stress tensor
+$\ten \tau(\ten c^{n+1})$ in the momentum balance is computed in an
+explicit way from $\ten c^{n+1}$, which itself has been computed first from the
+constitutive equation.
+
+The time integration procedures described above are only suitable for fluids
+where $\eta_s\neq0$. For fluids with $\eta_s=0$, such as melts described by a
+large number of modes, other procedures are required. For small values of
+$\eta_s$ the time step limitation can be very severe and the explicit stress
+formulation cannot be used either. In Sec.~\ref{sec:implicitstress} for the
+\emph{implicit stress} formulation that can deal with $\eta_s=0$ or very small.
+
+Remarks
+\begin{enumerate}
+   \item In the implementation of the DEVSS-G system we have multiplied
+Eq.~\eqref{eq:devssg} with $\alpha$ in order to obtain a symmetric system
+matrix for $(\ten G,\vek u, p)$. Therefore, we only have to store
+half of the matrix and can use a symmetric matrix solver.
+\end{enumerate}
+
+\subsection{Time discretization for flows with inertia}
+
+Not yet available.
+
+\subsection{Multiple mode models}
+
+Handling viscoelastic models with multiple modes
+is easy in the explicit stress formulation:
+\begin{enumerate}
+   \item solve the time-discretized constitutive equation for each mode
+separately,
+   \item compute the polymer stress $\tau$ in the right-hand side of
+Eq.~\eqref{eq:mombal} by using the contributions from all modes.
+
+\end{enumerate}
+
+\subsection{Driven-cavity flow of a Giesekus fluid for a Weissenberg number of
+1}
+\label{sec:driven_cavity}
+
+We consider a Giesekus fluid for a driven cavity problem on a unit square
+(see Fig.~\ref{fig:drivencavity}). On the upper boundary a tangential
+velocity of 1 is imposed and on all other walls the velocity components are
+zero. In the lower left corner the pressure value is set to zero (Dirichlet).
+At the start of the flow the stress will be assumed to be zero.
+
+The example files are \texttt{driven\_cavity1.f90} (first-order semi-implicit
+scheme) and \newline
+\texttt{driven\_cavity2.f90}  (second-order semi-implicit
+scheme) and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample driven\_cavity}
+\end{quote}
+The post-processing part is done by two separate programs
+\texttt{driven\_cavity\_post.f90} and \texttt{streamfunction.f90}.
+
+The examples are rather straightforward and can be studied by examining the
+source files.
+
+A feature of \ftn, called \emph{namelists},
+is used to read in various parameters from a file (redirected through standard
+input):
+
+\begin{listing}{78}
+
+! namelist for input of variables; read from standard input
+
+  namelist /comppar/ nx, ny, timeint, numtimesteps, logc, eta_s, eta_p, &
+    lambda, mobility, deltat, beta, rs_gup, is_gup, rs_c, is_c
+
+  read ( unit=*, nml=comppar )
+
+\end{listing}
+In the input file the names are identical to the variable names in your
+program. If you omit a variable it gets the value set in the program. The input
+file for \texttt{driven\_cavity1.f90} and \texttt{driven\_cavity2.f90} are
+\texttt{input\_driven\_cavity1.txt} and \texttt{input\_driven\_cavity2.txt}, respectively.
+
+The elements used are not part of the example files, but are in the
+\tfem\ add-on viscoelastic (see Sec.~\ref{sec:viscoelastic}). The parameters are
+supplied to the elements using the structure \texttt{coefficients} of type
+\texttt{coefficients\_t} (see Sec.~\ref{sec:coefficients}). The documentation
+of the coefficients is not part of this manual, but is in the text files
+\texttt{README\_coefficients\%i} and
+\texttt{README\_coefficients\%r} in the directory
+\texttt{<tfemroot>/src/addons/viscoelastic}.
+
+Two problems are created, one for the $(\ten G,\vek u, p)$ system and one for
+a single component of $\ten c$. The system matrix for $(\ten G,\vek u, p)$
+remains constant in the examples and needs to be decomposed only once.
+The system matrix of each component
+of $\ten c$ is fully decoupled from the other components and also identical
+for all
+components. The coupling between components only appears on the right-hand side.
+Since the system matrix is the same for all components, the LU decomposition
+needs to be performed only once per time step if a direct solver is used.
+
+\begin{listing}{191}
+! build (assemble) matrix and vector for gradient/velocity/pressure problem
+
+! stokes velocity/pressure
+  call build_system ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=stokes_elem, physqrow=[2,3], physqcol=[2,3], &
+    coefficients=coefficients )
+
+! DEVSS-G
+  call build_system ( mesh, problem, sysmatrix, rhsd, &
+    elemsub=devssg_elem, addmatvec=.true., &
+    physqrow=[1,2], physqcol=[1,2], coefficients=coefficients )
+
+! set to zero off-diagonal blocks gradient-pressure
+  call build_system ( mesh, problem, sysmatrix, rhsd, addmatvec=.true., &
+    buildvector=.false., physqrow=[1], physqcol=[3], zeromatvec=.true. )
+  call build_system ( mesh, problem, sysmatrix, rhsd, addmatvec=.true., &
+    buildvector=.false., physqrow=[3], physqcol=[1], zeromatvec=.true. )
+   
+\end{listing}
+
+Here the system matrix for $(\ten G,\vek u, p)$ is build in three steps. The
+system matrix looks like
+\[
+   \begin{pmatrix}
+      D  &  B^T  &  0 \\
+      B  &  S    &  L^T \\
+      0  &  L    &  0  
+   \end{pmatrix}
+\]
+In the first step the Stokes system is build for $(\vek u,p)$, i.e.\ the block
+including $S$, $L$, $L^T$ and the zero pressure block. It uses standard Stokes
+elements. In the second step the
+DEVSS part, i.e. the block with the submatrices $D$, $B$ and $B^T$,
+is build using separate elements. In the third part the remaining two
+off-diagonal zero
+blocks between $\ten G$ and $p$ are filled with zero.
+
+The solution vector for $\ten c$ and the right-hand side are defined as a
+two-dimensional array of system vectors:
+\begin{listing}{46}
+  type(sysvector_t), dimension(ncompc,nmodes), target :: solc
+  type(sysvector_t), dimension(ncompc,nmodes) :: rhsc
+\end{listing}
+where \texttt{ncompc=3} and \texttt{nmodes=1} are the number of components
+and the number of modes, respectively.
+
+These vectors are created as follows
+\begin{listing}{230}
+
+! create system vectors (solution and right-hand side) for conformation and
+! initialize vectors with zero stress
+
+  call create ( problemc, solc, rhsc )
+
+  if ( logc == 0 ) then ! standard
+    solc(1,1)%u = 1  ! initial cxx
+    solc(2,1)%u = 0  ! initial cxy
+    solc(3,1)%u = 1  ! initial cyy
+  else if ( logc == 1 ) then ! log scheme
+    do i = 1, ncompc
+      solc(i,1)%u = 0  ! initial s=0
+    end do
+  end if
+
+\end{listing}
+
+The communication with the elements for $\ten c$ and the right-hand side in the 
+$(\ten G,\vek u, p)$ system is achieved with the structure oldvectors of type
+\texttt{oldvecters\_t} (see Sec.~\ref{sec:oldvectors}). All solution vectors
+and the problem structures of both problems are stored as recommended in
+Sec.~\ref{sec:oldvectors}.
+
+The building of the system matrix and vector of the problem for the
+conformation tensor is performed every time step:
+
+\begin{listing}{276}
+   !   build (assemble) matrix and vector for conformation problem
+
+    call build_system ( mesh, problemc, sysmatrixc, m2sysvector=rhsc, &
+      elemsub=ce_supg_elem, oldvectors=oldvectors_ve, &
+      coefficients=coefficients )
+\end{listing}
+The right-hand side of all three components of the tensor $\ten c$ are
+build at once by using the \texttt{m2sysvector} heading parameter instead of
+\texttt{sysvector}. There is only a single system matrix (\texttt{sysmatrixc}),
+since it is the same for all components of $\ten c$. The LU-factors of the
+decomposed system matrix are deleted after all the components of $\ten c$
+have been solved. 
+
+The main difference between example \texttt{driven\_cavity1} and
+\texttt{driven\_cavity2} is the introduction of system vectors at time
+$t_{n-1}$ in addition to the system vectors at $t_n$. At sysvectors at
+$t_{n-1}$ are found from copying the sysvectors at $t_n$ before the latter are
+being overwritten:
+\begin{listing}{294}
+!   copy previous conformation solution to older time step
+
+    call copy ( solcn, solcnm1 )
+\end{listing}
+Here \texttt{copy} is a generic routine that copies the data 
+from the first vector to the second vector. Note that this is 
+is identical to the assignment statement\footnote{Before revision
+\texttt{365} \tfem\ used pointer components in structures and the copy
+routine was different from the assignment statement. The latter only copied the
+pointers and not the data itself leading to possible memory leaks.
+Now \tfem\ uses allocatables and memory leaks are not possible anymore.}:
+\begin{quote}
+   \texttt{solcnm1 = solcn}
+\end{quote}
+
+The first example can be run by
+\begin{quote}
+   \texttt{driven\_cavity1 < input\_driven\_cavity1.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{driven\_cavity\_post}\\
+   \texttt{streamfunction}
+\end{quote}
+The second example can be run by
+\begin{quote}
+   \texttt{driven\_cavity2 < input\_driven\_cavity2.txt}
+\end{quote}
+and post-processing is performed as in the previous example.
+
+After running the example \texttt{driven\_cavity1}
+the results in Figs.~\ref{fig:velocity1}--
+\ref{fig:streamfunction1} are obtained.
+\red{WARNING: It should be noted that this is an extremely difficult problem
+with singularities where the solution depends on the mesh and it is uncertain
+whether a mesh and time converged solution exists.}
+
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{velocity1}
+   \end{center}
+   \caption{Velocity vector field for the driven\_cavity1 problem}
+    \label{fig:velocity1}
+\end{figure}
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.55]{streamfunction1}
+   \end{center}
+   \caption{Streamfunction field for the driven\_cavity1 problem}
+    \label{fig:streamfunction1}
+\end{figure}
+
+\subsection{Driven-cavity flow of a Giesekus fluid having two modes} 
+\label{sec:driven_cavity2}
+
+We again consider a Giesekus fluid for a driven cavity problem on a unit square
+as in Sec.~\ref{sec:driven_cavity} but now the model has two modes.
+
+The example file is \texttt{driven\_cavity5.f90}
+(second-order semi-implicit scheme) and is a modification of the file
+\texttt{driven\_cavity2.f90}. Use the Unix \texttt{diff} program to see where
+the changes are. The file can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample driven\_cavity}
+\end{quote}
+The post-processing part is done again by the two separate programs
+\texttt{driven\_cavity\_post.f90} and \texttt{streamfunction.f90}, however the
+first has not yet been adapted for multiple modes.
+
+The example can be run by
+\begin{quote}
+   \texttt{driven\_cavity5 < input\_driven\_cavity5.txt}
+\end{quote}
+which might again take a while.
+
+\subsection{Driven-cavity flow of a Giesekus fluid having two modes.
+One freely moving and rotating particle. Inertia for particle and fluid
+(neutrally buoyant). } 
+\label{sec:driven_cavity7}
+
+(This example has been contributed by Young Joon Choi of the TU/e).
+
+We again consider a Giesekus fluid with two modes
+for a driven cavity problem on a unit square
+as in Sec.~\ref{sec:driven_cavity2}. We now also have a freely moving and
+rotating particle. The particle is neutrally buoyant
+(density of particle = density of fluid).
+
+The example file is \texttt{driven\_cavity7.f90}
+(second-order semi-implicit scheme).
+The file can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample driven\_cavity}
+\end{quote}
+
+\subsection{Planar Couette flow of an Oldroyd-B fluid for a
+ Weissenberg number (Wi) of 10}
+\label{sec:couette}
+
+The examples in this section have been developed from the examples
+in Sec.~\ref{sec:driven_cavity}. Therefore it is recommended to study the
+examples in Sec.~\ref{sec:driven_cavity} first.
+
+We consider an Oldroyd-B fluid for a planar Couette problem on a unit square
+(see Fig.~\ref{fig:couette}). On the upper boundary a tangential
+velocity of 1 and a normal velocity of zero is imposed.
+On the lower wall the velocity components are
+zero. In horizontal direction periodical boundary conditions are assumed.
+In the lower left corner the pressure value is set to zero (Dirichlet).
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{couette}
+   \end{center}
+   \caption{Planar Couette flow}
+    \label{fig:couette}
+\end{figure}
+
+At the start of the flow the conformation tensor will be given the steady state
+value plus a random perturbation. The latter is small so that
+the difference from the steady state can be considered a linear perturbation.
+
+The example files are \texttt{couette1.f90} (first-order semi-implicit
+scheme) 
+\texttt{couette2.f90}  (second-order semi-implicit
+scheme) and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+The post-processing part is done by the separate program
+\texttt{couette\_post.f90}.
+
+The examples are rather straightforward and can be studied by examining the
+source files.
+
+The first example can be run by
+\begin{quote}
+   \texttt{couette1 < input\_couette1.txt}
+\end{quote}
+which might take a while.
+The results are written to a file and can be turned into viewable fig files by
+\begin{quote}
+   \texttt{couette\_post}
+\end{quote}
+The second example can be run by
+\begin{quote}
+   \texttt{couette2 < input\_couette2.txt}
+\end{quote}
+and post-processing is performed as in the previous example.
+
+After running the example \texttt{couette1}
+the results in Fig.~\ref{fig:couette1} are obtained.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{couette1}
+   \end{center}
+   \caption{$L_2$-norm of the conformation tensor perturbation
+            in a planar Couette flow with $\text{Wi}=10$
+            as a function of time. Mesh: 14$\times$14 elements.}
+    \label{fig:couette1}
+\end{figure}
+We get the typical stable curve (red) for which DEVSS-G/SUPG is famous for
+(see, for example \cite{Bogaerds00} and the references therein). After an
+initial increase the perturbation will die out and eventually
+becomes a straight line in the log plot. The form of
+transient for the continuous spectrum as predicted by Kupferman
+\cite{Kupferman05} and the slowest decaying eigenvalue predicted
+ by Gorodtsov \& Leonov
+\cite{Gorodtsov67} (for a UCM model and $\text{Wi}\gg1$) are also shown.
+Furthermore, the results
+using a DEVSS/SUPG method (using Eq.~\eqref{eq:weakcd} instead of
+Eq.~\eqref{eq:weakcdg}) are plotted, which clearly shows the superiority of
+DEVSS-G/SUPG in time-dependent flows.
+
+\subsection{Planar Couette flow of an Oldroyd-B fluid having two modes}
+\label{sec:couette2}
+
+Similar to Section~\ref{sec:driven_cavity2}, the example \texttt{couette2.f90}
+has been modified to use two modes. This is the file \texttt{couette5.f90}. The
+input file is \texttt{input\_couette5.txt}.
+
+\subsection{Axi-symmetric problem: flow around a sphere in
+ cylindrical tube filled with a Giesekus fluid.}
+\label{sec:sphere2}
+
+We consider the problem of a sphere moving along
+the center line of a cylindrical tube with a constant velocity of $U$.
+The problem is an extension of the problem in Sec.\ref{sec:sphere} to
+viscoelastic flow. For the viscoelastic problem we have the additional boundary
+condition that it is assumed that the stress is zero at the inflow boundary.
+
+The example file is \texttt{sphere2.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample sphere}
+\end{quote}
+The example can be run by
+\begin{quote}
+   \texttt{sphere2 <input\_sphere2.txt}
+\end{quote}
+The postprocessing files are \texttt{sphere\_post.f90}, 
+\texttt{sphere\_drag.f90} and \texttt{streamfunction.f90}. The file
+\texttt{sphere\_drag.f90} is for computing the drag on the sphere.
+
+In Fig.~\ref{fig:czz_sphere} the conformation tensor component $c_{zz}$ has been
+plotted for $\text{Wi}=5$. 
+In Fig.~\ref{fig:velocity_deg1} the $u_z$ velocity component has been
+plotted for $\text{Wi}=5$. 
+In Fig.~\ref{fig:streamfunction_zoom} part of the streamfunction has been
+plotted for $\text{Wi}=5$. 
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.7]{czz_sphere}
+   \end{center}
+   \caption{Conformation tensor component $c_{zz}$ for problem
+       \texttt{sphere2.f90} at $\text{Wi}=5$.}
+    \label{fig:czz_sphere}
+\end{figure}
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.7]{velocity_deg1}
+   \end{center}
+   \caption{Velocity component $u_z$ in problem \texttt{sphere2.f90}.}
+    \label{fig:velocity_deg1}
+\end{figure}
+\begin{figure}[p!]
+   \begin{center}
+   \includegraphics[scale=0.7]{streamfunction_zoom}
+   \end{center}
+   \caption{Part of the streamfunction in problem \texttt{sphere2.f90}.}
+    \label{fig:streamfunction_zoom}
+\end{figure}
+Interesting phenomena here include
+\begin{itemize}
+   \item large stress wake behind the sphere.
+   \item `negative wake': the fluid particles in the wake moving away
+         from the sphere.
+   \item small vortex behind the sphere.
+\end{itemize}
+
+The example \texttt{sphere9.f90} is similar to \texttt{sphere2.f90}, however
+uses triangles instead of quadrilaterals.
+
+\subsection{3D channel with a square cross section:
+developed flow with secondary eddies for a Giesekus fluid}
+\label{sec:Dooley3D}
+
+This problem is an extension to viscoelastic flow of the Stokes problem in
+Sec.~\ref{sec:stokes3Dchannel}.
+                                                                                
+The example file is \texttt{channel2.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+The post-processing part is done by a separate program
+\texttt{channel\_post.f90}.
+
+In Figure~\ref{fig:secondaryflow}, the velocity vector and the velocity
+component in a plane normal to the flow direction in a cross section. We
+clearly see the `secondary flow' flow for the Giesekus model (which has a
+second normal stress difference). For an Oldroyd-B model the secondary flow is
+absent.
+\begin{figure}[htpb!]
+   \begin{center}
+   \includegraphics[scale=0.35]{velocity_channel}\hspace*{2cm}
+   \includegraphics[scale=0.35]{crossv_channel}
+   \end{center}
+   \caption{The velocity vector (left) and the velocity
+component in a plane normal to the flow direction (right, scaled by a factor of
+ 1000), in a cross section.}
+\label{fig:secondaryflow}
+\end{figure}
+                                                                                
+An additional example file \texttt{channel4.f90} is available that solves the
+same problem, however now the periodical boundary conditions are imposed using
+constraints on objects. A temporary mesh using $Q_1$-elements is used to
+create objects for the coupling of $\ten c$ and, optionally, $\ten G$.
+
+The example \texttt{channel13.f90} is similar to \texttt{channel2.f90}, but uses prisms instead of hexahedrons.
+
+\subsection{Flow around a cylinder confined between two (2D) walls}
+\label{sec:cylinderve}
+
+This problem is an extension to viscoelastic models of the
+flow of a Stokes fluid around a cylinder confined between two (2D) 
+walls, described in Sec.~\ref{sec:cylinderStokes}.
+
+The example file for the 2D problem is \texttt{cylinder2.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder}
+\end{quote}
+The example \texttt{cylinder2.f90} uses a mesh that is generated by \tfem\ in
+the following way:
+\begin{quote}
+   \texttt{mesh\_confined\_cylinder < meshinput1.txt}
+\end{quote}
+
+For all 2D problems there is a main program \texttt{streamfunction.f90} to
+generate the stream function. The program \texttt{cylinder\_drag\_2D.f90}
+computes the drag on the cylinder. The program \texttt{cylinder\_post\_2D.f90}
+creates post-processing data for plotting.
+
+All examples described in this section generate VTK data files (see
+Sec.~\ref{sec:vtk}) for plotting data.
+
+\subsection{Flow around a cylinder confined between two walls for a FENE-P
+model}
+\label{sec:cylinderfenep}
+
+This problem is an extension to the FENE-P model of the
+2D flow around a cylinder confined between two walls
+described in Sec.~\ref{sec:cylinderve}. It uses small time steps to avoid the
+trace of the conformation tensor becoming too large.
+
+The example file for the 2D problem is \texttt{cylinder1.f90} and
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_FENE-P}
+\end{quote}
+The mesh is generated by \tfem\ in the
+following way:
+\begin{quote}
+   \texttt{mesh\_confined\_cylinder < meshinput1.txt}
+\end{quote}
+
+There is a main program \texttt{streamfunction.f90} to
+generate the stream function. 
+The program \texttt{cylinder\_post.f90}
+creates post-processing data for plotting.
+
+\subsection{Axi-symmetric viscoelastic problem: stick-slip}
+\label{sec:stick_slip}
+
+We consider the axisymmetric flow of a Giesekus fluid 
+through a pipe section (see Figure~\ref{fig:stick_slip}).
+\begin{figure}[htpb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{stick_slip}
+   \end{center}
+   \caption{Stick-slip problem.}
+\label{fig:stick_slip}
+\end{figure}
+In the first part the fluid sticks to the wall, whereas in the second part
+there is zero friction between the wall and fluid (slip).
+
+In the first example we assume a parabolic velocity profile and zero
+viscoelastic stresses at the entry and zero traction at the exit. The mesh
+consists of three submeshes (one between $\Gamma_1$ and
+ $\Gamma_2$ with a refinement
+towards the entry, one between $\Gamma_2$ and $z=0$ with a refinement
+towards the
+stick-slip point and one between $z=0$
+and the exit, also with a refined towards the stick-slip points.
+The first example file is \texttt{stick\_slip1.f90} and can
+be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample stick\_slip}
+\end{quote}
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_three\_blocks < meshinput1.txt}\\
+   \texttt{stick\_slip1 < input\_stick\_slip1.txt}\\
+   \texttt{post\_stick\_slip1}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+In the second example we get rid of the big disturbance of 
+the entry flow by assuming internal periodic boundary conditions
+(\cite{Bogaerds04}). Basically we assume periodical boundary conditions
+between $\Gamma_1$ and $\Gamma_2$ as if the domain between 
+$\Gamma_1$ and $\Gamma_2$ is a separate domain. Then the rest of the domain is
+also connected to $\Gamma_2$. This last connection will lead to an
+additional traction force term on $\Gamma_2$ in the weak form (see
+for example Eq.~\eqref{eq:weakmomentumSUPG}:
+\begin{equation}
+   (\vek v,\vek t)_{\Gamma_2}\text{ with }
+ \vek t=-p\vec n+2\eta_s \ten D\cdot\vec n+\ten\tau\cdot\vec n
+\end{equation}
+where $\vek n=-\vek e_z$, the outwardly directed normal on $\Gamma_2$ with
+respect the region on the right of $\Gamma_2$. Note, that this is similar to
+the open boundary conditions (see Sec.~\ref{sec:stokesobc}), where $p$, $\ten
+D$ are basically unknown. Here $\ten\tau$ is also unknown and the boundary terms
+need to be computed using the ``inside'' values.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+Again we assume zero traction at the exit. The mesh
+consists of three submeshes (one between $\Gamma_1$ and
+ $\Gamma_2$ with equal distributed elements,
+one between $\Gamma_2$ and $z=0$ with a refinement
+towards the
+stick-slip point and one between $z=0$
+and the exit, also with a refined towards the stick-slip points.
+The second example file is \texttt{stick\_slip2.f90}.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_three\_blocks < meshinput2.txt}\\
+   \texttt{stick\_slip2 < input\_stick\_slip2.txt}\\
+   \texttt{post\_stick\_slip2}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+In the third example we use an open boundary condition at the inflow boundary,
+similar to \cite{Papanastasiou96} for the 1D fibre-spinning model. The stress
+is left unspecified at the inflow boundary and a
+traction force term on $\Gamma_1$ is added to the weak form (see
+for example Eq.~\eqref{eq:weakmomentumSUPG}:
+\begin{equation}
+   (\vek v,\vek t)_{\Gamma_1}\text{ with }
+ \vek t=-p\vec n+2\eta_s \ten D\cdot\vec n+\ten\tau\cdot\vec n
+\end{equation}
+where $\vek n=-\vek e_z$, the outwardly directed normal on $\Gamma_1$.
+Here, $p$, $\ten D$ are basically unknown (see Sec.~\ref{sec:stokesobc}). 
+Also $\ten\tau$ is unknown and the boundary terms
+need to be computed using the ``inside'' values.
+Again we assume zero traction at the exit.
+The flow is generated by imposing a flow rate constraint on the inflow
+boundary.
+The mesh
+consists of two submeshes (one between $\Gamma_1$ and
+$z=0$ with a refinement
+towards the
+stick-slip point and one between $z=0$
+and the exit, also with a refined towards the stick-slip points.
+The third example file is \texttt{stick\_slip3.f90}.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_two\_blocks < meshinput3.txt}\\
+   \texttt{stick\_slip3 < input\_stick\_slip3.txt}\\
+   \texttt{post\_stick\_slip3}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+The fourth example is based on the second example, where the
+internal periodic boundary condition has been replaced by a one-sided
+connection.
+Basically, we set the values for velocity and conformation (and optionally the
+gradients as well)
+at $\Gamma_1$ equal the values at $\Gamma_2$ by using a one-side connection as
+explained in the simple example \texttt{stokes41} in Sec.~\ref{sec:stokes41}.
+The flow is generated by imposing a flow rate constraint on $\Gamma_2$ (not on
+$\Gamma_1$ to avoid conflicts with the connection).
+The third example file is \texttt{stick\_slip5.f90}.
+You can run the example by
+\begin{quote}
+   \texttt{mesh\_three\_blocks < meshinput2.txt}\\
+   \texttt{stick\_slip5 < input\_stick\_slip5.txt}\\
+   \texttt{post\_stick\_slip2}\\
+   \texttt{streamfunction}
+\end{quote}
+Inspect the source files to see which data and plotfiles are generated.
+
+\subsection{Flow in channel with a square cross section using a 2D domain with three velocity components: 
+developed flow with secondary eddies for a Giesekus fluid}
+\label{sec:Dooley2D}
+
+This problem is an extension to viscoelastic flow of the Stokes problem in
+Sec.~\ref{sec:stokes2D3D}. The same problem using 3D elements and periodical boundary conditions is solved in Sec.~\ref{sec:Dooley3D}.
+                                                                                
+The example files are \texttt{channel6.f90} (first-order time integration)
+and \texttt{channel7.f90} (second-order time integration) and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+
+In Figure~\ref{fig:secondaryflow2}, the velocity
+component in a plane normal to the flow direction in a cross section is shown. We
+clearly see the `secondary flow' flow for the Giesekus model (which has a
+second normal stress difference). For an Oldroyd-B model the secondary flow is
+absent.
+\begin{figure}[htpb!]
+   \begin{center}
+   \includegraphics[scale=0.5]{dooley}
+   \end{center}
+   \caption{The velocity
+component in a plane normal to the flow direction in a cross section of the channel.}
+\label{fig:secondaryflow2}
+\end{figure}
+
+\subsection{Flow in curved channel with a square cross section using a 2D domain with 
+three velocity components (axisymmetric with swirl): Dean flow with secondary eddies for a Giesekus fluid}
+\label{sec:Dean2D}
+
+This problem is an extension of the straight channel problem of Sec.~\ref{sec:Dooley2D} to a curved channel.
+This called a Dean flow. The flow is axisymmetric and generated by an imposed flow rate through the curved channel (square torus).
+
+In a cylindrical coordinate system, axi-symmetry means that the velocity components $(u_z,u_r,u_\theta)$, pressure $p$ and stress-tensor components are only a function of $(z,r)$ (independent from $\theta$). In most cases we additionally assume that $u_\theta=0$, however it can be quite useful to include $u_\theta$ (swirl). Important examples are the analysis of plate-plate and cone-plate rotational rheometers. Note, that we now have to solve three velocity components, pressure and six stress components on a 2D domain,
+                                                                                
+The example files are \texttt{channel8.f90} (first-order time integration)
+and \texttt{channel9.f90} (second-order time integration) and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample channel}
+\end{quote}
+
+\subsection{Flow between two concentric cilinders with swirl component. Axisymmetric. A viscoelastic problem on a 2D domain with three velocity components}            
+\label{sec:viscoelastic2D3Dswirl}
+
+We consider the flow between two concentric cylinders. The $(u_z,u_r)$ components
+ are determined by imposing a flow rate in $z$-direction (periodical flow conditions) and the swirl component $u_\theta$ is determined by rotating the outer cilinder. 
+This problem is an extension to viscoelastic of the Stokes problem in \ref{sec:stokes2D3Dswirl}.
+The source code is given in \texttt{concentric\_cylinder2.f90} (first-order time integration) and \texttt{concentric\_cylinder3.f90} (second-order time integration).
+
+\subsection{Cone-plate (axisymmetric with swirl)}
+\label{sec:cone-plate_ve_se}
+
+(This example has been contributed by Michelle Spanjaards of the TU/e)
+
+The problem is an extension to viscoelastic flow of the Stokes problem in Sec.~\ref{sec:cone-plate_stokes}.
+The geometry is depicted in Figure~\ref{fig:coneplategeom}. The plate (curve 1) is stationary ($\vek u=\vek 0$). The cone (curve 2) is rotating around the $z$-axis ($\vek u=\omega r \vek e_\theta$). Curve 3 is a traction free surface ($\vek t_\text{N}=\vek 0$) and is of a circular shape having point 1 as its center. The angle between the cone and plate $\theta_\text{cp}$ is 0.1~rad in the figure, but can be adjusted. The shear rate is approximately constant and is given by $\omega/\theta_\text{cp}$. 
+
+At the free surface on curve 3 a minor inflow is generated due to secondary flows. In theory, the conformation tensor should be imposed on an inflow section. However, this is not done in this example. Therefore, it is possible that for other situations and/or higher Weissenberg numbers this can become a problem, such as the appearance of numerical instabilities. In that case, the boundary condition on curve 3 needs to be changed, like a moving material boundary or imposing the normal velocity to be zero.
+
+The source of the example is in the file \texttt{coneplate2.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample coneplate}
+\end{quote}

@@ -1,0 +1,10 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+1-3 (u,v,w): the constant prescribed velocity function for u_m
+
+4   Dcoef: diffusion coefficient
+
+5   deltat: timestep
+
+6-50 reserved for future use

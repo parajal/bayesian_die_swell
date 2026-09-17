@@ -1,0 +1,255 @@
+The examples in this directory are described in the userguide.
+
+NOTE: the cylinder? problems are in the b-tensor formulation, whereas the
+cylinder_c? problems are in the c-tensor formulation (standard c or logc).
+
+NOTE2: the cylinder?a problems are similar to the corresponding cylinder?
+problems, however using element level pointwise rotation reinitialization.
+This simplifies the code, but only BDF type time discretization is available.
+Hence, no trapezoidal rule or theta-method.
+
+Short description
+-----------------
+
+cylinder1, cylinder1a:
+
+ Startup of flow around a cylinder for a Giesekus model using the b-tensor
+ formulation. Explicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: b tensor
+
+cylinder2, cylinder2a:
+
+ Startup of flow around a cylinder for a b-representation differential
+ Giesekus model. Semi-implicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: b tensor
+ Problem 3: b*b^T projection
+
+cylinder3, cylinder3a:
+
+ (This a problem similar to cylinder1, but solved using fully-implicit
+  with Newton-Raphson for the b-tensor equation).
+
+ Startup of flow around a cylinder for a Giesekus model using the b-tensor
+ formulation. Explicit div tau term.
+ Fully-implicit with Newton-Raphson for the b-tensor.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: b tensor
+
+cylinder4, cylinder4a:
+
+ (This a problem similar to cylinder2, but solved using fully-implicit
+  with Newton-Raphson for the b-tensor equation).
+
+ Startup of flow around a cylinder for a b-representation differential
+ Giesekus model. Semi-implicit div tau term.
+ Fully-implicit with Newton-Raphson for the b-tensor.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: b tensor
+ Problem 3: b*b^T projection
+
+cylinder5, cylinder5a:
+
+ Startup of flow around a cylinder for a b-representation differential
+ Giesekus model. 
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+
+cylinder6, cylinder6a:
+
+ (This a problem similar to cylinder5, but now optionally zero blocks excluded)
+
+ Startup of flow around a cylinder for a b-representation differential
+ Giesekus model. 
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally exclude certain zero blocks from the sparse matrix.
+
+cylinder7
+
+ (This a problem similar to cylinder6a, but now with a final steady state step)
+
+ Startup + steady state of flow around a cylinder for a b-representation
+ differential Giesekus model.
+ Fully-implicit with Newton-Raphson.
+ After the final time step do a iteration to steady-state with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder8
+
+ Sequence of steady states of flow around a cylinder for a b-representation
+ differential Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder9
+
+ (This a problem similar to cylinder6a, but now it requires metis5,
+  uses an input file and a possibility to restart)
+
+ Startup of flow around a cylinder for a b-representation differential
+ Oldroyd-B or Giesekus model.
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally restart from a previously saved solution.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder10
+
+ (This a problem similar to cylinder8, but now it requires metis5,
+  uses an input file, optionally scale the velocity and a possibility
+  to restart)
+
+ Sequence of steady states of flow around a cylinder for a b-representation
+ differential Oldroyd-B or Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+ Optionally restart from a previously saved solution.
+ Optionally scale previous solution to match newly imposed flow rate.
+
+cylinder_c1:
+
+ (This a problem similar to cylinder1, but solved using c/logc)
+
+ Startup of flow around a cylinder for a Giesekus model using the conformation
+ tensor formulation. Explicit div tau term.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+
+cylinder_c2:
+
+ (This a problem similar to cylinder2, but solved using c/logc)
+
+ Startup of flow around a cylinder for a Giesekus model using the conformation
+ tensor formulation. Semi-implicit div tau term. 
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+ Problem 3: exp(s) projection
+
+cylinder_c3:
+
+ (This a problem similar to cylinder3, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for a Giesekus model using the conformation
+ tensor formulation. Explicit div tau term.
+ Fully-implicit with Newton-Raphson for the conformation tensor.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-explicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+
+cylinder_c4:
+
+ (This a problem similar to cylinder4, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for a Giesekus model using the conformation
+ tensor formulation. Semi-implicit div tau term.
+ Fully-implicit with Newton-Raphson for the conformation tensor.
+ Problem 1: Flow around a confined cylinder.
+   Periodical boundary conditions.
+   Stress-implicit formulation of the momentum balance.
+ Problem 2: Conformation tensor
+ (Problem 3: exp(s) projection, logc not available with Newton-Raphson).
+
+cylinder_c5:
+
+ (This a problem similar to cylinder5, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for a Giesekus model using the conformation
+ tensor formulation. 
+ Fully-implicit with Newton-Raphson
+ Compute drag on cylinder using reaction forces.
+ Periodical boundary conditions.
+ Optionally include Jacobian of SUPG test function.
+
+cylinder_c6:
+
+ (This a problem similar to cylinder6, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for a Giesekus model using the conformation
+ tensor formulation. 
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally exclude certain zero blocks from the sparse matrix.
+
+cylinder_c7
+
+ (This a problem similar to cylinder_c6, but now with a final steady state step)
+
+ Startup + steady state of flow around a cylinder for a b-representation
+ differential Giesekus model.
+ Fully-implicit with Newton-Raphson.
+ After the final time step do a iteration to steady-state with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_c8
+
+ (This a problem similar to cylinder8, but solved using the c-tensor)
+
+ Sequence of steady states of flow around a cylinder for a Giesekus model
+ using the conformation tensor formulation.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_c9
+
+ (This a problem similar to cylinder9, but solved using the c-tensor)
+
+ Startup of flow around a cylinder for an Oldroyd-B or Giesekus model using
+ the conformation tensor formulation.
+ Fully-implicit with Newton-Raphson
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally restart from a previously saved solution.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+cylinder_c10
+
+ (This a problem similar to cylinder10, but solved using the c-tensor)
+
+ Sequence of steady states of flow around a cylinder for a b-representation
+ differential Oldroyd-B or Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Periodical boundary conditions.
+ Compute drag on cylinder using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+ Optionally restart from a previously saved solution.
+ Optionally scale previous solution to match newly imposed flow rate.

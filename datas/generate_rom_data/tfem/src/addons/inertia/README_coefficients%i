@@ -1,0 +1,11 @@
+Integer coefficients for the element routines in this addon.
+
+
+List of the coefficients
+------------------------
+
+  1-150: all relevant integer coefficients for the stokes & viscoelastic add-on
+151-200: reserved for diffuse_interface add-on
+
+
+201-250: Reserved for future use. Set to zero for future compatibility.

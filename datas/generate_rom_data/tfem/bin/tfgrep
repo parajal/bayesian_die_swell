@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# tfgrep
+
+function helptext ()
+{
+  echo "Usage: tfgrep [-d dir] [-a] [-e ext] string"
+  echo "Options:   (Description)            (default)"
+  echo "   -d dir  include files in dir     src/core src/addons"
+  echo "   -a      include all directories  only dirs given by option -d"
+  echo "   -g gdir start from global gdir   tfem root directory"
+  echo "   -e ext  include file extension   f90 F90"
+  echo "   -A      include all files        only files given by option -e"
+  echo "   -i      case insensitive         case sensitive "
+  echo "   -n      print line number        print no line number "
+  echo "NOTE: -d and -e can by used multiple times to use multiple "
+  echo "      directories and/or file extensions. The default values"
+  echo "      are set only when the options are absent."
+}
+
+. settfemroot
+
+if [ $# -eq 0 ]
+then
+  helptext; exit
+fi
+
+SRCDIRS=
+alldirs=
+EXTS=
+allfiles=
+opt=
+gdir=$tp
+while getopts d:ag:e:Ainh optvar; do
+  case "$optvar"
+  in
+     d) SRCDIRS=$SRCDIRS" $OPTARG" ;;
+     a) alldirs=1 ;;
+     g) gdir=$OPTARG ;;
+     e) EXTS=$EXTS" $OPTARG" ;;
+     A) allfiles=1 ;;
+     i) opt=$opt" -i" ;;
+     n) opt=$opt" -n" ;;
+     h) helptext >/dev/stderr; exit ;;
+     "?") helptext >/dev/stderr; exit 1 ;;
+  esac
+done
+
+shift `expr $OPTIND - 1`
+
+if [ "$SRCDIRS" = "" ]; then
+  SRCDIRS="src/core src/addons"
+fi
+
+if [ "$EXTS" = "" ]; then
+  EXTS="f90 F90"
+fi
+
+if [ "$gdir" = . ]; then
+  cwd=`pwd`
+  gdir=`dirname $cwd`
+fi
+
+cd $gdir
+
+if [ $alldirs ]; then
+  if [ $allfiles ]; then
+    find . -name \* ! -path "./.git/*" ! -name ".gitignore" ! -name tags \
+          ! -name Makefile -type f \
+          -exec grep $opt -q -I -e $1 {} \; \
+          -exec echo {}: \; -exec grep $opt -I -e $1 {} \;
+  else
+    for ext in $EXTS
+    do
+      find . -name \*".$ext" -type f -exec grep $opt -q -e $1 {} \; \
+            -exec echo {}: \; -exec grep $opt -e $1 {} \;
+    done
+  fi
+else
+  if [ $allfiles ]; then
+    for dir in $SRCDIRS
+    do
+      find $dir -name \* ! -path "./.git/*" ! -name ".gitignore" ! -name tags \
+            ! -name Makefile -type f \
+            -exec grep $opt -I -q -e $1 {} \; \
+            -exec echo {}: \; -exec grep $opt -I -e $1 {} \;
+    done
+  else
+    for dir in $SRCDIRS
+    do
+      for ext in $EXTS
+      do
+        find $dir -name \*".$ext" -type f -exec grep $opt -q -e $1 {} \; \
+              -exec echo {}: \; -exec grep $opt -e $1 {} \;
+      done
+    done
+  fi
+fi
+

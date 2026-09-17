@@ -1,0 +1,105 @@
+% !TEX root = userguide.tex
+
+\chapter{Solvers}
+\pgst{tfemch}
+
+\def\chaptertitle{Solvers}
+\def\headdate{18th October 2023}
+
+As we already mentioned in the introduction chapter: \tfem\ does not have
+a solver included.
+In this chapter we give some possibilities for using external solvers with
+\tfem.
+
+\section{Sparse direct solvers from the HSL library: MA41 and MA57}
+\label{sec:hslsparse}
+
+For symmetric and unsymmetric matrices we can use the MA57 and MA41
+sparse direct solver from the HSL library\footnote{
+The HSL library must be licensed \cite{HSL}. Academics can obtain a personal license for free.
+See \href{http://www.hsl.rl.ac.uk/}{http://www.hsl.rl.ac.uk/} for more information.}, respectively (see Sec.~\ref{sec:hsl_addon}).
+The HSL library has been written in Fortran, which makes interfacing with \tfem\ easy. In this way, it is possible to use the powerful \texttt{-C=undefined} checking option of the nagfor compiler for \tfem.
+
+For the Poisson and Stokes problems of Chapter~\ref{ch:examples},
+the system matrix is symmetric.
+For such problems it is both
+CPU and memory efficient to store only the upper-triangle of the matrix and
+use the symmetric sparse direct solver MA57. This can be achieved as follows:
+\begin{verbatim}
+  ....
+  use hsl_ma57_m
+  ...
+  call create_sysmatrix_structure ( sysmatrix, mesh, problem, symmetric=.true. )
+  ...
+  call solve_system_ma57 ( sysmatrix, rhsd, sol )
+  ...
+\end{verbatim}
+The \texttt{symmetric=.true.} keyword tells the routine to store only the
+upper-triangular part of the matrix. The same keyword is available for the
+lower-level routine \texttt{create\_sysmatrix\_structure\_base}. For an
+unsymmetric matrix we should specify \texttt{symmetric=.false.} or
+omit the keyword \texttt{symmetric} altogether:
+\begin{verbatim}
+  ....
+  use hsl_ma41_m
+  ...
+  call create_sysmatrix_structure ( sysmatrix, mesh, problem )
+  ...
+  call solve_system_ma41 ( sysmatrix, rhsd, sol )
+  ...
+\end{verbatim}
+If you want to use both MA41 and MA57 in the same program unit, you can `use'
+both modules like:
+\begin{verbatim}
+  ....
+  use hsl_ma41_m
+  use hsl_ma57_m
+  ...
+\end{verbatim}
+Both MA41 and MA57 can scale the matrix\footnote{For MA57 you need a recent version. The HSL2002 version does not have scaling.}, which can make solving systems with large differences in element size and/or fluid properties much faster.
+
+It is strongly advised to combine both MA41 and MA57 with \metis\
+renumbering
+(see Sec.~\ref{sec:metis5}) to change the pivot order to reduce the fill-in, especially for larger problems with Lagrange multipliers, additional unknowns and/or connections. The speedup and memory reduction can be significant. An example for MA41 is given in Sec.~\ref{sec:poisson24}. For MA57 you need a recent version that automatically uses \metis\ if linked in. The usual MA57 from HSL2002 as supplied to students cannot be used together with \metis\ in \tfem.
+
+\section{Other sparse direct solvers}
+
+Interfaces to other sparse direct solvers are available as an add-on:
+\begin{itemize}
+   \item MUMPS, see Sec.~\ref{sec:mumps}.
+         Sequential and parallel version using MPI.
+         Public domain.
+   \item PARDISO, see Sec.~\ref{sec:pardiso}. 
+         Sequential and parallel version using
+         OPENMP. Free for academic use. Also Intel's MKL contains PARDISO.
+   \item UMFPACK, see Sec.~\ref{sec:umfpack}. UMFPACK is free software and written in C.
+   \end{itemize}
+UMFPACK assumes the matrix is unsymmetric\footnote{A symmetric matrix must be stored as if it is unsymmetric.}, whereas MUMPS and PARDISO can be used for both symmetric and unsymmetric matrices. Note, that when the symmetric solver is used, the structure of
+\texttt{sysmatrix} must be created using \texttt{symmetric=.true.} as explained
+in Sec.~\ref{sec:hslsparse} for MA57.
+
+\section{Iterative solvers}
+
+Interfaces to iterative solvers are available as an add-on:
+\begin{itemize}
+   \item SPARSKIT2, see Sec.~\ref{sec:sksolve}. Public domain. 
+   \item MKL, see Sec.~\ref{sec:mklgmres}. Free to use.
+   \item HSL, see Sec.~\ref{sec:hsl_extra_addon}. Free for academics.
+    Includes algebraic multigrid (AMG) preconditioning.
+\end{itemize}
+
+%In 2D the direct solvers are usually faster than iterative solvers, provided
+%enough memory is available.
+In 3D the full LU decomposition requires a huge
+amount of both memory and CPU time. Therefore, using iterative solvers is
+the only option in many cases.
+If algebraic multigrid (AMG) preconditioning is applicable, $\mathcal{O}(N)$
+solvers can be achieved.
+
+\section{Eigenvalue solvers}
+
+Interfaces to eigenvalue solvers are available as an add-on:
+\begin{itemize}
+   \item FEAST, see Sec.~\ref{sec:feast}. Public domain. 
+\end{itemize}
+

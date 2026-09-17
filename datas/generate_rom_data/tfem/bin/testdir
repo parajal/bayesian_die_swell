@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# testdir: test current directory
+
+tp=`dirname $0`
+tp=`dirname $tp`
+
+pwd0=`pwd`
+pwd1=`dirname $pwd0`
+pwd2=`dirname $pwd1`
+pwd3=`dirname $pwd2`
+
+if [ "$tp" = . -o $tp = $pwd0 -o $tp = $pwd1 -o \
+       $tp = $pwd2 -o $tp = $pwd3 ]; then
+  echo Error: You are in the tfem tree
+  exit
+fi

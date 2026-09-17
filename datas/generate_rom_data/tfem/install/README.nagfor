@@ -1,0 +1,100 @@
+NAG Fortran
+===========
+
+Introduction
+------------
+
+NAG Fortran is a compiler that is very good at checking your code (both during 
+compile and at runtime). It is the only compiler that has the option
+(-C=undefined) to check whether all variables used are properly initialized.
+This is a very powerful option. It comes with a drawback though: all routines
+used by the program need to be compiled with this option. This means that
+standard libraries available in binary form only (for example Intel MKL),
+are incompatible with this option.
+
+Installation notes
+------------------
+
+After installing the compiler run the command
+
+  nagfor -V
+
+The version info should be something like:
+
+NAG Fortran Compiler Release 7.2(Shin-Urayasu) Build 7202
+Product NPMA872NA for Apple Arm Mac OSX 64-bit
+Copyright 1990-2024 The Numerical Algorithms Group Ltd., Oxford, U.K.
+
+It is advised to use the latest version 7.2, obtainable from
+https://monet.nag.co.uk/compiler/r72download/.
+
+If it does not run, include the bin directory of nagfor in the PATH
+environment variable in your .bash_profile file.
+
+The compiler needs a valid license file to run. Either create a license
+file nag.key in your home directory or set the environment variable
+NAG_KUSARI_FILE to point to the license file. For example, put the line
+
+export NAG_KUSARI_FILE=/usr/local/lib/NAG_Fortran/license.txt
+
+in your .bash_profile file. If you have a floating license, the file should
+contain the license server:
+
+SERVER servername:
+
+where servername should be replaced by your license server name. Don't forget
+to put the colon at the end. Alternatively, you can set the environment
+variable NAG_KUSARI_FILE to the license server:
+
+export NAG_KUSARI_FILE=servername:
+
+If you use nagfor in a Linux client in VirtualBox or Docker container and you
+need to contact the license server through a vpn, setup the vpn from within the
+Linux client and not from the host machine.
+
+Enter the command
+
+  nagfor -xlicinfo
+
+to check whether the license has been properly setup.
+
+Copy the most recent Mdefs_distr.mk to Mdefs.mk in the root of tfem.
+Edit the Mdefs.mk file:
+
+1) Set FC = nagfor
+2) To set checking on:
+   a. uncomment the FCHECK macro for the nagfor compiler.
+   b. Set FOPT = -O0, to compile faster.
+   c. Remove "-C=undefined" from the FCHECK macro if you can't use this option
+      (see Introduction). Otherwise, perform also the following steps.
+   d. Download (*) Lapack from http://www.netlib.org/lapack/, copy the file
+      make.inc.example to make.inc and modify make.inc as follows:
+
+        FC = nagfor
+        FFLAGS = -O -C=undefined -dcfuns
+        FFLAGS_DRV = $(FFLAGS)
+        FFLAGS_NOOPT = -O0 -C=undefined -dcfuns
+
+        TIMER = INT_CPU_TIME
+
+      On macOS add -fpp to FFLAGS and FFLAGS_NOOPT.
+   e. Invoke the command:
+
+      make blaslib lapacklib
+
+   f. Put the files liblapack.a and librefblas.a in the subdirectory
+      lib of the root of tfem.
+   g. Set the macro LIBBLAS in Mdefs.mk as follows:
+
+      LIBBLAS = -llapack -lrefblas
+
+   h. Add a line to external/hsl2002/ma57ad.f according to the following diff
+      file:
+2164a2165
+>       PHASE = 0
+
+NOTE: runtime checking can be slow. Therefore, it is recommended to reduce the
+size of your problem first.
+
+NOTE (*): Do not use LAPACK version 3.12.0. It uses an intrinsic function that
+is not part of the Fortran standard and is not supported by nagfor.

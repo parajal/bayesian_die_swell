@@ -1,0 +1,8 @@
+#f(sigma,x)=(erf(1.0/2/sigma)+erf((2*x-1)/2/sigma))/2
+#plot "sol.out" us 1:($2-f(0.05,$1)) w l 
+f(Pe,x)=(exp(x*Pe)-1)/(exp(1.0*Pe)-1)
+#plot "sol.out" us 1:($2-f(100,$1)) w l 
+plot "sol.out" us 1:2 w l 
+#plot [0:1] f(100,x)
+pause -1
+

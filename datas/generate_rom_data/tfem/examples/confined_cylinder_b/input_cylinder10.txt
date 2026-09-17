@@ -1,0 +1,29 @@
+&comppar
+  meshfile = 'confined_cylinder1.msh'  ! mesh file to be used
+  metisnodes = T        ! renumber nodes with metis5
+  metisdegrees = T      ! renumber degrees of freedom with metis5
+  inrestartfile = 'data.out'      ! file to the restart from
+  outrestartfile = 'data.out'     ! output file for restart
+  timer = F             ! output timer data T/F
+  restart=0             ! restart=0: no restart
+                        ! restart=1: normal restart
+                        ! restart=2: read restart file + post processing
+  restart_every = 1     ! write restart file every restart_every steps.
+                        ! -1: means none
+  scaleU = T            ! scale velocity/gradients at the start of a step T/F
+  model = 2             ! model number 2: Oldroyd-B 3: Giesekus
+  G = 1.0               ! modulus
+  lambda = 1.0          ! relaxation time
+  beta_s = 0.59         ! beta viscosity parameter = eta_s/(eta_s+eta_p)
+  mobility = 0.1        ! mobility parameter of the Giesekus model
+  timeint3 = 10         ! steady time discretization, BDF1: 8, BDF2 10
+  deltat3 = 0.01        ! time step for steady iteration scheme
+  maxnumnriter = 30     ! maximum number of Newton-Raphson iterations
+  dU = 0.1              ! increments in imposed average velocity
+  Ue = 0.3              ! end values of the intervals in U
+  postprocess = T       ! perform postprocessing T/F, set to T for restart=2
+  ed = 1e-8             ! Newton-Raphson convergence threshold (difference)
+  er = 1e-12            ! Newton-Raphson convergence threshold (residual)
+  rs = 1.2              ! real_storage for LU (HSL)
+  is = 1.6              ! integer_storage for LU (HSL)
+/

@@ -1,0 +1,18 @@
+&comppar
+    nx=14                ! number of elements in x
+    ny=14                ! number of elements in y
+    timeint1 = 1         ! first-order time integration, first time step
+    timeint2 = 5         ! second-order time integration after first time step
+    numtimesteps = 40000 ! number of time steps
+    dist_step = 601      ! time step of disturbance
+    eta_s = 0.1          ! solvent viscosity
+    eta_p = 0.9          ! polymer viscosity
+    lambda = 10.0        ! relaxation time
+    ampl = 1.0e-3        ! amplitude of initial disturbance
+    deltat = 5.e-3       ! time step
+    beta = 1.0           ! upwinding parameter in the SUPG method
+    rs_gup = 1.5         ! real_storage gradient-velocity-pressure LU (HSL)
+    is_gup = 1.0         ! integer_storage gradient-velocity-pressure LU (HSL)
+    rs_b  = 1.5          ! real_storage for the conformation LU (HSL)
+    is_b  = 1.4          ! integer_storage for conformation LU (HSL)
+/

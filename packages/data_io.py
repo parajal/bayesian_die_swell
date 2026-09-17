@@ -1,74 +1,50 @@
 from pathlib import Path
 import numpy as np
 
-def _max_disp(y):
-    return np.max(y) - 1.0
 
 class DataLoaderMixin:
+    """Load observed swell curves, add synthetic noise to the curve, set sigma priors."""
 
-    def _add_noise(self, y, seed=0):
-        sigma = self.sigma_noise_percent / 100 * _max_disp(y)
-        noise = np.random.default_rng(seed).normal(0, sigma, y.shape)
-        self.max_displacement = _max_disp(y)
-        self.sigma_noise_target = sigma
-        self.sigma_noise_realized = noise.std()
-        return y + noise
-
-    def _sigma_priors_from_data(self, y):
-        disp = _max_disp(y)
-        if not (np.isfinite(disp) and disp > 0):
-            raise ValueError(
-                "Observed curve shows no swelling (max height <= die radius); "
-                "cannot set the sigma prior scale."
-            )
-        self.beta = 1.0 / (0.10 * disp)
-        self.sigma_noise_prior = self.beta
-        self.sigma_bias_prior = self.beta if self._infer_sigma_bias() else None
-
-    def load_data(self, filename, u_avg_obs, pressure_filename=None):
-
+    def load_data(self, filename, u_avg_obs):
         path = Path(self.swell_root, filename).resolve()
+        self.infer_dir = folder = path.parent
+        self.u_avg_obs, self.observed_uavgs = u_avg_obs, [u_avg_obs]
 
         y = np.atleast_2d(np.loadtxt(path))
-        self._obs_indices = np.arange(0, y.shape[1], self.thin)
+        self._obs_indices = idx = np.arange(0, y.shape[1], self.thin)
+        self.y_obs_matrix_clean = y = y[:, idx]
+        self.obs_x_coords = x = np.loadtxt(folder / "curve4_x.txt").ravel()[idx]
 
-        self.u_avg_obs = u_avg_obs
-        self.observed_uavgs = [u_avg_obs]
-        self.infer_dir = path.parent
+        disp = y.max() - 1.0
+        if not (np.isfinite(disp) and disp > 0):
+            raise ValueError("no swelling in observed curve (max height <= die radius)")
+        self.max_displacement = disp
+        self.beta = self.sigma_noise_prior = rate = 1.0 / (0.10 * disp)
+        self.sigma_bias_prior = rate if self._infer_sigma_bias() else None
 
-        self.y_obs_matrix_clean = y[:, self._obs_indices]
-        self._sigma_priors_from_data(self.y_obs_matrix_clean)
-        self.y_obs_matrix = self._add_noise(self.y_obs_matrix_clean)
+        self.sigma_noise_target = self.sigma_noise_percent / 100 * disp
+        noise = np.random.default_rng(0).normal(0, self.sigma_noise_target, y.shape)
+        self.sigma_noise_realized = noise.std()
+        self.y_obs_matrix = y + noise
 
-        self.obs_x_coords = np.loadtxt(
-            path.parent / "curve4_x.txt"
-        ).ravel()[self._obs_indices]
+        info = {
+            "folder": folder,
+            "curve file": path.name,
+            "U_avg": u_avg_obs,
+            "points": f"{idx.size} (thin={self.thin})",
+            "x range": f"[{x.min():.4g}, {x.max():.4g}]",
+            "height range": f"[{y.min():.4g}, {y.max():.4g}]",
+            "max displacement": f"{disp:.4g}",
+            "sigma_noise prior": f"Exp(rate={rate:.4g}), mean {1 / rate:.4g}",
+            "sigma_bias prior": "same as sigma_noise" if self.sigma_bias_prior else "not inferred",
+            "curve noise": f"{self.sigma_noise_percent}% of disp, sigma {self.sigma_noise_target:.4g} "
+                           f"(realized {self.sigma_noise_realized:.4g})",
+        }
 
-        if getattr(self, "use_pressure", False):
-            self._load_pressure_obs(pressure_filename, path.parent)
+        if self.use_pressure:
+            self.pressure_obs = self.pressure_obs_clean = np.loadtxt(folder / "pressure_drop.txt").ravel()
+            self.pressure_drop_obs = float(self.pressure_obs[0])
+            info["pressure"] = f"{np.array2string(self.pressure_obs, precision=4)} (no noise)"
 
-        n_curve = self.y_obs_matrix.shape[1]
-        msg = (
-            f"Loaded data: {n_curve} curve points (thin={self.thin}), "
-            f"realized noise sigma={self.sigma_noise_realized:.6e} "
-            f"(target={self.sigma_noise_target:.6e})"
-        )
-        if getattr(self, "use_pressure", False):
-            msg += f", {self.pressure_obs.size} pressure points"
-        print(msg)
-
-    def _load_pressure_obs(self, filename, folder):
-
-        if filename is None:
-            path = Path(folder) / "pressure.txt"
-        else:
-            raw = Path(filename).expanduser()
-            path = raw if raw.is_absolute() else Path(self.swell_root) / raw
-
-        p = np.loadtxt(path).ravel()
-
-        sigma = self.sigma_noise_target
-        noise = np.random.default_rng(1).normal(0, sigma, p.shape)
-
-        self.pressure_obs_clean = p
-        self.pressure_obs = p + noise
+        width = max(map(len, info))
+        print("\n".join(f"{k:<{width}} : {v}" for k, v in info.items()))

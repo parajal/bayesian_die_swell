@@ -1,0 +1,12 @@
+#set output "vprofile.eps"
+#set term postscript enhanced eps color solid 20
+set xlabel "y"
+set ylabel "velocity"
+set nokey
+plot "vprofile.out" us 2:3 w l 
+pause -1
+set xlabel "y"
+set ylabel "stress"
+set nokey
+plot "stressprofile.out" us 2:3 w l 
+pause -1

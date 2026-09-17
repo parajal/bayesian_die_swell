@@ -1,0 +1,49 @@
+&comppar
+    periodic = T       ! Use periodical boundaries in x direction
+                       ! Only makes sense for vfuncnr=0 (zero velocity)
+                       ! or vfuncnr=2 (shear flow).
+    flowrate = T       ! Impose flowrate in x-direction (for
+                       ! periodic=.true. only)
+    move_mesh_x = T    ! Move the mesh in x-direction to keep the center
+                       ! of volume of the drop at the same position wrt
+                       ! to the mesh
+    mesh_plot = F      ! write mesh plot files/info (curves, mesh etc.)
+    compute_error = F  ! Compute error. Only makes sense for eta_e=eta_i
+                       ! (no viscosity difference) and gammac=0 (no
+                       ! surface tension) or if vfuncnr=0 (no flow)
+                       ! or vfuncnr=3 (rotation).
+    compute_volume = T ! Compute volume and center of volume. 
+    n=5                ! number of elements in x and y direction of box
+    nc=40              ! number of elements on the circle
+    gauss = 4          ! order of integration for triangular elements
+    gaussb = 4         ! order of integration points of line elements
+    vfuncnr = 0        ! function number for the velocity field u
+    choice_um = 2      ! choice for um in the motion of the interface:
+                       !  0: um = 0
+                       !  1: um = average velocity of all interface nodes
+                       !  2: um = velocity of the center of volume 
+    vtkevery = 5       ! vtk file every vtkevery steps. -1: means none
+    ctime = T          ! continue time in output after restart
+    restart = 0        ! restart=0: no restart
+                       ! restart=1: normal restart
+                       ! restart=2: restart, but start with Euler step
+    restart_every = 100 ! write restart file every restart_every steps.
+                       ! -1: means none
+    timeint = 2        ! time integration scheme
+    numtimesteps = 400 ! number of time steps
+    ox = -0.5          ! x-coordinate left lower corner
+    oy = -0.5          ! y-coordinate left lower corner
+    lx = 1.0           ! length of the domain
+    ly = 1.0           ! height of the domain
+    xc = 0.0 0.1       ! center of the initial circle
+    rc = 0.1           ! initial radius of the circle
+    eta_e = 1.0        ! external fluid viscosity
+    eta_i = 1.0        ! internal fluid viscosity
+    gammac = 0.1       ! surface tension coefficient
+    factor = 5.0       ! factor for the interface grid deformation
+    U_avg  = 0.25      ! imposed average velocity for flowrate=.true.
+    rs_up  = 1.4,      ! real_storage velocity-pressure LU HSL
+    is_up  = 1.5,      ! integer_storage velocity-pressure LU HSL
+    deltat = 7.e-2     ! time step
+    beta = 0.5         ! factor beta in SUPG
+/

@@ -1,0 +1,4 @@
+plot "out" us 2:3 w l, "out" us 2:4 w l
+pause -1
+#plot "out" us 2:5 w l, "out" us 2:6 w l
+#pause -1

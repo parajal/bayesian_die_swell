@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# getsrc: get tfem sourcefile(s)
+
+if [ $# -eq 0 ]
+then
+     echo "Usage: getsrc files(s)"
+     exit
+fi
+
+. settfemroot
+. testdir
+
+. $tp/bin/setsrcdirs
+
+SRCDIRS="test $SRCDIRS"
+
+while  [ -n "$1" ]
+do
+	if [ `basename $1 .f` == "$1" -a \
+	     `basename $1 .f90` == "$1" -a \
+	     `basename $1 .F90` == "$1" ]
+        then
+	  echo "Source file extension is not .f, .f90 or .F90: $1"
+          echo "Aborting"
+    	  exit
+        fi
+	notfound=t
+	for dir in $SRCDIRS
+	do	if [ -s $tp/$dir/$1 ]
+		then	notfound=
+                        if [ -f $1 ]
+                        then
+                           echo "$1 is already there: no copy"
+                           break
+                        else
+                           echo "Copying $1"
+		           cp $tp/$dir/$1 .
+			   break
+                        fi
+		fi
+	done
+	if	[ $notfound ]
+	then	echo "$1 could not be found"
+	fi
+	shift
+done

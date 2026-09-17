@@ -1,0 +1,68 @@
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator\erf{erf}
+\DeclareMathOperator\dev{dev}
+
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\green}[1]{\textcolor{green}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+                                                                                
+\newcommand{\mdsc}[1]{\textmd{\textsc{#1}}}
+\newcommand{\tfem}{\mdsc{tfem}}
+\newcommand{\sep}{\mdsc{sepran}}
+\newcommand{\dyn}{\mdsc{dynaflow}}
+\newcommand{\metis}{\mdsc{Metis}}
+\newcommand{\fem}{\mdsc{fem}}
+\newcommand{\xfem}{\mdsc{xfem}}
+\newcommand{\dg}{\mdsc{dg}}
+\newcommand{\dgfem}{\mdsc{dgfem}}
+\newcommand{\ftn}{Fortran}
+\newcommand{\mftn}{modern~Fortran}
+\newcommand{\Wi}{\text{Wi}}
+\newcommand{\lj}{\text{[\![}}
+\newcommand{\rj}{\text{]\!]}}
+
+\newcommand{\pgst}[1]{\thispagestyle{#1}\pagestyle{#1}\pagenumbering{arabic}}
+
+\def\pderiv#1#2{\dfrac{\partial #1}{\partial #2}}
+\def\plderiv#1#2{\partial #1/\partial #2}
+\def\deriv#1#2{\dfrac{d #1}{d #2}}
+\def\derivmat#1#2{\dfrac{D #1}{D #2}}
+\def\lderiv#1#2{d #1 / d #2}
+\def\lderivmat#1#2{D #1 / D #2}
+\def\pderivxy#1#2#3{\dfrac{\partial #1}{\partial #2 \partial #3}}
+\def\plderivxy#1#2#3{\partial #1 / \partial #2 \partial #3}
+
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\ten}[1]{\vec{#1}}
+%\newcommand{\D}{\,\mathrm{d}}
+\newcommand{\D}{\,d}
+\newcommand{\vek}{\vec}
+\newcommand{\mat}[1]{\ubar{#1}}
+\newcommand{\col}[1]{\utilde{#1}} 
+\newcommand{\tsum}{{\textstyle\sum}}
+
+%\def\Boven#1#2#3#4#5{#1 \setbox0=\hbox{$#1$}\setbox1=\hbox{$#2$}
+%       \dimen0=.5\wd0 \dimen1=\dimen0 \dimen2=\ht0 \dimen3=\dimen2
+%       \advance\dimen0 by .5\wd1 \advance\dimen0 by -#4
+%       \advance\dimen1 by -.5\wd1 \advance\dimen1 by -#4
+%       \advance\dimen2 by #3 \advance\dimen2 by \dp1
+%       \advance\dimen2 by 0.3ex \advance\dimen3 by #5
+%        \kern-\dimen0\raisebox{\dimen2}[\dimen3]{\box1}
+%        \kern\dimen1}
+\def\Onder#1#2#3#4#5{#1 \setbox0=\hbox{$#1$}\setbox1=\hbox{$#2$}
+       \dimen0=.5\wd0 \dimen1=\dimen0 \dimen2=\dp0 \dimen3=\dimen2
+       \advance\dimen0 by .5\wd1 \advance\dimen0 by -#4
+       \advance\dimen1 by -.5\wd1 \advance\dimen1 by -#4
+       \advance\dimen2 by -#3 \advance\dimen2 by \ht1
+       \advance\dimen2 by 0.3ex \advance\dimen3 by #5
+        \kern-\dimen0\raisebox{-\dimen2}[0ex][\dimen3]{\box1}
+       \kern\dimen1}
+
+\def\utilde#1{\Onder{#1}{\mbox{\char'003}}{0pt}{0ex}{0.5ex}} % onder tilde
+\def\ubar#1{\Onder{#1}{\mbox{\char'011}}{-0.08ex}{0ex}{0.3ex}} % onder streepje
+
+\newcommand{\upper}[1]{\stackrel{\scriptscriptstyle\bigtriangledown}{#1}}
+\newcommand{\stackbox}[1]{\stackrel{\scriptscriptstyle\Box}{#1}}
+\newcommand{\stacktridown}[1]{\upper{#1}}

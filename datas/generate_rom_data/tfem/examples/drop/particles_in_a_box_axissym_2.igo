@@ -1,0 +1,50 @@
+// Make a mesh consisting of a rectangle with circular particles
+// The full rectangle, including the particles, is meshed.
+// The space between the particles and the rectangle is physical volume 1
+// The space inside the particles is physical volume 2
+//
+// The input parameters are:
+//
+//   ox, oy = the coordinates of the vertex with lower coordinates
+//   lx, ly = the lengths of the box along the x-, y-directions
+//   nobj = the number of particles
+//   xp(i,:), yp(i,:) = the coordinates of the center of the circle i
+//   rp(i) = the radius of the circle i
+//   dx_box = the characteristic line element size on the box side
+//   dx_part = the characteristic line element size on the particle surface
+//
+// NOTE: the parameters have to be defined before including this file.
+//
+// Points and curves are numbered as follows:
+//
+// P1 = (ox,    oy   )
+// P2 = (ox+lx, oy   )
+// P3 = (ox+lx, oy+ly)
+// P4 = (ox,    oy+ly)
+// C1 = P1-P2  ( parallel to x passing through oy )
+// C2 = P2-P3  ( parallel to y passing through ox+lx )
+// C3 = P3-P4  ( parallel to x passing through oy+ly )
+// C4 = P4-P1  ( parallel to y passing through ox )
+
+For i In {1:8}
+  Physical Point(i) = i;
+EndFor
+
+For i In {1:8}
+  Physical Line(i) = i;
+EndFor
+
+Line Loop(9) = { 1, 2, 3, 4, 5, 6 };
+Line Loop(10) = { 8, 7};
+
+// Create surface mesh (with holes)
+ 
+Plane Surface(1) = {9};
+ 
+Physical Surface(1) = {1};
+
+Plane Surface(2) = {10};
+ 
+Physical Surface(2) = {2};
+
+// vim: set filetype=gmsh :  //

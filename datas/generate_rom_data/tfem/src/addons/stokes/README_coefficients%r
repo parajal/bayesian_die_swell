@@ -1,0 +1,57 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+1   eta: Stokes viscosity
+         tau = eta * ( L + L^T ) = eta ( nabla u^T + nabla u )
+
+2   eta_stab: viscosity parameter for the stabilized elements
+
+3   Navier slip coefficient etaslip:
+       tau = - etaslip * ( u - u_w )
+    with u_w the wall velocity
+
+4   alpha: the viscosity coefficient in the DEVSS:
+           2 * alpha * ( D(u) - E )
+    or DEVSS-G scheme:
+           alpha * ( nabla u - G^T )
+           
+5   eta_mix: the viscosity coefficient used in the mixed_stokes element.
+
+6   flowrate: the specified flow rate for the flow rate constraint.
+  
+7   pressure difference: the specified pressure difference for the flow rate
+    constraint, if the flow rate is treated as an additional unknown.
+  
+8-10 RESERVED for the viscoelastic add-on
+
+11  kappa: viscosity parameter for embedded Dirichlet boundary conditions
+
+12-14 (u,v,w): the constant prescribed velocity for the embedded Dirichlet
+    boundary condition
+
+15  factor for the Nitsche term in embedded Dirichlet boundary conditions
+    and embedded interface conditions. 
+    NOTE: at this moment the scaling with the element size has not yet been
+    taken into account and this parameter is actually K/h.
+
+16-18 (xp,yp,zp): the center of a particle
+
+19  surface tension 
+
+20-22 (u,v,w): the constant prescribed velocity u_w of the wall in the slip 
+    element.
+
+23  Pressure level subtracted from the pressure field solution for determining
+    the L2-norm of the error. Used in stokes_L2_error_norm.
+
+24  Normal traction value 
+
+25  parameter beta for surface tension dependent on surfactant concentration
+
+26  initial surface tension for an interface that contains surfactants
+
+27  initial concentration for an interface that contains surfactants
+
+28-30 RESERVED for the viscoelastic add-on
+
+31-100 reserved for future use

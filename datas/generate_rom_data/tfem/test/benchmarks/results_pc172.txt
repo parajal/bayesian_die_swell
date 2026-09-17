@@ -1,0 +1,23 @@
+Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz (pc172)
+
+ifort (IFORT) 18.0.1 20171018, -O2
+
+Stokes11, mesh nx=26 ny=13 nz=26
+--------------------------------
+
+MKL 2018.1.163 (threading)
+Threading: OMP_NUM_THREADS
+ 
+Solver: MA41, HSL2002, metis5
+threads build   solve     real      user      sys       renumber
+   1    2.30027 80.09079  1m25.190s 1m23.253s 0m1.624s  2.23895
+   2    2.29860 91.75961  0m52.771s 1m34.355s 0m2.197s  2.22942
+   3    2.37800 109.89455 0m44.725s 1m51.844s 0m2.960s  2.24034
+   4    2.34258 133.73834 0m43.766s 2m14.726s 0m3.894s  2.23279
+
+Solver: Pardiso, unsymmetric matrix
+threads build   solve     real      user      sys 
+   1    2.32420 106.74752 1m49.736s 1m47.319s 0m2.009s
+   2    2.32527 124.40392 1m11.451s 2m4.904s  0m2.089s
+   3    2.32907 124.76557 1m11.404s 2m5.318s  0m2.045s
+   4    2.33588 155.41847 0m50.690s 2m35.528s 0m2.486s

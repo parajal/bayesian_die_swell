@@ -1,0 +1,35 @@
+Mesh.Algorithm = 2; // Frontal for surfaces
+Mesh.ElementOrder = 2; // Second-order elements
+
+// Create domain vertices
+
+Point(1) = {0.0, 0.0, 0.0, dx_0};
+Point(2) = {0.0, Ro, 0.0, dx_Ro};
+Point(3) = {z[1], r[1], 0.0, dx_Ro};
+
+For i In {1:3}
+  Physical Point(i) = {i};
+EndFor
+
+Line(1) = {1, 2};
+Line(2) = {1, 3};
+
+Circle(3) = {3,1,2};
+
+For i In {1:3}
+  Physical Line(i) = {i};
+EndFor
+
+// Create outer boundary
+
+lin_loop[0] = newll;
+Line Loop(lin_loop[0]) = {2, 3, -1};
+
+// Create surface mesh
+Plane Surface(1) = {lin_loop[0]};
+
+Physical Surface(1) = {1};
+
+
+// vim: set filetype=gmsh :  //
+

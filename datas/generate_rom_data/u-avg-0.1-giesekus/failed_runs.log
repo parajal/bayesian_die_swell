@@ -1,0 +1,158 @@
+row 1: lambda=1.0000000000000000 betav=0.1000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 2: lambda=2.7999999999999998 betav=0.1000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 3: lambda=4.5999999999999996 betav=0.1000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 4: lambda=6.4000000000000004 betav=0.1000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 5: lambda=8.1999999999999993 betav=0.1000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 6: lambda=10.0000000000000000 betav=0.1000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 7: lambda=1.0000000000000000 betav=0.3000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 8: lambda=2.7999999999999998 betav=0.3000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 9: lambda=4.5999999999999996 betav=0.3000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 10: lambda=6.4000000000000004 betav=0.3000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 11: lambda=8.1999999999999993 betav=0.3000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 12: lambda=10.0000000000000000 betav=0.3000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 13: lambda=1.0000000000000000 betav=0.5000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 14: lambda=2.7999999999999998 betav=0.5000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 15: lambda=4.5999999999999996 betav=0.5000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 16: lambda=6.4000000000000004 betav=0.5000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 17: lambda=8.1999999999999993 betav=0.5000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 18: lambda=10.0000000000000000 betav=0.5000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 19: lambda=1.0000000000000000 betav=0.7000000000000001 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 20: lambda=2.7999999999999998 betav=0.7000000000000001 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 21: lambda=4.5999999999999996 betav=0.7000000000000001 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 22: lambda=6.4000000000000004 betav=0.7000000000000001 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 23: lambda=8.1999999999999993 betav=0.7000000000000001 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 24: lambda=10.0000000000000000 betav=0.7000000000000001 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 25: lambda=1.0000000000000000 betav=0.9000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 26: lambda=2.7999999999999998 betav=0.9000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 27: lambda=4.5999999999999996 betav=0.9000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 28: lambda=6.4000000000000004 betav=0.9000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 29: lambda=8.1999999999999993 betav=0.9000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 30: lambda=10.0000000000000000 betav=0.9000000000000000 alpha=0.1000000000000000
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 31: lambda=1.0000000000000000 betav=0.1000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 32: lambda=2.7999999999999998 betav=0.1000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 33: lambda=4.5999999999999996 betav=0.1000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 34: lambda=6.4000000000000004 betav=0.1000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 35: lambda=8.1999999999999993 betav=0.1000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 36: lambda=10.0000000000000000 betav=0.1000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 37: lambda=1.0000000000000000 betav=0.3000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 38: lambda=2.7999999999999998 betav=0.3000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 39: lambda=4.5999999999999996 betav=0.3000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 40: lambda=6.4000000000000004 betav=0.3000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 41: lambda=8.1999999999999993 betav=0.3000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 42: lambda=10.0000000000000000 betav=0.3000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 43: lambda=1.0000000000000000 betav=0.5000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 44: lambda=2.7999999999999998 betav=0.5000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 45: lambda=4.5999999999999996 betav=0.5000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 46: lambda=6.4000000000000004 betav=0.5000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 47: lambda=8.1999999999999993 betav=0.5000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 48: lambda=10.0000000000000000 betav=0.5000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 49: lambda=1.0000000000000000 betav=0.7000000000000001 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 50: lambda=2.7999999999999998 betav=0.7000000000000001 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 51: lambda=4.5999999999999996 betav=0.7000000000000001 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 52: lambda=6.4000000000000004 betav=0.7000000000000001 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 53: lambda=8.1999999999999993 betav=0.7000000000000001 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 54: lambda=10.0000000000000000 betav=0.7000000000000001 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 55: lambda=1.0000000000000000 betav=0.9000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 56: lambda=2.7999999999999998 betav=0.9000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 57: lambda=4.5999999999999996 betav=0.9000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 58: lambda=6.4000000000000004 betav=0.9000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 59: lambda=8.1999999999999993 betav=0.9000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 60: lambda=10.0000000000000000 betav=0.9000000000000000 alpha=0.2333333333333333
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 61: lambda=1.0000000000000000 betav=0.1000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 62: lambda=2.7999999999999998 betav=0.1000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 63: lambda=4.5999999999999996 betav=0.1000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 64: lambda=6.4000000000000004 betav=0.1000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 65: lambda=8.1999999999999993 betav=0.1000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 66: lambda=10.0000000000000000 betav=0.1000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 67: lambda=1.0000000000000000 betav=0.3000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 68: lambda=2.7999999999999998 betav=0.3000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 69: lambda=4.5999999999999996 betav=0.3000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 70: lambda=6.4000000000000004 betav=0.3000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 71: lambda=8.1999999999999993 betav=0.3000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 72: lambda=10.0000000000000000 betav=0.3000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 73: lambda=1.0000000000000000 betav=0.5000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 74: lambda=2.7999999999999998 betav=0.5000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 75: lambda=4.5999999999999996 betav=0.5000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 76: lambda=6.4000000000000004 betav=0.5000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 77: lambda=8.1999999999999993 betav=0.5000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 78: lambda=10.0000000000000000 betav=0.5000000000000000 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'
+row 79: lambda=1.0000000000000000 betav=0.7000000000000001 alpha=0.3666666666666667
+    [Errno 2] No such file or directory: '/shared/extrudate_rom/generate_rom_data/_parallel_work/w00/curve4_x.txt'

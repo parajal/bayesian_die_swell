@@ -1,0 +1,405 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%func => func
+  coefficients%vfunc => vfunc
+
+  coefficients%vfunc1(1)%p => ubar_vfunc ! vector function for embedded vel.
+  coefficients%vfunc1(2)%p => uw_vfunc   ! vector function for wall velocity.
+
+  coefficients%set_ninti_user => set_ninti_user
+  coefficients%set_Gauss_integration_user => set_Gauss_integration_user
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+1   velocity interpolation (base function). Low order choices: 
+    for a triangle
+      6: P2 
+      7: P2+
+    for a quadrilateral
+      8: Q2
+    for a hexahedron
+      8: Q2
+    for a tetrahedron
+      6: P2 
+    for a prism
+     16: P2Q2
+    NOTE: for high-order or spectral, also the polynomial order p needs to be
+          set with coefficients%i(51). See examples.
+
+2   pressure interpolation (base function). Low order choices:
+    for a triangle
+      2: P1
+    for a quadrilateral
+      2: P1
+      4: Q1 
+    for a hexahedron
+      2: P1
+      4: Q1 
+    for a tetrahedron
+      2: P1
+    for a prism
+     15: P1Q1
+    NOTE: for quadrilateral/hexahedron and interpolation=2 (Q2/P1
+          Crouzeix-Raviart) see also coefficients%i(62).
+    NOTE: for high-order or spectral, also the polynomial order p needs to
+          be set with coefficients%i(52). See examples.
+
+3   stress interpolation for mixed Stokes
+    NOTE: for high-order or spectral, also the polynomial order p needs to be
+          set with coefficients%i(82). See examples.
+
+4   symmetric velocity gradient E interpolation for DEVSS
+    for a triangle
+      2: P1
+    for a quadrilateral
+      4: Q1
+    for a hexahedron
+      4: Q1
+    for a tetrahedron
+      2: P1
+    for a prism
+     15: P1Q1
+
+5   velocity gradient G interpolation for DEVSS-G
+    for a triangle
+      2: P1
+    for a quadrilateral
+      4: Q1
+    for a hexahedron
+      4: Q1
+    for a tetrahedron
+      2: P1
+    for a prism
+     15: P1Q1
+
+6   physqvel: physical quantity number of the velocity
+
+7   physqpress: physical quantity number of the pressure
+
+8   physqstress: physical quantity number of the stress in mixed stokes
+
+9   physqgrad: physical quantity number of the velocity gradient (E or G).
+
+10  numerical integration rule (intrule) for the internal domain integrals
+    of elements.
+
+11  numerical integration rule (intrule) for boundary integrals for curves,
+    surfaces, volumes. For example with intrule=3 (and coefficients%i(40)=0) a
+    three-point Gauss-Legendre integration is used for curves and a 3x3
+    Gauss-Legendre integration is used for surfaces consisting of quads.
+
+12  RESERVED for the viscoelastic add-on
+
+13  component choice parameter in computing a derivative.
+    For example coefficient%i(13)=1 means dudx in stokes_deriv. See the sources
+    for the possibilities in various derivative routines.
+
+14  vfuncnr for the body force
+    <=0: no body force
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+15  vfuncnr for the traction force
+    <=0: no traction force
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+16  funcnr for the traction force in one the coordinate directions given by
+    direction=coefficients%i(17)
+    <=0: no traction force
+     >0: function number in the call to func
+    NOTE: function func must be assigned to coefficients%func
+
+17  the direction of the traction force for funcnr=coefficients%i(16)
+    1: x-direction
+    2: y-direction
+    3: z-direction
+
+18-22 RESERVED for the viscoelastic add-on
+
+23  coordinate system for 2D elements:
+    0: Cartesian planar (x,y)
+    1: Cylindrical (z,r), axisymmetrical
+    Note that for cylindrical/axisymmetrical coordinates we have (z,r),
+    i.e. the first coordinate is the axial coordinate z and the second
+    coordinate is the radial coordinate r. The third coordinate is theta,
+    but is not needed explicitly in an axisymmetrical flow.
+
+24-29 RESERVED for the viscoelastic add-on
+
+30  Make the DEVSS-G matrix contribution symmetric (alpha=coefficients%r(4)):
+    0: yes. This is the default and the equation defining G
+               nabla u - G^T = 0
+       is multiplied by alpha to obtain a symmetric matrix.
+    1: no. The coefficients alpha only appears in the contribution to
+       the momentum balance. Setting alpha=0 the latter will be zero, whereas
+       G will still be defined. This is needed if the equations are solved
+       fully implicit without DEVSS-G, but G is still needed for the
+       constitutive equation (G-method).
+    NOTE: this only applies to DEVSS-G, not to DEVSS-E.
+
+31  RESERVED for the viscoelastic add-on
+
+32  nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(10) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(10) to each subdomain.
+
+33  nsubint: number of subdomains for the numerical integration rule for the
+    boundary integrals:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(11) to the complete element domain. 
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(11) to each subdomain.
+
+34  Number of degrees of freedom in the element in one direction (ndf) of the
+    velocity interpolation is different from the number of nodes in an element.
+    0: no
+    1: yes. This is tricky stuff, but it might work. The problem is
+       isoparametric mapping of the elements, where it is assumed that the
+       shape functions of the mapping are identical to the velocity shape
+       functions. At the moment it is assumed that the first 1:ndf nodes are
+       the nodes of the velocity unknowns, in that order. In this way it is
+       possible to use elements with an additional internal node without a
+       velocity unknown, provided that it has the highest nodal number.
+       A more general mechanism for mixing different shape functions/element
+       types is planned but is not available yet.
+
+35  interpolation for the geometrical shape of elements in an object
+
+36  the direction of the outside normal vector (for example for the open
+    boundary condition) or the normal vector directing outside of the
+    contributing part of an interface:
+     0: default: the same as giving 1
+    -1: opposite to the direction given by the curve or surface
+     1: as given by the curve or surface
+
+37  Numerical integration rule and number of subdomains for the
+    volume integrals of elements:
+     0: the same for all elements as given by coefficients%i(10) and
+        coefficients%i(32)
+     1: given by the vector per element oldvectors%e(1)
+     2: given by user subroutines
+
+38  Layer number. Needs to be specified if the elements are going to be used
+    (build,derive etc) for a single layer only.
+     0: default: all degrees
+     >0: layer number. 
+
+39  Build the continuity equation (div u=0):
+    0: Yes (default)
+    1: No 
+    NOTES: 
+     - this only affects the continuity equation; the pressure term (grad p)
+       is always build.
+     - the system becomes singular and other elements need to be used to fill
+       in the zero lines of the matrix, for example using separate elements
+       for compressible flow.
+
+40  Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle, hexahedron->pyramid).
+      3: standard Gauss-Legendre (numerical tables)
+    NOTE: this affects all numerical integration of interior and boundary
+    integrals.
+
+41  numerical integration rule for embedded boundary integrals using an eltree
+    Note: in 2D interfaces consist of line intervals and in 3D of triangles.
+
+42  The vector (coefficient) ubar (=prescribed velocity in the embedded
+    Diriclet boundary condition) is as follows:
+    <0 ubar = 0 (i.e. rhs vector = 0, which saves CPU time)
+    0: constant, given by coefficients%r(12:14)
+    1: given by a vector function, vfuncnr=coefficient%i(43)
+       NOTE: vector function must be assigned to coefficients%vfunc1(1)%p
+    2: given by nodal values in the vector oldvectors%v(1)
+    3: given by Gauss values in the vector per element oldvectors%e(1)
+
+43  vfuncnr for ubar (=prescribed velocity for embedded Dirichlet bc)
+
+44  sign of the "transposed" open boundary viscous term
+    (elements stokes_open_boundary_transposed_eltree and
+     stokes_traction_interface_transposed_eltree):
+    0: default (same as 1)
+    1: symmetric version (like in the Nitsche method)
+   -1: anti-symmetric version (like in the Baumann-Oden method)
+    
+45  sign of the "transposed" open boundary pressure term
+    (elements stokes_open_boundary_transposed_eltree and
+     stokes_traction_interface_transposed_eltree):
+    0: default (term is absent, i.e. set to zero).
+    1: symmetric version
+   -1: anti-symmetric version
+    
+46  add the symmetric "transposed" open boundary viscous term
+    (element stokes_open_boundary_eltree_particle):
+    0: default (term is absent, i.e. set to zero).
+    1: use symmetric version (like in the Nitsche method)
+   -1: use anti-symmetric version (like in the Baumann-Oden method)
+
+47  Specifies which layer is contributing to the interface condition for this
+    call to the system build (clayer):
+    0: default: the same as specifying 1
+    1: the first layer
+    2: the second layer
+    NOTE: this is used in stokes_traction_interface_eltree and
+          stokes_traction_interface_transposed_eltree
+          to avoid specifying material properties/functions/coefficients etc.
+          on both sides in one routine.
+    NOTE: this requires only two layers to be present at the interface, or at
+          least specified in the build (not available yet in build_system).
+
+48  Use mesh/grid velocity for ALE:
+    0 No
+    1 Yes. The mesh/grid velocity is given by the vectors oldvectors%v(1) and
+      oldvectors%v(2), where the latter is for the previous time step
+      (if needed for higher order time stepping).
+    2 Yes. The mesh/grid velocity is derived from the temporary ALE meshes:
+         mesh_ALE_np1 = oldvectors%m(1) 
+         mesh_ALE_n   = oldvectors%m(3)
+      where the latter is for the previous time step (if needed for higher order
+      time stepping). 
+      The computational meshes are given by
+         mesh_n   = oldvectors%m(2)
+         mesh_nm1 = oldvectors%m(4) 
+      where the latter is for the previous time step (if needed for higher order
+      time stepping). The current computational mesh is the mesh supplied
+      through build. Note, that mesh_n and mesh_nm1 needs to be supplied even
+      if the computational mesh does not change.
+      NOTE: this coefficient is not for the stokes add-on, but for add-ons that
+      depend on it. It might also not work for all add-ons yet.
+
+49-50 RESERVED for the viscoelastic add-on
+
+51  Polynomial order p of spectral/high-order interpolation for velocity
+
+52  Polynomial order p of the spectral/high-order interpolation for pressure
+
+53  pressure projection space interpolation for the stabilized elements
+    NOTE: for spectral/high-order interpolation, also the polynomial order p
+    needs to be set with coefficients%i(54).
+
+54  Polynomial order p of the spectral/high-order interpolation for pressure
+    projection space.
+
+55  The velocity vector uw of the wall in the slip element:
+    <0 uw = 0 (i.e. rhs vector = 0, which saves CPU time)
+    0: constant, given by coefficients%r(20:22)
+    1: given by a vector function, vfuncnr=coefficient%i(56)
+       NOTE: vector function must be assigned to coefficients%vfunc1(2)%p
+
+56  vfuncnr for uw (=prescribed velocity of the wall for slip)
+
+57--58 RESERVED for the viscoelastic add-on
+
+59  factor for the (optional) diagonal term in the area tensor:
+    0: no diagonal term, thus tensor=\int nn dA (=area tensor).
+    1: 1/ndim, thus tensor=\int (nn - 1/ndim I) dA
+    2: 1, thus tensor=\int (nn - I) dA
+
+60--61 RESERVED for the viscoelastic add-on
+
+62  Mapped or global interpolation for the pressure:
+    0: mapped interpolation
+    1: global interpolation (scaled shape functions)
+    2: global interpolation (unscaled a+b*x+c*y+d*z)
+    This is only for discontinuous pressure elements on quadrilaterals and
+    hexahedra (such a Q2/P1). Only the global interpolation for the pressure
+    (coefficients%i(62)=1) gives optimal convergence rates for general meshes.
+    However, for meshes containing rectangles, parallelograms (and 3D
+    equivalents) and meshes obtained from regular refinement are fine. See the
+    userguide for refs.
+    NOTE: the global shapefunctions depend on the global coordinates instead of 
+       the reference coordinates only. This can affect iteration and 
+       time-stepping schemes with moving meshes (such as ALE) in an unexpected
+       way. The advice is to use global shape functions only for stationary
+       meshes, unless you know what you are doing, of course.
+
+63  vfuncnr for exact velocity field (used in stokes_L2_error_norm)
+    <=0: exact velocity field = 0
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+64  funcnr for exact pressure field (used in stokes_L2_error_norm)
+    <=0: exact pressure field = 0
+     >0: function number in the call to func
+    NOTE: function func must be assigned to coefficients%func
+
+65  The normal traction (in element stokes_natboun_normal)
+    0: constant, given by coefficients%r(24)
+    1: given by a vector function, funcnr=coefficient%i(66)
+       NOTE: function func must be assigned to coefficients%func
+
+66  funcnr for normal traction
+
+67  Use a 3D velocity vector in a 2D space:
+      0: no 
+      1: yes
+    NOTE: the definition of the third velocity component depends on the
+          coordinate system used (coefficients%i(23)):
+     * velocity component u_z in the 2D Cartesian system (coefficients%i(23)=0).
+     * circumferential velocity component u_theta in the axisymmetrical case,
+       i.e. add "swirl". (coefficients%i(23)=1).
+    NOTE: Not all elements have been modified to take this into account.
+          An error message is given if incompatible elements are called.  
+    NOTE: Not all add-ons have implemented the third component. Hence, check
+          the elements before using coefficients%i(67)=1.
+
+68--74 RESERVED for the viscoelastic add-on
+
+75  secondary numerical integration rule (intrule2) for the internal domain
+    integrals of elements. This is only relevant for prisms and pyramids
+
+76  secondary numerical integration rule (intrule2) for boundary integrals.
+    This is only relevant for volumes consisting of prisms or pyramids.
+
+77  Specifies how the integration rules must be set:
+    0: default, i.e. direcly with the value in coefficients.
+    1: by specifying the minimal polynomial order that the rule must be able
+       to integrate exactly.
+    Note, that the value of coefficients%i(77) is overruled by setting
+    SET_GAUSS_BY_ORDER = .true. in the module limits_m.
+
+78--81  RESERVED for the viscoelastic add-on
+
+82  Polynomial order p of the spectral/high-order interpolation for stress
+
+83--103 RESERVED for the viscoelastic add-on
+
+104--150 Reserved for future use. Set to zero for future compatibility.
+

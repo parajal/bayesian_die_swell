@@ -1,0 +1,80 @@
+% !TEX root = userguide.tex
+
+\def\headdate{2nd December 2025}
+
+\section{Energy balance equation with temperature-dependent material parameters}
+\label{sec:energy}
+
+(This section and the examples have been contributed by Nick Jaensson, Caroline
+Balemans and Giovanna Grosso of the TU/e.)\medskip
+
+Following Dantzig and Tucker \cite{Dantzig2001}, we write the energy balance 
+equation as
+\begin{equation}
+  \rho c_\mathrm{p} \left( \pderiv{T}{t} + \vek u \cdot \nabla T \right) = 
+  \nabla \cdot (\kappa \nabla T) + \ten \tau : \ten D + \rho \dot{R}, 
+  \label{eq:energy_balance}
+\end{equation}
+where $\rho$ is the density, $c_\mathrm{p}$ is the specific heat at constant 
+pressure, $T$ is the temperature, $\kappa$ is the scalar thermal conductivity, 
+$\ten 
+\tau$ is the extra stress tensor, $\ten D$ is the rate-of-deformation tensor 
+and $\dot{R}$ is the internal heat generation per unit mass. We assume that 
+$\rho$, $c_\mathrm{p}$ and $\kappa$ are constant. Note the similarity with the 
+convection-diffusion-reaction equation as given in 
+Section \ref{sec:convdiffsupg}. The weak form of Eq.~\eqref{eq:energy_balance}
+is given by: find $T$ such that
+\begin{equation}
+ \rho c_\mathrm{p} (s, \pderiv{T}{t}+\vek u \cdot \nabla T) + \kappa (\nabla s,
+ \nabla T)-\kappa (s, \vek n \cdot \nabla T)_\Gamma = (s, \ten \tau : \ten D + 
+ \rho \dot{R} ) \label{eq:energy_balance_weak}
+\end{equation}
+for all admissible test functions $s$. A flux boundary condition on 
+$\Gamma$ (with unit normal $\vek n$) can be substituted directly into equation 
+\eqref{eq:energy_balance_weak}, but for now we will assume this term to be zero.
+
+Two example files (\texttt{energy1.f90} and \texttt{energy3.f90})
+are available which are both based on flow through a 
+cylinder. Initially, the fluid is at temperature $T_0$. We 
+assume zero normal 
+traction and zero vertical velocity at the entry and exit, and a flowrate is 
+prescribed to generate the flow. The fluid that flows in is at temperature 
+$T_0$.
+
+In example 
+\texttt{energy1.f90}, a Newtonian flow problem is solved with a 
+temperature-dependent viscosity $\eta(T)=\eta_0 e^{-(T-T_0)}$, where $\eta_0$ 
+is 
+the viscosity at $T_0$. The dissipation term in this example is thus:
+$2\eta(T)\ten D:\ten D$. Within a time step, the temperature problem is solved 
+first using 
+extrapolated values for $\vek u$ and $T$: $\hat{\vek u}_{n+1}=\vek u_n$ for 
+first-order or $\hat{\vek u}_{n+1}=2\vek u_n-\vek u_{n-1}$ for second-order 
+time integration (and similarly for $\hat{T}_{n+1}$, which is needed to compute 
+the viscosity in the 
+dissipation term). Then, using the updated temperature-field for the viscosity, 
+the velocity-pressure field is solved. 
+
+A (multi-mode) viscoelastic version of the same problem is given in 
+\texttt{energy3.f90}, which assumes a 
+temperature-dependent modulus $G(T)=G_0 e^{-(T-T_0)}$ and a temperature 
+dependent relaxation time $\lambda(T)=\lambda_0 e^{-(T-T_0)}$, where $G_0$ and 
+$\lambda_0$ are the modulus and relaxation time at $T_0$, respectively. We 
+furthermore assume a temperature-dependent Newtonian 
+viscosity, and thus is the dissipation term written as: $(2\eta(T) \ten D+ 
+\sum_{i=1}^N [\ten \tau_\text{p}]_i):\ten D$, where $N$ is the number 
+of modes. Similar boundary conditions as for the Newtonian 
+example are employed, and we further assume that the viscoelastic fluid that 
+flows in is 
+stress-free. Note, that there are clear entry- and exit effects when using 
+these boundary conditions and this problem should thus be regarded as a 
+``toy-problem''. The stress-implicit approach is used to include the 
+viscoelastic stress in the momentum balance.
+Within a time step, the temperature equation is solved first using  
+first- or  second-order extrapolated values for 
+$\hat{\vek u}_{n+1}$, $\hat{T}_{n+1}$ and the conformation tensor $\hat{\vek 
+c}_{n+1}$. Then, using the updated temperature-field, the 
+velocity-pressure field is solved for using $G(T_{n+1})$ and 
+$\lambda(T_{n+1})$ for each mode (the relaxation time 
+is needed due to the stress-implicit method). At the end of a time step, the 
+actual conformation tensors are computed using $\lambda(T_{n+1})$ for each mode.

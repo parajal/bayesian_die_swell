@@ -1,0 +1,15 @@
+// Single sphere surface (linear elements).
+// Run with gmsh -2 mesh2l.geo
+
+nobj = 1;
+N = 50; // number of elements on the equator (approximately)
+xp[1] = 0.00000000000000;
+yp[1] = 0.00000000000000;
+zp[1] = 0.00000000000000;
+rp[1] = 1.00000000000000;
+dx_part = 2*Pi*rp[1]/N;
+
+Mesh.Algorithm = 6; // Frontal for surfaces
+Mesh.ElementOrder = 1; // First-order elements
+
+Include "particles_3D.igo";

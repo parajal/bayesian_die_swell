@@ -1,0 +1,166 @@
+NOTE:
+
+streamfunction8 is for navier_stokes[8-9]
+
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+navier_stokes1 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Steady flow, gradual increase of the Reynolds number.
+ Physical quantities.
+
+navier_stokes2 
+
+ Navier-Stokes problem on a 3D cavity. Two moving boundaries,
+ and Re=500. Either Picard or Newton or a combination of both can be used for
+ the iteration process
+
+navier_stokes3 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Steady flow, gradual increase of the Reynolds number.
+ The Stokes system matrix is saved, for increased performance
+ Physical quantities.
+
+navier_stokes4 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Crank-Nicolson time discretization
+
+navier_stokes5 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+
+navier_stokes6 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Crank-Nicolson time discretization with a predictor for the convection
+ velocity at tn+1 based on extrapolation from two previous time steps:
+   u_hat=2*un-un-1
+ First time step: predictor is un.
+
+navier_stokes7 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Semi-implicit Crank-Nicolson/Adams-Bashforth time discretization
+ First time step: replace AB2 with explicit Euler.
+ Keep LU decomposition for later time steps to reduce CPU time.
+
+navier_stokes8 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+ One freely moving and rotating object. Time-stepping.
+ Weak constraint on the particle domain.
+ Neutrally buoyant particle ( density of particle = density of fluid )
+
+navier_stokes9 
+
+ Navier-Stokes problem on gravitational sedimentation of a particle in a
+ rectangular box.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+ One freely moving and rotating object. Time-stepping.
+ Weak constraint on the particle domain.
+
+navier_stokes10 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Semi-implicit Crank-Nicolson/Adams-Bashforth time discretization
+ Do a real semi-implicit Euler at the first step.
+ Keep LU decomposition for later time steps to reduce CPU time.
+
+ Similar to navier_stokes7, but now:
+ Do a real semi-implicit Euler at the first step.
+
+navier_stokes11 
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Semi-implicit Gear/Karniadakis time discretization
+ A semi-implicit Euler at the first step.
+ Keep LU decomposition for later time steps to reduce CPU time.
+
+ Similar to navier_stokes7, but now:
+ Semi-implicit Gear/Karniadakis time discretization
+ A semi-implicit Euler at the first step.
+
+navier_stokes12
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Steady flow, gradual increase of the Reynolds number.
+ Physical quantities.
+
+ Similar to navier-stokes1, but now:
+ Iterative solver with block preconditioning (using pressure
+ convection-diffusion).
+
+navier_stokes13
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Semi-implicit Crank-Nicolson/Adams-Bashforth time discretization
+ First time step: replace AB2 with explicit Euler.
+ Keep LU decomposition for later time steps to reduce CPU time.
+
+ Similar to navier-stokes7, but now:
+ Iterative solver with block preconditioning (using pressure mass and
+ diffusion matrix). M_1^{-1}+M_2^{-1} form for approximate inverse
+ Schur complement.
+
+navier_stokes14
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Semi-implicit Gear/Karniadakis time discretization
+ A semi-implicit Euler at the first step.
+ Keep LU decomposition for later time steps to reduce CPU time.
+
+ Similar to navier-stokes11, but now:
+ Iterative solver with block preconditioning (using pressure mass and
+ diffusion matrix). M_1^{-1}+M_2^{-1} form for approximate inverse
+ Schur complement.
+
+navier_stokes15
+
+ Navier-Stokes problem on a square cavity with Dirichlet boundary conditions.
+ Unsteady flow. Compared to exact (manufactured) solution.
+ Second-order implicit Gear discretization. First step: Euler implicit.
+ Spectral elements.
+ This problem is similar to navier_stokes5, but now with spectral elements.
+
+navier_stokes16
+
+ Navier-Stokes problem on a square cavity with 3D velocities.
+ Steady flow, gradual increase of the Reynolds number.
+ Lid-driven cavity flow in (x,y).
+ Imposed flow rate in z-direction.
+
+navier_stokes17
+
+ Navier-Stokes problem on a square cavity with 3D velocities (curved channel).
+ Steady flow, gradual increase of the Reynolds number.
+ Imposed flow rate in theta-direction. Axisymmetric.
+
+navier_stokes18
+
+ Navier-Stokes problem on a square cavity 3D velocities (curved channel).
+ Unsteady flow. 
+ Crank-Nicolson time discretization
+ Imposed flow rate in theta-direction. Axisymmetric.
+
+navier_stokes19
+
+ Navier-Stokes problem on a square cavity with 3D velocities (curved channel).
+ Unsteady flow. 
+ Second-order implicit Gear discretization. First step: Euler implicit.
+

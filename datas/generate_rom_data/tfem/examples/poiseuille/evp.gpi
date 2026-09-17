@@ -1,0 +1,58 @@
+# use the epslatex terminal to generate the plot, the arguments are:
+# standalone: generates a .tex that can be compiled by itself
+# color:      enable colors
+# solid:      draw all lines in the plots a solid lines (overridding
+#             dashed lines)
+# header      "\\usepackage{amsmath,amssymb}": LaTex packages to use
+# 14:         fontsize used for LaTeX, possible options are 8, 9, 14,
+#             17, 20 (size<size>.clo file should exist e.g. 
+#             /opt/local/share/texmf-texlive/tex/latex/extsizes/size14.clo)
+set terminal epslatex standalone color solid \
+    header "\\usepackage{amsmath,amssymb}" 12
+
+
+# set the name of the .tex output file
+set output 'poiseuille_evp.tex'
+
+# set formats for the labels on the x- and y-axis
+#set format x '10\textsuperscript{%L}'
+#set format y '10\textsuperscript{%L}'
+#set format y '%1.0e'
+set format y '%h'
+
+set ylabel '$u$'  rotate by 0 offset 1
+set y2label '$\tau$' rotate by 0 offset -1
+#set ylabel '$\dfrac{\Delta t_\text{crit}U}{R}$' rotate by 0 offset -1
+#set ylabel 'Delta t_{crit}'
+set xlabel '$y$'
+
+# set left and right margins of the plot: useful if a label falls outside
+# the plot
+#set lmargin 10
+#set rmargin 2
+
+# set the size of the canvas
+#set size 2.8/3.0,3.4/3.0
+#set size ratio -1
+#set size 1.05,1
+
+# set the 
+#set xrange [-15:15]
+#set yrange [1e-8:1]
+
+
+# make a loglog plot
+#set logscale xy 10
+#set logscale y 10
+
+
+
+set key left center reverse Left
+set y2tics
+set y2range [0:]
+plot \
+ "velocity_curve2.out" using 2:3 title 'velocity $u$' w l lw 2, \
+ "tau_curve2.out" using 2:(-$4) title 'shear stress -$\tau_\text{xy}$' w l lw 2 axis x1y2, \
+ "tau_curve2.out" using 2:($3) title 'normal stress $\tau_\text{xx}$' w l lw 2 axis x1y2, \
+ "vonmises_curve2.out" using 2:($3) title 'von Mises $\tau_\text{d}$' w l lw 2 axis x1y2
+pause -1

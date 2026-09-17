@@ -1,0 +1,91 @@
+% !TEX root = userguide.tex
+
+\chapter{External routines}
+\pgst{tfemch}
+
+\label{ch:external}
+
+\def\chaptertitle{External routines}
+\def\headdate{11th March 2016}
+
+In this chapter the \texttt{external} tree in \tfem\ is briefly described. The \texttt{external} tree
+does \emph{not} contain the routines, only the Makefiles for compiling \& building
+libraries. The routines itself require licenses and need to be obtained
+separately.
+
+\section{HSL}
+\label{sec:hsl_external}
+
+The default solvers in \tfem\ are MA41 and MA57 from the HSL library (see Sec.~\ref{sec:hslsparse}).
+Within the department most students use the routines from HSL2002, since these have been licensed. However, MA57 does not have scaling and metis renumbering (see Sec.~\ref{sec:metis5}) in that version. A more recent version is needed. 
+
+HSL packages have a free personal license for academics. 
+See the file \texttt{external/README} and \texttt{external/hsl/README} for more information. 
+
+Provided the routines have been obtained, the recent MA41 and MA57 routines can be compiled and added to the solver library by
+typing
+\begin{quote}
+   \texttt{make libhsl2}
+\end{quote}
+from the \tfem\ root directory. See the root \texttt{Makefile} which HSL packages are required.
+
+The add-on \texttt{hsl\_extra} (see Sec.~\ref{sec:hsl_extra_addon}) requires additional routines from the HSL library. Provided the routines have been obtained, the routines can be compiled and added to the solver library by
+typing
+\begin{quote}
+   \texttt{make libhsl3}
+\end{quote}
+from the \tfem\ root directory. See the root \texttt{Makefile} which HSL packages are required. Note, that \texttt{libhsl3} requires \texttt{libhsl2}.
+
+\section{Numerical Recipes}
+\label{sec:nr}
+
+The add-on particle\_tracking (see Sec.~\ref{sec:particletrackingaddon}) needs some (modified for double precision) routines from the Numerical Recipes library\cite{Press92,Press96}, available
+at \href{http://www.nr.com}{www.nr.com}.
+The software is not free and need to be purchased separately or as part of a book.
+See the file \texttt{external/README} and \texttt{external/nr/README} for more information. Provided the routines have been obtained (and modified for double precision) the routines\footnote{See the \texttt{Makefile} for which routines are needed.} can be compiled and added to the solver library by
+typing
+\begin{quote}
+   \texttt{make nr}
+\end{quote}
+from the \tfem\ root directory.
+
+\section{Sparskit2}
+\label{sec:sparskit2}
+
+The add-on \texttt{sk\_solve} (see Sec.~\ref{sec:sksolve}) needs some routines from the Sparskit2 
+library\footnote{\href{http://www-users.cs.umn.edu/~saad/software/SPARSKIT}{http://www-users.cs.umn.edu/\textasciitilde{}saad/software/SPARSKIT}}. 
+The software is free (LGPL). See the file \texttt{external/README} and \texttt{external/sparskit2/README} for more information. Provided the routines have been obtained, the routines can be compiled and added to the solver library by
+typing
+\begin{quote}
+   \texttt{make sparskit2}
+\end{quote}
+from the \tfem\ root directory.
+
+\section{Removing external packages}
+\label{sec:external_removing}
+
+It is recommended not to remove/clean individual external packages.
+Clean the complete external tree at once using
+\begin{quote}
+   \texttt{make externalclean}
+\end{quote}
+instead of cleaning individual packages. The reason is that cleaning an
+    individual package will also remove the complete solver library, leaving
+    other compiled packages ``hanging'', unable to build them again. 
+
+Similarly, if you want to go back to \texttt{libhsl} from \texttt{libhsl2} do a
+clean of the complete external tree:
+\begin{quote}
+      \texttt{make externalclean}
+\end{quote}
+    then build libhsl
+\begin{quote}
+      \texttt{make libhsl}
+\end{quote}
+    and rebuild non-HSL external packages again, if needed.
+
+
+
+
+
+

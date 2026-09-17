@@ -1,0 +1,55 @@
+% !TEX root = userguide.tex
+
+\def\headdate{16th July 2021}
+
+\section{Spectral and high-order elements}
+\label{sec:highorder}
+
+Various high-order variants of the finite element method based on the Galerkin discretization exist, such as 
+the spectral element method (SEM) \cite{canuto_spectral_2007}, the $hp$ finite element method ($hp$-FEM) \cite{szabo_finite_1991} and Isogeometric Analysis (IGA) \cite{cottrell_isogeometric_2009}. The main
+difference between these methods is the choice of the base functions in the Galerkin discretization. This choice also affects how Dirichlet boundary conditions are applied and also the handling of curved domains. For example SEM and IGA can use iso-parametric elements, whereas for $hp$-FEM special domain mapping needs to be applied. A secondary difference is the way numerical integration is performed. In the standard SEM using lines, quadrilaterals and hexahedra, the integration points are identical to the nodal points, leading to orthogonality of the base functions in the numerical sense at least. This method is called SEM-NI in \cite{canuto_spectral_2007}, where NI stands for \emph{numerical integration}.
+
+Based on the PhD work of Anna-Catharina Verkaik \cite{verkaik_overlapping_2014,verkaik_coupling_2015}, spectral elements of the SEM-NI variant (1D line and 2D quadrilateral) have been available in \tfem\ since 2012. The nodal/integration points are distributed according to Legendre Gauss-Lobatto (LGL) points. With these elements we can obtain spectral convergence up to machine accuracy as shown in Figure~\ref{fig:conv_spec}.
+
+The Gmsh program (See Sec.~\ref{sec:readgmshmesh}) can generate meshes using polynomial interpolation up to order 10 for all available element shapes\footnote{Line, triangle, quadrilateral, tetrahedron, quadrilateral, hexahedron, prism and pyramid.}. However, the distribution of the nodes is equidistant and limits the spectral convergence, as shown in Figure~\ref{fig:conv_ho}. How to improve the distribution of the nodes on triangles and tetrahedra is an active field of research \cite{warburton_explicit_2007} and needs to be explored further.
+
+In the following table an overview of the spectral/high-order examples in \tfem\ are given.\medskip
+
+\begin{tabular}{lll}
+Example & Section & remarks \\\hline
+ \texttt{convdiff2.f90} & \ref{sec:examples1dconvdiff} & SEM-NI, 1D line \\
+ \texttt{convection\_diffusion7.f90} & \ref{sec:convdiff1D} & SEM-NI, 1D line \\
+ \texttt{poisson20.f90} & \ref{sec:poisson20} & SEM-NI, quadrilateral\\
+ \texttt{poisson21.f90} & \ref{sec:poisson21} & SEM-NI, quadrilateral\\
+ \texttt{poisson22.f90} & \ref{sec:poisson22} & SEM-NI, quadrilateral\\
+ \texttt{poisson34.f90} & \ref{sec:poisson20} & high-order quadrilateral, equidistant\\
+ \texttt{poisson35.f90} & \ref{sec:poisson21} & high-order quadrilateral, equidistant\\
+ \texttt{poisson36.f90} & \ref{sec:poisson22} & high-order quadrilateral, equidistant\\
+ \texttt{poisson37.f90} & \ref{sec:poisson22} & high-order triangle, equidistant\\
+ \texttt{stokes34.f90} & \ref{sec:stokes34} & SEM-NI, quadrilateral\\
+ \texttt{stokes38.f90} & \ref{sec:stabilizedstokes} & SEM-NI, quadrilateral, stabilized\\
+ \texttt{stokes53.f90} & \ref{sec:stabilizedstokes} & high-order triangle, equidistant, stabilized\\
+ \texttt{stokes54.f90} & \ref{sec:stabilizedstokes} & high-order quadrilateral, equidistant, stabilized\\
+ \texttt{sphere29.f90} & \ref{sec:stabilizedstokes} & high-order quadrilateral, equidistant, stabilized, gmsh\\
+ \texttt{sphere30.f90} & \ref{sec:stabilizedstokes} & high-order triangle, equidistant, stabilized, gmsh\\
+ \texttt{sphere32.f90} & \ref{sec:blendexamples} & high-order quadrilateral, equidistant, Taylor-Hood, gmsh\\
+ \texttt{navier\_stokes15.f90} & \ref{sec:testproblemNS} & SEM-NI, quadrilateral\\
+ \texttt{diffuse\_interface11.f90} & \ref{sec:couettedi} & SEM-NI, quadrilateral\\
+ \texttt{elastic6.f90} & \ref{sec:solidbar} & SEM-NI, quadrilateral\\
+  \texttt{mixed\_stokes1.f90} & \ref{sec:mixedcontraction} & mixed Stokes Taylor-Hood $Q_2/Q_1$ with $Q_p$ stress \\
+\end{tabular}
+
+\begin{figure}[p]
+\begin{center}
+    \includegraphics[scale=1.0]{conv_spec}
+\end{center}
+   \caption{Maximum error in the nodes as a function of polynomial order $p$ for the problem in \texttt{poisson22.f90} (see Sec.~\ref{sec:poisson22}) using different meshes. This problem is solved using spectral elements of the SEM-NI variant.}
+    \label{fig:conv_spec}
+\end{figure}
+\begin{figure}[p]
+\begin{center}
+    \includegraphics[scale=1.0]{conv_ho}
+\end{center}
+   \caption{Maximum error in the nodes as a function of polynomial order $p$ for the problem in \texttt{poisson36.f90} (see Sec.~\ref{sec:poisson22}) using different meshes. This problem is solved using high-order elements with equidistant nodal distribution.}
+    \label{fig:conv_ho}
+\end{figure}

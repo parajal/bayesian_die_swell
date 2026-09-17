@@ -1,0 +1,46 @@
+% !TEX root = userguide.tex
+
+\def\headdate{4th April 2017}
+
+\section{Surface convection diffusion}
+\label{sec:surface_convection_diffusion}
+
+(These examples have been based on the codes developed by Christos Mitrias of the TU/e)
+
+\subsection{Surfactant concentration on the interface of a drop subject to simple shear}
+
+Example \texttt{drop12.f90} involves two Newtonian fluids, separated by an interface with 
+surface tension which depends linearly on the surfactant concentration. 
+The concentration of the surfactants on the interface is calculated by solving the following  
+convection-diffusion equation on the interface:
+\begin{equation}\label{eq:surfactant_concentration}
+	\frac{\partial c}{\partial t} +  
+	(\vec u-\vec u_\text{m})\cdot \nabla_\text{s} c + (\nabla_\text{s} \cdot \vec u )c = 
+	\nabla_\text{s} \cdot ( D \nabla_\text{s} c ),
+\end{equation}
+where $D$ is the diffusion coefficient, $c$ is the surfactant concentration and $\vec u_\text{m}$ is the grid velocity on the interface.
+
+The surfactant concentration equation is coupled with the flow via the velocity 
+on the interface and the surface tension which is given by
+\begin{equation}
+	\Gamma(c) = \frac{\Gamma_0}{1-\beta} (1-\beta \frac{c}{c_0}),
+\end{equation}
+where $\Gamma_0$ is the surface tension at the reference concentration $c_0$ and $\beta$ is a constant.
+
+In Figure~\ref{fig:surfactant_concentration} the result of the surfactant concentration 
+on a drop interface that has reached steady state is shown.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=0.4]{surfactant_concentration}
+   \end{center}
+   \caption{Steady state of a drop in simple shear containg insoluble surfactants on 
+	   the interface. Results obtained using example
+   \texttt{drop12.f90}}
+    \label{fig:surfactant_concentration}
+\end{figure}
+
+\subsection{Surfactant concentration on the interface of a drop subject to uniaxial extensional flow (axisymmetric)}
+
+Example \texttt{drop14.f90} involves two Newtonian fluids, separated by an interface with 
+surface tension which depends linearly on the surfactant concentration. Axisymmetry is assumed. 
+The example is based on the the example \texttt{drop13.f90} (see Sec.~\ref{sec:drop_remesh_axisymmetric}).

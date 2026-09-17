@@ -1,0 +1,390 @@
+% !TEX root = userguide.tex
+
+\chapter{Introduction}
+\pgst{tfemch}
+
+\def\chaptertitle{Introduction}
+\def\headdate{5th September 2025}
+
+\section{What is \tfem?}
+
+\tfem\ is a toolkit for the finite element method (\fem).
+It is written in \mftn. The core of \tfem\ is moderately sized\footnote{At the
+time of writing it contains 44320
+lines of \ftn\, excluding comments and empty lines.}
+and it is intended to be used in education and
+research. It is a general \fem-system, i.e.\ it can
+\begin{itemize}
+   \item build system of equations for 
+         Galerkin \fem, discontinuous Galerkin (\dg) \fem\ and the extended finite element
+         method (\xfem),
+   \item have varying number degrees of freedom per node,
+   \item identify multiple degrees of freedom as a single physical degree of freedom,
+   \item group elements, so that different element types 
+         and/or different material properties can be used in the same problem,
+   \item have layers of degrees, with full freedom of choice in
+         which nodes a layer is actually present,
+         facilitating implementation of \xfem,
+   \item define local transformations of nodal degrees of freedom to apply Dirichlet boundary conditions
+         in any direction.
+\end{itemize}
+Furthermore,
+\begin{itemize}
+   \item many types of elements are available, including higher-order elements,
+   \item has extensive functionality for computing derived quantities,
+   \item blended meshes can be defined, which gives the possibility to easily mix different orders of interpolation for mixed or coupled variables.
+\end{itemize}
+However, the core of \tfem\ has limited scope:
+\begin{itemize}
+   \item The built-in mesh generator generates structured meshes only.
+   \item I/O only consists of writing warning and error messages to standard
+         output.
+   \item No element subroutines, only modules for
+         shape functions and Gauss integration are available.
+   \item No graphics routines, although some basic post-processing such as
+         sampling vectors and integration
+         on curves, surfaces and objects, is available.
+   \item No linear equation solvers\footnote{Interfaces to external solvers are available 
+         as an add-on. For example, 
+   there are interfaces to the MA41 (unsymmetric
+         matrices) and MA57 (symmetric matrices) sparse direct solvers
+         of the HSL library \cite{HSL} available in the add-on hsl, see Sec~\ref{sec:hsl_addon}.}.
+   \item No high level routines such as time stepping or
+         non-linear equation solvers are available.
+\end{itemize}
+So the core of
+\tfem\ provides basic functionality that every \fem\ program needs, but
+additional functionality is necessary to make a complete program. This
+functionality can be provided through so-called add-ons along with the core 
+routines of \tfem, but this is not necessary.
+For example, a PhD student may decide to write his/her own code for that and
+link his program to the core \tfem\ modules only. A wide range of 
+add-ons already exist\footnote{At the time
+ of writing all add-ons together have 63567
+lines of \ftn\, excluding comments and empty lines.}
+such as elements for (viscoelastic) flow problems, interfaces
+to (parallel) external solvers and
+readers for external mesh generators\footnote{Several are available, including a reader for meshes made by
+Gmsh.}.
+At least one add-on for graphics must be available to obtain a functional
+program\footnote{For 2D graphics and simple 3D graphics the add-on figplot
+is available.
+For more advanced graphics add-ons that can write to 
+VTK-files, gmsh-files or Tecplot-files, are available.
+VTK-files can be read by various freely available
+visualization programs, of which Paraview is the most important one.
+Most examples in the userguide use either figplot or Paraview. Gmsh postprocessing is used for solid mechanics problems using trusses and beam structures.}.
+
+A \tfem\ \emph{experimental} repository is available that
+contains add-ons and examples that are not (yet) fit to include in the regular
+\tfem\ repository, but can still be useful.
+
+Add-ons and examples that are difficult to maintain or are replaced by better
+ones, are moved to a separate \tfem\ \emph{legacy} repository. In this way, these add-ons and
+examples are still available if needed.
+
+\tfem\ has been loosely modeled after the part of \sep\ \cite{Segal93} 
+that is run from a main program and calls several, not too high-level,
+subroutines.
+\tfem\ is controlled from a main \ftn\ program and doesn't need any
+input from a file. Like \sep\ it has two basic structures, the mesh and the
+problem, but in \tfem\ these structures are stored using modern type
+definitions in \ftn. People familiar with \sep, will sometimes feel the spirit
+of \sep\ when using \tfem, although the details are quite different.
+
+\section{Getting started}
+\label{sec:gettingstarted}
+
+We assume that you have a working compiler 
+environment and have a \tfem-tree somewhere on your (Linux/Unix or macOS) system
+that has been compiled\footnote{The details of setting up a
+compiler environment and compiling \tfem\ are not complicated but beyond the scope of this guide.
+See the directory \texttt{install} of the \tfem\ tree for more information.
+\tfem\ is not supported on Windows natively, but running Linux in a Docker container or under Windows Subsystem for Linux (WSL) are good alternatives.}.
+
+First you have to add the \texttt{bin}-subdirectory of the \tfem\ root directory
+to your path. Test it by typing 
+\begin{quote}
+  \texttt{which fmm}
+\end{quote}
+at the command line and see whether the correct path is used to the
+\texttt{fmm} command.
+
+Now you can develop your own main program, but at this point it is easier to
+copy an example. For that, type
+\begin{quote}
+   \texttt{getexample poisson}
+\end{quote}
+which creates the (sub-)directory \texttt{poisson} containing the example files\footnote{The command \texttt{getexample} has an option 
+(\texttt{-M})
+to generate the \texttt{Mdefs.mk} and \texttt{Makefile} files and an option 
+(\texttt{-b}) to 
+completely build an example, but it is
+advised not to use these options before you have become familiar with all the basic
+steps of building an example.}. Now 
+\texttt{cd} to that directory.
+You will see several source files (extension \texttt{.f90}) in your directory.
+Among these are several main programs.
+
+In order to compile all files and link the main program(s), type the following
+commands
+\begin{quote}
+   \texttt{getmdefs >Mdefs.mk}
+\end{quote}
+which will create the file \texttt{Mdefs.mk}, and
+\begin{quote}
+   \texttt{fmm >Makefile}
+\end{quote}
+which creates the file \texttt{Makefile}.
+There are some restrictions on the use of
+\texttt{fmm}, which are described in Sec.~\ref{sec:fmm}. In particular: main
+programs must have an \texttt{end program} statement and modules
+must be in separate files having names identical to the module name. The
+following command removes the module restriction, but is slower:
+\begin{quote}
+   \texttt{fmme >Makefile}
+\end{quote}
+The actual compilation/linking is done by typing the command
+\begin{quote}
+   \texttt{make}
+\end{quote}
+The \texttt{make} utility uses the file \texttt{Makefile} to find the
+dependencies between the various source files. So if you edit a source file 
+and type \texttt{make} again, 
+all source files that depend on the changed file
+will be recompiled. Also all main programs
+will be recompiled/linked that depend on the recompiled files. The file
+\texttt{Mdefs.mk} is included by \texttt{Makefile} and
+contains the definitions that are used to compile/build \tfem\ and normally
+doesn't need to be changed. If you change the dependencies between the source
+files, for example by adding a source file or adding an explicit
+dependency\footnote{In \ftn\ an explicit dependency is created by 
+adding a \texttt{use <module>} statement, where
+\texttt{<module>} has been defined in your own directory.}, the
+file \texttt{Makefile} needs to be recreated using \texttt{fmm}.
+The files produced by \texttt{make} can be removed by
+\begin{quote}
+   \texttt{make clean}
+\end{quote}
+and you return to the situation before typing \texttt{make}.
+The \texttt{make} utility is available on all Linux/Unix and Unix-like systems.
+
+Many examples in this User Guide use the add-on figplot for plotting (see
+Sec.~\ref{sec:figplot}). Figplot produces files in the Fig-format as
+used by the program \texttt{xfig} (not to be confused with the fig-files of
+Matlab). Several shell scripts have been written to view and/or
+convert\footnote{The fig-files can also be viewed/edited using the program
+\texttt{xfig}, of course.} the fig-files.
+
+The command 
+\begin{quote}
+   \texttt{viewfig [figfile(s)]}
+\end{quote}
+shows on the screen the figfiles given or all figfiles if no files are
+given\footnote{The \texttt{viewfig} command converts the fig-files to eps-files
+and creates a single pdf file to view them all at once. A disadvantage
+is, that it produces full pages and not cropped ones.
+The command 
+\begin{quote}
+   \texttt{viewfigpdf [figfile(s)]}
+\end{quote}
+is similar to \texttt{viewfig}, but converts the fig-files directly to pdf-files.
+In does crop the pages, but is slower.
+The command 
+\begin{quote}
+   \texttt{viewfigpng [figfile(s)]}
+\end{quote}
+converts the fig-files directly to png-files, which are viewed
+using an image viewer.
+}.
+
+The command \texttt{fig2} converts fig-files to another graphics format, for example
+\begin{quote}
+   \texttt{fig2 pdf [figfile(s)]}
+\end{quote}
+will generate pdf-files of the figfiles given
+or all figfiles if no files are given. Typing just:
+\begin{quote}
+   \texttt{fig2}
+\end{quote}
+will give an overview of all the graphics formats available.
+
+\section{Modern Fortran}
+
+\tfem\ has been written in the computer language (modern) \ftn\footnote{Modern Fortran usually means
+Fortran~90 and later. For \tfem\ we require modern Fortran, but don't restrict to a particular version of
+the standard. We follow the latest standard (currently \ftn~2023), provided the particular
+feature of the standard is supported by the three most
+important compilers (NAG Fortran, Intel Fortran, GNU Fortran).}. Although the first
+Fortran program was written more than 65 years (!) ago, nowadays it is a very
+modern language, designed for the professional computational scientist:
+\begin{itemize}
+   \item It is very efficient.
+   \item It has an array/matrix notation similar to Matlab.
+   \item It has parallel programming syntax built in (coarrays\footnote{
+         Coarrays are part of the \ftn~2008 standard, but not yet fully implemented in
+         all compilers.}).
+   \item It is available for every relevant computer system and compilers are available from various
+         vendors\footnote{There is also an excellent open-source compiler
+         (\texttt{gfortran}), which is part of gcc. Also Intel Fortran (\texttt{ifx}) has been included in the oneAPI toolkit and is free to use.}.
+   \item Old, but usually very well tested, code written in old-style
+         Fortran can still be compiled and used in \ftn.
+\end{itemize}
+In order to use \tfem, the user needs to have
+some knowledge of \ftn. How much depends
+of course on how you are going to use it. Do you plan on writing new code or
+only change an existing main program slightly? In the latter case, you might
+even get away with knowing only how to continue a statement on the next line. However, it is recommended to
+go to \href{https://fortran-lang.org}{fortran-lang.org}, where users are building a community around the \ftn\ language. Click on \boxed{\texttt{Get Started}} and start reading the Quickstart tutorial.
+A good book for learning
+\ftn\ is the book\footnote{The book is available as an e-book from the library of the TU/e.} of Brainerd \cite{Brainerd2015}.
+For those who are already familiar with \mftn, but need a good reference, the
+book of Metcalf, Reid, Cohen \& Bader \cite{metcalf_modern_2024} is highly recommended.
+
+\section{Editing source code}
+
+For editing source code you need an editor that, preferably, can
+handle Fortran syntax highlighting and has a feature to quickly traverse through the source code.
+
+Most of \tfem\ has been developed using Vim
+(\texttt{http://www.vim.org}), which is available for all systems. 
+Vim can use the \texttt{tags} files to quickly move around in the source files (see Sec.~\ref{sec:viewing}). Vim is very powerful, but has a learning curve in order to get used to the commands. 
+Type \texttt{vimtutor} at the command line to get a half an hour introduction course. 
+
+Visual Studio Code (\texttt{https://code.visualstudio.com}) is also a powerful editor with a nice GUI interface that has become quite popular in the programming community. It also has good Fortran support with the ``Modern Fortran'' extension.
+
+\section{Viewing source code}
+\label{sec:viewing}
+
+A reference guide for \tfem\ does not exist.
+Therefore, to know all the
+possibilities of various routines, it is important to view the (comments) in
+the source. To make that an easy process, we use so-called tags.
+
+When compiling/building \tfem,
+but also when using \texttt{make} on your own files,
+a file \texttt{tags} is made. Such a file contains hooks to various points in
+the source code. Various editors (including Vim)
+can read this file and provide a 
+mechanism to immediately jump to a particular point in a source file.
+
+\tfem\ has a command \texttt{tfvi} to jump to a tag, using Vim. So
+\begin{quote}
+   \texttt{tfvi problem\_t}
+\end{quote}
+will jump to the definition of the derived type \texttt{problem\_t} and 
+\begin{quote}
+   \texttt{tfvi problem\_definition}
+\end{quote}
+will jump to the first line of the subroutine \texttt{problem\_definition}.
+
+You
+can also use commands within an editor to jump to a tag. So while editing
+or viewing with Vim, you can type for example
+\begin{quote}
+   \texttt{:tag mesh\_t}
+\end{quote}
+to jump to the tag \texttt{mesh\_t}. It you don't know exactly the tag name:
+it is possible to use name expansion, where \texttt{TAB} will expand the tag.
+Typing \texttt{Ctrl-D} will give all the remaining possibilities.
+
+Another possibility to jump to a tag is to
+put your cursor on a word in a file and type
+\texttt{Ctrl-]} to jump to the tag defined by the underlying word\footnote{Sometimes there are multiple possibilities and \texttt{Ctrl-]} will jump to the first possibility by default. To get an overview of all possibilities use \texttt{g-]}, instead.}.
+You can type as many times \texttt{Ctrl-]} as you want to jump to new
+positions. The previous positions are stored (on a so-called stack) and
+you can always go back by typing \texttt{Ctrl-t} to go
+backwards in the editing/viewing stack. NOTE: Vim has the annoying feature that 
+it also reads the tags file in the directory of the current file leading to
+multiple entries for the same tag when the stack is larger than one. To switch
+off this feature forever put 
+\begin{quote}
+   \texttt{set tags=tags}
+\end{quote}
+or
+\begin{quote}
+   \texttt{set cpoptions+=d}
+\end{quote}
+in your \texttt{\$HOME/.exrc} of \texttt{\$HOME/.vimrc} file.
+
+Note that if your \texttt{make} command is successful, a \texttt{tags} file is
+made in your own directory and you can jump in the same way through your own
+source. If \texttt{make} is not successful you can force it to make a
+\texttt{tags} file by
+\begin{quote}
+   make tags
+\end{quote}
+
+\section{Documentation}
+
+Type
+\begin{quote}
+   \texttt{tfdoc}
+\end{quote}
+to see a documentation list. A document can be viewed with
+\begin{quote}
+   \texttt{tfdoc <document>}
+\end{quote}
+An alias for \texttt{tfdoc userguide} is
+\begin{quote}
+   \texttt{tfug}
+\end{quote}
+and will show this userguide on your screen.
+
+Element modules are available as add-ons and the required coefficients are
+documented using \texttt{README\_coefficients\%i} and 
+                 \texttt{README\_coefficients\%r} text files in the add-on
+directory. 
+All the available add-ons having these files can be listed by
+\begin{quote}
+   \texttt{showcoef -l}
+\end{quote}
+Showing these files on the screen can be achieved by
+\begin{quote}
+   \texttt{showcoef [add-on]}
+\end{quote}
+or 
+\begin{quote}
+   \texttt{showcoef [add-on] | less}
+\end{quote}
+to easily scroll through the file.
+Omitting the add-on gives the coefficients of all add-ons.
+
+\newpage
+\section{Getting \tfem}
+
+The source code of \tfem, including the documentation, is stored in a Git
+repository on the GitLab server \href{https://gitlab.tue.nl}{\texttt{https://gitlab.tue.nl}}. You can login directly to the GitLab server to view source files, browse the commit history, report an issue, create a merge request and more. However, if you want to use \tfem, you need to obtain a local copy and compile the source.
+
+You can copy (`clone') a fresh \tfem\ tree from the GitLab server by typing at the command line
+\begin{quote}
+   \texttt{git clone https://gitlab.tue.nl/mahulsen/tfem.git tfem}
+\end{quote}
+This command will create a subdirectory \texttt{tfem} that contains the \tfem\ tree. See the file
+\texttt{README.md}
+for further directions on building \tfem\ from the source.
+
+To see whether \tfem\ has been updated, cd to the \tfem\ tree and type
+\begin{quote}
+   \texttt{git remote show origin}
+\end{quote}
+
+You can update to the latest revision of \tfem\ by going to the root of the
+\tfem\ tree and just type
+\begin{quote}
+  \texttt{git pull} 
+\end{quote}
+It is advised to always
+rebuild the whole tree after an update to get rid of possible
+incompatibilities between new
+and previously compiled routines.
+
+To see a log of commits type
+\begin{quote}
+   \texttt{git log}
+\end{quote}
+which is automatically piped through \texttt{less}\footnote{I had to set the environment variable \texttt{export LESS=R} to have a proper output with colors.}.
+
+If you find the command line interface of Git difficult to use, maybe \href{https://desktop.github.com}{GitHub Desktop} is something for you.
+
+Further information on the use of Git is available at \href{https://git-scm.com}{\texttt{https://git-scm.com}}.

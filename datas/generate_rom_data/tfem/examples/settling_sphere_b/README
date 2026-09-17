@@ -1,0 +1,46 @@
+
+Short description
+-----------------
+
+settling1:
+
+ Sequence of steady states of settling sphere for a b-representation
+ axisymmetric problem on a 2D mesh
+ differential Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag on sphere using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+settling2:
+
+ Sequence of steady states of settling sphere for a b-representation
+ full 3D problem on an angular cutout of the cylinder/sphere
+ differential Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag on sphere using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+
+settling3:
+
+ Sequence of steady states of settling sphere for a b-representation
+ full 3D problem on an angular cutout of the cylinder/sphere
+ differential Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag on sphere using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+ This a problem similar to settling2, but now it uses metis5 for renumbering 
+ the mesh
+
+settling4:
+
+ Sequence of steady states of settling sphere for a b-representation
+ full 3D problem on an angular cutout of the cylinder/sphere
+ differential Giesekus model.
+ Iteration to steady-state with Newton-Raphson.
+ Compute drag on sphere using reaction forces.
+ Optionally include Jacobian of SUPG test function.
+ Optionally discard certain zero blocks from the sparse matrix.
+ This a problem similar to settling2, but now it uses pardiso as solver

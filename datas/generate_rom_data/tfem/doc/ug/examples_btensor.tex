@@ -1,0 +1,156 @@
+% !TEX root = userguide.tex
+
+\def\headdate{6th December 2023}
+
+\section{Viscoelastic fluid flow using the b-tensor formulation}
+\label{sec:CDTformulation}
+
+(These examples in this section have been developed by Mick Carrozza and Michelle Spanjaards of the TU/e)
+
+\subsection{Theory}
+
+In the b-tensor formulation the conformation tensor $\ten c$ is decomposed
+according to $\ten c=\ten b\cdot\ten b^T$. The differential form for $\ten b$ is similar to the deformation gradient, i.e.\ with just one $\ten L\cdot\ten b$ term instead of two in the conformation tensor formulation. In \tfem\ four different variants are available:
+\begin{enumerate}
+\item  The contravariant deformation tensor (CDT)
+formulation introduced in \cite{hutter_fluctuating_2018}. Details on the
+numerical implementation of the CDT-formulation can be found in \cite{carrozza_viscoelastic_2019}. 
+In \tfem\ this is called \texttt{bvariant=1}.
+\item The symmetric variant of Balci et al.\ \cite{balci_symmetric_2011}.
+In \tfem\ this is called \texttt{bvariant=2}.
+\item The Cholesky variant of Vaithianathan and Collins \cite{vaithianathan_numerical_2003}.
+In \tfem\ this is called \texttt{bvariant=3}.
+\item The Cholesky variant with
+log transformation of the diagonal components of Vaithianathan and Collins \cite{vaithianathan_numerical_2003} .
+In \tfem\ this is called \texttt{bvariant=4}.
+\end{enumerate}
+The first variant is the most simple one (no additional velocity gradient terms), but requires rotation reinitialization and the solution for the $\ten b$-tensor is generally unsteady in steady flows.
+The other variants do not have these two drawbacks (rotation reinitialization and unsteadiness), but an additional term $\ten b\cdot\ten A$ is required, where the anti-symmetric tensor
+$\ten A$ depends on $\ten b$ and $\ten L$. Early testing shows that the CDT formulation (\texttt{bvariant=1}) is the most stable one in our current implementation, similar to the log-conformation representation. Therefore it is recommended to use \texttt{bvariant=2,3,4} only for comparison and not for production runs.
+
+In the examples that follow, except the ones with thermal fluctuations, all variants can be tested.
+
+In the CDT-formulation of Carrozza et al.\ \cite{carrozza_viscoelastic_2019} it is required to do so-called rotation reinitialization, which basically sets the rotation tensor $\ten R$ of $\ten b_n$ back to the unity tensor. For multi-step schemes, values of $\ten b$ at older times obtain the same additional rotation as $\ten b_n$. In Carrozza et al.\ \cite{carrozza_viscoelastic_2019} the rotation reinitialization is performed \emph{after} the time step for all the nodal values with $\ten b_{n+1}$ as a reference (and also values at older time steps, if needed). This means that $\ten b_{n+1}=\sqrt{\ten c_{n+1}}$ is a symmetric tensor after the time step. Note, that $\ten b_{n+1}$ becomes $\ten b_n$ in the next time step. Alternatively, rotation reinitialization can be performed on element level in each integration point \emph{at the start} of the time step with $\ten b_n$ as a reference. This means that $\ten b_{n+1}$ will be an unsymmetric tensor after solving the CDT system! Also note, that the reinitialization is performed on the element values only and not on the system vector(s) $\ten b_n$, ($\ten b_{n-1}$). Hence the $\ten b$ tensors between the two types of reinitialization cannot be directly compared. Only the $\ten c$ tensors should be comparable.
+Element level rotation reinitialization simplifies the main program, removing the burden of reinitialization at the main level. However, the implementation has been limited to BDF-type time integration schemes (no trapoidal rule, for example).
+
+\subsection{Planar Couette flow of an upper-convected Maxwell fluid (UCM) for a
+ Weissenberg number (Wi) of 10}
+\label{sec:couette_b}
+
+We consider an upper-convected Maxwell fluid model (UCM) for a planar Couette problem on a unit square
+(see Fig.~\ref{fig:couette}). On the upper boundary a tangential
+velocity of 1 and a normal velocity of zero is imposed.
+On the lower wall the velocity components are
+zero. In horizontal direction periodical boundary conditions are assumed.
+In the lower left corner the pressure value is set to zero (Dirichlet).
+
+At the start of the flow the b-tensor field will be set to the exact steady state value
+of the square root of the conformation tensor for variants 1 and 2. For the variants 3 and 4 the initial value of the b-tensor is set to the lower diagonal matrix of the Cholesky decomposition 
+of the exact steady state value of the conformation tensor. In addition, for variant 4 the log is taken of the diagonal components of the Cholesky lower triangular matrix.
+
+Since the contravariant deformation tensor field (in variant 1)
+ is not a steady field there is a small time discretization error 
+even in a steady state shear flow. Therefore, first the reference steady state solution is found by performing a number of time steps. Then, a small random perturbation is added to the contravariant deformation tensor. 
+
+The example file is \texttt{couette15.f90} (second-order stress-implicit
+scheme) and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+%
+The example can be run by
+\begin{quote}
+   \texttt{couette15 < input\_couette15.txt}
+\end{quote}
+%
+Time-dependent stability is similar to the standard formulation using the conformation tensor.
+
+Example \texttt{couette15a.f90} is similar to example \texttt{couette15.f90}, but uses element level rotation reinitialization instead of the nodal based one.
+
+\subsection{Planar Couette flow of an Oldroyd-B fluid for a
+ Weissenberg number (Wi) of 10 (second-order stress-explicit scheme)}
+\label{sec:couette_b_OldB}
+
+The example file is \texttt{couette16.f90} and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+%
+The example can be run by
+\begin{quote}
+   \texttt{couette16 < input\_couette16.txt}
+\end{quote}
+
+Example \texttt{couette16a.f90} is similar to example \texttt{couette16.f90}, but uses element level rotation reinitialization instead of the nodal based one.
+
+\subsection{Flow around a cylinder between two plates}
+\label{sec:confcyl1}
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample confined\_cylinder\_b}
+\end{quote}
+
+Examples \texttt{cylinder1.f90} and \texttt{cylinder2.f90} describe the flow
+around a fixed cylinder positioned between two walls. The numerical scheme is
+stress-explicit (see Sec.~\ref{sec:explicitstress}) and stress-implicit (see
+Sec.~\ref{sec:implicitstress}) for the two examples, respectively.
+
+Examples \texttt{cylinder1a.f90} and \texttt{cylinder2a.f90} are similar to examples \texttt{cylinder1.f90} and \texttt{cylinder2.f90}, respectively, but use element level rotation reinitialization instead of the nodal based one.
+
+A default coarse mesh (\texttt{confined\_cylinder1.msh}) is supplied, but in the
+subdirectory \texttt{meshes} files are available to generate more refined 
+meshes.
+
+For comparison the examples \texttt{cylinder\_c1.f90} and \texttt{cylinder\_c2.f90} are also available.
+These are similar to \texttt{cylinder1.f90} and \texttt{cylinder2.f90}, respectively, however 
+the problems are solved using the (log-)conformation tensor. By considering the difference between these files, users are able to transfer their problems to using the b-formulation instead.
+
+\subsection{Extrudate swell}
+
+The examples in this section are the extrudate swell examples in \cite{hulsen_numerical_2021}.
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample extrudate\_swell\_b}
+\end{quote}
+
+Examples \texttt{extrudate\_swell2d\_b.f90} and \texttt{extrudate\_swell3d\_b.f90} describe extrudate swell 
+of a viscoelastic fluid flowing from a die for a 2D planar and a 3D cylindrical geometry, respectively.
+
+Examples \texttt{extrudate\_swell2d\_ba.f90} and \texttt{extrudate\_swell3d\_ba.f90} are similar to examples \texttt{extrudate\_swell2d\_b.f90} and \texttt{extrudate\_swell3d\_b.f90}, respectively, but use element level rotation reinitialization instead of the nodal based one.
+
+For comparison the examples \texttt{extrudate\_swell2d\_c.f90} and \texttt{extrudate\_swell3d\_c.f90} are also available.
+These are similar to \texttt{extrudate\_swell2d\_b.f90} and \texttt{extrudate\_swell3d\_b.f90}, respectively, however 
+the problems are solved using the (log-)conformation tensor. 
+
+\subsection{Flow in curved channel with a square cross section (Dean flow, axisymmetric with swirl)} 
+\label{sec:Dean2Dimplbten}
+
+This problem is in file \texttt{channel14.f90} and is similar to the problem \texttt{channel11.f90} solved in Sec.~\ref{sec:Dean2Dimpl}. 
+
+Example \texttt{channel14a.f90} is similar to example \texttt{channel14.f90}, but uses element level rotation reinitialization instead of the nodal based one.
+
+\subsection{Equilibrium and homogeneous flows with fluctuations}
+\label{sec:startup_b_fluct}
+
+The stochastic differential equation for viscoelastic fluids with fluctuations, 
+written in the CDT-formulation, is integrated in time while imposing a constant 
+velocity gradient. Forward Euler time stepping is used. The initial condition 
+for the contravariant deformation can for instance be chosen to be the 
+equilibrium solution for the deterministic model, or the square root of the
+average conformation in equilibrium for the stochastic UCM model. Single-point
+computations in 3D are performed for equilibrium and shear or uniaxial
+extensional flow. Pseudorandom numbers from a standard normal distribution are
+drawn with a random-number generator using the Ziggurat method, 
+see Sec.~\ref{sec:ziggurat}. A small enough time step should be used to prevent 
+the solution to diverge due to finite-amplitude fluctuations.
+
+The example file is \texttt{startup14.f90} and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample viscoelastic\_models}
+\end{quote}
+

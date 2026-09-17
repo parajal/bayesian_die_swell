@@ -1,0 +1,157 @@
+% !TEX root = userguide.tex
+
+\def\headdate{18th December 2019}
+
+\section{Truss and beam structures}
+\label{sec:structures_examples}
+
+In this section examples of truss and beam structures will be given.
+
+\subsection{Weak form for 2D beams}
+The basis is a 2D straight beam element as depicted in Figure~\ref{fig:beam}. For the axial displacement $u$ we will use $P_1$ base functions. For the transverse displacement $v$ we will use cubic Hermite base functions ($P_3$) \cite{Hughes2000}. These base functions give exact nodal values  (super convergence) for displacements and rotations for a beam with constant coefficients (geometry and material properties) and distributed loading. By using $P_2$ base functions for $u$ and adding a ``bubble function'' for $v$ ($P_4$ base function) it is possible to also generate exact solutions inside the element for that case. However, this requires additional degrees of freedom in the middle node of an element.
+\begin{figure}[htbp!]
+   \includegraphics[scale=0.8]{beam1}\\
+   \includegraphics[scale=0.8]{beam2}\hspace*{10cm}\\
+   \includegraphics[scale=0.8]{beam3}
+   \caption{Definition of a straight 2D beam (element). Upper figure: degrees of freedom in the two end nodes, displacement vectors $\vek u_i$ and rotations $\phi_i$, $i=1,2$. Middle figure: distributed loading $\vek q$ and discrete end forces $\vek F_i$ and moments $M_i$, $i=1,2$. Bottom figure: split into axial and transverse components. }
+    \label{fig:beam}
+\end{figure}
+
+The weak form (for a single beam element) can be written as
+\[
+\int_0^L \delta u'EAu'\,ds + \int_0^L \delta v'' EI v''\,ds =\int_0^L\delta\vek u\cdot\vek q\,ds
++\delta\vek u_1\cdot \vek F_1
++\delta\vek u_2\cdot \vek F_2
++\delta \phi_1 M_1+\delta\phi_2 M_2
+\]
+where the variational symbol $\delta$ is used for denoting a test function.
+Note, that we have assumed linearity for both the material (linear elastic) and
+the geometry of deformation (small strains and rotations).
+
+\subsection{Weak form for 3D beams}
+The basis is a 3D straight beam element as depicted in Figure~\ref{fig:beam3D}. For the axial displacement $u$ and torsional rotation $\theta$ we will use $P_1$ base functions. For the transverse displacement $v$ and $w$ we will use cubic Hermite base functions ($P_3$) \cite{Hughes2000}.
+These base functions give exact nodal values  (super convergence) for displacements and rotations for a beam with constant coefficients (geometry and material properties) and distributed loading. By using $P_2$ base functions for $u$ (and optionally $\theta$) and adding a ``bubble function'' for both $v$ ans $w$ ($P_4$ base function) it is possible to also generate exact solutions inside the element for that case. However, this requires additional degrees of freedom in the middle node of an element.
+\begin{figure}[htbp!]
+   \includegraphics[scale=0.75]{beam1_3D}\\
+   \includegraphics[scale=0.75]{beam2_3D} \hspace*{10cm}\\
+  \includegraphics[scale=0.75]{beam3_3D}
+   \caption{Definition of a straight 3D beam (element). Upper figure: degrees of freedom in the two end nodes, displacement vectors $\vek u_i$ and rotation vector $\vek\phi_i$, $i=1,2$. Middle figure: distributed loading $\vek q$ and discrete end forces $\vek F_i$ and moments $\vek M_i$, $i=1,2$. Bottom figure: the local $(x,y,z)$ coordinate system with a split into axial, transverse and torsional components.}
+    \label{fig:beam3D}
+\end{figure}
+
+The weak form (for a single beam element) can be written as
+\begin{multline*}
+\int_0^L \delta u'EAu'\,ds + \int_0^L E \delta\col\kappa^T\mat I\col\kappa\,ds
++ \int_0^L \delta\theta'GJ\theta'\,ds =\\
+\int_0^L\delta\vek u\cdot\vek q\,ds
++\delta\vek u_1\cdot \vek F_1
++\delta\vek u_2\cdot \vek F_2
++\delta\vek\phi_1 \cdot\vek M_1+\delta\vek\phi_2 \cdot\vek M_2 
+\end{multline*}
+where the variational symbol $\delta$ is used for denoting a test function. 
+The curvature vector $\col\kappa$ and the second moment of area matrix $\mat I$ have been defined as
+\[
+\col\kappa=
+\begin{pmatrix}
+  -w''\\
+  v''
+\end{pmatrix},\quad
+\quad \mat I=
+\begin{pmatrix}
+  I_{yy} & -I_{zy} \\
+  -I_{zy} & I_{zz} 
+\end{pmatrix}
+\]
+with
+\[
+   I_{yy} = \int_A z^2\,dA,\quad I_{zy}=\int_A zy\,dA,\quad I_{zz}=\int_a z^2\,dA 
+\]
+We assume the polar second moment of area $J$ to be independent from $\mat I$ to allow for approximate torsional stiffness for non-circular cross sections\footnote{The theory for non-circular and/or open cross sections is complicated and beyond the scope of this userguide. The warping of the cross section due to torsion is not included in the beam element.}.
+Note, that we have assumed linearity for both the material (linear elastic) and
+the geometry of deformation (small strains and rotations).
+
+Note, that 
+\[
+\begin{split} 
+\delta\col\kappa^T\mat I\col\kappa
+&=
+\begin{pmatrix}
+  -\delta w''\\
+  \delta v''
+\end{pmatrix}^T
+\begin{pmatrix}
+  I_{yy} & -I_{zy} \\
+  -I_{zy} & I_{zz} 
+\end{pmatrix}
+\begin{pmatrix}
+  -w'' \\
+  v''
+\end{pmatrix}\\
+&=\delta v''I_{zz}v''+\delta v''I_{zy}w''+\delta w''I_{zy}v''+\delta w''I_{yy}w''
+\end{split}
+\]
+
+The axial force $N$, the bending moments $\col M^T=(M_y,M_z)$ and torsion moment $M_x$ can be determined from:
+\[
+    N=EAu',\quad \col M=E\mat I\col\kappa,\quad M_x=GJ\theta'
+\]
+The shear forces $\col V=(V,W)$ are given by $\col V=\col M'$, where the positive directions of $V$ and $W$ are indicated in Figure~\ref{fig:beam3D}. The forces and moments in the cross section are resultants from stresses. It is beyond the scope of this userguide to give general expressions for the stress distribution, in particular the shear stresses. Nevertheless, the expression for the normal stress due to the axial force and bending moments alone, is given by
+\[
+  \sigma_x=\dfrac{N}{A}+E(\kappa_y z-\kappa_z y)
+\]
+
+As a final remark it should be noted, that the local $z$-axis direction $\vek n_z$ must be chosen by the user and that the $y$-direction is given by $\vek n_y=\vek n_z\times\vek e$. The choice of the local $z$-axis affects the components of the matrix $\mat I$. In particular the sign of $I_{zy}$ is affected by the direction of the local $z$-axis. For example, assume that in the local $(\bar x,\bar y)$-system 
+the second moments $\bar I_{xx}=\int \bar y^2\,dA$, $\bar I_{xy}=\int \bar x\bar y\,dA$ and
+$\bar I_{yy}=\int \bar x^2\,dA$ are given in a cross section as in the first figure of Figure~\ref{fig:crosssection}. Now, the usual choice is the second figure where the local 
+$z$-axis corresponds to the $-\bar x$-axis and the local $y$-axis to the $\bar y$-axis. In that case $I_{zz}=\bar I_{xx}$, $I_{zy}=-\bar I_{xy}$ and $I_{yy}=\bar I_{yy}$. In the third figure we have put the local $z$-axis in the direction of the  $\bar y$-axis (and the local $y$-axis is on top of the 
+$\bar x$-axis). In that case, we get $I_{zz}=\bar I_{yy}$, $I_{zy}=\bar I_{xy}$ and $I_{yy}=\bar I_{xx}$.
+\begin{figure}[htbp!]
+   \includegraphics[scale=0.8]{crosssection}
+   \caption{Cross section with a local $(x,y)$, $(z,y)$ and $(y,z)$ coordinate system.}
+    \label{fig:crosssection}
+\end{figure}
+
+\subsection{A truss element}
+
+A truss element is obtained if the bending and torsion terms are removed form the weak form and only axial deformation contributions to the left-hand side are retained:
+\[
+\int_0^L \delta u'EAu'\,ds=\int_0^L\delta\vek u\cdot\vek q\,ds
++\delta\vek u_1\cdot \vek F_1
++\delta\vek u_2\cdot \vek F_2
+\]
+Furthermore, if it is assumed that $EA$ and $\vek q$ are constants for a single element and the interpolation of $\vek u$ is taken to be $P_1$, the following matrix system for a truss element is obtained
+\[
+ \dfrac{EA}L\begin{bmatrix} 
+                 \phantom{-}\vek e\vek e & -\vek e\vek e \\
+                 -\vek e\vek e & \phantom{-}\vek e\vek e 
+             \end{bmatrix}\cdot
+             \begin{bmatrix} 
+                 \vek u_1\\
+                 \vek u_2 
+             \end{bmatrix}   =
+   \begin{bmatrix} 
+                 \vek F_1\\
+                 \vek F_2 
+             \end{bmatrix}+   
+             \begin{bmatrix} 
+                \vek q L/2
+             \end{bmatrix}      
+\]
+which is valid for 2D and 3D.
+
+\subsection{Examples}
+
+The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample structures}
+\end{quote}
+Examples \texttt{structures1.f90},  \texttt{structures2.f90} and \texttt{structures13--15.f90} involve 2D and 3D trusses. Examples \texttt{structures3--8.f90} involve 1D beams, i.e.\ the geometry is 1D, only transverse displacement $v$ is present and axial displacement $u$ is assumed to be zero. 
+
+Examples \texttt{structures9--12.f90} involve 2D beams.
+Some examples have an `\texttt{a}' version, for example \texttt{structures9a.f90}, that use the higher-order interpolation. 
+
+Examples \texttt{structures16--19.f90} involve 3D beams.
+Some examples have an `\texttt{a}' version, for example \texttt{structures16a.f90}, that use the higher-order interpolation. 
+
+The examples write data to \texttt{.mso} files for postprocessing with Gmsh, see Sec.~\ref{sec:gmshwrite}. Additionally, text files (with extension \texttt{.out}) are written with ASCII postprocessing data in column format.
+

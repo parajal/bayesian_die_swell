@@ -1,0 +1,5 @@
+set log y
+plot "out" us 2:3 w l
+pause -1
+plot "out" us 2:5 w l, 1e-3*exp(-x/2), 1e-4*x**2*exp(-x/1)
+pause -1

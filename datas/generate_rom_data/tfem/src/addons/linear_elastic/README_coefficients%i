@@ -1,0 +1,256 @@
+Integer coefficients for the element routines in this addon.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%func => func
+  coefficients%vfunc => vfunc
+
+  coefficients%func1(1)%p => dTemp   ! scalar function for temperature change
+
+  coefficients%set_ninti_user => set_ninti_user
+  coefficients%set_Gauss_integration_user => set_Gauss_integration_user
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+List of the coefficients
+------------------------
+
+1   displacement interpolation (base function) 
+    NOTE: for high-order or spectral interpolation also the polynomial order p
+    needs to be set with coefficients%i(51).
+
+2   pressure interpolation (base function) for mixed (u,p) elements.
+    NOTE: if set to 0, standard elements are used (displacements only).
+    NOTE: if set to >0, see the stokes elements for LBB compatible or
+          stabilized elements. 
+    NOTE: for quadrilateral/hexahedron and interpolation=2 (Q2/P1
+          Crouzeix-Raviart) see also coefficients%i(62).
+    NOTE: for interpolation=14, also the polynomial order p needs to be set with
+          coefficients%i(52).
+
+3   For 2D problems (Cartesian, coorsys=0): 0: plane strain, 1: plane stress.
+
+4   0: compressible, 1: incompressible.
+    NOTE: This only applies to 2D plane strain and 3D problems. 
+    NOTE: mixed (u,p) elements are required for the incompressible assumption.
+
+5   0: No thermal expansion. 1: Include thermal expansion.
+
+6   physqdisp: physical quantity number of the displacement
+
+7   physqpress: physical quantity number of the pressure
+
+8   funcnr: function number of the change in temperature (coefficients%i(2)=1)
+
+9   The change in temperature for thermal expansion is
+    0: constant, given by coefficients%r(4)
+    1: given by a scalar function, funcnr=coefficient%i(8)
+       NOTE: scalar function must be assigned to coefficients%func1(1)%p
+    2: given by nodal values in the vector oldvectors%v(1)
+    3: given by Gauss values in the vector per element oldvectors%e(1)
+
+10  numerical integration rule (intrule) for the internal domain integrals
+    of elements.
+
+11  numerical integration rule (intrule) for boundary integrals for curves,
+    surfaces, volumes. For example with intrule=3 (and coefficients%i(40)=0) a
+    three-point Gauss-Legendre integration is used for curves and a 3x3
+    Gauss-Legendre integration is used for surfaces consisting of quads.
+
+12
+
+13  component choice parameter in computing a derivative.
+    See the sources for the possibilities in various derivative routines.
+
+14  vfuncnr for the body force
+    <=0: no body force
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+15  vfuncnr for the traction force
+    <=0: no traction force
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+16  funcnr for the traction force in one the coordinate directions given by
+    direction=coefficients%i(17)
+    <=0: no traction force
+     >0: function number in the call to func
+    NOTE: function func must be assigned to coefficients%func
+
+17  the direction of the traction force for funcnr=coefficients%i(16)
+    1: x-direction
+    2: y-direction
+    3: z-direction
+
+18-22 
+
+23  coordinate system for 2D elements:
+    0: Cartesian planar (x,y)
+    1: Cylindrical (z,r), axisymmetrical
+    Note that for cylindrical/axisymmetrical coordinates we have (z,r),
+    i.e. the first coordinate is the axial coordinate z and the second
+    coordinate is the radial coordinate r. The third coordinate is theta,
+    but is not needed explicitly in an axisymmetrical problem.
+
+24-31 
+
+32  nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(10) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(10) to each subdomain.
+
+33  nsubint: number of subdomains for the numerical integration rule for the
+    boundary integrals:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(11) to the complete element domain. 
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(11) to each subdomain.
+
+34  Number of degrees of freedom in the element in one direction (ndf) of the
+    displacement interpolation is different from the number of nodes in an
+    element.
+    0: no
+    1: yes. This is tricky stuff, but it might work. The problem is
+       isoparametric mapping of the elements, where it is assumed that the
+       shape functions of the mapping are identical to the displacement shape
+       functions. At the moment it is assumed that the first 1:ndf nodes are
+       the nodes of the displacement unknowns, in that order. In this way it is
+       possible to use elements with an additional internal node without a
+       displacement unknown, provided that it has the highest nodal number.
+       A more general mechanism for mixing different shape functions/element
+       types is planned but is not available yet.
+
+35  interpolation for the geometrical shape of elements in an object
+
+36  
+
+37  Numerical integration rule and number of subdomains for the
+    volume integrals of elements:
+     0: the same for all elements as given by coefficients%i(10) and
+        coefficients%i(32)
+     1: given by the vector per element oldvectors%e(1)
+     2: given by user subroutines
+
+38  Layer number. Needs to be specified if the elements are going to be used
+    (build,derive etc) for a single layer only.
+     0: default: all degrees
+     >0: layer number. 
+
+39
+
+40  Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle, hexahedron->pyramid).
+      3: standard Gauss-Legendre (numerical tables)
+    NOTE: this affects all numerical integration of interior and boundary
+    integrals.
+
+41
+
+51  Polynomial order p of the high-order or spectral interpolation for
+    displacement
+
+52  Polynomial order p of the spectral interpolation for pressure
+
+53  pressure projection space interpolation for the stabilized elements
+    NOTE: for high-order or spectral, also the polynomial order p needs to be
+    set with coefficients%i(54).
+
+54  Polynomial order p of the spectral interpolation for the pressure projection
+    space
+
+59  factor for the (optional) diagonal term in the area tensor:
+    0: no diagonal term, thus tensor=\int nn dA (=area tensor).
+    1: 1/ndim, thus tensor=\int (nn - 1/ndim I) dA
+    2: 1, thus tensor=\int (nn - I) dA
+
+62  Mapped or global interpolation for the pressure:
+    0: mapped interpolation
+    1: global interpolation (scaled shape functions)
+    2: global interpolation (unscaled a+b*x+c*y+d*z)
+    This is only for discontinuous pressure elements on quadrilaterals and
+    hexahedra (such a Q2/P1). Only the global interpolation for the pressure
+    (coefficients%i(62)=1) gives optimal convergence rates for general meshes.
+    However, for meshes containing rectangles, parallelograms (and 3D
+    equivalents) and meshes obtained from regular refinement are fine. See the
+    userguide for refs.
+
+63  vfuncnr for exact displacement field (used in linear_elastic_L2_error_norm)
+    <=0: exact displacement field = 0
+     >0: function number in the call to vfunc
+    NOTE: function vfunc must be assigned to coefficients%vfunc
+
+64  funcnr for exact pressure field (used in linear_elastic_L2_error_norm)
+    <=0: exact pressure field = 0
+     >0: function number in the call to func
+    NOTE: function func must be assigned to coefficients%func
+
+65  The normal traction (in element linear_elastic_natboun_normal)
+    0: constant, given by coefficients%r(24)
+    1: given by a vector function, funcnr=coefficient%i(66)
+       NOTE: function func must be assigned to coefficients%func
+
+66  funcnr for normal traction
+
+67  Use a 3D displacement vector in a 2D space:
+      0: no 
+      1: yes
+    NOTE: the definition of the third displacement component depends on the
+          coordinate system used (coefficients%i(23)):
+     * displacement component u_z in the 2D Cartesian system
+       (coefficients%i(23)=0).
+     * circumferential displacement component u_theta in the axisymmetrical
+       case, i.e. add "torsion". (coefficients%i(23)=1).
+    NOTE: Not all elements have been modified to take this into account.
+          An error message is given if incompatible elements are called.  
+    NOTE: Not all add-ons have implemented the third component. Hence, check
+          the elements before using coefficients%i(67)=1.
+
+68--74
+
+75  secondary numerical integration rule (intrule2) for the internal domain
+    integrals of elements. This is only relevant for prisms and pyramids
+
+76  secondary numerical integration rule (intrule2) for boundary integrals.
+    This is only relevant for volumes consisting of prisms or pyramids.
+
+77  Specifies how the integration rules must be set:
+    0: default, i.e. direcly with the value in coefficients.
+    1: by specifying the minimal polynomial order that the rule must be able
+       to integrate exactly.
+    Note, that the value of coefficients%i(77) is overruled by setting
+    SET_GAUSS_BY_ORDER = .true. in the module limits_m.
+
+78--100 Reserved for future use. Set to zero for future compatibility.
+

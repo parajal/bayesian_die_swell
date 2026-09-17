@@ -1,0 +1,45 @@
+Real coefficients for the element routines in this addon.
+
+-----------------------------------
+
+  1-100: all relevant real parameters from the stokes & viscoelastic add-on
+101-150: reserved for diffuse_interface add-on
+151-200: reserved for inertia add-on
+201-250: reserved for generalized Stokes add-on
+251-300: reserved for compressible_fluid add-on
+
+
+301  deltat: timestep 
+
+302  beta: SUPG factor
+
+303  a: coefficient in damping function nr 2 (coefficients%i(366)=2)
+
+304  alpha: coefficient in damping function nr 3 (PSM, coefficients%i(366)=3)
+
+305  beta: coefficient in damping function nr 3 (PSM, coefficients%i(366)=3)
+
+306  Uglobal: velocity scaling used in SUPG for coefficients%i(368)==1
+     (check for zero velocity).
+
+307-350 reserved for future use
+
+-----------------------------------
+
+Real arrays in ra:
+
+  1: size N+1 (N=coefficients%i(353)), where the N+1 age points tau_j, 0=1,...,N
+     need to be given (the array is coefficients%ra(1)%a).
+
+  2: size >=nummodes=coefficients%i(365), where the moduli G_i are given by 
+        G_i = coefficients%ra(2)%a(i), i=1,...,n
+
+  3: size >=nummodes=coefficients%i(365), where the relaxation times lambda_i
+     are given by 
+        lambda_i = coefficients%ra(3)%a(i), i=1,...,n
+
+  4: size >=nummodes=coefficients%i(365), where the power-law exponents n_i are
+     given by 
+        n_i = coefficients%ra(4)%a(i), i=1,...,n
+     NOTE: only needed for spectrum=coefficients%i(364)=2 and only for the
+           power-law (Carreau) modes.

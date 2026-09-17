@@ -1,0 +1,582 @@
+% !TEX root = userguide.tex
+
+\def\headdate{4th July 2023}
+
+\section{The convection-diffusion-reaction equation}
+
+In this section some examples using the convection-diffusion-reaction
+equation will be given. The examples will be split into a one-dimensional
+description and a general one. The one-dimensional description is here
+basically for educational reasons.
+
+\subsection{Weak form of the steady convection-diffusion-reaction equation
+ in 1D}
+\label{sec:weakform1dconvdiff}
+
+We consider the steady convection-diffusion-reaction equation on an interval
+$\Omega=(a,b)$:
+\begin{equation}
+   u \deriv c x - \deriv{}x(\alpha\deriv{c}x) + \gamma c = f\text{ on }\Omega
+\end{equation}
+where $u$, $\alpha>0$ and $\gamma$ are constants and $f$ is a given function of
+$x$.
+
+The boundary conditions are
+\begin{alignat*}{2}
+   c&=c_a,\quad&&\text{ at }x=a\quad(\Gamma_D) \\
+   -\alpha\deriv cx&=h_b \quad&&\text{ at }x=b\quad(\Gamma_N)
+\end{alignat*}
+
+The weak form is obtained by multiplying with a test function $v$ and
+integrate:
+\begin{equation}
+   \big(v,u \deriv c x - \deriv{}x(\alpha\deriv{c}x) + \gamma c - f\big)\qquad
+  \text{ for all }v
+\label{eq:weak1}
+\end{equation}
+Partial integration of the diffusion term and inserting the boundary condition
+at $x=b$ we get:
+Find $c\in S$ such that
+\begin{equation}
+   (\deriv vx,\alpha\deriv cx)+(v,u\deriv cx)+(v,\gamma c)
+        +v(b)h_b=(v,f)\qquad \text{for all }v\in V
+\end{equation}
+where $S$ and $V$ are appropriate spaces.
+
+The weak form can be used to obtain an approximate solution using the
+Galerkin \fem\ technique. For this we define approximating 
+spaces $S_h$ and $V_h$, or in other words, we divide the region into elements:
+\begin{equation}
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\end{equation}
+and interpolate $c$ and $v$ by
+polynomials on each element (approximation denoted by $c_h$ and $v_h$):
+\begin{align*}
+    c_h(x)&=\tsum_i c_i\phi_i(x)=\col\phi^T(x)\col c
+\\
+    v_h(x)&=\tsum_i v_i\phi_i(x)=\col\phi^T(x)\col v
+\end{align*}
+where $\col\phi(x)$ are global shape functions.  Substituting into the
+weak form gives:
+Find $c_h\in S_h$ such that
+\begin{equation}
+   (\deriv {v_h}x,\alpha\deriv {c_h}x)+(v_h,u\deriv {c_h}x)+
+           (v_h,\gamma{c_h})+v_h(b)h_b
+      = (v_h,f)\qquad \text{for all }v_h\in V_h
+\end{equation}
+or
+\[
+ \col v^T\mat K\col c=
+        \col v^T\col f \quad\text{for all }\col v
+\]
+or
+\[
+ \mat K\col c= \col f
+\]
+where the `stiffness matrix' $\mat K$ and
+the right-hand side $\col f$ are given by
+\begin{alignat*}{2}
+ \mat K&=(\deriv{\col\phi}{x},\alpha\deriv{\col\phi^T}{x})\qquad\text{  or}&
+   \qquad K_{ij}&=(\deriv{\phi_i}{x}, \alpha\deriv{\phi_j}{x}) \\
+      &\quad+(\col\phi,u\deriv{\col\phi^T}{x})  &
+       &\quad+(\phi_i,u\deriv{\phi_j}{x})\\
+      &\quad+(\col\phi,\gamma\col\phi^T)  &
+       &\quad+(\phi_i,\gamma\phi_j)\\[2ex]
+\col f&= (\col\phi,f)-h_b\col\phi(b) &
+f_i&= (\phi_i,f)-h_b\phi_i(b)
+\end{alignat*}
+where the left column is in matrix notation and the right column in index
+notation.
+
+If convection dominates (P\'eclet number $\mathrm{Pe}=\dfrac{|u|L}{\alpha}\gg1$)
+and the mesh is too coarse to resolve large gradients in the solution, the
+Galerkin numerical solution can show `global wiggles'.
+If mesh refinement is not an
+option the so-called `upwind' schemes can help. The streamline upwind
+Petrov-Galerkin (SUPG) \cite{Brooks82} is such a scheme and consists of
+using a test function
+$v+s\dfrac{\beta h}2 \deriv vx$ instead of $v$ in Eq.~\eqref{eq:weak1}:
+\begin{equation}
+   \big(v+s\dfrac{\beta h}2 \deriv vx,u \deriv c x - \deriv{}x(\alpha\deriv{c}x)
++ \gamma c - f\big)\qquad
+  \text{ for all }v
+\end{equation}
+where $s$ is the sign\footnote{Strictly speaking, when derived from the 3D SUPG formulation, $s=u/|u|$, which in 1D  is the equal to sign of $u$.} of $u$, $h$ is the size of an element and the factor $\beta\geq0$ should be chosen
+``optimally''. It should be noted that the additional terms must be interpreted
+element wise, so that
+\begin{itemize}
+   \item $h$ and $\beta$ can vary from element to element,
+   \item the multiplication of the test function with the second-order term can
+be interpreted, i.e.
+\[
+   \big(v+s\dfrac{\beta h}2 \deriv vx, - \deriv{}x(\alpha\deriv{c}x)\big)=
+   \big(v, - \deriv{}x(\alpha\deriv{c}x)\big) + \sum_e
+   \big(s\dfrac{\beta h}2 \deriv vx, -\deriv{}x(\alpha\deriv{c}x)\big)
+\]
+The first term can be treated by partial integration like in the Galerkin
+scheme giving the usual natural boundary conditions. Note, that the last term
+is zero for linear elements and $\alpha$ is constant.
+\end{itemize}
+So the weak form for SUPG becomes:
+Find $c\in S$ such that
+\begin{multline}
+   (\deriv vx,\alpha\deriv cx)-
+ \sum_e \big(s\dfrac{\beta h}2 \deriv vx, \deriv{}x(\alpha\deriv{c}x)\big)
++(v+s\dfrac{\beta h}2 \deriv vx,u\deriv cx+\gamma c)
+        +v(b)h_b\\
+  =(v+s\dfrac{\beta h}2 \deriv vx,f)\qquad \text{for all }v\in V
+\end{multline}
+where $S$ and $V$ are appropriate spaces.
+
+The parameter $\beta$ depends on the so-called mesh P\'eclet number 
+$\mathrm{Pe}_h=\dfrac{|u|h}{2\alpha}$.
+For accuracy, $\beta$ should become small 
+and tend to zero for $\mathrm{Pe}_h<1$ (tend to the Galerkin method). For
+example 
+\[
+    \beta=\coth(\mathrm{Pe}_h)-\frac1{\mathrm{Pe}_h}
+\]
+which gives exact nodal values if $f$ is a constant, or
+\[
+   \beta=
+\begin{cases}
+    0  & \text{ for }\mathrm{Pe}_h\leq1 \\
+    1-\dfrac1{\mathrm{Pe}_h} & \text{ for }\mathrm{Pe}_h>1
+\end{cases}
+\]
+which keeps the `artificial' mesh P\'eclet number equal to 1 for
+$\mathrm{Pe}_h>1$ in case of the artificial diffusion method (SU, see below).
+
+The streamline upwind (SU) method is an inconsistent method and is only
+mentioned here for comparison. It is constructed by applying
+the upwind biased test function to
+the convection term only:
+\begin{equation}
+   (v+s\dfrac{\beta h}2 \deriv vx,u \deriv c x) +\big(v, -
+\deriv{}x(\alpha\deriv{c}x) + \gamma c - f\big)\qquad
+  \text{ for all }v
+\end{equation}
+It should not be used, because the improper weighting leads to large errors.
+Note, however that for $f=0$, $\gamma=0$ and and in case of
+linear elements the SUPG and SU
+method are identical.
+
+\subsection{Examples of the steady 1D convection-diffusion-reaction}
+\label{sec:examples1dconvdiff}
+
+These examples solves the 1D convection-diffusion-reaction equation on $(0,L)$
+with constant coefficients for various source terms. 
+In the first example (\texttt{convdiff1.f90}), the three methods Galerkin,
+SUPG and SU, using standard \fem, can be used for comparison and generating textbook examples.
+In the second example (\texttt{convdiff2.f90}), the Galerkin method is used together
+with spectral elements.
+
+The example files can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample convection\_diffusion\_1d}
+\end{quote}
+The examples are self-contained and do not use add-on element routines.
+Therefore it can be used to study a simple complete example without bothering
+about complicated add-ons.
+
+\subsection{Weak form of the convection-diffusion-reaction
+equation. Galerkin \fem}
+\label{sec:diffusionweak}
+
+We consider the convection-diffusion-reaction equation in a region $\Omega$:
+\begin{equation}
+    \gamma(\pderiv{c}t + \vek u\cdot\nabla c) -\nabla \cdot( \alpha \nabla c)
++ \beta c = f\text{ on }\Omega
+ \label{eq:convectiondiffusion}
+\end{equation}
+where the coefficient $\alpha$ is either a scalar or a tensor. All the
+coefficients ($\alpha$, $\beta$, $\gamma$, $\vek u$ and $f$) may vary in
+space and time and may also depend on other quantities.
+For $\gamma=\beta=0$, this equation reduces to
+the (steady) diffusion equation.
+If in addition $\alpha=1$ the equation reduces to
+the Poisson equation (see Sec.~\ref{sec:poissonweak}).
+The boundary conditions are
+\begin{gather}
+    c = c_D\text{ on }\Gamma_D\\
+    -\vec n\cdot(\alpha\nabla c)=h_{\text{N}}\text{ on }\Gamma_{\text{N}}
+\end{gather}
+where the boundary $\Gamma=\Gamma_D\cup\Gamma_{\text{N}}$ has been split into a
+Dirichlet and a Neumann part.
+
+The weak form can be obtained by multiplying Eq.~\eqref{eq:convectiondiffusion}
+with a test function $v$:
+\[
+   \big(v,\gamma(\pderiv{c}t + \vek u\cdot\nabla c)
+     -\nabla\cdot( \alpha \nabla c)+ \beta c-f\big)=0\qquad\text{for all }v
+\]
+where the standard inner product on $L^2(\Omega)$ is
+\[
+    (a,b)=\int_\Omega ab \D x
+\]
+With
+\[
+   v\nabla\cdot\big(\alpha\nabla c\big)=\nabla\cdot\big(v\alpha\nabla c)\big)
+-\nabla v\cdot\alpha\nabla c
+\]
+and the divergence theorem (Gauss):
+\[
+    \int_\Omega\nabla\cdot\vek a\D x=\int_\Gamma\vek n\cdot\vek a\D s
+\]
+we get the weak form: Find $c\in S$ such that
+\begin{equation}
+   (v,\gamma\pderiv{c}t)+(v,\gamma \vek u\cdot\nabla c)
+   +(\nabla v,\alpha\nabla c) + (v,\beta c) +
+             (v,h_{\text{N}})_{\Gamma_{\text{N}}}=(v,f)
+   \label{eq:weakformdiffusion}
+\end{equation}
+for all $v\in V$, where $S$ and $V$ are suitable functional spaces for $c$ and
+$v$, respectively. Notes:
+\begin{itemize}
+  \itemsep -1ex
+   \item $v=0$ on $\Gamma_D$, $c=c_D$ on $\Gamma_D$
+   \item we have silently introduced:
+\begin{align*}
+   (\vek a, \vek b)&=\int_\Omega\vek a\cdot\vek b\D x\\
+   (a,b)_{\Gamma}&=\int_\Gamma a b\D s
+\end{align*}
+\end{itemize}
+
+The weak form can be used to obtain an approximate solution using the Galerkin \fem\
+technique. For this we define approximating 
+spaces $S_h$ and $V_h$, or in other words, we divide the region into elements:
+\[
+\Omega=\cup_e\Omega_e, \quad\Omega_{e}\cap\Omega_{f}=\emptyset\quad
+   \text{for }e\neq f
+\]
+and interpolate $c$ and $v$ by
+polynomials on each element (approximation denoted by $c_h$ and $v_h$):
+\begin{align*}
+    c_h(\vek x,t)&=\tsum_i c_i(t)\phi_i(\vek x)=\col\phi^T(\vek x)\col c(t)
+\\
+    v_h(\vek x,t)&=\tsum_i v_i(t)\phi_i(\vek x)=\col\phi^T(\vek x)\col v(t)
+\end{align*}
+where $\col\phi(\vek x)$ are global shape functions.  Substituting into the
+weak form leads to
+\[
+ \col v^T(\mat M\dot{\col c}+\mat K\col c)=
+        \col v^T\col f \quad\text{for all }\col v
+\]
+or
+\begin{equation}
+ \mat M\dot{\col c}+\mat K\col c= \col f
+ \label{eq:convdiffdiscr}
+\end{equation}
+where the `mass matrix' $\mat M$,
+the `stiffness matrix' $\mat K$ and
+the right-hand side $\col f$ are given by
+\begin{align*}
+ \mat M&=(\col\phi,\gamma\col\phi^T)\\
+\mat K&=(\col\phi,\gamma\vek u\cdot\nabla\col\phi^T)+
+(\nabla{\col\phi},\alpha\nabla{\col\phi^T})+(\col\phi,\beta\col\phi^T)\\
+\col f&= (\col\phi,f)-(\col\phi,h_{\text{N}})_{\Gamma_{\text{N}}}
+\end{align*}
+or in index notation
+\begin{align*}
+M_{ij}&=(\phi_i, \gamma\phi_j) \\
+K_{ij}&=(\phi_i,\gamma\vek u\cdot\nabla\phi_j)
++(\nabla{\phi_i}, \alpha\nabla{\phi_j})+(\phi_i, \beta\phi_j) \\
+f_i&= (\phi_i,f)-(\phi_i,h_{\text{N}})_{\Gamma_{\text{N}}}
+\end{align*}
+
+The element routines have been designed such that many standard time
+discretization schemes for \eqref{eq:convdiffdiscr}
+can be programmed in an easy way.
+A first class of time discretization methods is based on backwards differencing.
+The most simple method is the implicit Euler (IE) or backward Euler 
+scheme:
+\[
+ \mat M\frac{\col c^{n+1}-\col c^n}{\Delta t}+\mat K\col c^{n+1}= \col f^{n+1}
+\]
+where the coefficient matrices $\mat M$ and $\mat K$ can be evaluated at either
+the new $t^{n+1}$ or the old $t^n$ time.
+It is first-order accurate ($\mathcal{O}(\Delta t)$), but very stable. A
+natural extension is using second-order backwards
+differencing (BDF2) (the second-order Gear scheme, see \cite{Hulsen96} for
+further references):
+\[
+ \mat M^{n+1}\frac{\frac32\col c^{n+1}-2\col c^n+\frac12\col c^{n-1}}{\Delta t}+
+\mat K^{n+1}\col c^{n+1}= \col f^{n+1}
+\]
+This is a multi-step scheme. It needs to be started, for example by the implicit Euler method.
+
+A simple one-step second-order method is based on the trapezoidal rule. 
+The fully implicit trapezoidal rule is also called Crank-Nicolson (CN) or second-order Adams-Moulton (AM2):
+\[
+ \mat M\frac{\col c^{n+1}-\col{c}^n}{\Delta t}+
+\frac12(\mat K^{n+1}\col c^{n+1}+
+\mat K^{n}\col c^{n})=\frac12( \col f^{n+1}+ \col f^{n})
+\]
+where the method has been defined using a constant mass matrix $\mat M$.
+Although the CN-method has a small error coefficient (smaller than BDF2),
+in practice large
+oscillating errors can be present due to the bad damping properties
+(amplification factor goes to -1 for large steps). A possible way of avoiding
+these oscillations is starting with either an implicit Euler scheme
+or a ``theta-scheme''
+\[
+ \mat M\frac{\col c^{n+1}-\col{c}^n}{\Delta t}+
+\theta\mat K^{n+1}\col c^{n+1}+
+(1-\theta)\mat K^{n}\col c^{n}=\theta\col f^{n+1}+ (1-\theta) \col f^{n}
+\]
+with $\theta\in[1,\frac12)$,
+for several time steps to damp the oscillations.
+
+\subsection{A steady diffusion problem on a unit square with Dirichlet
+            and Neumann boundary conditions. Varying diffusion coefficient and
+            (optionally) a varying Gauss rule}
+
+\label{sec:diffusion1}
+
+We consider the steady
+diffusion problem\footnote{The example, and other examples derived from it,
+is rather artificial. Its purpose is to show the use of the 
+\texttt{convection\_diffusion\_m} module.}.
+ on a unit square, similar to the Poisson
+problem in Sec.~\ref{sec:poisson2}. We use the same function for $f$ on the
+square domain and $\plderiv{c}{n}$ on the
+curve \texttt{C2} as in the Poisson problem. However, now the diffusion
+coefficient is not constant but given by the function
+\begin{equation}
+     \alpha=\tfrac32+\cos(\pi x)\cos(\pi y)
+\end{equation}
+We don't know the exact solution for $c$, but that is not important here.
+
+The sources are
+in the files \texttt{diffusion1.f90}, \texttt{diffusion2.f90} and
+\texttt{diffusion3.f90}.
+ and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample diffusion}
+\end{quote}
+In \texttt{diffusion1.f90} the problem can be solved by
+either directly calling a function routine for $\alpha$ in the Gauss points
+ on element level or by filling a vector (defined in the nodes) containing
+the value of $\alpha$ using the same function. In the latter case the Gauss
+point values of $\alpha$ are determined by using the same shape function as
+used for $u$.
+In \texttt{diffusion2.f90} the problem is solved by filling a vector defined
+per element of type \texttt{elvector\_t} with the Gauss point values of
+$\alpha$.
+In \texttt{diffusion3.f90} the problem is also
+solved by filling a vector defined
+per element of type \texttt{elvector\_t} with the Gauss point values of
+$\alpha$. However, in addition, here it is shown how to use a varying
+Gauss integration rule, i.e.\ the rule can be different for each element.
+
+\subsection{A time-dependent diffusion problem on a unit square with Dirichlet
+            and Neumann boundary conditions. Varying diffusion coefficient.
+            Second-order Gear time-discretization}
+
+\label{sec:diffusion2}
+
+We consider the same 
+diffusion problem on a unit square of Sec.~\ref{sec:diffusion1} as given by
+the source code \texttt{diffusion1.f90}, however
+now a time-dependent problem is solved with $\gamma=1$.
+The source is \texttt{diffusion4.f90}.
+The time-discretization is second-order Gear.
+
+\subsection{A steady convection-diffusion problem on a unit square with
+            Dirichlet and Neumann boundary conditions.
+            Varying diffusion and velocity coefficient.
+            Scalar to tensor diffusion coefficient.}
+
+\label{sec:convectiondiffusion1}
+
+We consider the same 
+diffusion problem on a unit square of Sec.~\ref{sec:diffusion1} as given by
+the source code \texttt{diffusion1.f90}, however
+now a problem is extended with a convection term with varying velocity
+coefficient.
+
+The sources are
+in the files \texttt{convection\_diffusion1.f90}
+and \texttt{convection\_diffusion2.f90} 
+ and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample convection\_diffusion}
+\end{quote}
+In \texttt{convection\_diffusion1.f90} the diffusion coefficient is a scalar
+and in \texttt{convection\_diffusion2.f90} it is a tensor.
+
+\subsection{A time-dependent convection-diffusion problem on a unit square with
+            Dirichlet and Neumann boundary conditions.
+            Varying diffusion and velocity coefficient.
+            Varying $\beta$ coefficient.
+            Second-order Gear (BDF2) or Crank-Nicolson (CN)
+            time-discretization}
+
+\label{sec:convectiondiffusion2}
+
+We consider the same 
+convection-diffusion problem on a unit square
+of Sec.~\ref{sec:convectiondiffusion1} as given by
+the source code \texttt{convection\_diffusion1.f90}, however
+now a time-dependent problem is solved with $\gamma=1$.
+
+The sources are
+in the files \texttt{convection\_diffusion3.f90} (BDF2),
+\texttt{convection\_diffusion4.f90} (BDF2, $\beta$-coefficient),
+\texttt{convection\_diffusion5.f90} (CN, $\beta$-coefficient) and
+\texttt{convection\_diffusion5.f90} (CN, $\beta$-coefficient, tensor $\alpha$) 
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample convection\_diffusion}
+\end{quote}
+The examples using CN are far from optimal and show oscillations in time.
+
+\subsection{Steady 1D convection-diffusion equation using spectral elements}
+\label{sec:convdiff1D}
+This example is similar to the example \texttt{convdiff2.f90}
+in Sec.~\ref{sec:examples1dconvdiff}, but now using the standard elements in the add-on
+\texttt{convection\_diffusion}.
+The source is in the file \texttt{convection\_diffusion7.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample convection\_diffusion}
+\end{quote}
+
+\subsection{A time-dependent diffusion problem with \texttt{vtk}-output}
+
+This example solves a time-dependent temperature problem in a cylindrical rod.
+This problem solves the example in Sec.~3.2.2 of Dantzig \& Tucker \cite{Dantzig2001}:
+A solid cylindrical rod of radius $R$ and length $L$, at an initial
+temperature $T_1$, is quenched in a fluid at a lower temperature $T_0$.
+Second-order implicit Gear discretization. First step: Euler implicit.
+Half the domain is solved, due to symmetry.
+Output of \texttt{vtk}-files as a function of time.
+
+The source is in the file \texttt{diffusion9.f90}
+and can be obtained by typing at the
+command line:
+\begin{quote}
+   \texttt{getexample diffusion}
+\end{quote}
+
+\subsection{Stabilization of the convection-diffusion-reaction equation using SUPG}
+\label{sec:convdiffsupg}
+
+We consider the following generic convection-diffusion-reaction equation for 
+$c(\vek x, t)$
+\begin{equation}
+  \gamma \left( \pderiv{c}{t} + \vek u \cdot \nabla c \right) - \nabla \cdot 
+  (\alpha \nabla c) + \beta c = f, \label{eq:conv_diff}
+\end{equation}
+where $\gamma$, $\alpha$ and $\beta$ are constant coefficients and $f$ is a 
+source 
+term, which can be position and time dependent (i.e.~$f=f(\vek x,t)$). The 
+weak form of Eq.~\eqref{eq:conv_diff} is given by: find $c$ such that
+\begin{equation}
+  \gamma (v, \pderiv{c}{t}+\vek u \cdot \nabla c) + \alpha (\nabla v, \nabla 
+  c)+\beta(v,c)-\alpha (v, \vek n \cdot \nabla c)_\Gamma = (v, f ) 
+  \label{eq:conv_diff_weak}
+\end{equation}
+for all admissible test functions $v$. A flux boundary condition on 
+$\Gamma$ (with unit normal $\vek n$) can be substituted directly into equation 
+\eqref{eq:conv_diff_weak}, but for now we will assume this term to be zero.
+To integrate \eqref{eq:conv_diff_weak} in time, we assume that the velocity 
+$\vek u$ and 
+source term $f$ at some time $t_{n+1}$ are known. Using a 
+first-order backward
+Euler scheme for Eq.~\eqref{eq:conv_diff_weak} yields:
+\begin{equation}
+  \gamma (v, \frac{c_{n+1}-c_n}{\Delta t}+\vek u \cdot \nabla c_{n+1}) + \alpha 
+  (\nabla v, \nabla c_{n+1}) +\beta(v,c_{n+1})= (v, f ) 
+  \label{eq:conv_diff_euler}
+\end{equation}
+whereas a second-order Gear scheme (BDF2) yields
+\begin{equation}
+  \gamma (v, \frac{\frac{3}{2}c_{n+1}-2c_n+\frac{1}{2}c_{n-1}}{\Delta t}+\vek u 
+  \cdot \nabla c_{n+1}) + \alpha (\nabla v, \nabla c_{n+1}) +\beta(v,c_{n+1})= (v, f ). 
+  \label{eq:conv_diff_gear}
+\end{equation}
+
+The ratio between the convection and diffusion terms is expressed in the 
+P\'{e}clet number $\mathrm{Pe}$. For high $\mathrm{Pe}$ (transport is convection-dominated), 
+which 
+might lead to ``wiggles'' if the gradients in the solution are not properly 
+resolved. Streamline upwind Petrov-Galerkin (SUPG) can help in reducing these wiggles, 
+as is explained in Section \ref{sec:weakform1dconvdiff}. Using SUPG, 
+Eq.~\eqref{eq:conv_diff_weak} is written as: find $c$ such that
+\begin{multline}
+  \gamma (v+\tau \vek u \cdot \nabla v, \pderiv{c}{t} + \vek u \cdot 
+  \nabla c + \beta c)  + \alpha 
+  (\nabla v, \nabla c) - \sum_\text{e} (\tau \vek u \cdot \nabla v,\nabla 
+  \cdot (\alpha \nabla c)) \\
+  = (v+\tau \vek u \cdot \nabla v, f ) 
+  \label{eq:conv_diff_supg}
+\end{multline}
+for all admissible test functions $s$. Here $\tau = \beta_\textsc{supg} h / (2U)$, where $h$ 
+is the element size in the direction 
+of the velocity and $U$ is the (local) characteristic velocity. Details on how to 
+compute $h$ and $U$ can be found in Appendix \ref{chap:tausupg}. Note, that the 
+last term on the left-hand side still contains second-order derivatives of $c$, 
+but these will be zero if linear base functions (on a line, triangle or tetrahedron) are used. 
+For other base functions, this term will simply be ignored. The value of $\beta_\textsc{supg}$ 
+varies between zero and one, and can be made dependent on the local (mesh) 
+P\'{e}clet number, which is defined as:
+\begin{equation}
+  \mathrm{Pe}_h = \frac{\gamma U h}{2\alpha}.\label{eq:Peh}
+\end{equation}
+The value of $\beta_\textsc{supg}$ should approach zero for small 
+$\mathrm{Pe}_h$. For linear base functions $\beta_\textsc{supg}$ should approach one for large values of 
+$\mathrm{Pe}_h$. 
+
+\subsection{A 2D unsteady convection problem with SUPG stabilization}
+An example
+of SUPG in a 2D unsteady convection problem is available in the example
+\texttt{convection\_diffusion\_supg1.f90} and can be obtained  
+by typing at the command line:
+\begin{quote}
+   \texttt{getexample convection\_diffusion\_supg}
+\end{quote}
+
+\subsection{Multiple coupled convection equations with SUPG stabilization}
+
+Problems in crystallization can be described by multiple (coupled) equations of the form of 
+Eq.~\eqref{eq:conv_diff} but without the diffusion term, e.g.~:
+\begin{equation}
+  \pderiv{c_1}{t} + \vek u \cdot \nabla c_1  =  0, \qquad
+  \pderiv{c_2}{t} + \vek u \cdot \nabla c_2 =  c_1.
+  \label{eq:conv_coupled}
+\end{equation}  
+The approach taken here is to solve these equations decoupled, i.e.~first we 
+solve for $c_1$ and then we solve for $c_2$. Dependencies can be taken into 
+account by adding the updated solution to 
+the right-hand side of the consequent equations (e.g.~$(c_1)_{n+1}$ is solved 
+first and is then added to the right hand side to find $(c_2)_{n+1}$). This 
+approach has 
+the advantage that updated solutions are used in the solving procedure, at the 
+expensive of additional assembly steps of the right-hand side. A second approach
+is to assemble the right-hand side using a prediction for $c_1$, 
+i.e.~$(\hat{c}_1)_{n+1}= (\hat{c}_1)_{n}$ for first-order, or 
+$(\hat{c}_1)_{n+1}= 2(\hat{c}_1)_{n}-(\hat{c}_1)_{n-1}$ for second-order time 
+intergration). With this approach, the system can be assembled in one go, saving
+time in the assembly.  Note that if $\vek u$ is constant, the system matrix for 
+these equations does not change, thus the LU-decomposition only has be 
+computed once and can be re-used. If $\vek u$ varies in time, the 
+LU-decomposition can still be re-used within a time step. Note, that the 
+Eq.~\eqref{eq:conv_coupled} is hyperbolic, and SUPG can be used for 
+stabilization. In the examples \texttt{convection\_diffusion\_supg2.f90} and  
+\texttt{convection\_diffusion\_supg3.f90}, the two equations as shown in 
+Eq.~\eqref{eq:conv_coupled} are solved using a manufactured solution. In the
+former example, the updated solution is used to fill the right-hand side, 
+whereas in the latter example, the right hand side is filled using a prediction
+for $c_1$. The examples can be obtained by typing at the command line:
+\begin{quote}
+   \texttt{getexample convection\_diffusion\_supg}
+\end{quote}
+

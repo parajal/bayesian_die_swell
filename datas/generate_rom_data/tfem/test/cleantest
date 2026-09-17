@@ -1,0 +1,2 @@
+make clean
+rm -f out out2 *.out *.res *.dif *.fig testresult

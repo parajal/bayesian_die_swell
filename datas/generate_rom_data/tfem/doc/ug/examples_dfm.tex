@@ -1,0 +1,536 @@
+% !TEX root = userguide.tex
+
+\def\headdate{15th May 2017}
+
+\section{Viscoelastic fluid flow with integral constitutive models: the deformation fields method}
+\label{sec:dfm}
+
+\subsection{Basic theory of deformation fields}
+
+The stress tensor in a material point of a ``simple material''
+is determined by the local deformation history of that material point
+\cite{TruesdellC.1966}:
+\begin{equation}
+   \ten\sigma(t) = \ten{\mathcal{H}}[\ten F_{t'}(t); t'\leq t]
+\end{equation}
+where $\ten{\mathcal{H}}$ is a functional and $\ten F_{t'}(t)$ is the deformation gradient at the current time $t$
+with respect to the reference time $t'$. If we are able to determine the deformation history, i.e.\ $\ten F_{t'}(t)$ for $t'\leq t$, \emph{any} constitutive model obeying locality can be used. The \emph{deformation fields method} has been developed to do just that, i.e.\ determine $\ten F_{t'}(t)$ for $t'\leq t$, in particular in an Eulerian frame. In this section we discuss the second generation deformation fields method, as introduced in \cite{Hulsen01}.
+
+Assume that at $t=0$ the flow starts and there has been no deformation of the material before that.
+One way of obtaining $\ten F_{t'}(t)$ for $t'\leq t$ is defining a (large) number of discrete reference times $t'_i$ (both for $t<0$ and $t>0$)
+%, $i=1,\dots N$
+and solve the following equation
+\begin{equation}
+  \dot {\ten F}=\ten L\cdot \ten F, \quad \ten F(t=t'_i)=\ten I\label{eq:Fevolution}
+\end{equation}
+forward in time for all discrete reference times $t'_i\le t$, i.e.\ a discrete time point `kicks in' as soon as time $t$ passes the time point.  In an Eulerian frame, this equation is written as follows,
+\begin{equation}
+  \pderiv{\ten F}t+\vek u\cdot\nabla\ten F=\ten L\cdot \ten F, \quad \ten F(t=t'_i)=\ten I\label{eq:FevolutionEuler}
+\end{equation}
+The solutions for $\ten F_{t'_i}(t,\vek x)$ are called \emph{deformation fields}.
+There is a problem with this approach: the number of `active fields', i.e.\ the fields with $t'_i\le t$ keeps increasing as time increases.
+This can be overcome by removing the `oldest field' as a new field becomes active, keeping the number of active fields constant.
+%the fixed reference times $t'_i$  become `old and less relevant' for the stress buildup in a viscoelastic fluid after a while. Therefore, new reference points $t'_i$ and corresponding fields $\ten F_{t'_i}(t,\vek x)$ need to be created, which start out as the identity tensor $\ten I$. This needs to be done every time step. If the number of fields is limited, also old fields need to be removed. 
+This is basically the first generation of the deformation fields method as introduced in \cite{Peters2000b}. A drawback of this approach
+in contrast to differential models is that the fields are unsteady for steady flows, which leads to additional time discretisation errors. Also the labelling of the fields by the reference time leads to a difficult bookkeeping, including the removal and creation of fields at each time step. As a result, also the distribution of fields over the history is not very flexible and basically coupled with the time step $\Delta t$.
+
+The second generation deformation fields removes much of the drawbacks of the first generation by labeling the deformation gradient tensor not by an absolute (fixed) reference time $t'$, but by the reference time relative to the current time, i.e.\ by the age $\tau=t-t'$: $\ten F(t,\tau,\vek x)$. Since Eq.~\eqref{eq:Fevolution} is still valid, we need to find the expression for the material derivative for fixed absolute reference $t'$. For that, we write:
+\begin{equation}
+  \dot {\ten F}=\pderiv{\ten F}t+\pderiv{\ten F}\tau\pderiv{\tau}t\Big|_{t'}+
+    \pderiv{\vek x}t\Big|_{\vek X}\cdot\nabla F
+\end{equation}
+where $\vek X$ is the label of a material particle. Since 
+\[
+\pderiv{\vek x}t\Big|_{\vek X}=\vek u, \quad \pderiv{\tau}t|_{t'}=\pderiv{(t-t')}t|_{t'}=1
+\]
+we get
+\begin{equation}
+  \dot {\ten F}=\pderiv{\ten F}t+\pderiv{\ten F}\tau+\vek u\cdot\nabla\ten F
+\end{equation}
+and instead of Eq.~\eqref{eq:FevolutionEuler}
+\begin{equation}
+  \pderiv{\ten F}t+\pderiv{\ten F}\tau+\vek u\cdot\nabla\ten F=\ten L\cdot \ten F\label{eq:Fevolutiontau}
+\end{equation}
+with boundary condition
+\begin{equation}
+  \ten F(t,\tau=0,\vek x)=\ten I
+\end{equation}
+and initial condition
+\begin{equation}
+  \ten F(t=0,\tau,\vek x)=\ten I
+\end{equation}
+In principal the age axis is unlimited, i.e.\ $\tau\in[0,\infty)$. However, in practise we are dealing with ``fading memory fluids'' and the age axis is taken to be finite i.e.\ $\tau\in[0,\tau_\text{c}]$.
+
+Notes:
+\begin{enumerate}
+   \item We have obtained a \emph{4D hyperbolic equation} in 3D space. 
+   \item The convection speed in the $\tau$-axis is 1, which gives opportunities for quickly 
+         solving the discretized system in $\tau$-direction like a `forward in time'-axis.
+  \item We have not yet discretized the $\tau$-axis.
+  \item For fluids, the Finger tensor $\ten B=\ten F\cdot\ten F^T$ is needed and in \cite{Peters2000b} and 
+  \cite{Hulsen01} the symmetric Finger tensor $\ten B$ is solved directly without computing the non-symmetric
+   $\ten F$. In 3D this reduces the number of components from 9 to 6, saving CPU time.
+      However, we believe that solving for $\ten F$ will give stability similar to the BCF-method
+      without a need for the log-conformation method \cite{Mangoubi2009}. Well worth the extra CPU time.
+\end{enumerate}
+
+\subsection{Weak formulation and discretization of deformation fields}
+
+We are going to use the finite element method to discretize Eq.~\eqref{eq:Fevolutiontau} in both the $\tau$-direction and in 3D real space. For that, we write the weak formulation as follows: find $\ten F(t,\tau,\vek x)$ such that
+\begin{equation}
+    \int_0^{\tau_\text{c}} ( \ten H,\pderiv{\ten F}t+
+           \pderiv{\ten F}\tau+\vek u\cdot\nabla\ten F-\ten L\cdot \ten F)\,d\tau=0 
+\end{equation}
+for all test functions $\ten H(t,\tau,\vek x)$. Here, $(\cdot,\cdot)$ is the usual inner product for tensors in real 3D space.
+
+Although quite general four-dimensional elements could be used for discretization, we will not do that. First, we divide the $\tau$-axis into $N$ intervals
+ $[\tau_k,\tau_{k+1}]$, $k=0,\dots,N-1$, where $\tau_0=0$ and $\tau_{N}=\tau_\text{c}$. This division is global and independent from $t$ and $\vek x$, thus creating ``$\Delta\tau$'' slabs. We apply the discontinuous Galerkin method 
+ in $\tau$-space, using piecewise continuous base functions,
+  that can jump across the slab boundaries. In real 3D coordinate space we
+  employ a standard mesh with continuous base functions. Since, we solve a hyperbolic equation we apply SUPG stabilization. We can now write the discretized weak form on a single slab:
+  \begin{equation}
+    \int_{\tau_k}^{\tau_{k+1}} (\ten H+\bar\tau\vek u\cdot\nabla\ten H,\pderiv{\ten F}t+
+           \pderiv{\ten F}\tau+\vek u\cdot\nabla\ten F-\ten L\cdot \ten F)\,d\tau
+            +(\ten H+\bar\tau\vek u\cdot\nabla\ten H,[\ten F]_k)=0 \label{eq:weakF}
+\end{equation}
+where $[\ten F]_k=\ten F(\tau^+_k)-\ten F(\tau^-_{k})$ is the jump of $\ten F$ at the slab boundary $\tau_k$ and $\bar\tau$ is the SUPG time scale parameter. Note, that the use of the DG method together with the division into intervals (slabs) makes it possible to solve $\ten F$ in the $\tau$-direction `slab by slab' like a time step scheme. First the entry condition $\ten F(\tau^-_0)=\ten I$ is imposed, then slab 1 is solved, which gives $\ten F(\tau^-_1)$ as input for slab 2, etc.
+
+Now we introduce the base functions for $\ten F(t,\tau,\vek x)$ in $\tau$-direction by writing the test and trial functions as follows
+\begin{equation}
+   \ten H(t,\tau,\vek x)=\tsum_{i}\phi_i(\tau)\ten H_i(t,\vek x),\qquad
+   \ten F(t,\tau,\vek x)=\tsum_{j}\phi_j(\tau)\ten F_j(t,\vek x) \label{eq:testtrialF}
+\end{equation}
+where $\phi_i(\tau)$ are piecewise continuous base functions. The functions $\ten F_j(t,\vek x)$ are called the \emph{discrete} deformation fields, where the $j$-index denotes an index in the $\tau$- (age-) direction.
+The number of discrete fields depends on the polynomial order of $\phi_i(\tau)$. For order $m$ base function the number of `nodes' within a interval is $n_\tau=m+1$, and therefore the number of fields is $n_\tau N d^2=(m+1)N d^2$, where $d$ is the space dimension (2 or 3).  
+The discrete deformation fields can be discretized in real space using the standard base functions.
+ 
+Substituting Eq.~\eqref{eq:testtrialF} into Eq.~\eqref{eq:weakF}, we get `slab for slab':
+\begin{multline}
+     \big(\ten H_i+\bar\tau\vek u\cdot\nabla\ten H_i,m^k_{ij}(\pderiv{\ten F_j}t+
+           \vek u\cdot\nabla\ten F_j-\ten L\cdot \ten F_j)\\
+             +n^k_{ij}\ten F_j
+                    -\phi_i(\tau_k)\ten F(t,\tau^-_{k},\vek x)\big)=0,\quad k=1,\dots,N
+\end{multline}
+%\begin{multline}
+%    m^k_{ij} (\ten H_i+\bar\tau\vek u\cdot\nabla\ten H_i,\pderiv{\ten F_j}t+
+%           \vek u\cdot\nabla\ten F_j-\ten L\cdot \ten F_j)
+%             +n^k_{ij}(\ten H_i+\bar\tau\vek u\cdot\nabla\ten H_i,\ten F_j)\\
+%                    -\phi_i(\tau_k)\big(\ten H_i+\bar\tau\vek u\cdot\nabla\ten H_i,\ten F(t,\tau^-_{k},\vek x)\big)=0,\quad k=1,\dots,N
+%\end{multline}
+where
+\begin{align}
+ m^k_{ij}&=\int_{\tau_k}^{\tau_{k+1}} \phi_i(\tau)\phi_j(\tau)\,d\tau\\	
+ n^k_{ij}&=\int_{\tau_k}^{\tau_{k+1}} \phi_i(\tau)\deriv{\phi_j(\tau)}{\tau}\,d\tau+
+ \phi_i(\tau_k)\phi_j(\tau_k)
+\end{align}
+and the indices $i$ and $j$ are limited to fields in slab $k$.
+
+Remarks
+\begin{enumerate}
+ \item The system can be solved `slab for slab' following the sequence $k=1,\dots,N$, 
+ where the solution values at the end of the slab 
+ ($\ten F(t,\tau^-_{k},\vek x)$ are input for the next slab. This is similar to a time-stepping scheme. In fact, the DG-method for order $k$ polynomial leads to a $2k+1$ order accurate implicit Runge-Kutta method \cite{Lesaint1974}.
+ \item For time-discretization we use backward differencing, where we combine implicit BDF for all terms, except $-\ten L\cdot \ten F_j$, which is treated with extrapolated BDF of the same order. In this way, the system matrix size for a slab is only $n_\tau N\times n_\tau N$. If the slab sizes $\Delta\tau_k=\tau_{k+1}-\tau_k$ are all the same (equidistant grid), the system matrix is the same for each slab as well. The latter property can be used to speed up the matrix solve.
+ \item If, like in \cite{Hulsen01}, the base functions $\phi_i(\tau)$ are defined with the nodal points in the Gauss points, we get $\phi_i(\tau_g)=\delta_{ig}$ and thus
+ \begin{align}
+ m^k_{ij}&=\tsum_g w_g\delta_{ig}\delta_{jg}=w_i\delta_{ij}\\	
+ n^k_{ij}&=\tsum_g w_g\delta_{ig}\deriv{\phi_j(\tau_g)}{\tau}+
+ \phi_i(\tau_k)\phi_j(\tau_k)= w_i\deriv{\phi_j(\tau_g)}{\tau}+\phi_i(\tau_k)\phi_j(\tau_k)
+\end{align}
+which means that $m^k_{ij}$ is a diagonal matrix with $w_i$ as diagonal components. The weak form now becomes:
+\begin{multline}
+    (\ten H_i+\bar\tau\vek u\cdot\nabla\ten H_i,\pderiv{\ten F_i}t+\pderiv{\ten F_i}\tau
+           +\vek u\cdot\nabla\ten F_i-\ten L\cdot \ten F_i\\+\frac{\phi_i(\tau_k)}{w_i}[\ten F]_k
+ \big)=0,\quad k=1,\dots,N
+\end{multline}
+By taking the convection in real space  $\vek u\cdot\nabla\ten F_i$ implicit and all other terms explicit, the fields are uncoupled in the matrix. However, the time step is limited by $\Delta\tau$ due to a CFL condition \cite{Hulsen01}. Therefore, it is recommended to use the coupled approach to have both the convection in real space and the convection in $\tau$-space implicit. \label{rem:decoupled}
+
+\end{enumerate}
+
+\subsection{Integral constitutive models}
+
+A well-known class of constitutive equations for incompressible viscoelastic fluids are the single integral
+models of the \emph{Rivlin-Sawyers} type:
+\begin{equation}
+  \ten\tau(t) = \int_{-\infty}^t[\alpha_1(t-t',I_1,I_2)\ten B-\alpha_2(t-t',I_1,I_2)\ten B^{-1}]\,dt'
+\end{equation}
+where $\ten\tau$ is the extra-stress tensor ($\ten\sigma=-p\ten I+\ten\tau$), $\ten B=\ten F_{t'}(t)\cdot\ten F^T_{t'}(t)$ and the invariants are defined as $I_1=\tr\ten B$ and $I_2=\frac12[I_1^2-\tr\ten B^2]$.
+ 
+An important sub-class are the models of \emph{separable} Rivlin-Sawyers type, where the time and strain can be ``separated'': $\alpha_1(t-t',I_1,I_2)=m(t-t')h_1(I_1,I_2)$ and $\alpha_2(t-t',I_1,I_2)=m(t-t')h_2(I_1,I_2)$ and thus
+\begin{equation}
+  \ten\tau(t) = \int_{-\infty}^tm(t-t')[h_1(I_1,I_2)\ten B-h_2(I_1,I_2)\ten B^{-1}]\,dt'
+  \label{eq:separable}
+\end{equation}
+where $m(\tau)$, $\tau\geq0$ is the \emph{memory function} and the functions $h_1(I_1,I_2)$ and $h_2(I_1,I_2)$ are called \emph{damping functions}.
+
+
+
+Remarks:
+\begin{enumerate}
+\item
+The K-BKZ integral model is of the Rivlin-Sawyers type, where the scalar functions $\alpha_1$ and $\alpha_2$ are derivable from an elastic strain energy (per unit volume) $V(t-t',I_1,I_2)$: $\alpha_1=2\plderiv{V}{I_1}$, $\alpha_2=2\plderiv{V}{I_2}$. In the separable form, the strain energy can be written as $V(t-t',I_1,I_2)=m(t-t')W(I_1,I_2)$ and thus
+\begin{equation}
+  \ten\tau(t) = \int_{-\infty}^tm(t-t')[2\pderiv{W}{I_1}\ten B-2\pderiv{W}{I_2}\ten B^{-1}]\,dt'
+\end{equation}
+\item Examples of damping functions are:
+$h_1=1$, $h_2=0$ (Lodge rubberlike liquid), $h_1=1/[1+a(I_1-3)]$, $h_2=0$ (suggested by McKinley \cite{Jaishankar2014} for fractional K-BKZ models), $h_1=\alpha/[\alpha-3+\beta I_1+(1-\beta)I_2]$, $h_2=0$ (PSM model). Note, that the PSM-model is not a K-BKZ model.
+\item The memory integral can easily be rewritten using the age coordinate $\tau$ as
+\begin{equation}
+  \ten\tau(t) = \int_{0}^\infty[\alpha_1(\tau,I_1,I_2)\ten B-\alpha_2(\tau,I_1,I_2)\ten B^{-1}]\,d\tau
+  \label{eq:intstress}
+\end{equation}
+which can easily be evaluated using a (numerical) integration over the $\tau$-coordinate of the deformation fields.
+\item The memory function $m(t)$, $t\geq 0$ represents the linear viscoelastic behaviour of the fluid and is related to the relaxation modulus $G(t)$ as follows: $m(t)=-\lderiv{G(t)}{t}$. In order for this to be valid, we must require
+the damping functions $h_1(I_1,I_2)$ and $h_2(I_1,I_2)$ to fulfil
+\begin{equation} 
+ h_1(3,3)+h_2(3,3)=1
+ \label{eq:h1plush2iszero} 
+\end{equation}
+\item The equilibrium value of the extra stress tensor, denoted by $\ten\tau_\text{eq}$, can be found by a deformation history of $\ten B=\ten I$, and thus $I_1=3$ and $I_2=3$:
+\begin{equation} 
+\begin{split}
+  \ten\tau_\text{eq} &= \int_{-\infty}^t[\alpha_1(t-t',3,3)\ten I-\alpha_2(t-t',3,3)\ten I]\,dt'\\
+      &= \int_{-\infty}^t[\alpha_1(t-t',3,3)-\alpha_2(t-t',3,3)]\,dt'\ten I\\
+      &= \int_{0}^{\infty}[\alpha_1(\tau,3,3)-\alpha_2(\tau,3,3)]\,d\tau\ten I
+\end{split}
+\end{equation}
+which is a constant pressure term only. For the separable model, this becomes:
+\begin{equation} 
+\begin{split}
+  \ten\tau_\text{eq} &= \int_0^{\infty}m(\tau)\,d\tau\,[h_1(3,3)-h_2(3,3)]\ten I\\
+      &=- \int_0^{\infty}\deriv{G(\tau)}{\tau}\,d\tau\,[h_1(3,3)-h_2(3,3)]\ten I\\
+      &= G(0)[h_1(3,3)-h_2(3,3)]\ten I
+\end{split}
+\end{equation}
+where $\int_0^{\infty}-\lderiv{G(\tau)}{\tau}\,d\tau=G(0)-G(\infty)=G(0)$, since $G(\infty)=0$ for a fluid.
+
+\item
+If the relaxation modulus $G(t)$, $t\geq0$ 
+can be written as a sum of exponentials, i.e.\ $G(t)=\sum_1^n G_i\exp(-t/\lambda_i)$, the memory function $m(t)$ becomes
+\begin{equation}
+   m(t)=\sum_{i=1}^n \frac{G_i}{\lambda_i}\exp(-t/\lambda_i)
+   \label{eq:memexponentials}
+\end{equation}
+The model has a \emph{discrete spectrum} with $n$ modes. Each mode $i$ is characterized by a modulus $G_i$ and a relaxation time $\lambda_i$.
+\item In the implementation we have a cut-off age $\tau_\text{c}$ and integrals $\int_0^\infty\cdot\, d\tau$ are replaced by 
+$\int_0^{\tau_\text{c}}\cdot\, d\tau$.
+\item In 2D flows, the $\tau_{zz}$ component given by
+\begin{equation}
+  \tau_{zz}(t) = \int_{0}^\infty[\alpha_1(\tau,I_1,I_2)-\alpha_2(\tau,I_1,I_2)]\,d\tau
+\end{equation}
+is not equal to $\tau_{{zz},\text{eq}}$, except if the functions $\alpha_1$ and $\alpha_2$ do not depend on the invariants, such in the Lodge rubberlike liquid.
+\end{enumerate}
+
+\subsection{Stress tensor of an integral model for a single material point}
+\label{sec:df_stress_point}
+
+The example \texttt{df\_stress1.f90} computes the steady-state stress tensor of an integral model for simple shear, planar extension and uni-axial extension.
+The example file can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample df\_stress}
+\end{quote}
+
+\subsection{Deformation fields for a steady Poiseuille flow}
+\label{sec:df_Poiseuille_steady}
+
+The examples \texttt{df1.f90}, \texttt{df2.f90} and \texttt{df3.f90} compute the deformation fields for steady Poiseuille flow as a function of time. It is assumed the flow starts instantaneously at $t=0$ and was at rest for $t<0$. The analytical solution is 
+\begin{equation}
+    \ten F(t,\tau) = 
+\begin{cases}
+      \ten I + \dot\gamma\tau\vek e_x\vek e_y  & \text{for }\tau \in [0,t] \\
+      \ten I + \dot\gamma t \vek e_x\vek e_y & \text{for }\tau > t
+\end{cases}
+\label{eq:steadyFshear}
+\end{equation}
+where $\dot\gamma$ is the local shear rate in the Poiseuille flow.
+
+The example files is can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample df}
+\end{quote}
+
+The examples \texttt{df1.f90} and \texttt{df2.f90} use the explicit time integration with the decoupled fields, as discussed in remark~\ref{rem:decoupled} above. 
+Example \texttt{df1.f90} uses $P_1$ interpolation and 
+extrapolated BDF2, whereas \texttt{df2.f90} uses $P_2$ interpolation and 
+extrapolated BDF3 time integration. The example \texttt{df3.f90} uses BDF2 convection implicit DG together with extrapolated BDF2 for the explicit terms. As discussed above, the method in \texttt{df3.f90} is preferred over the explicit method in \texttt{df1.f90} and \texttt{df2.f90}.
+The examples \texttt{df5.f90} and \texttt{df6.f90} are similar to \texttt{df1.f90} and \texttt{df3.f90}, respectively, except that in addition the stress tensor 
+integral Eq.~\eqref{eq:intstress} is evaluated in each node.
+
+\subsection{Deformation fields for a Stokes flow around a confined cylinder}
+\label{sec:df_confined_cylinder}
+
+The example \texttt{df4.f90} computes the deformation fields for Stokes flow around a confined cylinder. It is assumed the flow starts instantaneously at $t=0$ and was at rest for $t<0$. The example \texttt{df4.f90} uses BDF2 convection implicit DG together with extrapolated BDF2 for the explicit terms.
+The example \texttt{df7.f90} is similar to \texttt{df4.f90}, except that in addition 
+the stress tensor integral Eq.~\eqref{eq:intstress} is evaluated in each node.
+
+\subsection{Stress-implicit formulation for integral constitutive models}
+\label{sec:df_stress_implicit}
+
+In Sec.~\ref{sec:implicitstress} we have discussed the stress-implicit implementation of differential viscoelastic models. 
+For integral models, we again start from the DEVSS-G formulation of the momentum balance:
+\begin{equation}
+\begin{split}
+      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +\nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)
+&=\nabla\cdot\ten \tau^{n+1}
+        + \rho\vek b\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0\label{eq:devssgint}
+\end{split}
+\end{equation}
+where we need to find an expression for $\ten\tau^{n+1}$.
+
+The basic idea, when using differential models, is that the CE is integrated over $\Delta t$ to obtain $\ten\tau^{n+1}$ up to an error of $\mathcal{O}(\Delta t^2)$ using an ``Euler-like'' scheme where the velocity and pressure field is taken implicit and the stresses (conformation) is taken explicit. The resulting equation for $\ten\tau^{n+1}$ is substituted in the momentum balance, evaluated at time $t^{n+1}$, to obtain a Stokes-like set op equations. The set of equations introduces a time error of 
+$\mathcal{O}(\Delta t^2)$ for the momentum balance, consistent with second-order integration of the constitutive model.
+
+In order to do something similar for integral models, we need to obtain a ``differential form'' of the integral model. For that, we need to differentiate the integral model with respect to time. We will only consider the separable model Eq.~\eqref{eq:separable}:
+\begin{equation}
+  \ten\tau(t) = \int_{-\infty}^tm(t-t')[h_1(I_1,I_2)\ten B-h_2(I_1,I_2)\ten B^{-1}]\,dt'
+  \label{eq:separable2}
+\end{equation}
+Note, that the upper limit, the memory function $m(t-t')$ and the Finger tensor $\ten B=\ten F_{t'}(t)\cdot\ten F_{t'}(t)^T$  (and also the invariants $I_1$ and $I_2$) will depend on time. To obtain the (material) time derivative of $\ten\tau$ we apply Leibniz' integral rule:
+\begin{equation}
+    \deriv{}{t}\int^{b(t)}_{a(t)}f(t,t')\,dt'=f\big(t,b(t)\big)\deriv{}{t}b(t) -f\big(t,a(t)\big)\deriv{}{t}a(t))+\int^{b(t)}_{a(t)}\pderiv{}{t}f(t,t')\,dt'
+\end{equation}
+which leads to:
+\begin{multline}
+  \dot{\ten\tau}(t) = m(0)[h_1(3,3)-h_2(3,3)]\ten I
+  +\int_{-\infty}^t\deriv{m(\tau)}{\tau}\Big|_{\tau=t-t'}[h_1(I_1,I_2)\ten B-h_2(I_1,I_2)\ten B^{-1}]\,dt'\\
+  +\int_{-\infty}^tm(t-t')[(\pderiv{h_1}{I_1}\dot I_1+\pderiv{h_1}{I_2}\dot I_2)\ten B-
+            (\pderiv{h_2}{I_1}\dot I_1+\pderiv{h_2}{I_2}\dot I_2)\ten B^{-1}]\,dt'\\
+            +\int_{-\infty}^tm(t-t')[h_1(I_1,I_2)\derivmat{}{t}\ten B-h_2(I_1,I_2)\derivmat{}{t}\ten B^{-1}]\,dt'
+  \label{eq:diffseparable}
+\end{multline}
+Using the results
+\begin{gather}
+  \derivmat{}{t}\ten B = \ten L\cdot \ten B+\ten B \cdot\ten L^T,\quad
+    \derivmat{}{t}\ten B^{-1} = -\ten L^T\cdot \ten B^{-1}-\ten B^{-1} \cdot\ten L\\
+    \dot I_1=2\ten B:\ten D,\quad \dot I_2=2(I_1\ten B-\ten B^2):\ten D
+\end{gather}
+we obtain
+\begin{multline}
+  \dot{\ten\tau}(t) = m(0)[h_1(3,3)-h_2(3,3)]\ten I
+  +\int_{-\infty}^t\deriv{m(\tau)}{\tau}\Big|_{\tau=t-t'}[h_1(I_1,I_2)\ten B-h_2(I_1,I_2)\ten B^{-1}]\,dt'\\
+  +\int_{-\infty}^tm(t-t')\Big[\pderiv{h_1}{I_1}\ten B\ten B+\pderiv{h_1}{I_2}\ten B(I_1\ten B-\ten B^2)\hspace*{2cm}\\
+  \hspace*{2.5cm}-\pderiv{h_2}{I_1}\ten B^{-1}\ten B-\pderiv{h_2}{I_2}\ten B^{-1}(I_1\ten B-\ten B^2)\Big]\,dt':2\ten D\\
+            +\ten L\cdot \ten \tau_1+\ten \tau_1 \cdot\ten L^T
+            -\ten L^T\cdot \ten \tau_2-\ten\tau_2\cdot\ten L
+  \label{eq:diffseparable2}
+\end{multline}
+where 
+\begin{align}
+  \ten\tau_1&=\int_{-\infty}^tm(t-t')h_1(I_1,I_2)\ten B\,dt'\\
+   \ten\tau_2&=-\int_{-\infty}^tm(t-t')h_2(I_1,I_2)\ten B^{-1}dt'
+\end{align}
+Remarks:
+\begin{itemize}
+\item Note, that  $\ten\tau=\ten\tau_1+\ten\tau_2$.
+\item For a discrete spectrum (Eq.~\eqref{eq:memexponentials}), we have
+\begin{equation}
+   \deriv{}{t}m(t)=
+   -\sum_{i=1}^n \frac1{\lambda_i}\frac{G_i}{\lambda_i}\exp(-t/\lambda_i)
+   \label{eq:divmemexponentials}
+\end{equation}
+and the second term in Eq.~\eqref{eq:diffseparable2} can be written as
+\begin{equation}
+ \int_{-\infty}^t\deriv{m(\tau)}{\tau}\Big|_{\tau=t-t'}[h_1(I_1,I_2)\ten B-h_2(I_1,I_2)\ten B^{-1}]\,dt'=\\
+  -\sum_{i=1}^n \frac1{\lambda_i} \ten\tau_{(i)}
+  \label{eq:relaxationterm}
+\end{equation}
+with the stress tensor of mode $i$ given by:
+\begin{equation}
+ \ten\tau_{(i)}=\int_{-\infty}^t\frac{G_i}{\lambda_i}\exp\big(-(t-t')/\lambda_i\big)[h_1(I_1,I_2)\ten B-h_2(I_1,I_2)\ten B^{-1}]\,dt'
+\end{equation}
+Note, that $\ten\tau=\sum_1^n\ten\tau_{(i)}$. Eq.~\eqref{eq:relaxationterm} shows, that the second term represents relaxation of the stress.
+\item The third term in Eq.~\eqref{eq:diffseparable2}, representing the nonlinear elasticity of the model (non-constant damping functions), can be written as
+\begin{equation}
+      \mathbb{K}:\ten D
+\end{equation}
+where $\mathbb K$ is a fourth-order tensor, fully determined by the deformation history $\ten B_{t'}(t)$, $t'\leq t$:
+\begin{equation}
+\begin{split}
+    \mathbb K &= 2\int_{-\infty}^tm(t-t')\Big[\pderiv{h_1}{I_1}\ten B\ten B+\pderiv{h_1}{I_2}\ten B(I_1\ten B-\ten B^2)\\
+  &\hspace*{2.5cm}-\pderiv{h_2}{I_1}\ten B^{-1}\ten B-\pderiv{h_2}{I_2}\ten B^{-1}(I_1\ten B-\ten B^2)\Big]\,dt'
+\end{split}
+\end{equation}
+The fourth-order tensor $\mathbb K$ cannot be reduced to a function of the stress, which is the reason that integral models cannot be reduced to differential models, except for special cases (see below for the example of a UCM model). 
+\item The last four terms in Eq.~\eqref{eq:diffseparable2}, are similar to upper-convected and lower-convected terms in differential models. However, here the coefficients $\ten\tau_1$ and $\ten\tau_2$ are determined by memory integrals.
+\item
+For the special case $h_2=0$, Eq.~\eqref{eq:diffseparable2} reduces to:
+\begin{multline}
+  \dot{\ten\tau}(t) = m(0)\ten I
+  +\int_{-\infty}^t\deriv{m(\tau)}{\tau}\Big|_{\tau=t-t'}h_1(I_1,I_2)\ten B\,dt'\\
+  +2\int_{-\infty}^tm(t-t')\Big[\pderiv{h_1}{I_1}\ten B\ten B+\pderiv{h_1}{I_2}\ten B(I_1\ten B-\ten B^2)\Big]\,dt':\ten D\\
+            +\ten L\cdot \ten \tau+\ten \tau \cdot\ten L^T
+  \label{eq:diffseparable3}
+\end{multline}
+where 
+\begin{equation}
+  \ten\tau=\int_{-\infty}^tm(t-t')h_1(I_1,I_2)\ten B\,dt' 
+\end{equation}
+and where we have used Eq.~\eqref{eq:h1plush2iszero} to show that $h_1(3,3)=1$ for this special case.
+\item 
+For the special case $h_1=1$, $h_2=0$, $G(t)=G\exp ( -t/\lambda)$,  Eq.~\eqref{eq:diffseparable3} reduces to
+\begin{equation}
+  \dot{\ten\tau}(t) = \frac{G}{\lambda}\ten I - \frac1\lambda \ten\tau
+            +\ten L\cdot \ten \tau+\ten \tau \cdot\ten L^T
+  \label{eq:diffseparable4}
+\end{equation}
+where 
+\begin{equation}
+  \ten\tau=\frac{G}\lambda \int_{-\infty}^t\exp\big(-(t-t')/\lambda\big)\ten B\,dt'
+  \label{eq:tauUCM} 
+\end{equation}
+This is equivalent to the upper-convected Maxwell (UCM) model (see Sec.~\ref{sec:appucm}), with the conformation tensor defined as $\ten c=\ten\tau/G$. Note, however that the differential form Eq.~\eqref{eq:diffseparable4} will not be used to determine $\ten\tau$, but only to write the momentum balance in terms of velocities and pressures. The value of the $\ten\tau$-field is determined by the memory integral Eq.~\eqref{eq:tauUCM}.
+\end{itemize}
+
+\noindent The \emph{stress-implicit} formulation for integral models now consists of the following steps:
+\begin{enumerate}
+ \item Assuming an Eulerian formulation and split $\dot{\ten\tau}$ in Eq.~\eqref{eq:diffseparable2} in the usual way:
+ \[
+     \dot{\ten\tau}=\pderiv{\ten\tau}t+\vek u\cdot\nabla \ten\tau
+ \]
+ This can be easily extended to an ALE formulation.
+ \item Approximate $\plderiv{\ten\tau}t$ up to $\mathcal{O}(\Delta t^2)$:
+ \[
+     \pderiv{\ten\tau}t \approx \frac{\ten\tau^{n+1}-\ten\tau^n}{\Delta t}
+ \]
+ \item Evaluate velocities and pressures at the new time $t^{n+1}$, i.e.\ $(\vek u^{n+1},p^{n+1})$, and evaluate all memory integrals at the previous time $t^n$.
+ \item Find the expression for $\ten\tau^{n+1}$ and substitute the result into the momentum balance (first sub-equation of Eq.~\eqref{eq:devssgint}).
+ \item Solve the Stokes-like system for $(\vek u^{n+1},p^{n+1})$ and solve the deformation fields for the new time $t^{n+1}$.
+
+\end{enumerate}
+For the special case of an UCM model (Eq.~\eqref{eq:diffseparable4}), step~4 leads to
+\begin{equation}
+  \ten\tau^{n+1} = \Delta t (-\vek u^{n+1}\cdot\nabla \ten\tau^n 
+            +\ten L^{n+1}\cdot \ten \tau^n+\ten \tau^n \cdot\ten L^{Tn+1})+ 
+            (1-\frac{\Delta t}\lambda)\ten\tau^n+\frac{\Delta t}\lambda G\ten I
+  \label{eq:taunp1ucm}
+\end{equation}
+with
+\begin{equation}
+  \ten\tau^n=\frac{G}\lambda \int_{-\infty}^{t_n}\exp\big(-(t-t')/\lambda\big)\ten B\,dt'
+  \label{eq:tauUCMn} 
+\end{equation}
+and the Stokes-like system becomes (with $\eta_\text{s}=0$):
+\begin{equation}
+\begin{split}
+%      -\nabla\cdot\big(2\eta_s\ten D(\vek u^{n+1})\big) +
+      \nabla p^{n+1} 
+  -\alpha\nabla\cdot\big(\nabla\vek u^{n+1} -\ten G^T{}^{n+1} \big)&\\
+-\Delta t\nabla\cdot\big(-\vek u^{n+1}\cdot\nabla \ten\tau^n &+\nabla\vek u^{n+1T}\cdot \ten \tau^n+\ten \tau^n \cdot\nabla\vek u^{n+1}\big) \\
+        &=\nabla\cdot\big( (1-\frac{\Delta t}\lambda)\ten\tau^n+\frac{\Delta t}\lambda G\ten I  \big)+\rho\vek b\\
+     \nabla\cdot\vek u^{n+1}&=0\\
+   -\nabla\vek u^{n+1} + \ten G^T{}^{n+1} &= \ten 0\label{eq:devssgint2}
+\end{split}
+\end{equation}
+Remarks:
+\begin{itemize}
+ \item The term convection term $-\vek u^{n+1}\cdot\nabla \ten\tau^n$ in the momentum balance is defined without ``variational crimes'', since $\ten\tau^n$ is a continuous function. However, it will be difficult to obtain $\nabla \ten\tau^n$ directly by differentiating. Therefore, we propose to define a stress field $\hat{\ten\tau}^n$ by projection on the spatial finite element space of $\ten F$:
+\begin{equation}
+  (\ten H,\hat{\ten\tau}^n)=\big(\ten H,\frac{G}\lambda \int_{-\infty}^{t_n}\exp\big(-(t-t')/\lambda\big)\ten B\,dt'\big)
+  \label{eq:projecttaun} 
+\end{equation}
+and use the same spatial finite element space for the interpolation of $\hat{\ten\tau}^n$.  The term $-\vek u^{n+1}\cdot\nabla \ten\tau^n$ is now replaced by $-\vek u^{n+1}\cdot\nabla \hat{\ten\tau}^n$, which can easily be computed  using the base functions of the finite element space $\ten F$ (usually linear).
+\item It is important for temporal stability how the velocity gradient tensor $\ten L$ is evaluated in the evolution of the deformation fields, similarly to differential models \cite{Brown1993,Bogaerds00}. Temporal stability in a simple shear flow for an (non-stretched) mesh is only obtained by using $\ten G$ instead of $\ten L=(\nabla\vek u)^T$ in the evolution equation of $\ten F$.
+\end{itemize}
+
+\subsection{Planar Couette flow of an upper-convected Maxwell fluid (UCM) for a
+ Weissenberg number (Wi) of 10}
+\label{sec:couette_df}
+
+We consider an upper-convected Maxwell fluid (UCM) integral form (Eqs.~\eqref{eq:diffseparable4}--\eqref{eq:tauUCM})
+for a planar Couette problem on a unit square
+(see Fig.~\ref{fig:couette_df}). On the upper boundary a tangential
+velocity of 1 and a normal velocity of zero is imposed.
+On the lower wall the velocity components are
+zero. In horizontal direction periodical boundary conditions are assumed.
+In the lower left corner the pressure value is set to zero (Dirichlet).
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics{couette}
+   \end{center}
+   \caption{Planar Couette flow}
+    \label{fig:couette_df}
+\end{figure}
+
+At the start of the flow the deformation fields will be set to the steady state values, given by Eq.~\eqref{eq:steadyFshear}, 
+plus a small random perturbation. The latter is small so that
+the difference from the steady state can be considered a linear perturbation.
+
+The example file are \texttt{couette14.f90} (second-order stress-implicit
+scheme) and can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample couette}
+\end{quote}
+
+The example can be run by
+\begin{quote}
+   \texttt{couette14}
+\end{quote}
+
+Using this example the results in Fig.~\ref{fig:couette14} are obtained.
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{couette_F}
+   \end{center}
+   \caption{$L_2$-norm of the stress tensor perturbation for an integral UCM model
+            in a planar Couette flow with $\text{Wi}=\lambda=10$
+            as a function of time. Mesh: 20$\times$20 elements. Parameters: $\Delta t=0.5$, $N=20$, $\Delta\tau_1=3\lambda/N$=1.5, $\tau_\text{c}=15\lambda$=150.}
+    \label{fig:couette14}
+\end{figure}
+\begin{figure}[htbp!]
+   \begin{center}
+   \includegraphics[scale=1.0]{couette_c}
+   \end{center}
+   \caption{$L_2$-norm of the conformation tensor perturbation for a differential UCM model
+            in a planar Couette flow with $\text{Wi}=\lambda=10$
+            as a function of time. Mesh: 20$\times$20 elements. Parameters: $\Delta t=0.5$.}
+   \label{fig:couette9_c}
+\end{figure}
+For comparison, we included the results obtained using a differential UCM model (example \texttt{couette9} in Sec.~\ref{sec:couette_IS})
+in Figure~\ref{fig:couette9_c}.
+We see, that our implementation of the deformation fields behaves quite simular to the differential model implementation
+We get the typical stable curve (\cite{Brown1993,Bogaerds00}), when $\ten L=\ten G$ is used in the evolution of $\ten F$.
+After an initial increase, the perturbation will die out, and eventually
+becomes a straight line in the log plot. The form of the
+transient for the continuous spectrum as predicted by Kupferman
+\cite{Kupferman05} is also shown. Eventually, there is an even slower decaying eigenvalue, which is probably related to the two
+discrete Gorodtsov \& Leonov (GL) modes
+\cite{Gorodtsov67}. The discrete GL-modes decays as $\exp(-t/(2\lambda)$ for $\text{Wi}\gg1$ and are located near the walls. Whether we resolve the GL-modes with this rather coarse mesh, is beyond the scope of the current paper.
+
+Finally, we note that using $\ten L=\nabla(\vek u)^T$, i.e.\ obtaining the velocity gradient directly from  differentiating the finite element velocity field, leads to a numerically unstable flow
+ for the integral UCM model using a deformation field method, which is similar to well-known behaviour when using 
+ the differential UCM with 
+ $\ten L=\nabla(\vek u)^T$ (\cite{Brown1993,Bogaerds00}).
+
+\subsection{Start-up of a Poiseuille flow of an integral model}
+\label{sec:poiseuille_df}
+
+The example \texttt{df10.f90} solves the startup of the Poiseuille flow of an integral model.
+The example can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample df}
+\end{quote}
+
+\subsection{Start-up of the flow around a confined cylinder of an of an integral model}
+\label{sec:confined_cylinder_df}
+
+The example \texttt{df11.f90} solves the startup of the flow around a confined cylinder of of an integral model.
+The example can be obtained by typing at the
+command line:
+\medskip
+\begin{quote}
+   \texttt{getexample df}
+\end{quote}
+
+
+

@@ -1,0 +1,26 @@
+#set output "plots.eps"
+#set term postscript enhanced eps color solid 20
+set ylabel "scalar"
+#set nokey
+plot "sample_c_out_df8.out" us 1:4 w l
+replot "sample_c_in_df8.out" us 1:4 w l
+pause -1
+
+set ylabel "gradc_x"
+#set nokey
+plot "sample_gc_out_df8.out" us 1:4 w l
+replot "sample_gc_in_df8.out" us 1:4 w l
+pause -1
+
+set ylabel "gradc_y"
+#set nokey
+plot "sample_gc_out_df8.out" us 1:5 w l
+replot "sample_gc_in_df8.out" us 1:5 w l
+pause -1
+
+set ylabel "gradc_z"
+#set nokey
+plot "sample_gc_out_df8.out" us 1:6 w l
+replot "sample_gc_in_df8.out" us 1:6 w l
+pause -1
+

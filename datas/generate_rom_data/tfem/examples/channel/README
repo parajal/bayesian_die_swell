@@ -1,0 +1,122 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+channel1:
+
+ 3D Stokes problem in a channel with a square cross section. Computed is the
+ developed flow using only one layer of elements in the flow direction (x) and
+ assuming periodical boundary conditions.
+
+channel2:
+
+ 3D viscoelastic problem in a channel with a square cross section. 
+ Computed is the developed flow using only one layer of elements in the flow
+ direction (x) and assuming periodical boundary conditions.
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+
+channel3:
+
+ 3D viscoelastic problem in a channel with a square cross section. 
+ Computed is the developed flow using only one layer of elements in the flow
+ direction (x) and assuming periodical boundary conditions.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ first-order time integration to steady state
+
+channel4:
+
+ 3D viscoelastic problem in a channel with a square cross section. 
+ Computed is the developed flow using only one layer of elements in the flow
+ direction (x) and assuming periodical boundary conditions.
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+ This problem is the same as channel2, but now using coupling of objects
+ in realizing the periodical boundary conditions.
+
+channel5:
+
+ 3D Stokes problem in a channel with a square cross section. Computed is the
+ developed flow using only one layer of elements in the flow direction (x) and
+ assuming periodical boundary conditions.
+ Navier-slip boundary conditions.
+ Dirichlet normal wall velocity.
+ Collocation for periodic boundaries.
+
+channel6:
+
+ Viscoelastic problem in a channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow).
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+
+channel7:
+
+ Viscoelastic problem in a channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow).
+ DEVSS-G/SUPG
+ second-order time integration to steady state
+
+channel8:
+
+ Viscoelastic problem in a curved channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow). Axisymmetric.
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+
+channel9:
+
+ Viscoelastic problem in a curved channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow). Axisymmetric.
+ DEVSS-G/SUPG
+ second-order time integration to steady state
+
+channel10:
+
+ Viscoelastic problem in a channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow).
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady state
+
+channel11:
+
+ Viscoelastic problem in a curved channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow). Axisymmetric.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ L2-projection of c=exp(s) on the finite element approximation space in the
+ momentum balance.
+ second-order time integration to steady 
+
+channel12:
+
+ 3D Stokes problem in a channel with a square cross section. Computed is the
+ developed flow using only one layer of elements in the flow direction (x) and
+ assuming periodical boundary conditions. Prisms.
+
+channel13:
+
+ 3D viscoelastic problem in a channel with a square cross section. 
+ Computed is the developed flow using only one layer of elements in the flow
+ direction (x) and assuming periodical boundary conditions.
+
+ DEVSS-G/SUPG
+ first-order time integration to steady state
+ Prisms
+
+channel14, channel14a:
+
+ Viscoelastic problem in a curved channel with a square cross section. 
+ 3D velocities on a 2D domain (developed flow). Axisymmetric.
+ DEVSS-G/SUPG
+ Implicit bilinear terms of CE in momentum balance.
+ second-order time integration to steady state
+
+ Similar to channel11 but now with a b-tensor formulation.
+ NOTE: channel14 uses nodal point level rotation reinitialization.
+       channel14a uses element level rotation reinitialization.

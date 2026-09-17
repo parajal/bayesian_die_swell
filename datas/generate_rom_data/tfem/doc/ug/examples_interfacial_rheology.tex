@@ -1,0 +1,51 @@
+% !TEX root = userguide.tex
+
+\def\headdate{17th February 2021}
+
+\section{Interfacial Rheology}
+\label{sec:interfacial_rheology}
+
+(The examples in this section have been developed by Mick
+ Carrozza of the TU/e)\medskip
+
+This section describes some examples using a constitutive model on the
+interface between two fluids. The methods/techniques
+ used have been implemented in the add-on
+\texttt{interfacial\_rheology} and published in Carrozza et al.\
+\cite{Carrozza2020}. We refer to that publication for more details.
+
+\subsection{Axisymmetric drop in uniaxial extensional flow}
+
+In example \texttt{drop16.f90}, an axisymmetric Newtonian drop
+in a Newtonian matrix fluid with a sharp interface in between is subjected to
+uniaxial extensional flow. Interfacial rheology is included via a Neumann
+boundary condition using the Boussinesq-Scriven model for viscous interfaces,
+the Verwijlen and H\"utter-Tervoort elastic interface constitutive models, or
+Kelvin-Voigt models by adding these viscous and elastic stresses together.
+The example \texttt{drop16.f90} has a corresponding input file
+\texttt{input\_drop16.txt} (read from standard input), which
+must be used to set the various options for the example. The example
+\texttt{drop16.f90} has been developed by extending
+\texttt{drop13.f90} with interfacial rheology. Optionally, the method of
+manufactured solutions is applied to verify the correctness of implementation
+and validate the order of convergence. 
+
+\subsection{Drop in 3D shear flow}
+
+In example \texttt{drop17.f90}, a Newtonian drop in a 
+Newtonian matrix fluid with a sharp interface in between is subjected to 3D
+shear flow. Interfacial rheology is included via a Neumann boundary condition
+using the Boussinesq-Scriven model for viscous interfaces, the Verwijlen and
+H\"utter-Tervoort elastic interface constitutive models, or Kelvin-Voigt models
+by adding these viscous and elastic stresses together. The example
+\texttt{drop17.f90} has a corresponding input file
+\texttt{input\_drop17.txt} (read from standard input), which
+must be used to set the various options for the example. The example
+\texttt{drop17.f90} has been developed by extending
+\texttt{drop6.f90} with interfacial rheology. The example
+\texttt{drop17.f90} also plots the principal interfacial stress
+and strain values and directions, together with some other deformation (rate)
+scalar quantities of the interface. Optionally, the method of manufactured
+solutions is applied to verify the correctness of implementation and validate
+the order of convergence. 
+

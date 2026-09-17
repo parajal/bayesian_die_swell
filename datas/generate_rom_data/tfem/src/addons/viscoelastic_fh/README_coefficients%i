@@ -1,0 +1,9 @@
+Integer coefficients for the element routines in this addon.
+
+
+List of the coefficients
+------------------------
+
+This add-on does not has its own coefficients yet.
+It uses the generalized stokes add-on.
+Thus at least 300 integer coefficients must be reserved.

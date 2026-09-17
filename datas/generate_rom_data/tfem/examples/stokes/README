@@ -1,0 +1,428 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+stokes1
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+stokes1a:
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ This is the stokes1 problem with the following changes:
+  1) Q1isoQ2 shape functions
+  2) subdomain Gauss integration (using 4 subdomains)
+
+stokes1b:
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ This is the stokes1 problem with the following changes:
+  1) Exclude p-p zero block from the matrix
+  2) timer 
+
+stokes2
+
+ Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow.
+ Collocation of nodes.
+
+stokes3
+
+ Stokes problem on a unit square. Periodical boundary conditions
+ Poiseuille flow.
+ weak coupling
+
+stokes4
+
+ Stokes problem on a unit square. Periodical boundary conditions
+ Poiseuille flow.
+ weak coupling. pressure difference via additional unknown.
+
+stokes6
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Two fixed objects.
+
+stokes7
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely translating and rotating object.
+
+stokes8
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+
+stokes9
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+ Sample in single point and sample on a line.
+
+stokes9a:
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+ Sample in single point and sample on a line.
+
+ This is the stokes9 problem with the following changes:
+  1) Q1isoQ2 shape functions
+  2) subdomain Gauss integration (using 4 subdomains)
+
+stokes11
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+
+stokes11a:
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+
+ This is the stokes11 problem with the following changes:
+  1) Exclude p-p zero block from the matrix
+  2) timer 
+
+stokes12
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely translating and rotating object.
+ sparskit solver
+ Metis renumbering (commented out)
+
+stokes13
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+
+ Output to vtk files
+
+stokes15
+
+ Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow.
+ Collocation of nodes on connecting objects
+
+stokes16
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+ Tecplot output
+
+stokes17
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+ Weak constraint on the particle boundary.
+ Use of subscript to get constraint data (lagrangian multipliers and
+ additional unknowns).
+
+stokes18
+
+ Stokes problem on a unit square. Periodical boundary conditions
+ Poiseuille flow.
+ weak coupling
+ Flow rate imposed using a global constraint on an object
+ The position of the constraint can be located at any position
+ Flow rate computation in any cross-section using integrate_object
+
+stokes19
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Non-conforming coupling of two domains.
+
+stokes20
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Non-conforming coupling of two domains (vertical velocity)
+ Connection of two domains (horizontal velocity, slip layer) using objects.
+
+stokes21
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ integral p dA = 0
+
+stokes22
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ integral p dA = 0 using a constraint on a surface
+
+stokes23
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ One freely moving and rotating object. Time-stepping.
+
+ This is the stokes8 problem with P2+/P1^d Crouzeix-Raviart triangles
+
+stokes25
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ Identical to stokes1 but now using a user Gauss rule.
+ Uses generalized_stokes elements
+
+stokes26
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ Similar to stokes1 but now:
+ Iterative solver with block preconditioning (using pressure mass matrix).
+
+stokes27
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+
+ Similar to stokes11 but now:
+ Iterative solver using block preconditioning (using pressure mass matrix). 
+
+stokes28
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ Similar to stokes26, but now including a mass matrix with a factor a.
+
+stokes29
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ Similar to stokes28, but now: 
+ iterative solver with block preconditioning (using both pressure mass and
+ diffusion matrix). M_p^{-1}F_pA_p^{-1} form for inverse Schur complement.
+
+stokes30
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+
+ Similar to stokes27, but now including a mass matrix with a factor a and
+ iterative solver with block preconditioning (using both pressure mass and
+ diffusion matrix). M_p^{-1}F_pA_p^{-1} form for inverse Schur complement.
+
+stokes31
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ Similar to stokes29, but now: M_1^{-1}+M_2^{-1} form for inverse Schur
+ complement.
+
+stokes32
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ integral p dA = 0 using a constraint on an elementset
+
+ Similar to stokes21, but now using elementsets.
+
+stokes33
+
+ Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow.
+ Collocation of nodes.
+
+ Similar to stokes2, but now using nodesets instead of curves for the 
+ constraint.
+
+stokes34
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ Spectral elements.
+
+ This problem is similar to stokes1, but now with spectral elements.
+
+stokes35
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ Stabilized element example: Q2/Q2 velocity/pressure
+
+ This problem is similar to stokes1, but now with Q2/Q2 elements.
+
+stokes36
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ Stabilized element example: P1/P1 velocity/pressure
+
+ This problem is similar to stokes1, but now with P1/P1 elements.
+
+stokes37
+
+ Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow.
+ Collocation of nodes.
+ Stabilized element example: Q1/Q1 velocity/pressure
+
+ This problem is similar to stokes2, but now with Q1/Q1 elements.
+
+stokes38
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ Equal order spectral elements.
+
+ This problem is similar to stokes1, but now with spectral elements having
+ equal-order continuous stabilized velocity/pressure Qp/Qp elements 
+
+stokes39
+
+ Stokes problem on a unit square. Periodical boundary conditions.
+ Poiseuille flow.
+ Collocation of nodes.
+ Navier-slip boundary conditions.
+
+stokes40
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Connection of two domains (horizontal velocity, slip layer) using curves.
+
+stokes41
+
+ Stokes problem on a unit square. 
+ One-sided connected boundary conditions (collocated).
+ Channel flow.
+ The velocities on the inflow are set to the velocities on the outflow using
+ a connection.
+
+stokes42
+
+ Stokes problem on a rectangular domain with a disk at the center.
+ A force and/or torque is applied on the particle.
+ Gmsh mesh.
+ Interfacial slip on the particle boundary.
+
+stokes43
+
+ Stokes problem on a cubic domain with a sphere at the center.
+ A force and/or torque is applied on the particle.
+ Gmsh mesh.
+ Interfacial slip on the particle boundary.
+
+stokes44
+
+ Axisymmetrical Stokes problem of a sphere at the centerline of a cylindrical 
+ container. A force is applied on the particle.
+ Gmsh mesh.
+ Interfacial slip on the particle boundary.
+
+stokes45
+
+ Stokes problem on a unit square.
+ Lid-driven cavity flow with optional Dirichlet or traction free boundary
+ condition in normal direction of the lid.
+ Arbitrary rotation of mesh.
+ Boundary conditions applied using transformations.
+ Optional Neumann condition in the transformed system.
+ Show various possibilities for applying transformations:
+ 1) A global vector/matrix valid for each node on the geometry.
+ 2) A user subroutine called for each node on the geometry.
+ 3) In the direction of the normal on the geometry.
+ Internal subroutine as actual subroutine argument (f2008).
+
+stokes46
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ Arbitrary rotation of mesh over the y-axis.
+ Boundary conditions applied using transformations.
+ Optional Neumann condition in the transformed system.
+ Show various possibilities for applying transformations:
+ 1) A global vector/matrix valid for each node on the geometry.
+ 2) A user subroutine called for each node on the geometry.
+ 3) In the direction of the normal on the geometry.
+ Internal subroutine as actual subroutine argument (f2008).
+
+stokes47
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ This similar to stokes1, but now with Crouzeix-Raviart Q2/P1 element.
+ Global shape functions for pressure.
+
+stokes48
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ This similar to stokes11, but now with Crouzeix-Raviart Q2/P1 element.
+ Global shape functions for pressure.
+
+stokes49
+
+ Stokes problem on a unit square with 3D velocities (developed flow).
+ Lid-driven cavity flow in (x,y).
+ Imposed flow rate in z-direction.
+
+stokes51
+
+ Stokes problem on a 3D square cavity. Only half of the domain is solved
+ due to symmetry conditions.
+ Prisms.
+
+stokes52
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+
+ This is stokes1 example with Gauss integration specified by order.
+ NOTE: not described in the userguide.
+
+stokes53
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ Equal order high-order triangular elements.
+
+ This problem is similar to stokes1, but now with high-order elements having
+ equal-order continuous stabilized velocity/pressure Pp/Pp elements 
+
+stokes54
+
+ Stokes problem on a unit square with Dirichlet boundary conditions.
+ Lid-driven cavity flow.
+ Physical quantities.
+ Equal order high-order quadrilateral elements.
+
+ This problem is similar to stokes1, but now with high-order elements having
+ equal-order continuous stabilized velocity/pressure Qp/Qp elements 

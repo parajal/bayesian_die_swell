@@ -1,0 +1,147 @@
+Integer coefficients for the element routines in this add-on.
+
+
+Base functions (shape functions)
+--------------------------------
+
+See file addons/README_basefunctions
+
+
+Numerical integration
+---------------------
+
+See file addons/README_Gauss
+
+
+Procedure pointers
+------------------
+
+Summary of assignment of user functions/subroutines to procedure pointers:
+
+  coefficients%set_ninti_user => set_ninti_user
+  coefficients%set_Gauss_integration_user => set_Gauss_integration_user
+
+NOTES:
+
+ 1) The user functions/subroutines only need to be assigned if they are
+    actually being used. If a required assignment is forgotten an error message
+    with be given.
+ 2) The user is free to choose the functions/subroutines for assignment as
+    long as the interface is correct.
+
+
+Oldvectors
+----------
+
+oldvectors%v(1) : the input vector on the old mesh
+oldvectors%p(1) : the problem for the input vector on the old mesh
+oldvectors%m(1) : the old mesh (for coefficients%i(5)=0).
+
+
+List of the coefficients
+------------------------
+
+1   interpolation for the input vector (on old mesh)
+    NOTE: for high-order or spectral, also the polynomial order p needs to
+          be set with coefficients%i(6)
+
+2   number of components (ncompv) of the input vector (on old mesh)
+
+3   interpolation for the shape of the element (on new mesh)
+    NOTE: for high-order or spectral, also the polynomial order p needs to
+          be set with coefficients%i(7)
+
+4   interpolation for the projection (on new mesh)
+    NOTE: for high-order or spectral, also the polynomial order p needs to
+          be set with coefficients%i(8)
+
+5   Indicator for the meshes:
+    0: new mesh is different from the old mesh. The argument mesh defines the
+       new mesh and oldvectors%m(1) defines the old mesh.
+    1: new mesh is identical to old mesh. The argument mesh defines the 
+       new mesh and oldvectors%m(1) does not have to be defined and/or
+       associated.
+
+6   Polynomial order p of spectral/high-order interpolation for input vector
+    (on old mesh)
+
+7   Polynomial order p of spectral/high-order interpolation for the shape of 
+    the element (on new mesh)
+
+8   Polynomial order p of spectral/high-order interpolation for the projection
+    (on new mesh)
+
+9   Reserved for future use. Set to zero for future compatibility.
+
+10  numerical integration rule (intrule) for the internal domain integrals
+    of elements.
+
+11  secondary numerical integration rule (intrule2) for the internal domain
+    integrals of elements. This is only relevant for prisms and pyramids.
+
+12-22 Reserved for future use. Set to zero for future compatibility.
+
+23  coordinate system for 2D elements:
+    0: Cartesian planar
+    1: Axisymmetrical
+    Note that for axisymmetrical coordinates we have (z,r), i.e. the first
+    coordinate is the axial coordinate z and the second coordinate is the
+    radial coordinate r.
+
+24-31 Reserved for future use. Set to zero for future compatibility.
+
+32  nsubint: number of subdomains for the numerical integration rule for the
+    internal domain integrals of elements:
+    0: default: the same as giving 1
+    1: only one subdomain, which means apply the numerical integration rule
+       given by coefficients%i(10) to the complete element domain.
+    >1: divide the element into nsubint subdomains (in each coordinate 
+        direction) and apply the numerical integration rule given by 
+        coefficients%i(10) to each subdomain.
+
+33  Reserved for future use. Set to zero for future compatibility.
+
+34  Number of degrees of freedom in the element in one direction (ndfs) of the
+    shape interpolation is different from the number of nodes in an element.
+    0: no
+    1: yes. This is tricky stuff, but it might work. The problem is
+       the mapping of the elements. At the moment it is assumed that the
+       first 1:ndfs nodes are the nodes of the shape unknowns, in that order.
+       In this way it is possible to use elements with an additional internal
+       node without a shape unknown, provided that it has the highest nodal
+       number.
+       A more general mechanism for mixing different shape functions/element
+       types is planned but is not available yet.
+
+35-36  Reserved for future use. Set to zero for future compatibility.
+
+37  Numerical integration rule and number of subdomains for the
+    volume integrals of elements:
+     0: the same for all elements as given by coefficients%i(10) and
+        coefficients%i(32)
+     1: given by the vector per element oldvectors%e(1)
+     2: given by user subroutines
+
+38  Layer number. Needs to be specified if the elements are going to be used
+    (build,derive etc) for a single layer only.
+     0: default: all degrees
+     >0: layer number. 
+
+39  Reserved for future use. Set to zero for future compatibility.
+
+40  Type of integration (inttype):
+      0: standard Gauss-Legendre (analytical expressions)
+      1: Gauss-Legendre-Lobatto
+      2: mapped Gauss (quad->triangle, hexahedron->pyramid).
+      3: standard Gauss-Legendre (numerical tables)
+    NOTE: this affects all numerical integration of interior integrals.
+
+41  Specifies how the integration rules must be set:
+    0: default, i.e. direcly with the value in coefficients.
+    1: by specifying the minimal polynomial order that the rule must be able
+       to integrate exactly.
+    Note, that the value of coefficients%i(41) is overruled by setting
+    SET_GAUSS_BY_ORDER = .true. in the module limits_m.
+
+42--100 Reserved for future use. Set to zero for future compatibility.
+

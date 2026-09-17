@@ -1,0 +1,34 @@
+#!/bin/sh
+
+#    tfvi: read sourcefile using tags:
+#       - use tags from tags file when available
+#       - otherwise go directly to TFEM home directory
+
+if [ $# -eq 0 ]
+then
+     echo "Usage: tfvi tag(s)"
+     exit
+fi
+
+if [ ! -f tags ]; then
+  cd `dirname $0`/..   # go directly to tfem home
+fi
+
+# define VIEW or change vim -R to your favorite readonly vi editor
+view=${VIEW:-vim -R}
+
+type `echo $view | awk '{ print $1 }'` >/dev/null 2>&1
+if [ $? -eq 1 ]; then
+  echo
+  echo $view: not found
+  echo
+  echo Set environment variable VIEW to a valid readonly vi
+  echo
+  exit
+fi
+
+while  [ -n "$1" ]
+do
+    $view -t $1
+    shift
+done

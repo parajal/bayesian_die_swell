@@ -1,0 +1,196 @@
+The examples in this directory are described in the userguide.
+
+Short description
+-----------------
+
+diffuse_interface1:
+
+ diffuse-interface problem on a unit square
+ linear Couette flow
+ constant viscosity
+ first-order time integration
+
+diffuse_interface2:
+
+ diffuse-interface problem on a square
+ no external flow, homogeneous essential boundary conditions for velocities
+ constant viscosity
+ first-order time integration
+ by changing the initial concentration different problems can be studied
+   funcnr = 1 : unstable stratified layers
+   funcnr = 2 : retraction of non-circular drop
+   funcnr = 3 : spinodal decomposition
+   funcnr = 4 : a supercritical and a subcritical nucleus
+
+diffuse_interface3:
+
+ diffuse-interface problem on a square
+ no external flow, bi-periodic boundary conditions for velocities,
+                   chemical potential and concentration
+ constant viscosity
+ first-order time integration
+ by changing the initial concentration different problems can be studied
+   funcnr = 1 : unstable stratified layers
+   funcnr = 2 : retraction of non-circular drop
+   funcnr = 3 : spinodal decomposition
+   funcnr = 4 : a supercritical and a subcritical nucleus
+
+diffuse_interface4:
+
+ diffuse-interface problem in a brick
+ no external flow, homogeneous essential boundary conditions for velocities
+ constant viscosity
+ first-order time integration
+ output using vtk
+ the initial concentration is such for spinodal decomposition
+
+diffuse_interface5:
+
+ diffuse-interface problem on a unit square
+ linear Couette flow
+ constant viscosity
+ first-order time integration
+ Lees Edwards boundary conditions
+
+diffuse_interface6:
+
+ axisymmetric diffuse-interface problem on a square (z,r)
+ no external flow, homogeneous essential boundary conditions for velocities
+ constant viscosity
+ first-order time integration
+
+diffuse_interface7:
+
+ one-dimensional diffuse-interface problem 
+ two phase problem 
+ no flux boundary conditions
+ Note: only Cahn_Hilliard equation (vp element only used as dummy element)
+
+diffuse_interface8:
+
+ diffuse-interface problem on a square
+ no external flow, bi-periodic boundary conditions
+ & and a time-periodic source term for the momentum equation
+ constant viscosity
+ first-order time integration
+ uses tec_utils for output
+
+diffuse_interface9:
+
+ one-dimensional diffuse-interface problem 
+ three phase problem 
+ no flux boundary conditions
+ Note: only Cahn_Hilliard equation (vp element only used as dummy element)
+ Benchmark problem from Kim, Kang and Lowengrub
+
+diffuse_interface10:
+
+ ternary diffuse-interface problem on a square
+ no external flow, homogeneous essential boundary conditions for velocities
+ constant viscosity
+ first-order time integration
+ recovery of a ternary drop
+ uses tec_utils for output
+ 
+diffuse_interface11:
+
+ diffuse-interface problem on a unit square
+ linear Couette flow
+ constant viscosity
+ first-order time integration
+ Spectral elements.
+ This problem is similar to diffuse_interface1, but now with spectral elements.
+
+diffuse_interface12:
+
+ diffuse-interface problem on a unit square
+ linear Couette flow
+ constant viscosity
+ second-order time integration
+ This examples is similar to diffuse_interface1, but now 2nd order in time.
+
+diffuse_interface13:
+
+  axisymmetric diffuse-interface problem of a droplet on a surface
+  Stokes problem with mu grad c term for the surface tension
+  constant viscosity
+  variable (static) contact angle
+  first order time integration
+  Newton-Raphson iterations for the non-linear term in the
+  Cahn-Hilliard equation
+
+diffuse_interface14:
+
+  axisymmetric diffuse-interface problem of a droplet on a surface
+  Stokes problem with mu grad c term for the surface tension
+  constant viscosity
+  variable (static) contact angle
+  second order time integration
+  Newton-Raphson iterations for the non-linear term in the
+  Cahn-Hilliard equation
+  This problem is similar to diffuse_interface13, but now with
+  adaptive meshing using Gmsh (triangular elements)
+  and second-order time-integration
+
+diffuse_interface15:
+
+  3D diffuse-interface problem of a droplet on a surface
+  in a closed cylindrical container
+  Stokes problem with mu grad c term for the surface tension
+  constant viscosity
+  variable (static) contact angle
+  second order time integration
+  Newton-Raphson iterations for the non-linear term in the
+  Cahn-Hilliard equation
+
+diffuse_interface16:
+
+  3D diffuse-interface problem of a droplet on a surface
+  in a closed cylindrical container
+  Stokes problem with mu grad c term for the surface tension
+  constant viscosity
+  variable (static) contact angle
+  second order time integration
+  Newton-Raphson iterations for the non-linear term in the
+  Cahn-Hilliard equation
+
+  This problem is similar to diffuse_interface15, but now with
+  pardiso as the solver
+
+diffuse_interface17:
+
+  Axisymmetric diffuse-interface problem of a droplet in a hyperbolic 
+  flow field
+  Stokes problem using the stress form or one of the potential forms for
+  the surface tension
+  Variable viscosity
+  Second order time integration
+  Adaptive meshing using Gmsh (triangular elements)
+  Newton-Raphson iterations for the non-linear term in the
+  Cahn-Hilliard equation
+
+diffuse_interface18:
+
+  Axisymmetric diffuse-interface problem of a droplet in a hyperbolic 
+  flow field
+  Stokes problem using the stress form or one of the potential forms for
+  the surface tension
+  Variable viscosity
+  Second order time integration
+  Adaptive meshing using Gmsh (triangular elements)
+  Newton-Raphson iterations for the non-linear term in the
+  Cahn-Hilliard equation
+
+  This example is similar to diffuse_interface17, but now the flow and 
+  diffuse-interface equations are solved fully-implicit (in one system).
+
+diffuse_interface19:
+
+  Drop between two stratified fluids in a square domain.
+  Ternary diffuse-interface model by Boyer and Lapuerta (2006).
+  Two different cases depending on the input file.
+    input_diffuse_interface19a.txt : three phases are symmetric
+    input_diffuse_interface19b.txt : upper fluid is spreading
+                                     between drop and lower fluid
+  Output to vtk files.
+
