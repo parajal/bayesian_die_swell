@@ -486,21 +486,29 @@ class PlottingMixin:
         self.plot_corner(**kwargs)
 
     def _bias_correlation_matrix(self, x, l_bias) -> np.ndarray:
-        """Squared-exponential discrepancy correlation, optionally GP-conditioned on
-        linear constraints (Brynjarsdottir & O'Hagan 2014; derivatives of a GP are
+        """Discrepancy correlation (squared-exponential or Matern nu=1/2, per
+        ``self.correlation_matrix``), optionally GP-conditioned on linear
+        constraints (Brynjarsdottir & O'Hagan 2014; derivatives of a GP are
         jointly Gaussian):
 
-        * ``bias_anchor=x0``  -> delta(x0)=0     (die-exit value constraint)
+        * ``bias_anchor=True`` -> delta(0)=0     (die-exit value constraint)
         * ``bias_flat=(a,b)`` -> delta'(x)=0 at ``bias_flat_n`` points in [a, b]
-          (flat discrepancy in the plateau).
+          (flat discrepancy in the plateau); squared-exponential only, since the
+          Matern (nu=1/2, exponential) kernel is not mean-square differentiable.
 
         Returns ``K' = K - C A^{-1} C^T`` (PSD; zero variance along the constraints),
-        with ``C``/``A`` the value/derivative cross- and auto-covariances of the SE
-        kernel. With no constraints it is the plain SE correlation.
+        with ``C``/``A`` the value/derivative cross- and auto-covariances of the
+        kernel. With no constraints it is the plain correlation matrix.
         """
         x = np.asarray(x, dtype=float).ravel()
         l2 = float(l_bias) ** 2
-        kf = lambda a, b: np.exp(-np.subtract.outer(a, b) ** 2 / (2.0 * l2))
+        matern = getattr(self, "correlation_matrix", "squared_exp") == "matern"
+        if matern:
+            # Matern, nu=1/2: c(r) = exp(-sqrt(8*0.5) r / l) = exp(-2r/l) (Fuglstad et al. 2019,
+            # Definition 2.3), the same "range" convention used to derive the PC prior on l_bias.
+            kf = lambda a, b: np.exp(-2.0 * np.abs(np.subtract.outer(a, b)) / l_bias)
+        else:
+            kf = lambda a, b: np.exp(-np.subtract.outer(a, b) ** 2 / (2.0 * l2))
         K = kf(x, x)
 
         Vc, Dc = [], []
@@ -508,6 +516,8 @@ class PlottingMixin:
             Vc = [float(self.bias_anchor)]                                   # delta(x0)=0
         flat = getattr(self, "bias_flat", None)
         if flat is not None:
+            if matern:
+                raise RuntimeError("bias_flat requires the squared_exp correlation matrix.")
             Dc = list(np.linspace(flat[0], flat[1], int(self.bias_flat_n)))  # delta'(x_p)=0
         if not Vc and not Dc:
             return K

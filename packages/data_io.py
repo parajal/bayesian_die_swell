@@ -20,7 +20,16 @@ class DataLoaderMixin:
             raise ValueError("no swelling in observed curve (max height <= die radius)")
         self.max_displacement = disp
         self.beta = self.sigma_noise_prior = rate = 1.0 / (0.10 * disp)
-        self.sigma_bias_prior = 1.0 / (self._sigma_bias_frac * disp) if self._infer_sigma_bias() else None
+        if self._infer_sigma_bias() and self.sigma_bias_pc is not None:
+            # PC elicitation (Fuglstad et al. 2019): P(sigma_bias > sigma0) = alpha,
+            # sigma0 a fraction of the displacement. rate = -ln(alpha) / sigma0.
+            frac, alpha = self.sigma_bias_pc
+            self._sigma0 = frac * disp
+            self.sigma_bias_prior = -np.log(alpha) / self._sigma0
+        elif self._infer_sigma_bias():
+            self.sigma_bias_prior = 1.0 / (self._sigma_bias_frac * disp)
+        else:
+            self.sigma_bias_prior = None
         self.c_bias_prior_sd = 0.10 * disp if self._infer_mean_bias() else None
         if self._infer_l_bias() and self.l_bias_prior == "pc":
             # PC prior (Fuglstad/Simpson) on the length scale: penalizes short (rough)
@@ -44,13 +53,17 @@ class DataLoaderMixin:
             "height range": f"[{y.min():.4g}, {y.max():.4g}]",
             "max displacement": f"{disp:.4g}",
             "sigma_noise prior": f"Exp(rate={rate:.4g}), mean {1 / rate:.4g}",
-            "sigma_bias prior": f"Exp(mean={self._sigma_bias_frac * disp:.4g})" if self.sigma_bias_prior else "not inferred",
+            "sigma_bias prior": (
+                f"PC: P(sigma>{self._sigma0:.4g})={self.sigma_bias_pc[1]:g}, rate={self.sigma_bias_prior:.4g}"
+                if self.sigma_bias_prior and self.sigma_bias_pc is not None else
+                f"Exp(mean={self._sigma_bias_frac * disp:.4g})" if self.sigma_bias_prior else "not inferred"),
             "c_bias prior": f"Normal(0, {self.c_bias_prior_sd:.4g})" if self.c_bias_prior_sd else "not inferred",
             "l_bias prior": (
                 f"Uniform({self.l_bias_bounds[0]:g}, {self.l_bias_bounds[1]:g})"
                 if self._infer_l_bias() and self.l_bias_prior == "uniform" else
                 f"PC: P(l<{self._l0:.4g})={self.l_bias_pc[1]:g}, lambda={self.l_bias_pc_lambda:.4g}"
                 if self._infer_l_bias() else f"fixed {self.l_bias:g}"),
+            "bias kernel": self.correlation_matrix,
             "bias anchor": f"delta({self.bias_anchor:g})=0" if self.bias_anchor is not None else "none",
             "bias flat": (f"delta'=0 on [{self.bias_flat[0]:g},{self.bias_flat[1]:g}] ({self.bias_flat_n} pts)"
                           if self.bias_flat is not None else "none"),

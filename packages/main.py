@@ -38,7 +38,7 @@ class ROMCurve4BayesianInference(ROM, DataLoaderMixin, PriorMixin, LikelihoodMix
     sigma_noise_prior = sigma_bias_prior = c_bias_prior_sd = samples = None
     u_avg_obs = 1.0
     l_bias_pc_lambda = None       # PC-prior rate for l_bias (set from data in load_data)
-    bias_anchor = None            # x0 for the die-exit constraint delta(x0)=0 (None = off)
+    bias_anchor = None            # resolved anchor: 0.0 if bias_anchor=True else None (off)
     bias_flat = None              # (a, b): impose delta'(x)=0 on [a, b] (flat plateau); None = off
     bias_flat_n = 5               # number of zero-derivative points across bias_flat
 
@@ -49,10 +49,12 @@ class ROMCurve4BayesianInference(ROM, DataLoaderMixin, PriorMixin, LikelihoodMix
                  epsilon_bounds=None, eta0_bounds=None, sr_bounds=None,
                  n1_bounds=None, tanner_ratio_bounds=(0.001, 10.0),
                  true_theta=None, sigma_noise_percent=0.0, sigma_bias=None, sigma_bias_scale=0.1,
+                 sigma_bias_pc=None,
                  mean_bias=None,
-                 l_bias=1.0, l_bias_prior="pc", l_bias_pc=(0.10, 0.05), l_bias_bounds=(0.01, 5.0),
-                 bias_anchor=None,
-                 bias_flat=None, bias_flat_n=5,
+                 l_bias=1.0, l_bias_prior="pc", l_bias_pc=(0.10, 0.05), l_bias_bounds=(0.001, 10.0),
+                 correlation_matrix="squared_exp",
+                 bias_anchor=False,
+                 bias_flat=None, bias_flat_n=20, constrained_gradient=False,
                  thin=1, model="auto", mode="full_curve", eta0=None, radius=1.0,
                  use_pressure=False, pressure_filename="pressure_drop.txt",
                  augment_eta0=False, seed=42):
@@ -103,15 +105,27 @@ class ROMCurve4BayesianInference(ROM, DataLoaderMixin, PriorMixin, LikelihoodMix
         self.mode, self.thin, self.radius, self.eta0 = mode, int(thin), float(radius), eta0
         self.sigma_noise_percent, self.sigma_bias = float(sigma_noise_percent), sigma_bias
         self._sigma_bias_frac = float(sigma_bias_scale)   # exponential prior mean = frac * disp
+        self.sigma_bias_pc = None if sigma_bias_pc is None else tuple(map(float, sigma_bias_pc))
+
         self.l_bias = l_bias if l_bias == "infer" else float(l_bias)
         if l_bias_prior not in ("pc", "uniform"):
             raise ValueError("l_bias_prior must be 'pc' or 'uniform'.")
         self.l_bias_prior = l_bias_prior
         self.l_bias_pc = tuple(map(float, l_bias_pc))   # PC prior: (l0 as fraction of x-range, alpha)
         self.l_bias_bounds = tuple(map(float, l_bias_bounds))   # uniform prior: (lo, hi)
-        self.bias_anchor = None if bias_anchor is None else float(bias_anchor)
-        self.bias_flat = None if bias_flat is None else tuple(map(float, bias_flat))
+        if correlation_matrix not in ("squared_exp", "matern"):
+            raise ValueError("correlation_matrix must be 'squared_exp' or 'matern'.")
+        self.correlation_matrix = correlation_matrix
+        self.bias_anchor = 0.0 if bias_anchor else None   # True -> delta(0)=0; False -> unconstrained
+        self.bias_flat = (5.0, 10.0) if constrained_gradient else (
+            None if bias_flat is None else tuple(map(float, bias_flat)))
         self.bias_flat_n = int(bias_flat_n)
+        if self.correlation_matrix == "matern" and self.bias_flat is not None:
+            raise ValueError(
+                "bias_flat/constrained_gradient needs delta'(x)=0, but the Matern (nu=1/2, "
+                "exponential) correlation is not mean-square differentiable. Use "
+                "correlation_matrix='squared_exp' for a flat-derivative constraint."
+            )
         self.mean_bias = mean_bias
         if self._infer_mean_bias() and self.mode == "swell_height":
             raise ValueError("mean_bias='infer' is unidentifiable in mode='swell_height'; "
